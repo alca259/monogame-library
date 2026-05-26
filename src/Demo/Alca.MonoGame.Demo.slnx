@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="../Library/Alca.MonoGame.Kernel.UnitTests/Alca.MonoGame.Kernel.UnitTests.csproj" />
+  <Project Path="../Library/Alca.MonoGame.Kernel/Alca.MonoGame.Kernel.csproj" />
+  <Project Path="Alca.MonoGame.Demo/Alca.MonoGame.Demo.csproj" />
+</Solution>

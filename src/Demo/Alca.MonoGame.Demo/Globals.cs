@@ -1,0 +1,15 @@
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Xna.Framework;
+global using Microsoft.Xna.Framework.Audio;
+global using Microsoft.Xna.Framework.Content;
+global using Microsoft.Xna.Framework.Graphics;
+global using Microsoft.Xna.Framework.Input;
+global using Microsoft.Xna.Framework.Media;
+global using Alca.MonoGame.Kernel;
+global using Alca.MonoGame.Kernel.ECS;
+global using Alca.MonoGame.Kernel.Scenes;
+global using Alca.MonoGame.Kernel.UI;
+global using Alca.MonoGame.Kernel.UI.Controls;
+global using Alca.MonoGame.Kernel.UI.Focus;
+global using Alca.MonoGame.Kernel.UI.Interaction;
+global using Alca.MonoGame.Kernel.UI.Layout;
