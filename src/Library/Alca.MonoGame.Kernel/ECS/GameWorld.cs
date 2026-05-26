@@ -23,6 +23,18 @@ public sealed class GameWorld
     /// </summary>
     public Lighting.LightingWorld? LightingWorld { get; set; }
 
+    /// <summary>
+    /// Gets or sets the navigation grid used by <see cref="Navigation.NavAgent"/> components in this world.
+    /// Optional — omit for projects that do not use pathfinding.
+    /// </summary>
+    public Navigation.NavGrid? NavGrid { get; set; }
+
+    /// <summary>
+    /// Gets or sets the pathfinder service used by <see cref="Navigation.NavAgent"/> components in this world.
+    /// Optional — omit for projects that do not use pathfinding.
+    /// </summary>
+    public Navigation.Pathfinder? Pathfinder { get; set; }
+
     // ── Lifecycle ──────────────────────────────────────────────────────────────
 
     /// <summary>Flushes pending creation/destruction then updates all active entities.</summary>

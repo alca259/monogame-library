@@ -369,6 +369,19 @@ Crear una `LightingWorld`, añadir un `PointLight2D` con `Range = 100` e `Intens
 
 ## FASE 10+ — Por Definir
 
+### FASE 10.x — NavMesh 2D (A*) ✅ COMPLETADA (primera iteración)
+
+Módulo `Navigation/` implementado con 23 tests:
+- `NavigationMode` (enum): TopDown / SideScroll
+- `NavCell` (readonly record struct): walkable, movementCost, obstacleHeight
+- `NavAgentProfile` (readonly struct): jumpHeight, jumpCostMultiplier, verticalAscentCostMultiplier, allowDiagonal
+- `NavPath` (sealed class): contenedor pre-allocado de waypoints
+- `NavGrid` (sealed class): cuadrícula flat array, conversión mundo↔grid
+- `Pathfinder` (sealed class): A* zero-alloc, lazy deletion, min-heap con arrays paralelos
+- `NavAgent` (sealed class : GameBehaviour): movimiento y rotación a lo largo del path
+- `NavGridDebugRenderer` (sealed class): overlay debug sin allocations
+- `GameWorld` extendido con `NavGrid?` y `Pathfinder?`
+
 Ideas para roadmaps futuros (sin especificación todavía):
 - **10.x — Animation System:** Sprite animation clips, Animation State Machine, blending
 - **10.x — Prefab System:** Serializable entity templates con JSON
