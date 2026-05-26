@@ -16,6 +16,13 @@ public sealed class GameWorld
     /// </summary>
     public Physics.Physics2DWorld? PhysicsWorld { get; set; }
 
+    /// <summary>
+    /// Gets or sets the lighting world. When set, <see cref="Lighting.LightBehaviour"/> components
+    /// automatically register and unregister themselves on <see cref="GameBehaviour.Awake"/> and
+    /// <see cref="GameBehaviour.OnDestroy"/>. Optional — omit for projects without dynamic lighting.
+    /// </summary>
+    public Lighting.LightingWorld? LightingWorld { get; set; }
+
     // ── Lifecycle ──────────────────────────────────────────────────────────────
 
     /// <summary>Flushes pending creation/destruction then updates all active entities.</summary>

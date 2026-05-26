@@ -230,7 +230,7 @@ Añadir a `Alca.MonoGame.Kernel.csproj`:
 
 ---
 
-## FASE 9.x — Sistema de Iluminación 2D 🔜 PENDIENTE
+## FASE 9.x — Sistema de Iluminación 2D ✅ COMPLETADA
 
 > **Objetivo:** Iluminación global y local para escenas 2D — luz ambiental, direccional, puntual y cono — como `GameBehaviour` adjunto a `GameEntity`, con un servicio `LightingWorld` que agrega contribuciones sin allocations en el game loop.
 
