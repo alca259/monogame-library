@@ -23,6 +23,7 @@
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="MonoGame.Extended" Version="6.0.*" />
+    <PackageReference Include="Aether.Physics2D.MG" Version="2.2.*" />
   </ItemGroup>
 
   <ItemGroup>

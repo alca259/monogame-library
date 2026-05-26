@@ -10,6 +10,12 @@ public sealed class GameWorld
     /// <summary>Gets or sets a value indicating whether this world processes updates. Draw always runs.</summary>
     public bool IsEnabled { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets the 2D physics world. When set, <see cref="Update"/> automatically steps the
+    /// simulation once per frame before processing entity updates.
+    /// </summary>
+    public Physics.Physics2DWorld? PhysicsWorld { get; set; }
+
     // ── Lifecycle ──────────────────────────────────────────────────────────────
 
     /// <summary>Flushes pending creation/destruction then updates all active entities.</summary>
@@ -18,6 +24,8 @@ public sealed class GameWorld
         FlushPending();
 
         if (!IsEnabled) return;
+
+        PhysicsWorld?.Step(gameTime);
 
         for (int i = 0; i < _entities.Count; i++)
             _entities[i].Update(gameTime);

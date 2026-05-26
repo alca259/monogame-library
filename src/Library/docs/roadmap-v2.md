@@ -157,7 +157,7 @@ public static bool TryCreatePlaneFromPolygon(ReadOnlySpan<Vector3> vertices, out
 
 ---
 
-## FASE 8 — Sistema de Física 2D 🔜 PENDIENTE
+## FASE 8 — Sistema de Física 2D ✅ COMPLETADA
 
 > **Objetivo:** Simulación física 2D completa (RigidBody, Colliders, Joints, Gravity, Friction) wrappeando **Aether.Physics2D** — el mismo patrón de integración que MonoGame.Extended.
 
