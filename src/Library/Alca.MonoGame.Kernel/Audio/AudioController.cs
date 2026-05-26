@@ -227,5 +227,8 @@ public sealed class AudioController : IDisposable
 
         IsDisposed = true;
     }
+
+    /// <summary>Creates a new <see cref="AudioCrossfader"/> tied to this controller's scope.</summary>
+    public AudioCrossfader CreateCrossfader() => new();
 }
 

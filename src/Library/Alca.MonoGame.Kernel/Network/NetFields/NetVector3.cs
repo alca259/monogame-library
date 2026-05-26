@@ -33,4 +33,10 @@ public sealed class NetVector3 : NetField
 
     /// <inheritdoc/>
     public override void Deserialize(ref NetworkReader reader) => Value = reader.ReadVector3();
+
+    /// <inheritdoc/>
+    public override void SetValue(object value) => Value = (Vector3)value;
+
+    /// <inheritdoc/>
+    public override object? GetValue() => Value;
 }

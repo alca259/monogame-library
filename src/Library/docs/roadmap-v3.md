@@ -730,7 +730,7 @@ New overloads:
 
 ---
 
-### Milestone 16.1 — GPU Lighting Render Pipeline
+### Milestone 16.1 — GPU Lighting Render Pipeline ✅ TODO
 
 **Background:** The existing `LightingWorld.Resolve(Vector2, LightingLayer)` method is called per-query by the game (e.g., for each sprite draw call) and is O(L) per query. With 16+ lights and 200+ sprites, this runs thousands of light evaluation iterations per frame. A shader-based approach runs once per pixel on the GPU, independent of sprite count.
 
@@ -789,7 +789,7 @@ Lighting/
 
 ---
 
-### Milestone 17.1 — AsyncPathfinder
+### Milestone 17.1 — AsyncPathfinder ✅ TODO
 
 **Background:** `Pathfinder.FindPath()` is synchronous and runs on the main thread. On large grids (e.g., 256×256 = 65,536 cells), a worst-case path search can take several milliseconds, causing visible frame drops. `NavGrid` data is read-only during pathfinding; mutations (walkability changes) must be externally synchronized.
 
@@ -829,7 +829,7 @@ Lighting/
 
 ---
 
-### Milestone 18.1 — Benchmark Baseline
+### Milestone 18.1 — Benchmark Baseline ✅ TODO
 
 **`Benchmarks/ECS/GameWorldBenchmarks.cs`** — using `BenchmarkDotNet`
 - `Benchmark_Update_100Entities`
@@ -843,7 +843,7 @@ Reference targets (60Hz budget = 16.67ms total; ECS should consume < 1ms for 100
 
 ---
 
-### Milestone 18.2 — Targeted Hot Path Improvements
+### Milestone 18.2 — Targeted Hot Path Improvements ✅ TODO
 
 **Based on expected benchmark results, apply the following improvements if justified:**
 

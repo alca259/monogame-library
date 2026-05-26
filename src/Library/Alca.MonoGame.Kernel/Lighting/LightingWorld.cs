@@ -1,3 +1,5 @@
+using Alca.MonoGame.Kernel.Lighting.GPU;
+
 namespace Alca.MonoGame.Kernel.Lighting;
 
 /// <summary>
@@ -68,12 +70,63 @@ public sealed class LightingWorld
     }
 
     /// <summary>
+    /// Fills <paramref name="buffer"/> with <see cref="LightShaderData"/> for all contributing lights
+    /// on the specified <paramref name="layer"/>, up to <paramref name="maxLights"/> entries.
+    /// No allocations — call every frame safely.
+    /// </summary>
+    /// <param name="buffer">Pre-allocated array of at least <paramref name="maxLights"/> elements.</param>
+    /// <param name="maxLights">Maximum number of entries to write.</param>
+    /// <param name="layer">Layer filter.</param>
+    /// <param name="count">Number of entries written to <paramref name="buffer"/>.</param>
+    public void FillShaderBuffer(LightShaderData[] buffer, int maxLights, LightingLayer layer, out int count)
+    {
+        count = 0;
+        for (int i = 0; i < _lights.Count && count < maxLights; i++)
+        {
+            var light = _lights[i];
+            if (!light.IsContributing) continue;
+            if (light.LightingLayer != layer) continue;
+
+            Vector2 position = light.Entity.Transform.Position2d;
+            Vector4 color = light.Color.ToVector4();
+            int type;
+            float innerAngle = 0f, outerAngle = 0f;
+            Vector2 direction = Vector2.Zero;
+
+            if (light is SpotLight2D spot)
+            {
+                type = LightShaderData.TypeSpot;
+                innerAngle = spot.InnerAngle;
+                outerAngle = spot.OuterAngle;
+                direction = spot.Direction ?? Vector2.UnitX;
+            }
+            else if (light is PointLight2D)
+            {
+                type = LightShaderData.TypePoint;
+            }
+            else if (light is DirectionalLight2D dir)
+            {
+                type = LightShaderData.TypeDirectional;
+                direction = dir.Direction;
+            }
+            else
+            {
+                type = LightShaderData.TypeAmbient;
+            }
+
+            buffer[count++] = new LightShaderData(position, light.Range, light.Intensity,
+                color, type, innerAngle, outerAngle, direction);
+        }
+    }
+
+    /// <summary>
     /// Sets standard light array parameters on <paramref name="effect"/> for GLSL/HLSL shaders.
     /// Parameters written: <c>_LightCount</c> (int), <c>_LightPositions</c> (Vector2[]),
     /// <c>_LightColors</c> (Vector4[]), <c>_LightRanges</c> (float[]).
     /// Missing parameters are silently ignored.
     /// Note: allocates temporary arrays — do not call every frame on a hot path.
     /// </summary>
+    [Obsolete("Use FillShaderBuffer for zero-allocation GPU path.")]
     public void FillShaderParameters(Effect effect)
     {
         int count = 0;

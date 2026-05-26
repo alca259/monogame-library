@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="Alca.MonoGame.Kernel.UnitTests/Alca.MonoGame.Kernel.UnitTests.csproj" Id="e8250ee7-a371-4edc-a19d-bdd60c17b84b" />
   <Project Path="Alca.MonoGame.Kernel/Alca.MonoGame.Kernel.csproj" />
+  <Project Path="Alca.MonoGame.Kernel.Benchmarks/Alca.MonoGame.Kernel.Benchmarks.csproj" />
 </Solution>

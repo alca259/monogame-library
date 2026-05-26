@@ -31,6 +31,12 @@ public sealed class NetworkIdentity : GameBehaviour
     public bool IsServer { get; internal set; }
 
     /// <summary>
+    /// Raised after an incoming <see cref="FieldsSyncMessage"/> has been applied to this identity's fields.
+    /// Subscribe in <see cref="GameBehaviour.Awake"/> to copy net-field values back to source properties.
+    /// </summary>
+    public event Action? OnFieldsApplied;
+
+    /// <summary>
     /// Gets or sets how often (in seconds) dirty fields are flushed to the network.
     /// Default is 0.05 s (20 Hz).
     /// </summary>
@@ -102,12 +108,14 @@ public sealed class NetworkIdentity : GameBehaviour
     {
         if (msg.NetworkId != NetworkId) return;
         msg.ApplyTo(_fields, _fieldCount);
+        OnFieldsApplied?.Invoke();
     }
 
     private void OnFieldsSyncReceivedFromClient(int peerId, FieldsSyncMessage msg)
     {
         if (msg.NetworkId != NetworkId) return;
         msg.ApplyTo(_fields, _fieldCount);
+        OnFieldsApplied?.Invoke();
 
         if (_server is not null)
             _server.BroadcastExcept(peerId, ref msg, NetworkChannel.ReliableOrdered);

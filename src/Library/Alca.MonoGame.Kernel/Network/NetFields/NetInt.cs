@@ -33,4 +33,10 @@ public sealed class NetInt : NetField
 
     /// <inheritdoc/>
     public override void Deserialize(ref NetworkReader reader) => Value = reader.ReadInt();
+
+    /// <inheritdoc/>
+    public override void SetValue(object value) => Value = (int)value;
+
+    /// <inheritdoc/>
+    public override object? GetValue() => Value;
 }

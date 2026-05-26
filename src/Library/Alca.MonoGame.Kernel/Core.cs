@@ -4,6 +4,7 @@ using Alca.MonoGame.Kernel.Input;
 using Alca.MonoGame.Kernel.Localization;
 using Alca.MonoGame.Kernel.Platform;
 using Alca.MonoGame.Kernel.Scenes;
+using Alca.MonoGame.Kernel.Timers;
 using Alca.MonoGame.Kernel.Tweening;
 using Alca.MonoGame.Kernel.UI;
 using Alca.MonoGame.Kernel.UI.Focus;
@@ -50,6 +51,8 @@ public abstract class Core : Game
     public static UIFocusManager UIFocus { get; private set; } = null!;
     /// <summary>Gets the UI overlay manager for floating elements such as dropdowns and tooltips.</summary>
     public static UIOverlayManager UIOverlay { get; private set; } = null!;
+    /// <summary>Gets the game-time timer scheduler.</summary>
+    public static TimerManager Timers { get; private set; } = null!;
     /// <summary>Gets the game window (for TextInput event subscription and window title changes).</summary>
     public static new GameWindow Window { get; private set; } = null!;
     /// <summary>Gets or sets a value that indicates if the game should exit when the Escape key is pressed.</summary>
@@ -117,6 +120,7 @@ public abstract class Core : Game
         services.AddSingleton<UIInteractionManager>();
         services.AddSingleton<UIFocusManager>();
         services.AddSingleton<UIOverlayManager>();
+        services.AddSingleton<TimerManager>();
 
         ConfigureServices(services);
 
@@ -135,6 +139,7 @@ public abstract class Core : Game
         UIInteraction = _serviceProvider.GetRequiredService<UIInteractionManager>();
         UIFocus = _serviceProvider.GetRequiredService<UIFocusManager>();
         UIOverlay = _serviceProvider.GetRequiredService<UIOverlayManager>();
+        Timers = _serviceProvider.GetRequiredService<TimerManager>();
 
         PostInitialize();
     }
@@ -158,6 +163,7 @@ public abstract class Core : Game
         Input.Update(gameTime);
         Audio.Update();
         Tweening.Update(gameTime);
+        Timers.Update(gameTime);
 
         if (ExitOnEscape && Input.Keyboard.IsKeyDown(Keys.Escape))
         {

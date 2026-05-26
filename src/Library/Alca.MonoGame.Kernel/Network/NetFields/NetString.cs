@@ -37,4 +37,10 @@ public sealed class NetString : NetField
 
     /// <inheritdoc/>
     public override void Deserialize(ref NetworkReader reader) => Value = reader.ReadString();
+
+    /// <inheritdoc/>
+    public override void SetValue(object value) => Value = (string)value;
+
+    /// <inheritdoc/>
+    public override object? GetValue() => Value;
 }

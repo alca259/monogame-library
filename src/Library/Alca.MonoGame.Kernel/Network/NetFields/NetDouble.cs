@@ -34,4 +34,10 @@ public sealed class NetDouble : NetField
 
     /// <inheritdoc/>
     public override void Deserialize(ref NetworkReader reader) => Value = reader.ReadDouble();
+
+    /// <inheritdoc/>
+    public override void SetValue(object value) => Value = (double)value;
+
+    /// <inheritdoc/>
+    public override object? GetValue() => Value;
 }

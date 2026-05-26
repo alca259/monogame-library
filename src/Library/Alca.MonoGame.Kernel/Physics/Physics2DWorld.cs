@@ -11,9 +11,13 @@ namespace Alca.MonoGame.Kernel.Physics;
 public sealed class Physics2DWorld
 {
     private readonly World _aetherWorld;
+    private Physics2DQuery? _query;
 
     /// <summary>Gets the underlying Aether world. Available after construction.</summary>
     internal World AetherWorld => _aetherWorld;
+
+    /// <summary>Gets the physics query interface for raycasts and overlap tests. Created lazily on first access.</summary>
+    public Physics2DQuery Query => _query ??= new Physics2DQuery(this);
 
     /// <summary>Gets or sets the global gravity vector. Default is (0, -9.8).</summary>
     public Vector2 Gravity
@@ -44,3 +48,4 @@ public sealed class Physics2DWorld
         _aetherWorld.Step(dt, ref si);
     }
 }
+

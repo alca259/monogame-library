@@ -33,4 +33,10 @@ public sealed class NetByte : NetField
 
     /// <inheritdoc/>
     public override void Deserialize(ref NetworkReader reader) => Value = reader.ReadByte();
+
+    /// <inheritdoc/>
+    public override void SetValue(object value) => Value = (byte)value;
+
+    /// <inheritdoc/>
+    public override object? GetValue() => Value;
 }

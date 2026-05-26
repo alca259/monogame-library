@@ -33,4 +33,10 @@ public sealed class NetBool : NetField
 
     /// <inheritdoc/>
     public override void Deserialize(ref NetworkReader reader) => Value = reader.ReadBool();
+
+    /// <inheritdoc/>
+    public override void SetValue(object value) => Value = (bool)value;
+
+    /// <inheritdoc/>
+    public override object? GetValue() => Value;
 }

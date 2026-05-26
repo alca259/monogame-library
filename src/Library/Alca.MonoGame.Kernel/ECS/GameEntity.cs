@@ -229,8 +229,8 @@ public sealed class GameEntity
     /// <summary>Returns true if this entity has a component of type T (concrete or interface).</summary>
     public bool HasComponent<T>() where T : class => GetComponent<T>() is not null;
 
-    /// <summary>Returns all behaviours attached to this entity.</summary>
-    public IEnumerable<GameBehaviour> GetAllComponents() => _behaviours.Values;
+    /// <summary>Returns all behaviours attached to this entity. No heap allocations.</summary>
+    public IReadOnlyList<GameBehaviour> GetAllComponents() => _allBehavioursList;
 
     /// <summary>Gets the total number of behaviours attached to this entity.</summary>
     public int GetComponentCount() => _allBehavioursList.Count;

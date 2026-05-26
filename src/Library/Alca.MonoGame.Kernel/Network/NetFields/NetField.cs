@@ -20,4 +20,10 @@ public abstract class NetField
 
     /// <summary>Deserializes a value from <paramref name="reader"/> and applies it.</summary>
     public abstract void Deserialize(ref NetworkReader reader);
+
+    /// <summary>Sets the field's value from a boxed object. Used by <see cref="NetworkReplicator"/>.</summary>
+    public abstract void SetValue(object value);
+
+    /// <summary>Gets the field's current value as a boxed object. Used by <see cref="NetworkReplicator"/>.</summary>
+    public abstract object? GetValue();
 }

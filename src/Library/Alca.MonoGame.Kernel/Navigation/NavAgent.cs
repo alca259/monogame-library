@@ -127,6 +127,42 @@ public sealed class NavAgent : GameBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Asynchronously calculates a path to <paramref name="worldPosition"/> on a background thread
+    /// and begins movement when the result is available. Falls back to the synchronous
+    /// <see cref="SetDestination"/> if no <see cref="AsyncPathfinder"/> is configured on the world.
+    /// </summary>
+    /// <returns><c>true</c> if a path was found; <c>false</c> otherwise.</returns>
+    public async Task<bool> SetDestinationAsync(Vector2 worldPosition)
+    {
+        AsyncPathfinder? async = Entity.World.AsyncPathfinder;
+        if (async is null)
+            return SetDestination(worldPosition);
+
+        if (_navGrid is null || _transform is null)
+            return false;
+
+        Destination = worldPosition;
+
+        NavPath? result = await async.FindPathAsync(_navGrid, _transform.Position2d, worldPosition, Profile)
+            .ConfigureAwait(false);
+
+        if (result is null || result.IsEmpty)
+        {
+            IsMoving = false;
+            OnPathNotFound?.Invoke();
+            return false;
+        }
+
+        _path.Clear();
+        _currentWaypointIdx = 0;
+        for (int i = 0; i < result.Count; i++)
+            _path.AddWaypoint(result.GetWaypoint(i));
+
+        IsMoving = true;
+        return true;
+    }
+
     /// <summary>Stops movement immediately and clears the current path.</summary>
     public void Stop()
     {

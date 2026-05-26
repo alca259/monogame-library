@@ -4,6 +4,7 @@ using nkast.Aether.Physics2D.Dynamics.Contacts;
 
 namespace Alca.MonoGame.Kernel.Physics;
 
+
 /// <summary>
 /// Base class for 2D physics colliders. Attach alongside a <see cref="RigidBody2D"/> on the same entity.
 /// If no <see cref="RigidBody2D"/> is present, a static body is created implicitly.
@@ -17,6 +18,12 @@ public abstract class Collider2D : GameBehaviour
 
     /// <summary>Gets or sets a value indicating whether this collider acts as a trigger (no physical response, events only).</summary>
     public bool IsTrigger { get; set; }
+
+    /// <summary>Gets or sets the collision category this fixture belongs to. Default is <see cref="CollisionCategory.Default"/>.</summary>
+    public CollisionCategory Layer { get; set; } = CollisionCategory.Default;
+
+    /// <summary>Gets or sets the categories this fixture will collide with. Default is <see cref="CollisionCategory.All"/>.</summary>
+    public CollisionCategory Mask { get; set; } = CollisionCategory.All;
 
     /// <summary>Gets or sets the friction coefficient (0 = frictionless, 1 = very rough).</summary>
     public float Friction { get; set; } = 0.5f;
@@ -76,6 +83,8 @@ public abstract class Collider2D : GameBehaviour
         _fixture.Friction = Friction;
         _fixture.Restitution = Restitution;
         _fixture.Tag = this;
+        _fixture.CollisionCategories = (Category)(ushort)Layer;
+        _fixture.CollidesWith = (Category)(ushort)Mask;
 
         _fixture.OnCollision += HandleCollision;
         _fixture.OnSeparation += HandleSeparation;

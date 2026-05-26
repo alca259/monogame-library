@@ -34,4 +34,10 @@ public sealed class NetFloat : NetField
 
     /// <inheritdoc/>
     public override void Deserialize(ref NetworkReader reader) => Value = reader.ReadFloat();
+
+    /// <inheritdoc/>
+    public override void SetValue(object value) => Value = (float)value;
+
+    /// <inheritdoc/>
+    public override object? GetValue() => Value;
 }

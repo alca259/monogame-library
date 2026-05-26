@@ -5,7 +5,7 @@ public sealed class GameWorld
 {
     private readonly List<GameEntity> _entities = [];
     private readonly List<GameEntity> _toAdd = [];
-    private readonly List<GameEntity> _toDestroy = [];
+    private readonly HashSet<GameEntity> _toDestroy = [];
 
     /// <summary>Gets or sets a value indicating whether this world processes updates. Draw always runs.</summary>
     public bool IsEnabled { get; set; } = true;
@@ -41,6 +41,13 @@ public sealed class GameWorld
     /// Optional — omit for projects that do not use combined physics + pathfinding.
     /// </summary>
     public Navigation.NavGridPhysicsSync? NavPhysicsSync { get; set; }
+
+    /// <summary>
+    /// Gets or sets the async pathfinder used by <see cref="Navigation.NavAgent.SetDestinationAsync"/>.
+    /// When set, <see cref="Navigation.NavAgent"/> can offload path searches to a background thread.
+    /// Optional — omit for projects that do not need async pathfinding.
+    /// </summary>
+    public Navigation.AsyncPathfinder? AsyncPathfinder { get; set; }
 
     /// <summary>
     /// Gets or sets the audio controller used by <see cref="Audio.SpatialAudioSource"/> and
@@ -117,15 +124,10 @@ public sealed class GameWorld
         return entity;
     }
 
-    /// <summary>
-    /// Schedules an entity for removal. It is removed from the world at the start of the next
+    /// <summary>Schedules an entity for removal. It is removed from the world at the start of the next
     /// Update (deferred) and <see cref="GameBehaviour.OnDestroy"/> is called on all its behaviours.
     /// </summary>
-    public void Destroy(GameEntity entity)
-    {
-        if (!_toDestroy.Contains(entity))
-            _toDestroy.Add(entity);
-    }
+    public void Destroy(GameEntity entity) => _toDestroy.Add(entity);
 
     /// <summary>
     /// Immediately calls <see cref="GameBehaviour.OnDestroy"/> on all entities (including pending ones)
@@ -146,20 +148,48 @@ public sealed class GameWorld
 
     // ── Queries ────────────────────────────────────────────────────────────────
 
+    /// <summary>Gets the number of active entities in this world.</summary>
+    public int EntityCount => _entities.Count;
+
     /// <summary>Returns all entities that have a component of type T (concrete type or interface).</summary>
+    [Obsolete("Allocates an enumerator. Use FindEntities<T>(List<GameEntity>) for zero-alloc hot paths.")]
     public IEnumerable<GameEntity> FindEntities<T>() where T : class
     {
         for (int i = 0; i < _entities.Count; i++)
             if (_entities[i].HasComponent<T>()) yield return _entities[i];
     }
 
+    /// <summary>
+    /// Fills <paramref name="results"/> with all entities that have a component of type T.
+    /// No heap allocations — safe to call from the update loop.
+    /// </summary>
+    public void FindEntities<T>(List<GameEntity> results) where T : class
+    {
+        for (int i = 0; i < _entities.Count; i++)
+            if (_entities[i].HasComponent<T>()) results.Add(_entities[i]);
+    }
+
     /// <summary>Returns all components of type T (concrete type or interface) across all entities.</summary>
+    [Obsolete("Allocates an enumerator. Use FindComponents<T>(List<T>) for zero-alloc hot paths.")]
     public IEnumerable<T> FindComponents<T>() where T : class
     {
         for (int i = 0; i < _entities.Count; i++)
         {
             var c = _entities[i].GetComponent<T>();
             if (c is not null) yield return c;
+        }
+    }
+
+    /// <summary>
+    /// Fills <paramref name="results"/> with all components of type T across all entities.
+    /// No heap allocations — safe to call from the update loop.
+    /// </summary>
+    public void FindComponents<T>(List<T> results) where T : class
+    {
+        for (int i = 0; i < _entities.Count; i++)
+        {
+            T? c = _entities[i].GetComponent<T>();
+            if (c is not null) results.Add(c);
         }
     }
 
@@ -193,10 +223,10 @@ public sealed class GameWorld
             _entities.Add(_toAdd[i]);
         _toAdd.Clear();
 
-        for (int i = 0; i < _toDestroy.Count; i++)
+        foreach (GameEntity entity in _toDestroy)
         {
-            _toDestroy[i].Destroy();
-            _entities.Remove(_toDestroy[i]);
+            entity.Destroy();
+            _entities.Remove(entity);
         }
         _toDestroy.Clear();
     }
