@@ -3,8 +3,11 @@ using Alca.MonoGame.Kernel.UI.Interaction;
 
 namespace Alca.MonoGame.Kernel.UnitTests.UI.Controls;
 
+[Collection(GraphicsCollection.Name)]
 public sealed class ButtonTests
 {
+    public ButtonTests(GraphicsDeviceFixture _) { }
+
     #region Defaults
 
     [Fact]

@@ -35,6 +35,19 @@ public sealed class GameWorld
     /// </summary>
     public Navigation.Pathfinder? Pathfinder { get; set; }
 
+    /// <summary>
+    /// Gets or sets the audio controller used by <see cref="Audio.SpatialAudioSource"/> and
+    /// <see cref="Audio.SpatialAudioListener"/> components in this world.
+    /// Optional — omit for projects that do not use 3D spatial audio.
+    /// </summary>
+    public Audio.AudioController? AudioController { get; set; }
+
+    /// <summary>
+    /// Gets or sets the audio mixer for channel-based volume routing used by audio components.
+    /// Optional — omit for projects that do not use audio mixing.
+    /// </summary>
+    public Audio.AudioMixer? AudioMixer { get; set; }
+
     // ── Lifecycle ──────────────────────────────────────────────────────────────
 
     /// <summary>Flushes pending creation/destruction then updates all active entities.</summary>

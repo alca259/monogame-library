@@ -382,11 +382,20 @@ Módulo `Navigation/` implementado con 23 tests:
 - `NavGridDebugRenderer` (sealed class): overlay debug sin allocations
 - `GameWorld` extendido con `NavGrid?` y `Pathfinder?`
 
+### FASE 10.x — Extended Audio 2.5D ✅ COMPLETADA (primera iteración)
+
+Módulo de audio espacial 2.5D con 67 tests:
+- `AudioMixerChannel` (sealed class): canal de volumen independiente con Name, Volume (clamped), Muted, EffectiveVolume
+- `AudioMixer` (sealed class): mezclador singleton con canales predefinidos Master/Music/SFX/Ambient, RegisterChannel, GetChannel
+- `SpatialAudioSource` (sealed class : GameBehaviour): emite audio 3D desde Transform.Position (X,Y,Z); sincroniza AudioEmitter3D cada frame; Play/Stop/Pause/Resume; enrutamiento por AudioMixerChannel
+- `SpatialAudioListener` (sealed class : GameBehaviour): sincroniza AudioController.UpdateListener con Transform.Position (3 ejes) y forward extraído de LocalToWorldMatrix; propiedad IsMain
+- `AudioZone` (sealed class : GameBehaviour): zona esférica 3D; fade-in/out de sonido ambiental en loop basado en distancia Vector3 al listener; atenuación lineal; FadeInTime/FadeOutTime configurables
+- `AudioController` extendido con `ListenerPosition` (Vector3) y `ApplySpatialAudio(instance, emitter)`
+- `GameWorld` extendido con `AudioController?` y `AudioMixer?`
+
 Ideas para roadmaps futuros (sin especificación todavía):
 - **10.x — Animation System:** Sprite animation clips, Animation State Machine, blending
 - **10.x — Prefab System:** Serializable entity templates con JSON
-- **10.x — NavMesh 2D:** Navegación por waypoints o grid-based pathfinding (A*)
-- **10.x — Extended Audio:** Spatial audio, audio zones, mixer
 - **10.x — Networking:** P2P o cliente/servidor básico para juegos multijugador pequeños
 
 

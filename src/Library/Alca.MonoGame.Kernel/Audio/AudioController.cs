@@ -185,10 +185,19 @@ public sealed class AudioController : IDisposable
         return new SoundEffectPool(effect, capacity);
     }
 
+    /// <summary>Gets the world-space position of the current 3D audio listener.</summary>
+    public Vector3 ListenerPosition => _listener.Position;
+
     /// <summary>Updates the 3D listener position and forward direction for spatial audio calculations.</summary>
     public void UpdateListener(Vector3 position, Vector3 forward)
     {
         _listener.Update(position, forward);
+    }
+
+    /// <summary>Applies 3D spatial positioning to the given sound instance using the current listener and the provided emitter.</summary>
+    public void ApplySpatialAudio(SoundEffectInstance instance, AudioEmitter3D emitter)
+    {
+        emitter.Apply3D(instance, _listener);
     }
 
     /// <summary>Disposes of this audio controller and cleans up resources.</summary>

@@ -21,6 +21,14 @@ public sealed class GraphicsDeviceFixture : IDisposable
         _game = new HeadlessGame();
         _game.Run();
         SpriteBatch = new SpriteBatch(_game.GraphicsDevice);
+
+        // Core.GraphicsDevice has private set — inject via reflection so that
+        // DrawHelper.DefaultPixelTexture (which calls Core.GraphicsDevice) works in tests.
+        typeof(Core)
+            .GetProperty(nameof(Core.GraphicsDevice),
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)!
+            .GetSetMethod(nonPublic: true)!
+            .Invoke(null, [_game.GraphicsDevice]);
     }
 
     public void Dispose()
