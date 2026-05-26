@@ -1,4 +1,8 @@
-﻿namespace Alca.MonoGame.Kernel.Scenes;
+using Alca.MonoGame.Kernel.ECS;
+using Alca.MonoGame.Kernel.Graphics;
+using Alca.MonoGame.Kernel.UI;
+
+namespace Alca.MonoGame.Kernel.Scenes;
 
 /// <summary>This is an abstract class for scenes that provides common functionality for all scenes</summary>
 public abstract class Scene : IDisposable
@@ -12,6 +16,23 @@ public abstract class Scene : IDisposable
 
     /// <summary>Gets a value indicating whether this scene is an overlay; when true, the scene beneath continues drawing.</summary>
     public virtual bool IsOverlay => false;
+
+    /// <summary>
+    /// Gets the <see cref="GameWorld"/> created by <see cref="CreateWorld"/>, or null if this scene
+    /// does not use the ECS. Null by default; set once during <see cref="Initialize"/>.
+    /// </summary>
+    protected GameWorld? World { get; private set; }
+
+    /// <summary>
+    /// Gets the <see cref="UIRoot"/> created by <see cref="EnableUI"/>, or null if UI was not enabled.
+    /// Use <see cref="EnableUI"/> in <see cref="PreInitialize"/> to opt in.
+    /// </summary>
+    protected internal UIRoot? UIRoot { get; private set; }
+
+    /// <summary>
+    /// For unit testing: when non-null, used instead of <see cref="Core.SpriteBatch"/> for UI and World drawing.
+    /// </summary>
+    internal SpriteBatch? _spriteBatchOverride;
 
     /// <summary>Creates a new scene instance.</summary>
     public Scene()
@@ -39,6 +60,39 @@ public abstract class Scene : IDisposable
     {
     }
 
+    /// <summary>
+    /// Override to create and configure a <see cref="GameWorld"/> for this scene.
+    /// Return null (default) to opt out of ECS — no world will be created or updated.
+    /// </summary>
+    protected virtual GameWorld? CreateWorld() => null;
+
+    /// <summary>
+    /// Called after <see cref="CreateWorld"/> assigns <see cref="World"/> and before <see cref="LoadContent"/>.
+    /// Override to populate the world with entities and configure subsystems.
+    /// Only meaningful when <see cref="CreateWorld"/> returns a non-null world.
+    /// </summary>
+    protected virtual void InitializeWorld() { }
+
+    /// <summary>
+    /// Creates a full-screen <see cref="UIRoot"/> and wires it to the global <see cref="Core.UIOverlay"/>.
+    /// Idempotent — safe to call multiple times. Call from <see cref="PreInitialize"/> so the root is
+    /// available when <see cref="InitializeUI"/> runs.
+    /// </summary>
+    protected void EnableUI()
+    {
+        if (UIRoot is not null) return;
+
+        var root = new UIRoot();
+        root.OverlayManager = Core.UIOverlay;
+
+        ResolutionManager? resolution = Core.Resolution;
+        root.Bounds = resolution is not null
+            ? new Rectangle(0, 0, resolution.VirtualWidth, resolution.VirtualHeight)
+            : (Core.GraphicsDevice?.Viewport.Bounds ?? Rectangle.Empty);
+
+        UIRoot = root;
+    }
+
     /// <summary>Initializes the scene.</summary>
     /// <remarks>
     /// When overriding this in a derived class, ensure that base.Initialize()
@@ -47,6 +101,8 @@ public abstract class Scene : IDisposable
     public virtual void Initialize()
     {
         PreInitialize();
+        World = CreateWorld();
+        InitializeWorld();
         LoadContent();
         PostInitialize();
     }
@@ -62,7 +118,7 @@ public abstract class Scene : IDisposable
     }
 
     /// <summary>Initializes the UI elements for the scene.</summary>
-    /// <remarks>This method is called after LoadContent and PostInitialize.</remarks>
+    /// <remarks>This method is called after LoadContent and PostInitialize. Call <see cref="EnableUI"/> first to create the root.</remarks>
     protected virtual void InitializeUI()
     {
     }
@@ -70,19 +126,38 @@ public abstract class Scene : IDisposable
     /// <summary>Override to provide logic to load content for the scene.</summary>
     public virtual void LoadContent() { }
 
-    /// <summary>Unloads scene-specific content.</summary>
+    /// <summary>
+    /// Unloads scene-specific content and destroys the ECS world if one was created.
+    /// </summary>
     public virtual void UnloadContent()
     {
+        World?.Destroy();
         Content.Unload();
     }
 
-    /// <summary>Updates this scene.</summary>
+    /// <summary>
+    /// Updates this scene. When overriding, call <c>base.Update(gameTime)</c> first to
+    /// ensure the <see cref="World"/> is stepped before custom scene logic runs.
+    /// </summary>
     /// <param name="gameTime">A snapshot of the timing values for the current frame.</param>
-    public virtual void Update(GameTime gameTime) { }
+    public virtual void Update(GameTime gameTime)
+    {
+        World?.Update(gameTime);
+    }
 
-    /// <summary>Draws this scene.</summary>
+    /// <summary>
+    /// Draws this scene. When overriding, call <c>base.Draw(gameTime)</c> first to ensure the
+    /// <see cref="World"/> and <see cref="UIRoot"/> are rendered before custom scene draw logic runs.
+    /// </summary>
     /// <param name="gameTime">A snapshot of the timing values for the current frame.</param>
-    public virtual void Draw(GameTime gameTime) { }
+    public virtual void Draw(GameTime gameTime)
+    {
+        World?.Draw(gameTime, Core.SpriteBatch!);
+
+        SpriteBatch? sb = _spriteBatchOverride ?? Core.SpriteBatch;
+        if (UIRoot is not null && sb is not null)
+            UIRoot.DrawAll(sb);
+    }
 
     /// <summary>Disposes of this scene.</summary>
     public void Dispose()
@@ -110,4 +185,3 @@ public abstract class Scene : IDisposable
         }
     }
 }
-

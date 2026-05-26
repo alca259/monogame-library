@@ -36,6 +36,13 @@ public sealed class GameWorld
     public Navigation.Pathfinder? Pathfinder { get; set; }
 
     /// <summary>
+    /// Gets or sets the physics-to-navgrid sync helper. When set, <see cref="Update"/> automatically
+    /// calls <see cref="Navigation.NavGridPhysicsSync.SyncAll"/> after each physics step.
+    /// Optional — omit for projects that do not use combined physics + pathfinding.
+    /// </summary>
+    public Navigation.NavGridPhysicsSync? NavPhysicsSync { get; set; }
+
+    /// <summary>
     /// Gets or sets the audio controller used by <see cref="Audio.SpatialAudioSource"/> and
     /// <see cref="Audio.SpatialAudioListener"/> components in this world.
     /// Optional — omit for projects that do not use 3D spatial audio.
@@ -70,6 +77,8 @@ public sealed class GameWorld
         if (!IsEnabled) return;
 
         PhysicsWorld?.Step(gameTime);
+        if (NavPhysicsSync is not null && NavGrid is not null)
+            NavPhysicsSync.SyncAll(NavGrid);
 
         for (int i = 0; i < _entities.Count; i++)
             _entities[i].Update(gameTime);
@@ -116,6 +125,23 @@ public sealed class GameWorld
     {
         if (!_toDestroy.Contains(entity))
             _toDestroy.Add(entity);
+    }
+
+    /// <summary>
+    /// Immediately calls <see cref="GameBehaviour.OnDestroy"/> on all entities (including pending ones)
+    /// and clears all entity lists. Safe to call multiple times.
+    /// </summary>
+    public void Destroy()
+    {
+        for (int i = 0; i < _toAdd.Count; i++)
+            _toAdd[i].Destroy();
+        _toAdd.Clear();
+
+        for (int i = 0; i < _entities.Count; i++)
+            _entities[i].Destroy();
+        _entities.Clear();
+
+        _toDestroy.Clear();
     }
 
     // ── Queries ────────────────────────────────────────────────────────────────

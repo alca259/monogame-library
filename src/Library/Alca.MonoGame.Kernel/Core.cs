@@ -171,6 +171,10 @@ public abstract class Core : Game
             Graphics.ApplyChanges();
         }
 
+        UIRoot? activeUI = SceneManager.ActiveUIRoot;
+        if (activeUI is not null)
+            UIInteraction.Update(activeUI, Input.Mouse, UIFocus);
+
         SceneManager.Update(gameTime);
 
         base.Update(gameTime);

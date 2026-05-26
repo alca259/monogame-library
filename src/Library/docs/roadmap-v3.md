@@ -1,5 +1,8 @@
 # Roadmap v3: Integration, Missing Features & Architecture
 
+**Reglas transversales a todos los desarrollos:**
+- Al terminar, actualizar este fichero marcando los TODOs completados.
+
 ## Executive Summary
 
 ### v1 Accomplishments (Phases 1–6)

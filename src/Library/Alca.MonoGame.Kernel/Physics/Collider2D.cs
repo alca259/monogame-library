@@ -42,6 +42,14 @@ public abstract class Collider2D : GameBehaviour
     /// <summary>Gets the underlying Aether fixture. Available after <see cref="GameBehaviour.Awake"/>.</summary>
     internal Fixture AetherFixture => _fixture;
 
+    /// <summary>Returns the world-space AABB of the fixture. Only valid after <see cref="GameBehaviour.Awake"/>.</summary>
+    internal void GetWorldBounds(out Vector2 min, out Vector2 max)
+    {
+        _fixture.GetAABB(out var aabb, 0);
+        min = aabb.LowerBound;
+        max = aabb.UpperBound;
+    }
+
     /// <inheritdoc/>
     public override void Awake()
     {

@@ -7,4 +7,5 @@ internal static class SystemMessageId
     internal const ushort Despawn = 0x0002;
     internal const ushort FieldsSync = 0x0003;
     internal const ushort TransformSync = 0x0004;
+    internal const ushort PhysicsSync = 0x0005;
 }
