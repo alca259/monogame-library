@@ -512,9 +512,23 @@ src/Library/Alca.MonoGame.Kernel/
 
 ---
 
-Ideas para roadmaps futuros (sin especificación todavía):
-- **10.x — Prefab System:** Serializable entity templates con JSON
-- **10.x — Networking:** P2P o cliente/servidor básico para juegos multijugador pequeños
+### FASE 10.x — Networking (Cliente/Servidor) ✅ COMPLETADA
+
+> **Spec:** `docs/specs/phase10-networking.md`
+
+Módulo `Network/` con 35 tests. Comunicación UDP (LiteNetLib) para juegos multijugador pequeños (~64 peers):
+- `NetworkChannel` (enum): Unreliable / ReliableUnordered / ReliableOrdered / Sequenced
+- `INetworkMessage` (interface): contrato de serialización por tipo de mensaje (`MessageId`)
+- `NetworkWriter` / `NetworkReader` (ref struct, Span-based): serialización zero-alloc de primitivas y vectores
+- `NetField` (abstract) + `NetBool/Byte/Int/UInt/Float/Double/Vector2/Vector3/String`: campos reactivos con dirty-flag para delta sync automático (patrón NetInt/NetString)
+- `NetworkServer` (sealed class): escucha conexiones, broadcast, `BroadcastExcept`, handlers tipados, `Poll()` en game loop
+- `NetworkClient` (sealed class): conecta, envía, handlers tipados, `Ping`, `Poll()` en game loop
+- `NetworkManagerBehaviour` (sealed : GameBehaviour): wrapper ECS; modos Server / Client / Host
+- `NetworkIdentity` (sealed : GameBehaviour): gestiona `NetField` registrados, delta sync a 20 Hz, `NetworkId` / `IsOwner` / `IsServer`
+- `NetworkTransformSync` (sealed : GameBehaviour): sync de Transform a 30 Hz con thresholds configurables e interpolación cliente-side
+- `FieldsSyncMessage` / `TransformSyncMessage` / `SpawnEntityMessage` / `DespawnEntityMessage`: mensajes de sistema (IDs 0x0001–0x0004)
+- `NetworkStats` (readonly struct): métricas de red por peer
+- `GameWorld` extendido con `NetworkServer?` y `NetworkClient?`
 
 
 ---

@@ -48,6 +48,18 @@ public sealed class GameWorld
     /// </summary>
     public Audio.AudioMixer? AudioMixer { get; set; }
 
+    /// <summary>
+    /// Gets or sets the network server for this world. Set by <see cref="Network.NetworkManagerBehaviour"/>
+    /// on <c>StartServer</c> or <c>StartHost</c>. Optional — omit for projects without networking.
+    /// </summary>
+    public Network.NetworkServer? NetworkServer { get; set; }
+
+    /// <summary>
+    /// Gets or sets the network client for this world. Set by <see cref="Network.NetworkManagerBehaviour"/>
+    /// on <c>StartClient</c> or <c>StartHost</c>. Optional — omit for projects without networking.
+    /// </summary>
+    public Network.NetworkClient? NetworkClient { get; set; }
+
     // ── Lifecycle ──────────────────────────────────────────────────────────────
 
     /// <summary>Flushes pending creation/destruction then updates all active entities.</summary>
