@@ -393,8 +393,126 @@ Módulo de audio espacial 2.5D con 67 tests:
 - `AudioController` extendido con `ListenerPosition` (Vector3) y `ApplySpatialAudio(instance, emitter)`
 - `GameWorld` extendido con `AudioController?` y `AudioMixer?`
 
+### FASE 10.x — Animation System ✅ COMPLETADA
+
+> **Objetivo:** Extender el sistema de animación de sprites existente con control de reproducción, integración ECS y una máquina de estados sencilla. No se rompe la API actual.
+
+#### Contexto — infraestructura existente
+
+En `Graphics/Sprites/` ya existen:
+- `Animation` — clip de frames con delay uniforme
+- `AnimatedSprite : Sprite` — reproduce un `Animation`, cicla frames
+- `TextureAtlas` — gestión de regiones y animaciones, carga XML
+
+Las mejoras añaden capacidades sin eliminar ninguna firma pública.
+
+---
+
+#### Milestone 10.x.1 — Extensión de clases existentes
+
+**`Graphics/Sprites/Animation.cs`** — **MODIFICAR**
+
+- `Name` (string, default `""`) — identificador opcional del clip
+- `IsLooping` (bool, default `true`) — si `false`, se detiene en el último frame
+- `SpeedMultiplier` (float, default `1.0f`) — multiplicador de velocidad del clip
+
+**`Graphics/Sprites/AnimatedSprite.cs`** — **MODIFICAR**
+
+- `IsPlaying` (bool, readonly) — `true` si la animación está en reproducción activa
+- `IsComplete` (bool, readonly) — `true` cuando una animación no-looping termina
+- `PlaybackSpeed` (float, default `1.0f`) — multiplicador de velocidad global; se aplica sobre `Animation.SpeedMultiplier`
+- `OnComplete` (Action?) — callback invocado una sola vez cuando una animación no-looping llega al último frame
+- `Play()` — inicia o reanuda; si `IsComplete`, resetea al frame 0
+- `Pause()` — congela el frame actual sin resetear
+- `Stop()` — para y resetea al frame 0; limpia `IsComplete`
+- `Resume()` — alias de `Play()`; reanuda desde el frame actual
+
+> `Update(GameTime)` solo avanza frames si `IsPlaying == true`. Cuando `Animation.IsLooping == false` y se llega al último frame, se dispara `OnComplete` (una sola vez), `IsPlaying` pasa a `false` e `IsComplete` a `true`.
+
+---
+
+#### Milestone 10.x.2 — AnimatedSpriteBehaviour (integración ECS)
+
+**`Graphics/Sprites/AnimatedSpriteBehaviour.cs`** — **NUEVO** `sealed class AnimatedSpriteBehaviour : GameBehaviour`
+
+Gap actual: `AnimatedSprite` es independiente del ECS y requiere llamadas manuales a `Update`/`Draw`.
+
+- `AnimatedSprite Sprite { get; }` — instancia pre-creada en `Awake()`
+- `override void Update(GameTime gameTime)` — llama a `Sprite.Update(gameTime)`
+- `void Draw(SpriteBatch spriteBatch)` — llama a `Sprite.Draw(spriteBatch, Entity.Transform.Position2d)`
+- `void Play(Animation animation)` — azúcar: `Sprite.Animation = animation; Sprite.Play()`
+
+> Los usuarios adjuntan este behaviour a un `GameEntity` y acceden a la animación vía `entity.GetComponent<AnimatedSpriteBehaviour>().Play(animation)`.
+
+---
+
+#### Milestone 10.x.3 — AnimationStateMachine
+
+**`Graphics/Sprites/AnimationStateMachine.cs`** — **NUEVO** `sealed class AnimationStateMachine`
+
+- `_states` (Dictionary<string, Animation>, capacidad 8 pre-allocated)
+- `_sprite` (AnimatedSprite, instancia interna) — no expuesto; encapsulado
+- `CurrentState` (string?, readonly) — nombre del estado activo
+- `Register(string name, Animation animation)` — registra un estado; lanza `ArgumentException` si ya existe
+- `Unregister(string name)` — elimina; no lanza si no existe
+- `Play(string name)` — cambia al estado nombrado; resetea a frame 0 si el estado es diferente; no-op si ya está en ese estado; lanza `KeyNotFoundException` si no existe
+- `Update(GameTime)` — delega a `_sprite.Update(gameTime)`
+- `Draw(SpriteBatch spriteBatch, Vector2 position)` — dibuja el frame actual de `_sprite`
+
+> Sin blending en esta iteración — las transiciones son inmediatas (cut). El blending puede añadirse en una fase posterior si el proyecto lo requiere.
+
+---
+
+#### Milestone 10.x.4 — AnimationStateMachineBehaviour (integración ECS)
+
+**`Graphics/Sprites/AnimationStateMachineBehaviour.cs`** — **NUEVO** `sealed class AnimationStateMachineBehaviour : GameBehaviour`
+
+- `StateMachine` (AnimationStateMachine, readonly) — instancia pre-creada en `Awake()`
+- `override void Update(GameTime gameTime)` — llama a `StateMachine.Update(gameTime)`
+- `void Draw(SpriteBatch spriteBatch)` — llama a `StateMachine.Draw(spriteBatch, Entity.Transform.Position2d)`
+- `void Play(string stateName)` — azúcar para `StateMachine.Play(stateName)`
+- `string? CurrentState` — delega a `StateMachine.CurrentState`
+
+---
+
+#### Tests esperados
+
+`UnitTests/Graphics/Sprites/AnimatedSpriteTests.cs`
+- `Update_WhenNotLooping_StopsOnLastFrame`
+- `Update_WhenNotLooping_InvokesOnComplete`
+- `Update_WhenLooping_WrapsToFirstFrame`
+- `Pause_FreezesCurrentFrame`
+- `Stop_ResetsToFrame0AndClearsIsComplete`
+- `PlaybackSpeed_DoublesFrameRate`
+
+`UnitTests/Graphics/Sprites/AnimationStateMachineTests.cs`
+- `Play_SwitchesCurrentState`
+- `Play_SameState_DoesNotResetFrame`
+- `Register_DuplicateName_ThrowsArgumentException`
+- `Play_UnknownName_ThrowsKeyNotFoundException`
+- `Update_WithNoCurrentState_DoesNotThrow`
+
+---
+
+#### Estructura de carpetas
+
+```
+src/Library/Alca.MonoGame.Kernel/
+└── Graphics/
+    └── Sprites/
+        ├── Animation.cs                          (modificado)
+        ├── AnimatedSprite.cs                     (modificado)
+        ├── AnimatedSpriteBehaviour.cs            (nuevo)
+        ├── AnimationStateMachine.cs              (nuevo)
+        ├── AnimationStateMachineBehaviour.cs     (nuevo)
+        ├── Sprite.cs
+        ├── TextureAtlas.cs
+        └── TextureRegion.cs
+```
+
+---
+
 Ideas para roadmaps futuros (sin especificación todavía):
-- **10.x — Animation System:** Sprite animation clips, Animation State Machine, blending
 - **10.x — Prefab System:** Serializable entity templates con JSON
 - **10.x — Networking:** P2P o cliente/servidor básico para juegos multijugador pequeños
 
