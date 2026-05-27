@@ -15,12 +15,57 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
 
     #endregion
 
+    #region Inner overlay element
+
+    private sealed class DropdownOverlay : UIElement
+    {
+        private readonly Dropdown _owner;
+
+        internal DropdownOverlay(Dropdown owner) => _owner = owner;
+
+        public override void Measure(Vector2 availableSize) { }
+
+        public override void Draw(SpriteBatch spriteBatch)
+        {
+            if (!IsVisible || _owner.Pixel is null || _owner.Font is null) return;
+
+            float opacity = _owner.EffectiveOpacity;
+
+            // Background
+            spriteBatch.Draw(_owner.Pixel, Bounds, _owner.ListBackgroundColor * opacity);
+
+            // Items: highlight background then text, drawn in correct Z-order
+            for (int i = 0; i < _owner._options.Count; i++)
+            {
+                Rectangle itemBounds = new(
+                    Bounds.X,
+                    Bounds.Y + i * _owner.ItemHeight,
+                    Bounds.Width,
+                    _owner.ItemHeight);
+
+                if (i == _owner._highlightedIndex)
+                    spriteBatch.Draw(_owner.Pixel, itemBounds, _owner.HighlightColor * opacity);
+                else if (i == _owner._selectedIndex)
+                    spriteBatch.Draw(_owner.Pixel, itemBounds, _owner.SelectedColor * opacity);
+
+                var textPos = new Vector2(
+                    itemBounds.X + TextPadding,
+                    itemBounds.Y + (itemBounds.Height - _owner.Font.LineSpacing) / 2f);
+                spriteBatch.DrawString(_owner.Font, _owner._options[i], textPos, _owner.TextColor * opacity);
+            }
+
+            // Border drawn last so it is not overwritten by item backgrounds
+            DrawHelper.DrawBorder(_owner.Pixel, spriteBatch, Bounds, _owner.BorderColor * opacity, 1);
+        }
+    }
+
+    #endregion
+
     #region Fields
 
     private readonly List<string> _options = new(8);
     private readonly UIOverlayManager _overlayManager;
-    private readonly Panel _overlayPanel;
-    private readonly List<Label> _itemLabels = new(8);
+    private readonly DropdownOverlay _overlay;
 
     private bool _isExpanded;
     private bool _isHovered;
@@ -32,6 +77,7 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
 
     private KeyboardState _prevKeyState;
     private GamePadState _prevGamePadState;
+    private MouseState _prevMouseState;
 
     #endregion
 
@@ -106,11 +152,7 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
     public Dropdown(UIOverlayManager overlayManager)
     {
         _overlayManager = overlayManager;
-        _overlayPanel = new Panel
-        {
-            IsVisible = false,
-            IsEnabled = false,
-        };
+        _overlay = new DropdownOverlay(this) { IsVisible = false, IsEnabled = false };
     }
 
     #endregion
@@ -118,21 +160,12 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
     #region Items
 
     /// <summary>Appends a string option to the list.</summary>
-    public void AddItem(string text)
-    {
-        _options.Add(text);
-        var label = new Label { Text = text, Font = Font, Color = TextColor };
-        _itemLabels.Add(label);
-        _overlayPanel.Add(label);
-    }
+    public void AddItem(string text) => _options.Add(text);
 
     /// <summary>Removes all options and resets selection.</summary>
     public void ClearItems()
     {
         _options.Clear();
-        _itemLabels.Clear();
-        while (_overlayPanel.ChildrenReadOnly.Count > 0)
-            _overlayPanel.Remove(_overlayPanel.ChildrenReadOnly[0]);
         _selectedIndex = -1;
         _highlightedIndex = -1;
     }
@@ -141,17 +174,16 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
 
     #region Open / Close
 
-    /// <summary>Expands the item list, registering the overlay panel with the UIOverlayManager.</summary>
+    /// <summary>Expands the item list, registering the overlay with the UIOverlayManager.</summary>
     public void Open()
     {
         if (_isExpanded || _options.Count == 0) return;
         _isExpanded = true;
         _highlightedIndex = _selectedIndex >= 0 ? _selectedIndex : 0;
         RebuildListBounds();
-        ArrangeItemLabels();
-        _overlayPanel.IsVisible = true;
-        _overlayPanel.IsEnabled = true;
-        _overlayManager.Show(_overlayPanel);
+        _overlay.IsVisible = true;
+        _overlay.IsEnabled = true;
+        _overlayManager.Show(_overlay);
     }
 
     /// <summary>Collapses the item list, removing the overlay from the UIOverlayManager.</summary>
@@ -159,9 +191,9 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
     {
         if (!_isExpanded) return;
         _isExpanded = false;
-        _overlayPanel.IsVisible = false;
-        _overlayPanel.IsEnabled = false;
-        _overlayManager.Hide(_overlayPanel);
+        _overlay.IsVisible = false;
+        _overlay.IsEnabled = false;
+        _overlayManager.Hide(_overlay);
     }
 
     private void RebuildListBounds()
@@ -173,24 +205,7 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
             ? new Rectangle(Bounds.X, Bounds.Y - listHeight, Bounds.Width, listHeight)
             : new Rectangle(Bounds.X, Bounds.Bottom, Bounds.Width, listHeight);
 
-        _overlayPanel.Arrange(_listBounds);
-        _overlayPanel.BackgroundColor = ListBackgroundColor;
-        _overlayPanel.BorderColor = BorderColor;
-        _overlayPanel.BorderThickness = 1;
-    }
-
-    private void ArrangeItemLabels()
-    {
-        for (int i = 0; i < _itemLabels.Count; i++)
-        {
-            _itemLabels[i].Font = Font;
-            _itemLabels[i].Color = TextColor;
-            _itemLabels[i].Arrange(new Rectangle(
-                _listBounds.X,
-                _listBounds.Y + i * ItemHeight,
-                _listBounds.Width,
-                ItemHeight));
-        }
+        _overlay.Arrange(_listBounds);
     }
 
     #endregion
@@ -220,23 +235,59 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
     {
         if (!IsEnabled) return;
 
-        // Handle clicks on overlay items
+        MouseState ms = Mouse.GetState();
+
         if (_isExpanded)
         {
-            MouseState ms = Mouse.GetState();
             Point mousePos = ms.Position;
+            bool justClicked = ms.LeftButton == ButtonState.Pressed
+                            && _prevMouseState.LeftButton == ButtonState.Released;
 
-            // Update highlighted item based on hover
-            _highlightedIndex = -1;
-            for (int i = 0; i < _itemLabels.Count; i++)
+            if (justClicked)
             {
-                if (_itemLabels[i].Bounds.Contains(mousePos))
+                bool hitItem = false;
+                for (int i = 0; i < _options.Count; i++)
                 {
-                    _highlightedIndex = i;
-                    break;
+                    Rectangle itemBounds = new(
+                        _listBounds.X,
+                        _listBounds.Y + i * ItemHeight,
+                        _listBounds.Width,
+                        ItemHeight);
+
+                    if (itemBounds.Contains(mousePos))
+                    {
+                        SelectedIndex = i;
+                        Close();
+                        hitItem = true;
+                        break;
+                    }
+                }
+
+                // Click outside both header and list closes the dropdown
+                if (!hitItem && !Bounds.Contains(mousePos))
+                    Close();
+            }
+            else
+            {
+                _highlightedIndex = -1;
+                for (int i = 0; i < _options.Count; i++)
+                {
+                    Rectangle itemBounds = new(
+                        _listBounds.X,
+                        _listBounds.Y + i * ItemHeight,
+                        _listBounds.Width,
+                        ItemHeight);
+
+                    if (itemBounds.Contains(mousePos))
+                    {
+                        _highlightedIndex = i;
+                        break;
+                    }
                 }
             }
         }
+
+        _prevMouseState = ms;
 
         if (_isFocused)
         {
@@ -311,41 +362,16 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
             spriteBatch.DrawString(Font, SelectedText, textPos, TextColor * opacity);
         }
 
-        // Arrow indicator
+        // Arrow indicator using ASCII characters (universally available in SpriteFont)
         if (Font is not null)
         {
-            string arrow = _isExpanded ? "▲" : "▼";
+            string arrow = _isExpanded ? "^" : "v";
             Vector2 arrowSize = Font.MeasureString(arrow);
             var arrowPos = new Vector2(Bounds.Right - ArrowWidth, Bounds.Y + (Bounds.Height - arrowSize.Y) / 2f);
             spriteBatch.DrawString(Font, arrow, arrowPos, TextColor * opacity);
         }
 
-        // Overlay panel draws itself (managed by UIOverlayManager),
-        // but we still need to draw item highlights here for when it's visible
-        if (_isExpanded)
-        {
-            DrawExpandedList(spriteBatch, opacity);
-        }
-    }
-
-    private void DrawExpandedList(SpriteBatch spriteBatch, float opacity)
-    {
-        // Background + border already drawn by Panel (UIOverlayManager calls _overlayPanel.Draw)
-        for (int i = 0; i < _itemLabels.Count; i++)
-        {
-            Rectangle itemBounds = _itemLabels[i].Bounds;
-
-            Color bg;
-            if (i == _highlightedIndex)
-                bg = HighlightColor;
-            else if (i == _selectedIndex)
-                bg = SelectedColor;
-            else
-                bg = Color.Transparent;
-
-            if (bg != Color.Transparent)
-                spriteBatch.Draw(Pixel!, itemBounds, bg * opacity);
-        }
+        // Expanded list is drawn by DropdownOverlay via UIOverlayManager (correct Z-order)
     }
 
     #endregion
@@ -366,30 +392,10 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
     {
         if (!IsEnabled) return;
 
-        // Click on the header
         if (Bounds.Contains(args.Position))
         {
             if (_isExpanded) Close(); else Open();
             args.Handled = true;
-            return;
-        }
-
-        // Click on an overlay item
-        if (_isExpanded)
-        {
-            for (int i = 0; i < _itemLabels.Count; i++)
-            {
-                if (_itemLabels[i].Bounds.Contains(args.Position))
-                {
-                    SelectedIndex = i;
-                    Close();
-                    args.Handled = true;
-                    return;
-                }
-            }
-
-            // Click outside — close without selection change
-            Close();
         }
     }
 
