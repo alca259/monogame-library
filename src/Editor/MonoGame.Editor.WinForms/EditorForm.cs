@@ -8,7 +8,7 @@ public sealed partial class EditorForm : Form
     private enum SceneViewMode
     {
         TwoD,
-        ThreeD,
+        TwoPointFiveD,
     }
 
     private readonly EditorContext _context = null!;
@@ -189,6 +189,7 @@ public sealed partial class EditorForm : Form
                 case Keys.W: SetGizmoMode(GizmoMode.Move);   e.Handled = true; break;
                 case Keys.E: SetGizmoMode(GizmoMode.Rotate); e.Handled = true; break;
                 case Keys.R: SetGizmoMode(GizmoMode.Scale);  e.Handled = true; break;
+                case Keys.T: SetGizmoMode(GizmoMode.Rect);   e.Handled = true; break;
                 case Keys.H: ToggleHandTool();               e.Handled = true; break;
                 case Keys.G: _gizmoCtrl.ShowGrid = !_gizmoCtrl.ShowGrid; e.Handled = true; break;
             }
@@ -382,6 +383,7 @@ public sealed partial class EditorForm : Form
             _ when ReferenceEquals(sender, _moveModeButton)   => GizmoMode.Move,
             _ when ReferenceEquals(sender, _rotateModeButton) => GizmoMode.Rotate,
             _ when ReferenceEquals(sender, _scaleModeButton)  => GizmoMode.Scale,
+            _ when ReferenceEquals(sender, _rectModeButton)   => GizmoMode.Rect,
             _                                                  => GizmoMode.Select,
         };
         SetGizmoMode(mode);
@@ -394,6 +396,7 @@ public sealed partial class EditorForm : Form
         _moveModeButton.Checked   = mode == GizmoMode.Move;
         _rotateModeButton.Checked = mode == GizmoMode.Rotate;
         _scaleModeButton.Checked  = mode == GizmoMode.Scale;
+        _rectModeButton.Checked   = mode == GizmoMode.Rect;
 
         if (_handToolEnabled)
             ToggleHandTool(false);
@@ -412,13 +415,14 @@ public sealed partial class EditorForm : Form
     private void OnSceneViewModeClick(object? sender, EventArgs e)
     {
         _sceneViewMode = _sceneViewMode == SceneViewMode.TwoD
-            ? SceneViewMode.ThreeD
+            ? SceneViewMode.TwoPointFiveD
             : SceneViewMode.TwoD;
 
         _sceneViewModeButton.Text = _sceneViewMode == SceneViewMode.TwoD
             ? "View: 2D"
-            : "View: 3D";
+            : "View: 2.5D";
 
+        _gizmoCtrl.IsDepthMode = _sceneViewMode == SceneViewMode.TwoPointFiveD;
         _viewport.Invalidate();
     }
 
@@ -1525,65 +1529,15 @@ public sealed partial class EditorForm : Form
         Viewport vp = new(0, 0, w, h);
         Matrix cameraTransform = _viewport.Camera.GetTransformMatrix(vp);
 
-        if (_sceneViewMode == SceneViewMode.TwoD)
-        {
-            // Render edit-mode sprite previews before gizmo overlays.
-            _editRenderer ??= new EditModeRenderer(_context);
-            if (!_editRenderer.IsInitialized)
-                _editRenderer.Initialize(e.GraphicsDevice);
-            if (_context.ActiveScene is not null)
-                _editRenderer.DrawScene(_context.ActiveScene, cameraTransform);
-        }
-        else
-        {
-            DrawScenePerspectivePreview(e.GraphicsDevice, w, h);
-        }
+        // Both 2D and 2.5D use the orthographic edit-mode renderer.
+        _editRenderer ??= new EditModeRenderer(_context);
+        if (!_editRenderer.IsInitialized)
+            _editRenderer.Initialize(e.GraphicsDevice);
+        if (_context.ActiveScene is not null)
+            _editRenderer.DrawScene(_context.ActiveScene, cameraTransform);
 
-        _gizmoRenderer.Draw(_context.SelectedObject, cameraTransform, w, h);
-    }
-
-    private void DrawScenePerspectivePreview(GraphicsDevice gd, int width, int height)
-    {
-        if (width <= 0 || height <= 0)
-            return;
-
-        gd.DepthStencilState = DepthStencilState.Default;
-        gd.RasterizerState = RasterizerState.CullNone;
-
-        VertexPositionColor[] vertices =
-        [
-            // X axis
-            new VertexPositionColor(new Vector3(-200f, 0f, 0f), new Microsoft.Xna.Framework.Color(140, 40, 40)),
-            new VertexPositionColor(new Vector3( 200f, 0f, 0f), new Microsoft.Xna.Framework.Color(240, 90, 90)),
-            // Y axis
-            new VertexPositionColor(new Vector3(0f, -200f, 0f), new Microsoft.Xna.Framework.Color(40, 140, 40)),
-            new VertexPositionColor(new Vector3(0f,  200f, 0f), new Microsoft.Xna.Framework.Color(90, 240, 90)),
-            // Z axis
-            new VertexPositionColor(new Vector3(0f, 0f, -200f), new Microsoft.Xna.Framework.Color(40, 90, 170)),
-            new VertexPositionColor(new Vector3(0f, 0f,  200f), new Microsoft.Xna.Framework.Color(90, 170, 255)),
-        ];
-
-        Matrix world = Matrix.Identity;
-        Matrix view = Matrix.CreateLookAt(new Vector3(180f, 180f, 180f), Vector3.Zero, Vector3.Up);
-        Matrix projection = Matrix.CreatePerspectiveFieldOfView(
-            MathHelper.PiOver4,
-            width / (float)height,
-            0.1f,
-            5000f);
-
-        using BasicEffect effect = new(gd)
-        {
-            VertexColorEnabled = true,
-            World = world,
-            View = view,
-            Projection = projection,
-        };
-
-        foreach (EffectPass pass in effect.CurrentTechnique.Passes)
-        {
-            pass.Apply();
-            gd.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 3);
-        }
+        _gizmoRenderer.Draw(_context.SelectedObject, cameraTransform, w, h, _gizmoCtrl.IsDepthMode,
+            _context.ActiveScene?.RootGameObjects);
     }
 
     #endregion

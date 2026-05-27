@@ -34,6 +34,7 @@ partial class EditorForm
     private ToolStripButton _moveModeButton = null!;
     private ToolStripButton _rotateModeButton = null!;
     private ToolStripButton _scaleModeButton = null!;
+    private ToolStripButton _rectModeButton = null!;
     private ToolStripButton _handModeButton = null!;
     private ToolStripSeparator _gizmoSeparator = null!;
     private ToolStripButton _sceneViewModeButton = null!;
@@ -115,6 +116,7 @@ partial class EditorForm
         _moveModeButton           = new ToolStripButton();
         _rotateModeButton         = new ToolStripButton();
         _scaleModeButton          = new ToolStripButton();
+        _rectModeButton           = new ToolStripButton();
         _handModeButton           = new ToolStripButton();
         _gizmoSeparator           = new ToolStripSeparator();
         _sceneViewModeButton      = new ToolStripButton();
@@ -329,7 +331,7 @@ partial class EditorForm
         // _gizmoStrip — horizontal, auto-sizes to button content
         _gizmoStrip.AutoSize = true;
         _gizmoStrip.GripStyle = ToolStripGripStyle.Hidden;
-        _gizmoStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _selectModeButton, _moveModeButton, _rotateModeButton, _scaleModeButton, _handModeButton, _gizmoSeparator, _sceneViewModeButton });
+        _gizmoStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _selectModeButton, _moveModeButton, _rotateModeButton, _scaleModeButton, _rectModeButton, _handModeButton, _gizmoSeparator, _sceneViewModeButton });
         _gizmoStrip.LayoutStyle = ToolStripLayoutStyle.HorizontalStackWithOverflow;
         _gizmoStrip.Location = new System.Drawing.Point(0, 0);
         _gizmoStrip.Name = "_gizmoStrip";
@@ -374,6 +376,15 @@ partial class EditorForm
         _scaleModeButton.ToolTipText = "Scale (R)";
         _scaleModeButton.Click += OnGizmoModeClick;
 
+        // _rectModeButton
+        _rectModeButton.CheckOnClick = true;
+        _rectModeButton.DisplayStyle = ToolStripItemDisplayStyle.Text;
+        _rectModeButton.Name = "_rectModeButton";
+        _rectModeButton.Size = new System.Drawing.Size(40, 22);
+        _rectModeButton.Text = "T Rect";
+        _rectModeButton.ToolTipText = "Rect (T)";
+        _rectModeButton.Click += OnGizmoModeClick;
+
         // _handModeButton
         _handModeButton.CheckOnClick = true;
         _handModeButton.DisplayStyle = ToolStripItemDisplayStyle.Text;
@@ -392,7 +403,7 @@ partial class EditorForm
         _sceneViewModeButton.Name = "_sceneViewModeButton";
         _sceneViewModeButton.Size = new System.Drawing.Size(58, 22);
         _sceneViewModeButton.Text = "View: 2D";
-        _sceneViewModeButton.ToolTipText = "Toggle Scene View 2D/3D";
+        _sceneViewModeButton.ToolTipText = "Toggle Scene View 2D/2.5D";
         _sceneViewModeButton.Click += OnSceneViewModeClick;
 
         // _playbackStrip — positioned at runtime in center of full toolbar width

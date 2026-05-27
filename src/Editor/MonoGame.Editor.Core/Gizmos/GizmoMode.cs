@@ -14,4 +14,7 @@ public enum GizmoMode
 
     /// <summary>Scale the selected object uniformly or per-axis.</summary>
     Scale,
+
+    /// <summary>Rectangle layout tool; shows dashed bounding box, no transform handles.</summary>
+    Rect,
 }

@@ -46,6 +46,17 @@ public sealed class SceneCodeGenerator : ICodeGenService
                 await CsprojFileEditor.EnsureFileIncludedAsync(project.GameCsprojPath, outputPath)
                     .ConfigureAwait(false);
 
+            // Create the manual partial class stub only on first generation — never overwrite.
+            string stubPath = Path.Combine(outputDir, $"{scene.Name}Scene.cs");
+            if (!File.Exists(stubPath))
+            {
+                await File.WriteAllTextAsync(stubPath, BuildSceneStubSource(scene, settings),
+                    Encoding.UTF8, cancellationToken).ConfigureAwait(false);
+                if (!string.IsNullOrEmpty(project.GameCsprojPath))
+                    await CsprojFileEditor.EnsureFileIncludedAsync(project.GameCsprojPath, stubPath)
+                        .ConfigureAwait(false);
+            }
+
             return new CodeGenResult(true, outputPath);
         }
         catch (Exception ex)
@@ -119,9 +130,30 @@ public sealed class SceneCodeGenerator : ICodeGenService
         for (int i = 0; i < roots.Count; i++)
             AppendEntity(sb, roots[i], null, names, indent: "        ");
 
+        sb.AppendLine("        OnWorldInitialized();");
         sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    /// <summary>Called after all scene entities are created. Implement in the manual partial class.</summary>");
+        sb.AppendLine("    partial void OnWorldInitialized();");
         sb.AppendLine("}");
 
+        return sb.ToString();
+    }
+
+    private static string BuildSceneStubSource(EditorScene scene, ProjectSettings settings)
+    {
+        StringBuilder sb = new();
+        sb.AppendLine("// Custom scene initialization — this file is NEVER regenerated. Edit freely.");
+        sb.AppendLine($"namespace {settings.RootNamespace}.Scenes;");
+        sb.AppendLine();
+        sb.AppendLine($"public sealed partial class {scene.Name}Scene");
+        sb.AppendLine("{");
+        sb.AppendLine("    partial void OnWorldInitialized()");
+        sb.AppendLine("    {");
+        sb.AppendLine("        // Add custom entity setup or world configuration here.");
+        sb.AppendLine("        // Called after all entities defined in the editor scene are created.");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
         return sb.ToString();
     }
 

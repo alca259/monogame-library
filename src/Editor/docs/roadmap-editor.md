@@ -1381,3 +1381,41 @@ private static void ApplyWorldConfig(GameWorld world, EditorWorldConfig? cfg)
 | **17** | `Models/EditorWorldConfig.cs` (nuevo), `Models/EditorScene.cs`, `CodeGen/SceneCodeGenerator.cs` | `Dialogs/WorldConfigDialog.cs+Designer` (nuevo), `EditorForm.cs` |
 | **18b** | `CodeGen/SceneCodeGenerator.cs` | — |
 | **19** | `PlayMode/SceneToWorldConverter.cs` | — |
+
+---
+
+## Fase 20 — Vista 2.5D y herramienta Rect ✅ COMPLETADA
+
+### Objetivo
+
+Eliminar el placeholder `SceneViewMode.ThreeD` (código muerto), añadir `SceneViewMode.TwoPointFiveD` con handle de profundidad Z en el gizmo Move para edición de parallax, y completar QWERTY añadiendo `GizmoMode.Rect` (tecla T) con bounding box punteado.
+
+### Proyecto: MonoGame.Editor.Core
+
+- `Gizmos/GizmoMode.cs` — añadido valor `Rect`
+- `Gizmos/GizmoDragAxis.cs` — añadido valor `Z`
+- `Gizmos/GizmoController.cs` — nuevas constantes `ZHandleOffsetX`/`ZHandleSize`, propiedad `IsDepthMode`, campo `_objPosStartZ`, soporte drag eje Z, `HitTestMoveWithZ`, `HitTestZHandle`
+- `Models/EditorGameObject.cs` — añadida propiedad `PositionZ: float` con `[JsonIgnore(Condition = WhenWritingDefault)]` (compatibilidad hacia atrás garantizada)
+- `Commands/MoveEntityZCommand.cs` — **NUEVO** — undo/redo de cambio de profundidad Z
+
+### Proyecto: MonoGame.Editor.WinForms
+
+- `Gizmos/GizmoRenderer.cs` — nuevo color `_axisZColor`/`_rectBoundsColor`, `DrawZHandle`, `DrawDashedBoundingBox`, `DrawDashedLine`; firma `Draw` acepta `bool isDepthMode`
+- `EditorForm.cs` — eliminado `DrawScenePerspectivePreview` y rama `ThreeD`; `SceneViewMode` ahora `{TwoD, TwoPointFiveD}`; tecla T mapea a `GizmoMode.Rect`; botón `_rectModeButton` añadido
+- `EditorForm.Designer.cs` — declaración, instanciación y configuración de `_rectModeButton`; tooltip actualizado
+- `Panels/InspectorPanel.cs` — fila "Depth Z" en Transform section, campo `_positionZInput`, refresh en `UpdateTransformInputsFromCurrentObject`
+
+### Archivos modificados (resumen)
+
+| Archivo | Tipo |
+|---------|------|
+| `Core/Gizmos/GizmoMode.cs` | Modificado |
+| `Core/Gizmos/GizmoDragAxis.cs` | Modificado |
+| `Core/Gizmos/GizmoController.cs` | Modificado |
+| `Core/Models/EditorGameObject.cs` | Modificado |
+| `Core/Commands/MoveEntityZCommand.cs` | **Nuevo** |
+| `WinForms/Gizmos/GizmoRenderer.cs` | Modificado |
+| `WinForms/EditorForm.cs` | Modificado |
+| `WinForms/EditorForm.Designer.cs` | Modificado |
+| `WinForms/Panels/InspectorPanel.cs` | Modificado |
+

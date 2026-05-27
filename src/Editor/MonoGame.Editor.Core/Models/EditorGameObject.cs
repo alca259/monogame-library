@@ -15,6 +15,10 @@ public sealed class EditorGameObject
     /// <summary>World-space position of this object.</summary>
     public EditorVector2 Position { get; set; } = EditorVector2.Zero;
 
+    /// <summary>Depth in 2.5D mode (parallax ordering). Omitted from JSON when zero.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public float PositionZ { get; set; }
+
     /// <summary>Rotation in degrees.</summary>
     public float Rotation { get; set; }
 

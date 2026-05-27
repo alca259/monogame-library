@@ -7,6 +7,7 @@ internal enum GizmoDragAxis
     X,
     Y,
     XY,
+    Z,
     Rotate,
     ScaleX,
     ScaleY,

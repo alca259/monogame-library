@@ -13,14 +13,18 @@ public sealed class GizmoRenderer : IDisposable
     private static readonly XnaColor _gridColor       = new(70,  70,  70,  180);
     private static readonly XnaColor _originAxisColor = new(140, 140, 140, 220);
     private static readonly XnaColor _boundsColor     = new(255, 255, 255, 110);
-    private static readonly XnaColor _axisXColor      = new(220, 60, 60);
-    private static readonly XnaColor _axisYColor      = new(60, 200, 60);
+    private static readonly XnaColor _dimBoundsColor  = new(180, 180, 180, 40);
+    private static readonly XnaColor _axisXColor      = new(220, 60,  60);
+    private static readonly XnaColor _axisYColor      = new(60,  200, 60);
     private static readonly XnaColor _axisXYColor     = new(230, 200, 40);
+    private static readonly XnaColor _axisZColor      = new(60,  120, 240);
     private static readonly XnaColor _rotateColor     = new(255, 210, 80);
+    private static readonly XnaColor _rectBoundsColor = new(60,  200, 255, 180);
 
     // ── Drawing constants ────────────────────────────────────────────────────
-    private const float LineThickness = 2.5f;
-    private const int   MaxGridLines  = 100;
+    private const float  LineThickness          = 2.5f;
+    private const int    MaxGridLines           = 100;
+    private const string SpriteRendererSuffix   = "SpriteRendererBehaviour";
 
     // ── Dependencies ─────────────────────────────────────────────────────────
     private readonly GizmoController _ctrl;
@@ -44,7 +48,8 @@ public sealed class GizmoRenderer : IDisposable
     /// Draws grid, bounding box, and gizmo handles for the current frame.
     /// Must be called from the render thread outside any active SpriteBatch pass.
     /// </summary>
-    public void Draw(EditorGameObject? selected, Matrix cameraTransform, int viewW, int viewH)
+    public void Draw(EditorGameObject? selected, Matrix cameraTransform, int viewW, int viewH,
+                     bool isDepthMode = false, IReadOnlyList<EditorGameObject>? allRoots = null)
     {
         if (_pixel == null || _spriteBatch == null) return;
 
@@ -66,11 +71,10 @@ public sealed class GizmoRenderer : IDisposable
             }
         }
 
-        // ── Pass 2: screen-space bounding box + handles ──────────────────────
-        if (selected == null) return;
+        // ── Pass 2: screen-space bounding boxes + handles ────────────────────
+        bool hasDimWork = allRoots is { Count: > 0 };
+        if (selected == null && !hasDimWork) return;
 
-        XnaVector2 objScreen = XnaVector2.Transform(
-            new XnaVector2(selected.Position.X, selected.Position.Y), cameraTransform);
         float zoom = cameraTransform.M11;
 
         _spriteBatch.Begin(
@@ -78,10 +82,27 @@ public sealed class GizmoRenderer : IDisposable
             blendState: BlendState.AlphaBlend);
         try
         {
-            DrawBoundingBox(objScreen, selected.Scale.X, selected.Scale.Y, zoom);
+            // Dim outlines for every unselected object that has no visual representation.
+            if (hasDimWork)
+                DrawDimObjectBoxes(allRoots!, selected, cameraTransform, zoom);
 
-            if (_ctrl.Mode != GizmoMode.Select)
-                DrawGizmoHandles(_ctrl.Mode, objScreen, selected.Rotation);
+            if (selected != null)
+            {
+                XnaVector2 objScreen = XnaVector2.Transform(
+                    new XnaVector2(selected.Position.X, selected.Position.Y), cameraTransform);
+
+                if (_ctrl.Mode == GizmoMode.Rect)
+                {
+                    DrawDashedBoundingBox(objScreen, selected.Scale.X, selected.Scale.Y, zoom);
+                }
+                else
+                {
+                    DrawBoundingBox(objScreen, selected.Scale.X, selected.Scale.Y, zoom);
+
+                    if (_ctrl.Mode != GizmoMode.Select)
+                        DrawGizmoHandles(_ctrl.Mode, objScreen, selected.Rotation, isDepthMode);
+                }
+            }
         }
         catch { /* ignore handle draw errors */ }
         finally
@@ -143,13 +164,76 @@ public sealed class GizmoRenderer : IDisposable
         DrawLine(bl, tl, _boundsColor);
     }
 
+    private void DrawDimBoundingBox(XnaVector2 centre, float scaleX, float scaleY, float zoom)
+    {
+        float halfW = scaleX * GizmoController.DefaultBoundsHalfSize * zoom;
+        float halfH = scaleY * GizmoController.DefaultBoundsHalfSize * zoom;
+
+        XnaVector2 tl = centre + new XnaVector2(-halfW, -halfH);
+        XnaVector2 tr = centre + new XnaVector2( halfW, -halfH);
+        XnaVector2 br = centre + new XnaVector2( halfW,  halfH);
+        XnaVector2 bl = centre + new XnaVector2(-halfW,  halfH);
+
+        DrawLine(tl, tr, _dimBoundsColor);
+        DrawLine(tr, br, _dimBoundsColor);
+        DrawLine(br, bl, _dimBoundsColor);
+        DrawLine(bl, tl, _dimBoundsColor);
+    }
+
+    private void DrawDimObjectBoxes(IReadOnlyList<EditorGameObject> objects,
+        EditorGameObject? selected, Matrix cameraTransform, float zoom)
+    {
+        for (int i = 0; i < objects.Count; i++)
+        {
+            EditorGameObject obj = objects[i];
+            if (obj.Active && !ReferenceEquals(obj, selected) && !HasVisualRepresentation(obj))
+            {
+                XnaVector2 s = XnaVector2.Transform(
+                    new XnaVector2(obj.Position.X, obj.Position.Y), cameraTransform);
+                DrawDimBoundingBox(s, obj.Scale.X, obj.Scale.Y, zoom);
+            }
+            if (obj.Children.Count > 0)
+                DrawDimObjectBoxes(obj.Children, selected, cameraTransform, zoom);
+        }
+    }
+
+    private static bool HasVisualRepresentation(EditorGameObject obj)
+    {
+        List<EditorBehaviour> behaviours = obj.Behaviours;
+        for (int i = 0; i < behaviours.Count; i++)
+        {
+            if (behaviours[i].TypeName.EndsWith(SpriteRendererSuffix, StringComparison.Ordinal))
+                return true;
+        }
+        return false;
+    }
+
+    private void DrawDashedBoundingBox(XnaVector2 centre, float scaleX, float scaleY, float zoom)
+    {
+        float halfW = scaleX * GizmoController.DefaultBoundsHalfSize * zoom;
+        float halfH = scaleY * GizmoController.DefaultBoundsHalfSize * zoom;
+
+        XnaVector2 tl = centre + new XnaVector2(-halfW, -halfH);
+        XnaVector2 tr = centre + new XnaVector2( halfW, -halfH);
+        XnaVector2 br = centre + new XnaVector2( halfW,  halfH);
+        XnaVector2 bl = centre + new XnaVector2(-halfW,  halfH);
+
+        DrawDashedLine(tl, tr, _rectBoundsColor);
+        DrawDashedLine(tr, br, _rectBoundsColor);
+        DrawDashedLine(br, bl, _rectBoundsColor);
+        DrawDashedLine(bl, tl, _rectBoundsColor);
+    }
+
     // ── Gizmo handles ────────────────────────────────────────────────────────
 
-    private void DrawGizmoHandles(GizmoMode mode, XnaVector2 origin, float rotationDegrees)
+    private void DrawGizmoHandles(GizmoMode mode, XnaVector2 origin, float rotationDegrees, bool isDepthMode)
     {
         switch (mode)
         {
-            case GizmoMode.Move:   DrawMoveGizmo(origin);   break;
+            case GizmoMode.Move:
+                DrawMoveGizmo(origin);
+                if (isDepthMode) DrawZHandle(origin);
+                break;
             case GizmoMode.Rotate: DrawRotateGizmo(origin, rotationDegrees); break;
             case GizmoMode.Scale:  DrawScaleGizmo(origin);  break;
         }
@@ -172,6 +256,30 @@ public sealed class GizmoRenderer : IDisposable
 
         // XY-free square (yellow)
         FillRect(new XnaRect((int)(origin.X + 12), (int)(origin.Y - 28), 16, 16), _axisXYColor);
+    }
+
+    private void DrawZHandle(XnaVector2 origin)
+    {
+        float offsetX = GizmoController.ZHandleOffsetX;
+        float len     = GizmoController.ArrowLength;
+        float hs      = GizmoController.ZHandleSize / 2f;
+
+        XnaVector2 basePoint = new(origin.X + offsetX, origin.Y);
+        XnaVector2 tipPoint  = new(origin.X + offsetX, origin.Y - len);
+
+        // Vertical stem (blue Z)
+        DrawLine(basePoint, tipPoint, _axisZColor, LineThickness);
+
+        // Diamond at tip — 4 segments
+        XnaVector2 dTop   = new(tipPoint.X,       tipPoint.Y - hs);
+        XnaVector2 dRight = new(tipPoint.X + hs,  tipPoint.Y);
+        XnaVector2 dBot   = new(tipPoint.X,        tipPoint.Y + hs);
+        XnaVector2 dLeft  = new(tipPoint.X - hs,  tipPoint.Y);
+
+        DrawLine(dTop,   dRight, _axisZColor, LineThickness);
+        DrawLine(dRight, dBot,   _axisZColor, LineThickness);
+        DrawLine(dBot,   dLeft,  _axisZColor, LineThickness);
+        DrawLine(dLeft,  dTop,   _axisZColor, LineThickness);
     }
 
     private void DrawRotateGizmo(XnaVector2 origin, float rotationDegrees)
@@ -228,6 +336,30 @@ public sealed class GizmoRenderer : IDisposable
             _pixel, from, null, color, angle,
             XnaVector2.Zero, new XnaVector2(length, thickness),
             SpriteEffects.None, 0f);
+    }
+
+    private void DrawDashedLine(XnaVector2 from, XnaVector2 to, XnaColor color,
+        float dashLen = 6f, float gapLen = 4f, float thickness = 1.5f)
+    {
+        if (_pixel == null || _spriteBatch == null) return;
+
+        XnaVector2 delta = to - from;
+        float      total = delta.Length();
+        if (total < 0.001f) return;
+
+        XnaVector2 dir    = delta / total;
+        float      pos    = 0f;
+        bool       doDraw = true;
+
+        while (pos < total)
+        {
+            float segLen = doDraw ? dashLen : gapLen;
+            float segEnd = Math.Min(pos + segLen, total);
+            if (doDraw)
+                DrawLine(from + dir * pos, from + dir * segEnd, color, thickness);
+            pos    = segEnd;
+            doDraw = !doDraw;
+        }
     }
 
     private void FillRect(XnaRect rect, XnaColor color)

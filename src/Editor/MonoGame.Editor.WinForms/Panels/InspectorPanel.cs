@@ -36,6 +36,7 @@ public sealed class InspectorPanel : UserControl
 
     private NumericUpDown? _positionXInput;
     private NumericUpDown? _positionYInput;
+    private NumericUpDown? _positionZInput;
     private NumericUpDown? _rotationInput;
     private NumericUpDown? _scaleXInput;
     private NumericUpDown? _scaleYInput;
@@ -145,6 +146,7 @@ public sealed class InspectorPanel : UserControl
         _scrollPanel.Controls.Clear();
         _positionXInput = null;
         _positionYInput = null;
+        _positionZInput = null;
         _rotationInput = null;
         _scaleXInput = null;
         _scaleYInput = null;
@@ -320,7 +322,7 @@ public sealed class InspectorPanel : UserControl
         GroupBox grp = new GroupBox
         {
             Text    = "Transform",
-            Height  = 24 + RowHeight * 3 + 12,
+            Height  = 24 + RowHeight * 4 + 12,
             Padding = new System.Windows.Forms.Padding(4),
         };
 
@@ -328,11 +330,12 @@ public sealed class InspectorPanel : UserControl
         {
             Dock        = DockStyle.Fill,
             ColumnCount = 2,
-            RowCount    = 3,
+            RowCount    = 4,
             Padding     = new System.Windows.Forms.Padding(0),
         };
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, LabelWidth));
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+        table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
         table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
         table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
         table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
@@ -385,6 +388,19 @@ public sealed class InspectorPanel : UserControl
                     ? new EditorVector2(x, y)
                     : new EditorVector2(obj.Parent.Scale.X * x, obj.Parent.Scale.Y * y)));
             }), 1, 2);
+
+        // Depth Z (2.5D parallax ordering)
+        table.Controls.Add(MakeLabel("Depth Z"), 0, 3);
+        table.Controls.Add(BuildTransformFloatEditor(
+            obj.PositionZ,
+            -10_000f,
+            10_000f,
+            input => _positionZInput = input,
+            v =>
+            {
+                if (_suppressUpdate) return;
+                _context!.Commands.Execute(new MoveEntityZCommand(obj, obj.PositionZ, v));
+            }), 1, 3);
 
         grp.Controls.Add(table);
         return grp;
@@ -442,7 +458,7 @@ public sealed class InspectorPanel : UserControl
         if (_currentObject is null)
             return;
 
-        if (_positionXInput is null || _positionYInput is null || _rotationInput is null || _scaleXInput is null || _scaleYInput is null)
+        if (_positionXInput is null || _positionYInput is null || _rotationInput is null || _scaleXInput is null || _scaleYInput is null || _positionZInput is null)
         {
             RebuildSafe();
             return;
@@ -457,6 +473,7 @@ public sealed class InspectorPanel : UserControl
             SetNumericValue(_rotationInput, _currentObject.LocalRotation);
             SetNumericValue(_scaleXInput, _currentObject.LocalScale.X);
             SetNumericValue(_scaleYInput, _currentObject.LocalScale.Y);
+            SetNumericValue(_positionZInput, _currentObject.PositionZ);
         }
         finally
         {

@@ -23,6 +23,12 @@ public sealed class GizmoController
     /// <summary>Half-size of a default object bounding box in world units (at Scale 1).</summary>
     public const float DefaultBoundsHalfSize = 24f;
 
+    /// <summary>Screen-X offset from the gizmo origin to the Z depth handle stem.</summary>
+    public const float ZHandleOffsetX = ArrowLength + ArrowHeadSize + 14f;
+
+    /// <summary>Size of the Z depth diamond handle in screen pixels.</summary>
+    public const float ZHandleSize = 12f;
+
     private const float HitTolerance = 10f;
 
     // ── Drag state (lock-protected) ──────────────────────────────────────────
@@ -31,6 +37,7 @@ public sealed class GizmoController
     private GizmoDragAxis _dragAxis;
     private float _dragWorldStartX, _dragWorldStartY;
     private float _objPosStartX, _objPosStartY;
+    private float _objPosStartZ;
     private float _objRotStart;
     private float _objScaleStartX, _objScaleStartY;
 
@@ -49,6 +56,9 @@ public sealed class GizmoController
         set => _gridCellSize = Math.Max(1f, value);
     }
 
+    /// <summary>When <c>true</c> (2.5D mode) the Move gizmo exposes a Z-depth handle.</summary>
+    public bool IsDepthMode { get; set; }
+
     private float _gridCellSize = 32f;
 
     // ── Drag API ─────────────────────────────────────────────────────────────
@@ -64,9 +74,9 @@ public sealed class GizmoController
         float clickWorldX,  float clickWorldY,
         EditorGameObject selected)
     {
-        if (Mode == GizmoMode.Select) return false;
+        if (Mode == GizmoMode.Select || Mode == GizmoMode.Rect) return false;
 
-        GizmoDragAxis axis = HitTest(clickScreenX, clickScreenY, objScreenX, objScreenY, Mode);
+        GizmoDragAxis axis = HitTest(clickScreenX, clickScreenY, objScreenX, objScreenY, Mode, IsDepthMode);
         if (axis == GizmoDragAxis.None) return false;
 
         lock (_lock)
@@ -77,6 +87,7 @@ public sealed class GizmoController
             _dragWorldStartY = clickWorldY;
             _objPosStartX    = selected.Position.X;
             _objPosStartY    = selected.Position.Y;
+            _objPosStartZ    = selected.PositionZ;
             _objRotStart     = selected.Rotation;
             _objScaleStartX  = selected.Scale.X;
             _objScaleStartY  = selected.Scale.Y;
@@ -97,7 +108,7 @@ public sealed class GizmoController
     {
         GizmoDragAxis axis;
         float worldStartX, worldStartY;
-        float posStartX, posStartY, rotStart, scaleStartX, scaleStartY;
+        float posStartX, posStartY, posStartZ, rotStart, scaleStartX, scaleStartY;
 
         lock (_lock)
         {
@@ -107,6 +118,7 @@ public sealed class GizmoController
             worldStartY  = _dragWorldStartY;
             posStartX    = _objPosStartX;
             posStartY    = _objPosStartY;
+            posStartZ    = _objPosStartZ;
             rotStart     = _objRotStart;
             scaleStartX  = _objScaleStartX;
             scaleStartY  = _objScaleStartY;
@@ -127,6 +139,11 @@ public sealed class GizmoController
 
             case GizmoDragAxis.XY:
                 selected.Position = new EditorVector2(posStartX + dx, posStartY + dy);
+                break;
+
+            case GizmoDragAxis.Z:
+                // Drag up (decreasing screenY) = increase depth value (further from viewer).
+                selected.PositionZ = posStartZ - dy;
                 break;
 
             case GizmoDragAxis.Rotate:
@@ -175,7 +192,7 @@ public sealed class GizmoController
     {
         bool wasDragging;
         GizmoDragAxis axis;
-        float posStartX, posStartY, rotStart, scaleStartX, scaleStartY;
+        float posStartX, posStartY, posStartZ, rotStart, scaleStartX, scaleStartY;
 
         lock (_lock)
         {
@@ -183,6 +200,7 @@ public sealed class GizmoController
             axis         = _dragAxis;
             posStartX    = _objPosStartX;
             posStartY    = _objPosStartY;
+            posStartZ    = _objPosStartZ;
             rotStart     = _objRotStart;
             scaleStartX  = _objScaleStartX;
             scaleStartY  = _objScaleStartY;
@@ -201,6 +219,8 @@ public sealed class GizmoController
         {
             GizmoDragAxis.X or GizmoDragAxis.Y or GizmoDragAxis.XY
                 => new MoveEntityCommand(selected, startPos, selected.Position),
+            GizmoDragAxis.Z
+                => new MoveEntityZCommand(selected, posStartZ, selected.PositionZ),
             GizmoDragAxis.Rotate
                 => new RotateEntityCommand(selected, rotStart, selected.Rotation),
             GizmoDragAxis.ScaleX or GizmoDragAxis.ScaleY
@@ -222,14 +242,29 @@ public sealed class GizmoController
 
     // ── Hit testing ──────────────────────────────────────────────────────────
 
-    private static GizmoDragAxis HitTest(float px, float py, float ox, float oy, GizmoMode mode) =>
+    private static GizmoDragAxis HitTest(float px, float py, float ox, float oy, GizmoMode mode, bool isDepthMode) =>
         mode switch
         {
+            GizmoMode.Move when isDepthMode => HitTestMoveWithZ(px, py, ox, oy),
             GizmoMode.Move   => HitTestMove(px, py, ox, oy),
             GizmoMode.Rotate => HitTestRotate(px, py, ox, oy),
             GizmoMode.Scale  => HitTestScale(px, py, ox, oy),
             _                => GizmoDragAxis.None,
         };
+
+    private static GizmoDragAxis HitTestMoveWithZ(float px, float py, float ox, float oy)
+    {
+        GizmoDragAxis result = HitTestMove(px, py, ox, oy);
+        return result != GizmoDragAxis.None ? result : HitTestZHandle(px, py, ox, oy);
+    }
+
+    private static GizmoDragAxis HitTestZHandle(float px, float py, float ox, float oy)
+    {
+        float hx = ox + ZHandleOffsetX;
+        float hy = oy - ArrowLength;
+        float h  = ZHandleSize / 2f + 4f;
+        return InRect(px, py, hx - h, hy - h, h * 2f, h * 2f) ? GizmoDragAxis.Z : GizmoDragAxis.None;
+    }
 
     private static GizmoDragAxis HitTestMove(float px, float py, float ox, float oy)
     {
