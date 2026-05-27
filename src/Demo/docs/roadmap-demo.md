@@ -13,12 +13,9 @@
 
 **`src/Demo/Alca.MonoGame.Demo/`** — proyecto ejecutable (`OutputType=WinExe`)
 - `DemoGame.cs` — `sealed class DemoGame : Core`
-- Escenas ECS:
-  - `Scenes/EcsDemoScene.cs` — demo de jerarquía ECS con `TransformBehaviour` padre/hijo
-- Escenas UI:
-  - `UIScene_Menu` — menú principal de navegación; punto de entrada de la aplicación
-  - 12 escenas de demostración (UI + ECS) accesibles desde el menú
-  - Cada escena UI expone un botón `← Menú` que vuelve a `UIScene_Menu`
+- `UIScene_Menu` — menú principal de navegación; punto de entrada de la aplicación
+- 41 escenas de demostración accesibles desde el menú (UI + ECS + Audio + Input + Gráficos + Física + Naveg. + Redes + ...)
+- Cada escena expone un botón `← Menú` que vuelve a `UIScene_Menu`
 - Añadir escenas nuevas conforme se completen nuevas fases
 
 **Para añadir fuentes al demo:**
@@ -48,7 +45,33 @@ src/Demo/Alca.MonoGame.Demo/
 │   ├── EcsDemoScene.cs               [OK]
 │   ├── Camera2DScene.cs              [OK]
 │   ├── Physics2DScene.cs             [OK]
-│   └── NavigationScene.cs            [OK]
+│   ├── NavigationScene.cs            [OK]
+│   ├── AudioBasicScene.cs            [TODO]
+│   ├── AudioSpatialScene.cs          [TODO]
+│   ├── AudioAdvancedScene.cs         [TODO]
+│   ├── InputScene.cs                 [TODO]
+│   ├── AnimationScene.cs             [TODO]
+│   ├── Camera3DScene.cs              [TODO]
+│   ├── ParticlesScene.cs             [TODO]
+│   ├── SpriteMaterialScene.cs        [TODO]
+│   ├── PostProcessScene.cs           [TODO]
+│   ├── ResolutionScene.cs            [TODO]
+│   ├── TiledMapScene.cs              [TODO]
+│   ├── BitmapFontScene.cs            [TODO]
+│   ├── Physics2DJointsScene.cs       [TODO]
+│   ├── SteeringScene.cs              [TODO]
+│   ├── EntityPoolScene.cs            [TODO]
+│   ├── EventBusScene.cs              [TODO]
+│   ├── StateMachineScene.cs          [TODO]
+│   ├── TimersScene.cs                [TODO]
+│   ├── TweeningScene.cs              [TODO]
+│   ├── DebugScene.cs                 [TODO]
+│   ├── PersistenceScene.cs           [TODO]
+│   ├── LocalizationScene.cs          [TODO]
+│   ├── AsyncContentScene.cs          [TODO]
+│   ├── LightingScene.cs              [TODO]
+│   ├── NetworkingScene.cs            [TODO]
+│   └── PlatformScene.cs              [TODO]
 ├── DemoGame.cs
 ├── Globals.cs
 ├── Program.cs
@@ -56,379 +79,948 @@ src/Demo/Alca.MonoGame.Demo/
 ```
 
 **`DemoGame.cs`:**
-- Registrar todas las escenas en `ConfigureServices` como `AddTransient`:
-  `UIScene_Menu`, `UIScene_BasicControls`, `UIScene_InputText`, `UIScene_TextArea`,
-  `UIScene_Sliders`, `UIScene_Selection`, `UIScene_ColorPicker`, `UIScene_Layout`,
-  `UIScene_ScrollView`, `UIScene_Tooltip`, `UIScene_Focus`,
+- Registrar todas las escenas en `ConfigureServices` como `AddTransient`.
+- Escenas ya registradas (01–15): `UIScene_Menu`, `UIScene_BasicControls`, `UIScene_InputText`,
+  `UIScene_TextArea`, `UIScene_Sliders`, `UIScene_Selection`, `UIScene_ColorPicker`,
+  `UIScene_Layout`, `UIScene_ScrollView`, `UIScene_Tooltip`, `UIScene_Focus`,
   `UIScene_Transitions`, `EcsDemoScene`, `Camera2DScene`, `Physics2DScene`, `NavigationScene`.
-- `PostInitialize` arranca en `UIScene_Menu` (hub principal de navegación).
-- Cada escena UI contiene un botón `← Menú` que llama
-  `Core.SceneManager.RequestChange(Core.GetService<UIScene_Menu>())`.
-- `UIScene_Menu` presenta la lista completa de escenas como botones clickables.
+- Escenas pendientes de registrar (16–41): `AudioBasicScene`, `AudioSpatialScene`,
+  `AudioAdvancedScene`, `InputScene`, `AnimationScene`, `Camera3DScene`, `ParticlesScene`,
+  `SpriteMaterialScene`, `PostProcessScene`, `ResolutionScene`, `TiledMapScene`,
+  `BitmapFontScene`, `Physics2DJointsScene`, `SteeringScene`, `EntityPoolScene`,
+  `EventBusScene`, `StateMachineScene`, `TimersScene`, `TweeningScene`, `DebugScene`,
+  `PersistenceScene`, `LocalizationScene`, `AsyncContentScene`, `LightingScene`,
+  `NetworkingScene`, `PlatformScene`.
+- `PostInitialize` arranca en `UIScene_Menu`.
 
 ---
 
-## UI Demo Scenes — Cobertura Completa
+## Dependencias de contenido
 
-> **Objetivo:** Cada control del sistema UI debe poder probarse visualmente e interactivamente desde el proyecto Demo.
+Algunas escenas requieren assets en `Content/` adicionales a `DefaultFont.spritefont`:
 
-**Navegación entre escenas:**
-- `UIScene_Menu` es el hub central; se accede a cada escena haciendo click en su botón.
-- Cada escena UI tiene un botón `← Menú` en la cabecera que vuelve a `UIScene_Menu`.
-- No existe navegación secuencial por teclado; toda la navegación es con ratón/click.
-- Cada escena muestra en la cabecera: título de la escena y número de orden.
+| Asset | Escenas que lo usan | Formato |
+|-------|--------------------|---------| 
+| `SFX/beep.wav` | AudioBasicScene, AudioSpatialScene, AudioAdvancedScene | WAV/OGG |
+| `SFX/ambient.ogg` | AudioSpatialScene | WAV/OGG |
+| `Sprites/character_sheet.png` + `.xml` | AnimationScene | TextureAtlas |
+| `Fonts/DefaultBitmapFont.fnt` + `.png` | BitmapFontScene | MonoGame.Extended BitmapFont |
+| `Maps/demo.tmx` + tilesets | TiledMapScene | Tiled JSON/XML |
+| `Shaders/SpriteTint.fx` | SpriteMaterialScene | MGFX shader |
+| `Shaders/Vignette.fx` | PostProcessScene | MGFX shader |
 
-**Infraestructura común en cada demo UI:**
+---
 
-Cada escena UI declara como mínimo:
+## Infraestructura común en cada demo
+
+Cada escena declara como mínimo:
 ```csharp
 private readonly UIRoot _uiRoot = new();
 private readonly UIInteractionManager _interactionManager = new();
-private Texture2D _pixel = null!;   // solo si la escena usa controles que requieren pixel
+private Texture2D _pixel = null!;
 private SpriteFont _font = null!;
-```
-
-Opcional — solo en escenas con navegación por teclado/gamepad:
-```csharp
-private readonly UIFocusManager _focusManager = new();
-```
-
-Opcional — solo en escenas con Dropdown o Tooltip:
-```csharp
-private readonly UIOverlayManager _overlayManager = new();
-```
-
-Ciclo de vida:
-```csharp
-// LoadContent
-_pixel = new Texture2D(Core.GraphicsDevice, 1, 1);
-_pixel.SetData(new[] { Color.White });
-_font = Content.Load<SpriteFont>("DefaultFont");
-// construir árbol UI aquí (BuildUI)...
-
-// Update
-_uiRoot.Update(gameTime);
-Rectangle screen = new(0, 0, Core.GraphicsDevice.Viewport.Width, Core.GraphicsDevice.Viewport.Height);
-_uiRoot.Measure(new Vector2(screen.Width, screen.Height));
-_uiRoot.Arrange(screen);
-_interactionManager.Update(_uiRoot, Core.Input.Mouse);
-// con foco: _focusManager.Update(Core.Input.Keyboard, Core.Input.GamePads[0]);
-
-// Draw
-Core.GraphicsDevice.Clear(new Color(20, 20, 30));
-_uiRoot.DrawAll(Core.SpriteBatch);
 ```
 
 Patrón del botón "← Menú" en `BuildUI`:
 ```csharp
 var backBtn = new Button(_font, "← Menú") { BackgroundPixel = _pixel };
 backBtn.Clicked += () => Core.SceneManager.RequestChange(Core.GetService<UIScene_Menu>());
-root.Add(backBtn);
+controls.Add(backBtn);
 ```
 
 ---
 
+## UI Demo Scenes (01–11)
+
 ### Menu — `UIScene_Menu.cs` [OK]
 
-> Tipo: hub de navegación. No demuestra ningún control en sí — es el punto de entrada de la aplicación.
+> Hub de navegación. Punto de entrada de la aplicación.
 
-**Layout:** `AnchorLayout` centrado; `ScrollView` (700×340 px) con un `StackPanel` vertical de botones.
+**Layout:** `AnchorLayout` centrado; `ScrollView` (700×500 px) con `StackPanel` vertical de botones.
 
 | Elemento | Configuración |
 |----------|--------------|
 | `Label` título | "MonoGame UI Demo — Selecciona una escena" — `Color.Yellow`, `HAlign.Center` |
-| 12 `Button` | Uno por escena, texto numerado, `HAlign.Left` |
-| `ScrollView` | 700×340 px — permite añadir escenas futuras sin cambiar el layout |
-
-**Comportamiento:**
-- Cada botón llama `Core.SceneManager.RequestChange(Core.GetService<TScene>())`.
-- Fondo `new Color(15, 15, 25)` (más oscuro que el resto de escenas).
-- No usa `_focusManager` ni `_overlayManager`.
-- Botones usan `HoveredColor = Color.LightGray`; no necesitan `_pixel` de borde (color plano).
+| 41 `Button` | Uno por escena, texto numerado, `HAlign.Left` |
+| `ScrollView` | 700×500 px |
 
 ---
 
-### Scene 1 — `UIScene_BasicControls.cs` [OK]
+### Scene 01 — `UIScene_BasicControls.cs` [OK]
 
-> Controles cubiertos: **Button**, **Label**, **Checkbox**, **Panel**
-
-**Layout:** `StackPanel` vertical centrado, spacing 16.
-
-| Control | Configuración |
-|---------|--------------|
-| `Label` | "Basic Controls Demo" — HAlign.Center, Color.Yellow |
-| `Button` | "Normal Button" — `Clicked` → incrementa contador en label |
-| `Button` | "Disabled Button" — `IsEnabled = false` |
-| `Checkbox` | "Toggle me" — `CheckedChanged` → actualiza label de estado |
-| `Panel` | Fondo `Color(60,80,60)`, borde `Color.Green` — contiene Label "Soy un Panel" |
-| `Label` | Estado reactivo: muestra nº de clicks y estado checked |
-
-**Notas:**
-- `Panel` necesita `Pixel` para renderizar fondo y borde.
-- `Button` sin `Texture` → renderiza como rectángulo de color con texto centrado.
+> Controles: **Button**, **Label**, **Checkbox**, **Panel**
 
 ---
 
-### Scene 2 — `UIScene_InputText.cs` [OK]
+### Scene 02 — `UIScene_InputText.cs` [OK]
 
-> Controles cubiertos: **TextBox**, **NumericBox**, **PasswordBox**
-
-**Layout:** `GridLayout` 2 columnas — izquierda: etiqueta descriptora, derecha: control.
-
-| Fila | Col 0 (Label) | Col 1 (Control) |
-|------|---------------|-----------------|
-| 0 | "TextBox:" | `TextBox` (Placeholder: "Escribe aquí...") |
-| 1 | "NumericBox:" | `NumericBox` (Min=0, Max=100, Step=1, Value=50) |
-| 2 | "Password:" | `PasswordBox` (Placeholder: "Contraseña") |
-| 3 | "Valores:" | Label reactivo con los 3 valores en tiempo real |
-
-**Notas:**
-- `TextChanged` / `ValueChanged` actualizan el label de la fila 3.
-- `Tab` navega entre los tres campos; configurar `UIFocusManager` con `TabIndex` 0–2.
+> Controles: **TextBox**, **NumericBox**, **PasswordBox**
 
 ---
 
-### Scene 3 — `UIScene_TextArea.cs` [OK]
+### Scene 03 — `UIScene_TextArea.cs` [OK]
 
-> Controles cubiertos: **TextArea**
-
-**Layout:** full-screen menos márgenes de 20px.
-
-- `Label` header: "TextArea Demo — escribe texto largo"
-- `TextArea` (ancho completo, alto 200 px, `WrapText=true`)
-- `Label` contador de caracteres: "X / 500 chars"
-- `Button` "Limpiar" → `textArea.Text = string.Empty`
+> Controles: **TextArea**
 
 ---
 
-### Scene 4 — `UIScene_Sliders.cs` [OK]
+### Scene 04 — `UIScene_Sliders.cs` [OK]
 
-> Controles cubiertos: **Slider** (horizontal y vertical), **ProgressBar** (horizontal y vertical, gradiente)
-
-**Layout:** `StackPanel` vertical, con un `StackPanel` horizontal anidado para las barras.
-
-| Control | Configuración |
-|---------|--------------|
-| `Label` | "Sliders & Progress Bars" — header |
-| `Slider` H | MinValue=0, MaxValue=100, Step=1, ancho 300 px |
-| `Label` | Reactivo: "Slider H: {valor}" |
-| `Slider` V | MinValue=0, MaxValue=1, Orientation=Vertical, alto 120 px |
-| `Label` | Reactivo: "Slider V: {valor:F2}" |
-| `ProgressBar` H | Animada +0.05/s, 300×20 px |
-| `ProgressBar` V+gradient | Animada, `ColorGradient=true`, 20×120 px |
-| `Button` "Reset" | Resetea sliders y barras a 0 |
-
-**Notas:**
-- El slider H controla el valor de la `ProgressBar` H (vinculados por `ValueChanged`).
-- La `ProgressBar` V se auto-incrementa sola en `Update`; al llegar a 1 reinicia desde 0.
-- `Slider` necesita `Pixel` para renderizar track y thumb.
+> Controles: **Slider** (H y V), **ProgressBar** (H y V, gradiente)
 
 ---
 
-### Scene 5 — `UIScene_Selection.cs` [OK]
+### Scene 05 — `UIScene_Selection.cs` [OK]
 
-> Controles cubiertos: **Dropdown**, **RadioGroup** / **RadioButton**
-
-**Layout:** `StackPanel` vertical, spacing 12.
-
-| Control | Configuración |
-|---------|--------------|
-| `Label` | "Dropdown & Radio Demo" — header |
-| `Dropdown` | Opciones: "Opción A", "Opción B", "Opción C", "Opción D" |
-| `Label` | Reactivo: "Dropdown: {selección}" |
-| `RadioGroup` | 3 RadioButtons: "Radio 1", "Radio 2", "Radio 3" |
-| `Label` | Reactivo: "Radio: {selección}" |
-
-**Notas:**
-- `Dropdown` necesita `UIOverlayManager`, `Font` y `Pixel`.
-- `RadioGroup.SelectionChanged` → actualiza el label reactivo.
-- `Dropdown.SelectedIndexChanged` → actualiza su label reactivo.
+> Controles: **Dropdown**, **RadioGroup** / **RadioButton**
 
 ---
 
-### Scene 6 — `UIScene_ColorPicker.cs` [OK]
+### Scene 06 — `UIScene_ColorPicker.cs` [OK]
 
-> Controles cubiertos: **ColorPickerRGB**, **ColorPickerHSV**
-
-**Layout:** `StackPanel` horizontal con dos columnas, swatch debajo.
-
-- Columna izquierda (`StackPanel` V): `Label` "RGB" + `ColorPickerRGB` (ancho 260 px)
-- Columna derecha (`StackPanel` V): `Label` "HSV" + `ColorPickerHSV` (ancho 260 px)
-- Fila inferior: `Panel` swatch 60×60 px + `Label` hex "#RRGGBB"
-
-**Notas:**
-- `ColorPickerRGB.ColorChanged` y `ColorPickerHSV.ColorChanged` → actualizan `Panel.BackgroundColor` y el label hex.
-- Los dos pickers comparten la misma referencia a `Pixel` y `Font`.
+> Controles: **ColorPickerRGB**, **ColorPickerHSV**
 
 ---
 
-### Scene 7 — `UIScene_Layout.cs` [OK]
+### Scene 07 — `UIScene_Layout.cs` [OK]
 
-> Controles cubiertos: **StackPanel**, **FlowLayoutPanel**, **GridLayout**, **AnchorLayout**, **Canvas**
-
-**Diseño:** 5 zonas visuales enmarcadas por `Panel` con borde, distribuidas en pantalla.
-
-| Zona | Layout interno | Contenido |
-|------|----------------|-----------|
-| Top-left 300×150 | `StackPanel` vertical, spacing 6 | 4 Labels: "Ítem 1" – "Ítem 4" |
-| Top-right 300×150 | `StackPanel` horizontal, spacing 6 | 4 Labels con colores distintos |
-| Center 300×150 | `FlowLayoutPanel` (wrap automático) | 8 Buttons pequeños "Btn 1" – "Btn 8" |
-| Bottom-left 300×150 | `GridLayout` 3 cols × 2 filas | 6 Labels "R0C0" – "R1C2" |
-| Bottom-right 300×150 | `AnchorLayout` | Labels en top-left, top-right, bottom-left, bottom-right y center |
-
-**Notas:**
-- El `Canvas` actúa como contenedor raíz posicionando las 5 zonas manualmente por sus `Bounds`.
-- Cada zona tiene un `Panel` de fondo con borde para delimitar visualmente el área de layout.
+> Controles: **StackPanel**, **FlowLayoutPanel**, **GridLayout**, **AnchorLayout**, **Canvas**
 
 ---
 
-### Scene 8 — `UIScene_ScrollView.cs` [OK]
+### Scene 08 — `UIScene_ScrollView.cs` [OK]
 
-> Controles cubiertos: **ScrollView**
-
-**Layout:** Dos `ScrollView` lado a lado.
-
-- **Vertical** (300×300 px): 25 Labels "Ítem 01" – "Ítem 25"; scroll con rueda de ratón.
-- **Horizontal** (400×60 px): 10 Labels anchos "Categoría Muy Larga X"; scroll arrastrando (o rueda horizontal).
-
-**Notas:**
-- `ScrollView` requiere `GraphicsDevice` en el constructor.
-- Scroll wheel se procesa con `Core.Input.Mouse.ScrollWheelDelta` en `Update`.
+> Controles: **ScrollView** (vertical y horizontal)
 
 ---
 
-### Scene 9 — `UIScene_Tooltip.cs` [OK]
+### Scene 09 — `UIScene_Tooltip.cs` [OK]
 
-> Controles cubiertos: **Tooltip**, **UISprite**, **UIOverlayManager**
-
-**Layout:** `StackPanel` vertical con 4 targets (Buttons + un UISprite).
-
-| Elemento | Tooltip al hover |
-|----------|-----------------|
-| Button "Hover 1" | "Este es el botón principal" |
-| Button "Hover 2" | "Haz click para continuar" |
-| Button "Hover 3" | "Texto largo que se clampea al borde de pantalla" |
-| `UISprite` (pixel 64×64 blanco) | "Un sprite con tooltip" |
-
-**Notas:**
-- Se crea un único `Tooltip` registrado en `UIOverlayManager`.
-- En `Update`: si el button/sprite está hovered (`IUIInteractable.IsHovered`), llamar `tooltip.Show(anchorPos, screenBounds)`.
-- Al salir del hover, llamar `tooltip.Hide()`.
+> Controles: **Tooltip**, **UISprite**, **UIOverlayManager**
 
 ---
 
 ### Scene 10 — `UIScene_Focus.cs` [OK]
 
-> Controles cubiertos: **UIFocusManager**, navegación por teclado con Tab y flechas
-
-**Layout:** Grid 3×3 de Buttons.
-
-- 9 Buttons con etiquetas "F1" – "F9" y `TabIndex` 0–8.
-- `FocusNeighborUp/Down/Left/Right` configurados para navegación cardinal (ej. F5 tiene vecino Up=F2, Down=F8, Left=F4, Right=F6).
-- `Label` de estado: "Foco actual: F{n}"
-- `Tab` / `Shift+Tab` ciclan el foco en orden de `TabIndex`.
-- Arrow keys navegan por vecinos configurados.
-- `Space` / `Enter` simulan `Clicked` en el botón enfocado.
-
-**Notas:**
-- `UIFocusManager.Update(Keyboard.GetState())` debe llamarse en `Update` después del `Arrange`.
-- Los Buttons resaltan visualmente al recibir foco (ya gestionado por `Button.OnFocusGained`).
+> Controles: **UIFocusManager**, navegación Tab + flechas
 
 ---
 
 ### Scene 11 — `UIScene_Transitions.cs` [OK]
 
-> Controles cubiertos: **UITransitionManager**, **UITweenExtensions**
-> (FadeIn, FadeOut, SlideInFromLeft/Right/Top/Bottom, SlideOutToLeft/Right/Top/Bottom)
-
-**Layout:** Dos columnas lado a lado.
-
-**Columna izquierda — controles (≈400 px):**
-
-| Control | Configuración |
-|---------|--------------|
-| `Label` | "Transitions Demo" — header |
-| `Dropdown` | "Transition In:" — 5 opciones de entrada (FadeIn, SlideInFrom×4) |
-| `Dropdown` | "Transition Out:" — 5 opciones de salida (FadeOut, SlideOutTo×4) |
-| `Label` + `Slider` | "Duración: X.Xs" — rango 0.2–2.0 s, step 0.1 |
-| `Dropdown` | "Easing:" — Linear, EaseOutQuad, EaseInQuad, EaseInOutQuad, EaseOutBounce |
-| `Button` | "▶ Play In" — ejecuta la transición de entrada seleccionada |
-| `Button` | "▶ Play Out" — ejecuta la transición de salida seleccionada |
-| `Button` | "Reset" — restaura `Opacity=1` y posición original del target |
-| `Label` | Reactivo: "Estado: Idle / Playing" |
-
-**Columna derecha — target (≈400 px):**
-- `Panel` de 200×120 px con `Label` "Target" centrado — es el elemento sobre el que se ejecutan las transiciones.
-- `Label` debajo: "Última transición: {nombre}" en `Color.DimGray`.
-
-**Notas:**
-- `private UITransitionManager _transitions = new();`
-- Guardar `_targetPanel.Bounds` original en `LoadContent` para el botón Reset.
-- El estado Playing/Idle se gestiona con un `bool _isPlaying` local.
-- Registrar `UIScene_Transitions` en `DemoGame.ConfigureServices`.
-- Añadir botón `"11. UI Transitions (UITransitionManager)"` en `UIScene_Menu.BuildUI`.
-- Requiere `using Alca.MonoGame.Kernel.UI.Transitions;` (o añadir al `Globals.cs`).
+> Sistemas: **UITransitionManager**, **UITweenExtensions** (FadeIn/Out, SlideIn/Out ×4)
 
 ---
 
-## ECS Demo Scene
+## ECS + Cámara + Física + Navegación (12–15)
 
-### `EcsDemoScene.cs` [OK]
+### Scene 12 — `EcsDemoScene.cs` [OK]
 
-> Controles cubiertos: **GameEntity**, **TransformBehaviour**, **GameWorld**
-
-- Entidad padre en el centro de pantalla.
-- Entidad hijo que orbita alrededor del padre (modifica `LocalPosition` con ángulo creciente).
-- Labels en pantalla mostrando posición world y local de cada entidad.
-- Botón `← Menú` para volver al hub de navegación.
+> Sistemas: **GameEntity**, **TransformBehaviour**, **GameWorld**
 
 ---
 
-## Escenas Futuras / Pendientes
+### Scene 13 — `Camera2DScene.cs` [OK]
 
-> No hay escenas pendientes — todas las escenas del roadmap han sido implementadas.
-
-### Camera2D Demo — `Camera2DScene.cs` [OK]
-
-> Sistemas: **Camera2D**, **CameraEffects** (Shake, ZoomTo, Follow)
-
-- Sprite/rectángulo orbitando en mundo 2D renderizado con `SpriteBatch.Begin(transformMatrix: camera.GetTransformMatrix(...))`.
-- Panel UI superpuesto sin transformación: botones Shake, Zoom In/Out/Reset, Toggle Follow.
-- `Label` reactivo con posición y zoom actuales.
-- `_cameraEffects.Update(gameTime)` en `Update`.
-
-**Notas:**
-- El mundo se dibuja con `SpriteBatch.Begin(transformMatrix: camera.GetTransformMatrix(viewport))`.
-- La UI se dibuja en una segunda pasada sin transformación de cámara.
+> Sistemas: **Camera2D**, **CameraEffects** (Shake, ZoomTo, PanTo, Follow)
 
 ---
 
-### Physics2D Demo — `Physics2DScene.cs` [OK]
+### Scene 14 — `Physics2DScene.cs` [OK]
 
 > Sistemas: **Physics2DWorld**, **RigidBody2D**, **BoxCollider2D**, **CircleCollider2D**, **Physics2DQuery**
 
-- `Physics2DWorld` con gravedad `(0, 9.8f)`.
-- Suelo estático: entidad con `BoxCollider2D`, `IsStatic = true`.
-- Click para spawnear bolas dinámicas (`CircleCollider2D` + `RigidBody2D`).
-- Panel de controles UI: botones Spawn Ball, Apply Impulse, Raycast.
-- `DebugDraw` opcional para visualizar AABB de colliders.
+---
 
-**Notas:**
-- `GameWorld.PhysicsWorld = new Physics2DWorld(gravity)` antes de crear entidades.
-- La conversión posición ratón → mundo requiere la inversa de la matrix de cámara.
+### Scene 15 — `NavigationScene.cs` [OK]
+
+> Sistemas: **NavGrid**, **Pathfinder**, **NavAgent**, **NavPath**
 
 ---
 
-### Navigation Demo — `NavigationScene.cs` [OK]
+## Audio (16–18)
 
-> Sistemas: **NavGrid**, **Pathfinder**, **NavAgent**, **SteeringController**
+### Scene 16 — `AudioBasicScene.cs` [TODO]
 
-- `NavGrid` 20×15 celdas con obstáculos configurables en runtime.
-- Click derecho → `navAgent.SetDestination(worldPos)` con ruta A* visualizada.
-- Panel de controles UI: Toggle Obstacle, Recompute Path, Show/Hide Grid.
-- `Label` reactivo: estado del agente (`Idle`/`Moving`) y nº de waypoints.
+> Sistemas: **AudioController**, **AudioMixer**, **AudioMixerChannel**
+
+**Dependencias de contenido:** `Content/SFX/beep.wav`, `Content/Music/theme.ogg`
+
+**Layout:** `StackPanel` vertical con controles de mezcla.
+
+| Control | Comportamiento |
+|---------|---------------|
+| `Label` header | "Audio Demo — Mixer & Channels" |
+| `Button` "Play SFX" | `AudioController.PlaySfx("SFX/beep")` |
+| `Button` "Play Music" | `AudioController.PlayMusic("Music/theme")` |
+| `Button` "Stop Music" | `AudioController.StopMusic()` |
+| `Slider` "Master Vol" | 0–1 → `AudioMixer.Master.Volume` |
+| `Slider` "Music Vol" | 0–1 → `AudioMixer.Music.Volume` |
+| `Slider` "SFX Vol" | 0–1 → `AudioMixer.Sfx.Volume` |
+| `Label` reactivo | "Canales: Master={v} Music={v} SFX={v}" |
 
 **Notas:**
-- `Pathfinder` se instancia con `new Pathfinder(gridCapacity: 20 * 15)`.
-- La conversión posición ratón → celda: `navGrid.WorldToCell(mouseWorldPos)`.
-- Ruta visualizada con `DebugDraw.DrawLine` entre waypoints consecutivos.
+- `AudioController` se obtiene vía `Core.GetService<AudioController>()` o inyectado en el constructor.
+- Los canales se acceden como `AudioMixer.Master`, `AudioMixer.Music`, `AudioMixer.Sfx`.
+- Registrar en `DemoGame.ConfigureServices` si `AudioController` no es singleton global.
+
+---
+
+### Scene 17 — `AudioSpatialScene.cs` [TODO]
+
+> Sistemas: **SpatialAudioSource**, **SpatialAudioListener**, **AudioZone**, **AudioEmitter3D**, **AudioListener3D**
+
+**Dependencias de contenido:** `Content/SFX/ambient.ogg`
+
+**Layout:** Vista 2D cenital (pixel art) con listener y source posicionados en pantalla.
+
+| Elemento | Descripción |
+|----------|-------------|
+| Rectángulo azul 20×20 | Listener — posición del jugador |
+| Rectángulo naranja 20×20 | Source — emite sonido en loop |
+| `Label` distancia | "Distancia: {d:F0} px — Vol: {v:F2}" |
+| `Button` "Mover Source" | Teletransporta la source a posición aleatoria |
+| `Button` "Toggle Loop" | Pausa/reanuda el sonido espacial |
+| `Slider` "Radio máx" | Controla `SpatialAudioSource.MaxDistance` |
+
+**Notas:**
+- Listener sigue al ratón en `Update`.
+- El volumen percibido (`1 - distancia/MaxDistance`) se calcula y muestra.
+- `AudioZone` dibujado como círculo semitransparente alrededor de la source.
+
+---
+
+### Scene 18 — `AudioAdvancedScene.cs` [TODO]
+
+> Sistemas: **SoundEffectPool**, **AudioCrossfader**
+
+**Dependencias de contenido:** `Content/SFX/beep.wav`, `Content/Music/track_a.ogg`, `Content/Music/track_b.ogg`
+
+**Layout:** Dos columnas.
+
+**Columna Pool:**
+- `Label` "SoundEffectPool Demo"
+- `Button` "Spawn Sound" → obtiene instancia del pool, reproduce, y la devuelve al pool automáticamente
+- `Label` reactivo "Pool: {active}/{capacity} instancias activas"
+- `Slider` "Pitch" 0.5–2.0 → pitch de la próxima reproducción
+
+**Columna Crossfader:**
+- `Label` "AudioCrossfader Demo"
+- `Button` "Fade A→B" → crossfade de track_a a track_b
+- `Button` "Fade B→A" → crossfade inverso
+- `Slider` "Duración crossfade" 0.5–3.0 s
+- `Label` reactivo "Reproduciendo: Track {A/B}"
+
+---
+
+## Input (19)
+
+### Scene 19 — `InputScene.cs` [TODO]
+
+> Sistemas: **InputManager**, **InputAction**, **InputActionMap**, **InputBinding**, **InputSerializer**
+
+**Layout:** Dos columnas.
+
+**Columna izquierda — Estado en tiempo real:**
+- `Label` "Input Demo — Actions & Rebinding"
+- `Label` reactivo teclado: "Tecla pulsada: {key}"
+- `Label` reactivo ratón: "Mouse: {x},{y} Btn: {btn}"
+- `Label` reactivo acción: "Jump: {pressed} | Fire: {pressed}"
+- `Label` "Mantén Space/Click para Fire, W/↑ para Jump"
+
+**Columna derecha — Rebinding:**
+- `Label` "Rebinding de acciones"
+- `Button` "Rebind Jump" → activa modo escucha; próxima tecla pulsada se asigna a Jump
+- `Button` "Rebind Fire" → ídem para Fire
+- `Label` reactivo "Jump: {binding} | Fire: {binding}"
+- `Button` "Guardar bindings" → `InputSerializer.Save(actionMap, "bindings.json")`
+- `Button` "Cargar bindings" → `InputSerializer.Load(actionMap, "bindings.json")`
+- `Label` "Estado: Idle / Esperando tecla..."
+
+**Notas:**
+- `InputActionMap` con dos `InputAction`: `"Jump"` (Keys.W + Keys.Up) y `"Fire"` (Keys.Space + MouseButton.Left).
+- En modo rebinding, capturar la siguiente tecla presionada y crear un nuevo `InputBinding`.
+- `InputSerializer.Save/Load` persiste los bindings en disco.
+
+---
+
+## Animación (20)
+
+### Scene 20 — `AnimationScene.cs` [TODO]
+
+> Sistemas: **TextureAtlas**, **TextureRegion**, **Sprite**, **AnimatedSprite**, **Animation**,
+> **AnimationStateMachine**, **AnimatedSpriteBehaviour**, **AnimationStateMachineBehaviour**
+
+**Dependencias de contenido:** `Content/Sprites/character_sheet.png` + `character_sheet.xml`
+(atlas de 4×4 frames de 32×32 px — puede generarse proceduralmente en LoadContent si no existe el asset)
+
+**Layout:** Dos columnas.
+
+**Columna izquierda — Visor del sprite:**
+- Sprite animado grande (escala 3×) en el centro
+- `Label` "Frame: {n}/{total} — Estado: {state}"
+- `Label` "FPS: {fps:F1}"
+
+**Columna derecha — Controles:**
+- `Label` "Animation Demo"
+- `Dropdown` "Estado:" — Idle, Walk, Run, Attack (los 4 estados de la state machine)
+- `Slider` "Velocidad" 0.5–4.0× → `AnimatedSprite.FrameRate`
+- `Button` "Play/Pause" → alterna `AnimatedSprite.IsPlaying`
+- `Checkbox` "Loop" → `AnimatedSprite.IsLooping`
+- `Button` "Reset Frame" → `AnimatedSprite.Reset()`
+
+**Notas:**
+- Si no existe el asset, crear el atlas proceduralmente en `LoadContent`:
+  4 tiras de 4 frames, cada frame un color distinto (Idle=azul, Walk=verde, Run=naranja, Attack=rojo).
+- `AnimationStateMachine` con transición automática Walk→Run si velocidad >2.0.
+- Registrar `AnimationStateMachineBehaviour` en la entidad ECS.
+
+---
+
+## Gráficos 3D (21)
+
+### Scene 21 — `Camera3DScene.cs` [TODO]
+
+> Sistemas: **Camera3D**, **FirstPersonCamera3D**, **ThirdPersonCamera3D**, **TopDownCamera3D**,
+> **FixedCamera3D**, **PrimitiveBatch**, **MeshRenderer**
+
+**Layout:** Panel de control superpuesto (UI en screen space) + mundo 3D.
+
+**Mundo 3D (PrimitiveBatch):**
+- Grid de suelo 10×10 unidades (líneas wireframe)
+- Cubo wireframe en el origen
+- Esfera/cápsula en posición (0, 0.5, 0) representando al "jugador"
+
+**Panel UI (topleft):**
+- `Label` "Camera3D Demo"
+- `Dropdown` "Modo cámara:" — First Person, Third Person, Top Down, Fixed
+- `Label` reactivo "Pos: {x:F1},{y:F1},{z:F1}"
+- `Label` reactivo "Dir: {yaw:F0}° {pitch:F0}°"
+- `Label` "WASD: mover | Ratón: rotar (FP/TP) | Scroll: zoom (TP/TD)"
+
+**Notas:**
+- `FirstPersonCamera3D`: ratón controla yaw/pitch; WASD mueve la cámara.
+- `ThirdPersonCamera3D`: orbita alrededor del target; scroll cambia distancia.
+- `TopDownCamera3D`: vista cenital fija en Y; WASD desplaza.
+- `FixedCamera3D`: cámara estática en posición predefinida.
+- `PrimitiveBatch` se inicializa con `Core.GraphicsDevice`.
+- Capturar ratón con `Core.Input.Mouse` para el delta de rotación.
+
+---
+
+## Partículas (22)
+
+### Scene 22 — `ParticlesScene.cs` [TODO]
+
+> Sistemas: **ParticleBuilder**, **ParticleEffectWrapper**, **ParticleEmitterBehaviour**
+
+**Layout:** Pantalla de partículas + panel UI esquina inferior izquierda.
+
+**Viewport de partículas:**
+- Click izquierdo en pantalla → emite burst de partículas en la posición del cursor
+- Emitter continuo en el centro (fuego/nieve según preset seleccionado)
+
+**Panel UI:**
+- `Label` "Particles Demo"
+- `Dropdown` "Preset:" — Fire, Snow, Explosion, Sparks
+- `Slider` "Emisión/s" 10–500
+- `Slider` "Vida (s)" 0.5–5.0
+- `Slider` "Velocidad" 10–300
+- `Button` "Burst aquí" → emite 200 partículas en el centro
+- `Button` "Limpiar" → elimina todas las partículas activas
+- `Label` reactivo "Partículas activas: {n}"
+
+**Notas:**
+- `ParticleBuilder` construye el `ParticleEffect` con los parámetros del panel.
+- `ParticleEffectWrapper` actualiza y dibuja el efecto.
+- `ParticleEmitterBehaviour` adjunto a una `GameEntity` centrada para el emitter continuo.
+- Reconstruir el efecto al cambiar preset/parámetros (botón Apply o en tiempo real).
+
+---
+
+## Shaders y Materiales (23)
+
+### Scene 23 — `SpriteMaterialScene.cs` [TODO]
+
+> Sistemas: **Material**, **SpriteMaterial**
+
+**Dependencias de contenido:** `Content/Shaders/SpriteTint.fx` (shader MGFX básico con parámetro tint + intensity)
+
+**Layout:** Dos columnas.
+
+**Columna izquierda — Visor:**
+- Sprite de prueba (64×64 px generado proceduralmente) renderizado con el material activo
+- Segundo sprite sin material (referencia)
+- `Label` "Con material" / "Sin material"
+
+**Columna derecha — Parámetros:**
+- `Label` "SpriteMaterial Demo"
+- `Checkbox` "Activar material" → alterna entre render con/sin shader
+- `ColorPickerRGB` "Tint color" → actualiza `SpriteMaterial.Parameters["TintColor"]`
+- `Slider` "Intensity" 0–2 → `SpriteMaterial.Parameters["Intensity"]`
+- `Slider` "Hue Shift" 0–360° → parámetro de rotación de tono
+- `Label` reactivo "Efecto activo: {nombre}"
+
+**Notas:**
+- Si no existe `SpriteTint.fx`, mostrar mensaje "Asset no encontrado — compilar Shaders/SpriteTint.fx con MGCB"
+  en lugar del visor y deshabilitar controles.
+- El shader básico multiplica el color del texel por el tint y la intensidad.
+
+---
+
+## Post-Procesado (24)
+
+### Scene 24 — `PostProcessScene.cs` [TODO]
+
+> Sistemas: **RenderTargetManager**, **PostProcessEffect**
+
+**Dependencias de contenido:** `Content/Shaders/Vignette.fx`, `Content/Shaders/Grayscale.fx`
+
+**Layout:** Mundo animado de fondo + panel UI superpuesto.
+
+**Mundo de fondo:**
+- Grid de colores (rectángulos de colores vivos) para que el efecto sea claramente visible
+- Sprites moviéndose (círculos orbitando) para demostrar que el efecto aplica a todo el frame
+
+**Panel UI:**
+- `Label` "PostProcess Demo"
+- `Dropdown` "Efecto:" — Ninguno, Vignette, Grayscale, Vignette+Grayscale
+- `Slider` "Intensidad" 0–1 → parámetro del shader
+- `Label` reactivo "RenderTarget: {w}×{h}"
+- `Label` reactivo "Efecto activo: {nombre}"
+
+**Notas:**
+- Flujo: `RenderTargetManager.SetRenderTarget(rt)` → dibuja mundo → `RenderTargetManager.Reset()` →
+  aplica `PostProcessEffect` al RenderTarget → dibuja resultado en pantalla.
+- Si no existen los shaders, mostrar aviso y deshabilitar Dropdown.
+- `RenderTargetManager` se crea con `new RenderTargetManager(Core.GraphicsDevice, screenW, screenH)`.
+
+---
+
+## Resolución Virtual (25)
+
+### Scene 25 — `ResolutionScene.cs` [TODO]
+
+> Sistemas: **ResolutionManager**
+
+**Layout:** Panel UI + mundo renderizado en resolución virtual.
+
+**Demostración:**
+- Mundo 2D de referencia (cuadrícula + texto "VIRTUAL 320×180") dibujado en resolución virtual
+- El mundo se escala letterbox/pillarbox al tamaño real de ventana
+
+**Panel UI:**
+- `Label` "ResolutionManager Demo"
+- `Dropdown` "Resolución virtual:" — 320×180, 640×360, 800×450, 1280×720
+- `Dropdown` "Resolución ventana:" — 640×360, 1280×720, 1920×1080
+- `Checkbox` "Letterbox" → activa/desactiva escala proporcional
+- `Label` reactivo "Virtual: {vw}×{vh} | Ventana: {ww}×{wh}"
+- `Label` reactivo "Escala: {sx:F2}×{sy:F2} | Offset: {ox},{oy}"
+
+**Notas:**
+- `ResolutionManager` se instancia con `Core.GraphicsDevice` y la resolución virtual elegida.
+- En `Draw`, llamar `ResolutionManager.BeginDraw()` antes del SpriteBatch del mundo.
+- La UI se dibuja fuera del ResolutionManager (en screen space real).
+- Al cambiar resolución, recrear el ResolutionManager con los nuevos parámetros.
+
+---
+
+## Tiled Maps (26)
+
+### Scene 26 — `TiledMapScene.cs` [TODO]
+
+> Sistemas: **TiledMapRenderer**, **TiledObjectLayer**
+
+**Dependencias de contenido:** `Content/Maps/demo.tmx` + tilesets asociados
+
+**Layout:** Mapa Tiled a pantalla completa + panel UI superpuesto.
+
+**Viewport del mapa:**
+- Mapa Tiled renderizado con `TiledMapRenderer`
+- Cámara 2D navegable con WASD
+- Objetos de la `TiledObjectLayer` destacados con rectángulos de colores
+
+**Panel UI:**
+- `Label` "TiledMap Demo"
+- `Label` reactivo "Posición cámara: {x:F0},{y:F0}"
+- `Label` reactivo "Objetos en mapa: {n}"
+- `Checkbox` "Mostrar capa de colisiones" → alterna visibilidad de la capa de colisión
+- `Checkbox` "Mostrar objetos" → alterna visibilidad de la capa de objetos
+- `Label` "WASD: mover cámara"
+
+**Notas:**
+- Si no existe `demo.tmx`, mostrar mensaje de contenido faltante y un rectángulo de marcador.
+- `TiledObjectLayer` expone los objetos del mapa para colisiones/triggers.
+- `TiledMapRenderer` dibujado dentro del `SpriteBatch.Begin(transformMatrix: camera)`.
+
+---
+
+## Bitmap Fonts (27)
+
+### Scene 27 — `BitmapFontScene.cs` [TODO]
+
+> Sistemas: **BitmapFontRenderer**
+
+**Dependencias de contenido:** `Content/Fonts/DefaultBitmapFont.fnt` + `DefaultBitmapFont_0.png`
+(generado con Hiero/AngelCode, importado vía MonoGame.Extended)
+
+**Layout:** Lienzo de texto + panel de control.
+
+**Lienzo:**
+- Texto de muestra renderizado con `BitmapFontRenderer` a distintos tamaños y colores
+- Texto animado (escala pulsante, color arco iris)
+- Caracteres especiales y acentos
+
+**Panel UI:**
+- `Label` "BitmapFont Demo"
+- `TextBox` "Texto de prueba:" → actualiza el texto del lienzo
+- `Slider` "Escala" 0.5–4.0
+- `ColorPickerRGB` "Color"
+- `Dropdown` "Alineación:" — Left, Center, Right
+- `Checkbox` "Animación arco iris"
+
+**Notas:**
+- Si no existe el archivo `.fnt`, mostrar aviso y usar el `SpriteFont` de fallback.
+- `BitmapFontRenderer` dibuja directamente sobre `SpriteBatch`.
+
+---
+
+## Physics2D Avanzado (28)
+
+### Scene 28 — `Physics2DJointsScene.cs` [TODO]
+
+> Sistemas: **PolygonCollider2D**, **DistanceJoint2D**, **HingeJoint2D**, **SpringJoint2D**,
+> **CollisionCategory**, **CollisionMatrix**
+
+**Layout:** Mundo físico a pantalla completa + panel UI derecho.
+
+**Mundo físico:**
+- Suelo estático + dos paredes
+- Cadena de 6 cuerpos unidos por `DistanceJoint2D` (péndulo múltiple)
+- Puerta giratoria unida al suelo con `HingeJoint2D`
+- Par de cajas unidas con `SpringJoint2D` (muelle elástico)
+- Polígono irregular con `PolygonCollider2D` cayendo desde arriba
+- Dos capas de colisión: "Red" y "Blue" — los objetos Red no colisionan entre sí
+
+**Panel UI:**
+- `Label` "Physics2D Joints Demo"
+- `Button` "Spawn Polygon" → crea un polígono irregular en posición aleatoria
+- `Button` "Reset scene" → limpia y recrea el mundo
+- `Button` "Toggle layers" → activa/desactiva filtrado de CollisionCategory
+- `Label` reactivo "Cuerpos activos: {n}"
+- `Label` reactivo "Contactos activos: {n}"
+
+**Notas:**
+- `CollisionMatrix` configura qué categorías colisionan entre sí.
+- `PolygonCollider2D.SetVertices(points)` define la forma del polígono.
+- `HingeJoint2D.EnableMotor = true` con `MotorSpeed` para girar la puerta.
+- `SpringJoint2D.Stiffness` y `Damping` configurables desde sliders opcionales.
+
+---
+
+## Steering Behaviors (29)
+
+### Scene 29 — `SteeringScene.cs` [TODO]
+
+> Sistemas: **SteeringController**, **SeekBehavior**, **FleeBehavior**, **ArriveBehavior**,
+> **WanderBehavior**, **SeparationBehavior**, **NavAgentProfile**
+
+**Layout:** Mundo 2D a pantalla completa + panel UI izquierdo.
+
+**Mundo 2D:**
+- 1 agente "objetivo" (círculo azul) controlado por el ratón (Click izq. → mueve objetivo)
+- 5 agentes con comportamientos distintos (círculos de colores)
+- Estelas de movimiento visualizando las trayectorias
+
+| Agente | Color | Comportamiento |
+|--------|-------|----------------|
+| Seek | Verde | `SeekBehavior` → persigue objetivo |
+| Flee | Rojo | `FleeBehavior` → huye del objetivo |
+| Arrive | Cian | `ArriveBehavior` → llega y desacelera suavemente |
+| Wander | Amarillo | `WanderBehavior` → movimiento aleatorio suave |
+| Separation | Magenta | `SeparationBehavior` → se mantiene separado del resto |
+
+**Panel UI:**
+- `Label` "Steering Behaviors Demo"
+- `Slider` "MaxSpeed" 50–400 → `NavAgentProfile.MaxSpeed`
+- `Slider` "MaxForce" 50–400 → `NavAgentProfile.MaxForce`
+- `Slider` "SlowRadius (Arrive)" 10–200
+- `Slider` "WanderRadius" 20–150
+- `Slider` "SeparationRadius" 20–200
+- `Checkbox` "Mostrar radios de influencia"
+- `Label` "Click izq: mover objetivo"
+
+**Notas:**
+- Cada agente tiene su propio `SteeringController` con su comportamiento asignado.
+- `NavAgentProfile` compartido para MaxSpeed/MaxForce; ajustado desde los sliders.
+- Los radios de influencia se dibujan como círculos semitransparentes si el checkbox está activo.
+
+---
+
+## Entity Pool (30)
+
+### Scene 30 — `EntityPoolScene.cs` [TODO]
+
+> Sistemas: **GameEntityPool\<T\>**, **IPoolable**
+
+**Layout:** Mundo de partículas/proyectiles + panel UI derecho.
+
+**Mundo:**
+- Disparar proyectiles (círculos rápidos) desde el centro hacia posiciones de click
+- Los proyectiles se devuelven al pool al salir de pantalla o tras 3 segundos
+- Visualización del estado del pool: activos en verde, en pool en gris
+
+**Panel UI:**
+- `Label` "EntityPool Demo"
+- `Button` "Disparar ráfaga (×10)" → obtiene 10 entidades del pool y las lanza
+- `Slider` "Capacidad pool" 10–200 → recrea el pool con nueva capacidad
+- `Label` reactivo "Pool: {active} activos / {pooled} en reserva / {capacity} capacidad"
+- `Label` reactivo "Obtenciones totales: {total}"
+- `Label` reactivo "Misses (sin pool disponible): {misses}"
+- `Checkbox` "Mostrar estado visual"
+
+**Notas:**
+- `GameEntityPool<ProjectileBehaviour>` con capacidad configurable.
+- `ProjectileBehaviour : GameBehaviour, IPoolable` — implementa `OnObtain()` / `OnReturn()`.
+- Comparar FPS con pool vs sin pool (crear/destruir sin pool = GC pressure).
+
+---
+
+## EventBus (31)
+
+### Scene 31 — `EventBusScene.cs` [TODO]
+
+> Sistemas: **EventBus**, **EventChannel**, **ICancellableEvent**
+
+**Layout:** Dos columnas — emisores y receptores.
+
+**Columna Emisores:**
+- `Label` "Publicar eventos"
+- `Button` "Publish: GameStarted" → `EventBus.Publish(new GameStartedEvent())`
+- `Button` "Publish: ScoreChanged (+10)" → `EventBus.Publish(new ScoreChangedEvent(+10))`
+- `Button` "Publish: PlayerDied (cancelable)" → `EventBus.Publish(new PlayerDiedEvent())`
+- `Checkbox` "Cancelar PlayerDied" → si activo, el subscriber cancela el evento
+
+**Columna Receptores:**
+- `Label` "Log de eventos recibidos" (scroll de las últimas 10 entradas)
+- `Label` reactivo "Score acumulado: {n}"
+- `Label` reactivo "PlayerDied recibido: {n} veces | Cancelado: {n} veces"
+- `Button` "Limpiar log"
+- `Button` "Subscribe/Unsubscribe" → registra/desregistra un receptor adicional
+
+**Notas:**
+- Definir 3 tipos de evento locales en el fichero: `GameStartedEvent`, `ScoreChangedEvent(int delta)`,
+  `PlayerDiedEvent : ICancellableEvent`.
+- `EventChannel<T>` para el canal de score (scoped); `EventBus` global para los otros.
+- El log se actualiza en `Update` leyendo una cola de strings (no usar LINQ).
+
+---
+
+## State Machine (32)
+
+### Scene 32 — `StateMachineScene.cs` [TODO]
+
+> Sistemas: **StateMachine\<TState\>**, **StateMachineBehaviour\<TState\>**
+
+**Layout:** Diagrama visual de estados + panel de control.
+
+**Diagrama visual:**
+- 4 estados dibujados como rectángulos con nombre: Idle, Walk, Run, Attack
+- Flechas entre estados mostrando las transiciones válidas
+- Estado activo resaltado en amarillo
+- Historial de transiciones (últimas 5) como lista
+
+**Panel UI:**
+- `Label` "StateMachine Demo"
+- `Button` "→ Idle" / "→ Walk" / "→ Run" / "→ Attack" — fuerza transición
+- `Button` "Auto Play" → cicla por los estados automáticamente cada 1.5 s
+- `Label` reactivo "Estado actual: {state}"
+- `Label` reactivo "Tiempo en estado: {t:F1}s"
+- `Label` reactivo "Transiciones totales: {n}"
+
+**Notas:**
+- `enum PlayerState { Idle, Walk, Run, Attack }`
+- `StateMachine<PlayerState>` con `OnEnter`, `OnUpdate`, `OnExit` por estado.
+- Definir transiciones válidas: Idle↔Walk, Walk↔Run, any→Attack, Attack→Idle.
+- Intentar una transición inválida muestra "Transición {A}→{B} no permitida" en un label.
+
+---
+
+## Timers (33)
+
+### Scene 33 — `TimersScene.cs` [TODO]
+
+> Sistemas: **TimerManager**, **GameTimer**
+
+**Layout:** Panel central de timers activos.
+
+| Control | Comportamiento |
+|---------|---------------|
+| `Button` "One-shot 3s" | Crea `GameTimer` que dispara una vez en 3 s y muestra "¡Disparado!" |
+| `Button` "Repeat 1s" | Crea `GameTimer` repetitivo que incrementa contador cada 1 s |
+| `Button` "Scaled 0.5s" | Timer que se ejecuta al doble de velocidad (`TimeScale=2`) |
+| `Button` "Pause/Resume" | Pausa y reanuda el `TimerManager` global |
+| `Button` "Cancel All" | Cancela todos los timers activos |
+| `Label` reactivo | "Timers activos: {n}" |
+| `Label` reactivo | "Contador repeat: {n}" |
+| `Label` reactivo | Lista de los 5 timers más recientes con tiempo restante |
+
+**Notas:**
+- `TimerManager` se obtiene vía `Core.GetService<TimerManager>()`.
+- `GameTimer.Interval`, `GameTimer.IsRepeating`, `GameTimer.TimeScale`.
+- La lista de timers activos se dibuja iterando sobre la colección interna (sin LINQ).
+
+---
+
+## Tweening Standalone (34)
+
+### Scene 34 — `TweeningScene.cs` [TODO]
+
+> Sistemas: **TweeningManager**, **EasingCatalog** (todas las funciones)
+
+**Layout:** Cuadrícula visual de curvas + panel de control + objeto animado.
+
+**Cuadrícula de curvas (lado derecho):**
+- 12 rectángulos de 80×60 px, uno por función de easing del catálogo
+- Cada uno muestra la curva dibujada con líneas (muestreo de 50 puntos)
+- La curva seleccionada se resalta en amarillo
+
+**Objeto animado (centro):**
+- Cuadrado de 40×40 px que anima de izquierda a derecha con el easing seleccionado
+- La animación se reinicia automáticamente al terminar (loop)
+
+**Panel UI (izquierda):**
+- `Label` "Tweening Demo"
+- `Dropdown` "Easing:" — Linear, QuadIn/Out/InOut, CubicIn/Out/InOut,
+  BounceOut, ElasticOut, BackOut, SineIn/Out/InOut
+- `Slider` "Duración" 0.3–3.0 s
+- `Button` "Play / Reset"
+- `Label` reactivo "t: {progress:F2} | valor: {value:F3}"
+
+**Notas:**
+- `Core.Tweening.TweenTo(target, prop, endValue, duration, easing)`.
+- Dibujar la curva con `SpriteBatch.Draw(_pixel, lineRect, color)` por segmentos.
+- El objeto animado usa la propiedad `X` de un `Vector2` local.
+
+---
+
+## Debug Tools (35)
+
+### Scene 35 — `DebugScene.cs` [TODO]
+
+> Sistemas: **DebugDraw**, **DebugOverlay**
+
+**Layout:** Mundo de prueba + panel UI + overlay de debug.
+
+**Mundo de prueba:**
+- Varios objetos geométricos dibujados con `DebugDraw`:
+  - Líneas, rectángulos, círculos, cruces, texto en mundo
+- Objetos moviéndose para demostrar que `DebugDraw` es por-frame (no persistente)
+
+**Panel UI:**
+- `Label` "Debug Tools Demo"
+- `Checkbox` "Mostrar DebugDraw" → activa/desactiva llamadas a `DebugDraw`
+- `Checkbox` "Mostrar DebugOverlay" → activa/desactiva el overlay de stats
+- `Checkbox` "Mostrar FPS" → `DebugOverlay.ShowFps`
+- `Checkbox` "Mostrar memoria" → `DebugOverlay.ShowMemory`
+- `Checkbox` "Mostrar GC" → `DebugOverlay.ShowGcCount`
+- `Slider` "Escala overlay" 0.5–2.0
+
+**Notas:**
+- `DebugOverlay` se dibuja al final del Draw, sobre todo lo demás.
+- `DebugDraw` llama se realizan dentro del `SpriteBatch.Begin/End` del mundo.
+- Demostrar que `DebugDraw` no genera allocations en el game loop.
+
+---
+
+## Persistence (36)
+
+### Scene 36 — `PersistenceScene.cs` [TODO]
+
+> Sistemas: **SaveManager**, **SaveSlot**, **ISaveable**, **SaveDataWriter**, **SaveDataReader**
+
+**Layout:** Tres columnas — datos editables, slots de guardado, log.
+
+**Columna datos editables:**
+- `Label` "Datos del jugador"
+- `TextBox` "Nombre:" (string)
+- `NumericBox` "Nivel:" (int, 1–100)
+- `NumericBox` "Puntuación:" (int, 0–999999)
+- `ColorPickerRGB` "Color favorito:"
+- `Checkbox` "Tutorial completado"
+
+**Columna slots:**
+- `Label` "Slots de guardado (1–3)"
+- Por slot: `Button` "Guardar", `Button` "Cargar", `Button` "Borrar"
+- `Label` reactivo por slot: "Slot {n}: {nombre} Nv.{nivel} — {fecha}"
+- `Label` "Slot vacío" si no hay datos
+
+**Columna log:**
+- `Label` "Log de operaciones"
+- Lista de las últimas 8 operaciones (Guardado, Cargado, Borrado + timestamp)
+- `Button` "Limpiar log"
+
+**Notas:**
+- Definir `PlayerSaveData : ISaveable` con los campos del panel izquierdo.
+- `SaveManager` gestiona los slots; `SaveDataWriter/Reader` para serialización.
+- Los slots se persisten en disco (carpeta `%AppData%/AlcaMonoGameDemo/`).
+
+---
+
+## Localización (37)
+
+### Scene 37 — `LocalizationScene.cs` [TODO]
+
+> Sistemas: **LocalizationManager**, **StringLocalizerExtensions**
+
+**Dependencias de contenido:** `Content/Localization/es.json`, `Content/Localization/en.json`,
+`Content/Localization/fr.json`
+
+**Layout:** Pantalla dividida en dos mitades.
+
+**Mitad izquierda — Selector de idioma:**
+- `Label` "Localización Demo"
+- `RadioGroup` con 3 opciones: Español (ES), English (EN), Français (FR)
+- `Button` "Aplicar idioma"
+- `Label` reactivo "Idioma activo: {code}"
+
+**Mitad derecha — Textos localizados:**
+- 8 Labels mostrando cadenas localizadas:
+  - título, subtítulo, descripción, menú.inicio, menú.opciones, menú.salir, msg.bienvenida, msg.puntuacion
+
+**Notas:**
+- `LocalizationManager.SetLanguage("es")` en `PostInitialize`.
+- `LocalizationManager.Get("menu.inicio")` → string localizado.
+- Los ficheros JSON tienen estructura `{ "key": "valor" }`.
+- Si no existen los ficheros de localización, generarlos en `LoadContent` con datos de ejemplo.
+
+---
+
+## Async Content (38)
+
+### Scene 38 — `AsyncContentScene.cs` [TODO]
+
+> Sistemas: **AsyncContentLoader**, **ContentGroupBuilder**, **ContentLoadGroup**
+
+**Layout:** Pantalla de carga simulada + resultados.
+
+**Pantalla de carga:**
+- `ProgressBar` de carga total (0–100%)
+- `Label` reactivo "Cargando: {asset actual}..."
+- Lista de assets cargados (checkmarks)
+- `Label` reactivo "Tiempo total: {t:F2}s"
+
+**Tras completar la carga:**
+- Los assets cargados se muestran (texturas como miniaturas, fuentes como texto de muestra)
+- `Button` "Recargar grupo A" → descarga y recarga solo el grupo A
+- `Button` "Recargar grupo B" → ídem para grupo B
+- `Label` "Grupo A: texturas | Grupo B: fuentes"
+
+**Notas:**
+- `ContentGroupBuilder` define dos grupos: A (3 texturas) y B (1 fuente + 1 audio).
+- `AsyncContentLoader.LoadGroupAsync(group, progress)` con callback de progreso.
+- La `ProgressBar` se actualiza desde el callback de progreso en el hilo principal.
+- Usar `Task` + `await` en `PostInitialize` (async) para la carga inicial.
+
+---
+
+## Lighting 2D (39)
+
+### Scene 39 — `LightingScene.cs` [TODO]
+
+> Sistemas: **LightingWorld**, **AmbientLight**, **PointLight2D**, **SpotLight2D**,
+> **DirectionalLight2D**, **LightBehaviour**, **LightingRenderPipeline**
+
+**Layout:** Mundo oscuro con luces dinámicas + panel UI.
+
+**Mundo:**
+- Fondo oscuro con sprites/objetos de colores que reaccionan a la iluminación
+- 3 luces de colores que se pueden mover con click+drag:
+  - `PointLight2D` roja (radio 200 px)
+  - `SpotLight2D` azul (ángulo 45°, rango 300 px)
+  - `DirectionalLight2D` blanca (global)
+- `AmbientLight` configurable desde el panel
+
+**Panel UI:**
+- `Label` "Lighting 2D Demo"
+- `Slider` "Luz ambiental" 0–1 → `AmbientLight.Intensity`
+- `ColorPickerRGB` "Color ambiental" → `AmbientLight.Color`
+- `Slider` "PointLight radio" 50–400 → `PointLight2D.Radius`
+- `Slider` "SpotLight ángulo" 10–120° → `SpotLight2D.Angle`
+- `Checkbox` "Activar PointLight / SpotLight / DirectionalLight"
+- `Label` "Click + drag: mover luces"
+
+**Notas:**
+- `LightingRenderPipeline` gestiona el render de todas las luces via GPU.
+- Las luces se registran en `LightingWorld.AddLight(light)`.
+- El pipeline usa `RenderTargetManager` internamente.
+- Requiere que los shaders de iluminación estén compilados con MGCB.
+
+---
+
+## Networking (40)
+
+### Scene 40 — `NetworkingScene.cs` [TODO]
+
+> Sistemas: **NetworkServer**, **NetworkClient**, **NetworkIdentity**, **NetworkManagerBehaviour**,
+> **NetworkReplicator**, **NetworkTransformSync**, **NetFields** (NetInt, NetFloat, NetVector2),
+> **NetSyncAttribute**, **NetworkPhysicsSync**
+
+**Layout:** Dos paneles lado a lado — servidor y cliente — simulando una sesión local loopback.
+
+**Panel Servidor (izquierda):**
+- `Label` "Servidor"
+- `Button` "Iniciar servidor (localhost:7777)" → `NetworkServer.Start(7777)`
+- `Button` "Detener servidor"
+- `Label` reactivo "Estado: {Offline/Running}"
+- `Label` reactivo "Clientes conectados: {n}"
+- `Label` reactivo "Mensajes enviados: {n}"
+- `Label` reactivo "Entidad replicada pos: {x:F1},{y:F1}"
+
+**Panel Cliente (derecha):**
+- `Label` "Cliente"
+- `Button` "Conectar a localhost:7777" → `NetworkClient.Connect("127.0.0.1", 7777)`
+- `Button` "Desconectar"
+- `Label` reactivo "Estado: {Offline/Connected}"
+- `Label` reactivo "Ping: {ms} ms"
+- `Label` reactivo "Mensajes recibidos: {n}"
+- `Label` reactivo "Entidad recibida pos: {x:F1},{y:F1}"
+
+**Entidad replicada (centro pantalla):**
+- Cuadrado azul controlado desde el lado servidor (WASD)
+- El cliente ve la posición sincronizada en tiempo real
+- `Label` "Mover con WASD (lado servidor)"
+
+**Notas:**
+- `NetworkManagerBehaviour` adjunto a una `GameEntity` global, gestiona servidor y cliente.
+- `NetworkTransformSync` en la entidad replicada sincroniza `Transform.Position`.
+- `NetSyncAttribute` decora los `NetField` que se replican automáticamente.
+- Loopback en la misma máquina; servidor y cliente en el mismo proceso.
+- Los `NetField` (NetInt para score, NetVector2 para posición) se actualizan en `Update` del servidor.
+
+---
+
+## Platform (41)
+
+### Scene 41 — `PlatformScene.cs` [TODO]
+
+> Sistemas: **PlatformManager**, **PlatformType**
+
+**Layout:** Panel informativo centrado.
+
+| Elemento | Descripción |
+|----------|-------------|
+| `Label` "Platform Demo" | Header |
+| `Label` "Plataforma detectada: {type}" | `PlatformManager.Current` |
+| `Label` "¿Windows?: {bool}" | `PlatformManager.IsWindows` |
+| `Label` "¿Linux?: {bool}" | `PlatformManager.IsLinux` |
+| `Label` "¿macOS?: {bool}" | `PlatformManager.IsMacOS` |
+| `Label` "¿Mobile?: {bool}" | `PlatformManager.IsMobile` |
+| `Label` "¿Console?: {bool}" | `PlatformManager.IsConsole` |
+| `Label` "Path de datos: {path}" | `PlatformManager.StoragePath` |
+| `Label` "Versión OS: {ver}" | `PlatformManager.OsVersion` |
+| `Panel` | Info adicional específica de plataforma (renderers, drivers) |
+
+**Notas:**
+- Escena puramente informativa, sin interacción más allá del botón `← Menú`.
+- Si hay datos de capacidades gráficas disponibles (`GraphicsDevice.Adapter`), mostrarlos también.
