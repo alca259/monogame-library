@@ -26,13 +26,30 @@ public sealed class DemoGame : Core
         services.AddTransient<Physics2DScene>();
         services.AddTransient<NavigationScene>();
         services.AddTransient<AudioBasicScene>();
+        services.AddTransient<AudioSpatialScene>();
+        services.AddTransient<AudioAdvancedScene>();
         services.AddTransient<InputScene>();
         services.AddTransient<AnimationScene>();
+        services.AddTransient<Camera3DScene>();
         services.AddTransient<ParticlesScene>();
+        services.AddTransient<SpriteMaterialScene>();
+        services.AddTransient<PostProcessScene>();
+        services.AddTransient<ResolutionScene>();
+        services.AddTransient<TiledMapScene>();
+        services.AddTransient<BitmapFontScene>();
+        services.AddTransient<Physics2DJointsScene>();
+        services.AddTransient<SteeringScene>();
+        services.AddTransient<EntityPoolScene>();
         services.AddTransient<EventBusScene>();
         services.AddTransient<StateMachineScene>();
         services.AddTransient<TimersScene>();
         services.AddTransient<TweeningScene>();
+        services.AddTransient<DebugScene>();
+        services.AddTransient<PersistenceScene>();
+        services.AddTransient<LocalizationScene>();
+        services.AddTransient<AsyncContentScene>();
+        services.AddTransient<LightingScene>();
+        services.AddTransient<NetworkingScene>();
         services.AddTransient<PlatformScene>();
     }
 

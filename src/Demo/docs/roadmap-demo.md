@@ -47,30 +47,30 @@ src/Demo/Alca.MonoGame.Demo/
 │   ├── Physics2DScene.cs             [OK]
 │   ├── NavigationScene.cs            [OK]
 │   ├── AudioBasicScene.cs            [OK]
-│   ├── AudioSpatialScene.cs          [TODO]
-│   ├── AudioAdvancedScene.cs         [TODO]
+│   ├── AudioSpatialScene.cs          [OK]
+│   ├── AudioAdvancedScene.cs         [OK]
 │   ├── InputScene.cs                 [OK]
 │   ├── AnimationScene.cs             [OK]
-│   ├── Camera3DScene.cs              [TODO]
+│   ├── Camera3DScene.cs              [OK]
 │   ├── ParticlesScene.cs             [OK]
-│   ├── SpriteMaterialScene.cs        [TODO]
-│   ├── PostProcessScene.cs           [TODO]
-│   ├── ResolutionScene.cs            [TODO]
-│   ├── TiledMapScene.cs              [TODO]
-│   ├── BitmapFontScene.cs            [TODO]
-│   ├── Physics2DJointsScene.cs       [TODO]
-│   ├── SteeringScene.cs              [TODO]
-│   ├── EntityPoolScene.cs            [TODO]
+│   ├── SpriteMaterialScene.cs        [OK]
+│   ├── PostProcessScene.cs           [OK]
+│   ├── ResolutionScene.cs            [OK]
+│   ├── TiledMapScene.cs              [OK]
+│   ├── BitmapFontScene.cs            [OK]
+│   ├── Physics2DJointsScene.cs       [OK]
+│   ├── SteeringScene.cs              [OK]
+│   ├── EntityPoolScene.cs            [OK]
 │   ├── EventBusScene.cs              [OK]
 │   ├── StateMachineScene.cs          [OK]
 │   ├── TimersScene.cs                [OK]
 │   ├── TweeningScene.cs              [OK]
-│   ├── DebugScene.cs                 [TODO]
-│   ├── PersistenceScene.cs           [TODO]
-│   ├── LocalizationScene.cs          [TODO]
-│   ├── AsyncContentScene.cs          [TODO]
-│   ├── LightingScene.cs              [TODO]
-│   ├── NetworkingScene.cs            [TODO]
+│   ├── DebugScene.cs                 [OK]
+│   ├── PersistenceScene.cs           [OK]
+│   ├── LocalizationScene.cs          [OK]
+│   ├── AsyncContentScene.cs          [OK]
+│   ├── LightingScene.cs              [OK]
+│   ├── NetworkingScene.cs            [OK]
 │   └── PlatformScene.cs              [OK]
 ├── DemoGame.cs
 ├── Globals.cs
@@ -268,7 +268,7 @@ controls.Add(backBtn);
 
 ---
 
-### Scene 17 — `AudioSpatialScene.cs` [TODO]
+### Scene 17 — `AudioSpatialScene.cs` [OK]
 
 > Sistemas: **SpatialAudioSource**, **SpatialAudioListener**, **AudioZone**, **AudioEmitter3D**, **AudioListener3D**
 
@@ -292,7 +292,7 @@ controls.Add(backBtn);
 
 ---
 
-### Scene 18 — `AudioAdvancedScene.cs` [TODO]
+### Scene 18 — `AudioAdvancedScene.cs` [OK]
 
 > Sistemas: **SoundEffectPool**, **AudioCrossfader**
 
@@ -381,7 +381,7 @@ controls.Add(backBtn);
 
 ## Gráficos 3D (21)
 
-### Scene 21 — `Camera3DScene.cs` [TODO]
+### Scene 21 — `Camera3DScene.cs` [OK]
 
 > Sistemas: **Camera3D**, **FirstPersonCamera3D**, **ThirdPersonCamera3D**, **TopDownCamera3D**,
 > **FixedCamera3D**, **PrimitiveBatch**, **MeshRenderer**
@@ -442,7 +442,7 @@ controls.Add(backBtn);
 
 ## Shaders y Materiales (23)
 
-### Scene 23 — `SpriteMaterialScene.cs` [TODO]
+### Scene 23 — `SpriteMaterialScene.cs` [OK]
 
 > Sistemas: **Material**, **SpriteMaterial**
 
@@ -472,7 +472,7 @@ controls.Add(backBtn);
 
 ## Post-Procesado (24)
 
-### Scene 24 — `PostProcessScene.cs` [TODO]
+### Scene 24 — `PostProcessScene.cs` [OK]
 
 > Sistemas: **RenderTargetManager**, **PostProcessEffect**
 
@@ -501,7 +501,7 @@ controls.Add(backBtn);
 
 ## Resolución Virtual (25)
 
-### Scene 25 — `ResolutionScene.cs` [TODO]
+### Scene 25 — `ResolutionScene.cs` [OK]
 
 > Sistemas: **ResolutionManager**
 
@@ -529,7 +529,7 @@ controls.Add(backBtn);
 
 ## Tiled Maps (26)
 
-### Scene 26 — `TiledMapScene.cs` [TODO]
+### Scene 26 — `TiledMapScene.cs` [OK]
 
 > Sistemas: **TiledMapRenderer**, **TiledObjectLayer**
 
@@ -559,7 +559,7 @@ controls.Add(backBtn);
 
 ## Bitmap Fonts (27)
 
-### Scene 27 — `BitmapFontScene.cs` [TODO]
+### Scene 27 — `BitmapFontScene.cs` [OK]
 
 > Sistemas: **BitmapFontRenderer**
 
@@ -589,7 +589,7 @@ controls.Add(backBtn);
 
 ## Physics2D Avanzado (28)
 
-### Scene 28 — `Physics2DJointsScene.cs` [TODO]
+### Scene 28 — `Physics2DJointsScene.cs` [OK]
 
 > Sistemas: **PolygonCollider2D**, **DistanceJoint2D**, **HingeJoint2D**, **SpringJoint2D**,
 > **CollisionCategory**, **CollisionMatrix**
@@ -622,7 +622,7 @@ controls.Add(backBtn);
 
 ## Steering Behaviors (29)
 
-### Scene 29 — `SteeringScene.cs` [TODO]
+### Scene 29 — `SteeringScene.cs` [OK]
 
 > Sistemas: **SteeringController**, **SeekBehavior**, **FleeBehavior**, **ArriveBehavior**,
 > **WanderBehavior**, **SeparationBehavior**, **NavAgentProfile**
@@ -661,7 +661,7 @@ controls.Add(backBtn);
 
 ## Entity Pool (30)
 
-### Scene 30 — `EntityPoolScene.cs` [TODO]
+### Scene 30 — `EntityPoolScene.cs` [OK]
 
 > Sistemas: **GameEntityPool\<T\>**, **IPoolable**
 
@@ -808,7 +808,7 @@ controls.Add(backBtn);
 
 ## Debug Tools (35)
 
-### Scene 35 — `DebugScene.cs` [TODO]
+### Scene 35 — `DebugScene.cs` [OK]
 
 > Sistemas: **DebugDraw**, **DebugOverlay**
 
@@ -837,7 +837,7 @@ controls.Add(backBtn);
 
 ## Persistence (36)
 
-### Scene 36 — `PersistenceScene.cs` [TODO]
+### Scene 36 — `PersistenceScene.cs` [OK]
 
 > Sistemas: **SaveManager**, **SaveSlot**, **ISaveable**, **SaveDataWriter**, **SaveDataReader**
 
@@ -871,7 +871,7 @@ controls.Add(backBtn);
 
 ## Localización (37)
 
-### Scene 37 — `LocalizationScene.cs` [TODO]
+### Scene 37 — `LocalizationScene.cs` [OK]
 
 > Sistemas: **LocalizationManager**, **StringLocalizerExtensions**
 
@@ -900,7 +900,7 @@ controls.Add(backBtn);
 
 ## Async Content (38)
 
-### Scene 38 — `AsyncContentScene.cs` [TODO]
+### Scene 38 — `AsyncContentScene.cs` [OK]
 
 > Sistemas: **AsyncContentLoader**, **ContentGroupBuilder**, **ContentLoadGroup**
 
@@ -928,7 +928,7 @@ controls.Add(backBtn);
 
 ## Lighting 2D (39)
 
-### Scene 39 — `LightingScene.cs` [TODO]
+### Scene 39 — `LightingScene.cs` [OK]
 
 > Sistemas: **LightingWorld**, **AmbientLight**, **PointLight2D**, **SpotLight2D**,
 > **DirectionalLight2D**, **LightBehaviour**, **LightingRenderPipeline**
@@ -962,7 +962,7 @@ controls.Add(backBtn);
 
 ## Networking (40)
 
-### Scene 40 — `NetworkingScene.cs` [TODO]
+### Scene 40 — `NetworkingScene.cs` [OK]
 
 > Sistemas: **NetworkServer**, **NetworkClient**, **NetworkIdentity**, **NetworkManagerBehaviour**,
 > **NetworkReplicator**, **NetworkTransformSync**, **NetFields** (NetInt, NetFloat, NetVector2),
