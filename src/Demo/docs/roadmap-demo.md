@@ -46,13 +46,13 @@ src/Demo/Alca.MonoGame.Demo/
 │   ├── Camera2DScene.cs              [OK]
 │   ├── Physics2DScene.cs             [OK]
 │   ├── NavigationScene.cs            [OK]
-│   ├── AudioBasicScene.cs            [TODO]
+│   ├── AudioBasicScene.cs            [OK]
 │   ├── AudioSpatialScene.cs          [TODO]
 │   ├── AudioAdvancedScene.cs         [TODO]
-│   ├── InputScene.cs                 [TODO]
-│   ├── AnimationScene.cs             [TODO]
+│   ├── InputScene.cs                 [OK]
+│   ├── AnimationScene.cs             [OK]
 │   ├── Camera3DScene.cs              [TODO]
-│   ├── ParticlesScene.cs             [TODO]
+│   ├── ParticlesScene.cs             [OK]
 │   ├── SpriteMaterialScene.cs        [TODO]
 │   ├── PostProcessScene.cs           [TODO]
 │   ├── ResolutionScene.cs            [TODO]
@@ -61,17 +61,17 @@ src/Demo/Alca.MonoGame.Demo/
 │   ├── Physics2DJointsScene.cs       [TODO]
 │   ├── SteeringScene.cs              [TODO]
 │   ├── EntityPoolScene.cs            [TODO]
-│   ├── EventBusScene.cs              [TODO]
-│   ├── StateMachineScene.cs          [TODO]
-│   ├── TimersScene.cs                [TODO]
-│   ├── TweeningScene.cs              [TODO]
+│   ├── EventBusScene.cs              [OK]
+│   ├── StateMachineScene.cs          [OK]
+│   ├── TimersScene.cs                [OK]
+│   ├── TweeningScene.cs              [OK]
 │   ├── DebugScene.cs                 [TODO]
 │   ├── PersistenceScene.cs           [TODO]
 │   ├── LocalizationScene.cs          [TODO]
 │   ├── AsyncContentScene.cs          [TODO]
 │   ├── LightingScene.cs              [TODO]
 │   ├── NetworkingScene.cs            [TODO]
-│   └── PlatformScene.cs              [TODO]
+│   └── PlatformScene.cs              [OK]
 ├── DemoGame.cs
 ├── Globals.cs
 ├── Program.cs
@@ -80,11 +80,13 @@ src/Demo/Alca.MonoGame.Demo/
 
 **`DemoGame.cs`:**
 - Registrar todas las escenas en `ConfigureServices` como `AddTransient`.
-- Escenas ya registradas (01–15): `UIScene_Menu`, `UIScene_BasicControls`, `UIScene_InputText`,
+- Escenas ya registradas (01–16, 19, 20, 22, 31–34, 41): `UIScene_Menu`, `UIScene_BasicControls`, `UIScene_InputText`,
   `UIScene_TextArea`, `UIScene_Sliders`, `UIScene_Selection`, `UIScene_ColorPicker`,
   `UIScene_Layout`, `UIScene_ScrollView`, `UIScene_Tooltip`, `UIScene_Focus`,
-  `UIScene_Transitions`, `EcsDemoScene`, `Camera2DScene`, `Physics2DScene`, `NavigationScene`.
-- Escenas pendientes de registrar (16–41): `AudioBasicScene`, `AudioSpatialScene`,
+  `UIScene_Transitions`, `EcsDemoScene`, `Camera2DScene`, `Physics2DScene`, `NavigationScene`,
+  `AudioBasicScene`, `InputScene`, `AnimationScene`, `ParticlesScene`, `EventBusScene`,
+  `StateMachineScene`, `TimersScene`, `TweeningScene`, `PlatformScene`.
+- Escenas pendientes de registrar (17–18, 21, 23–30, 35–40): `AudioSpatialScene`, `AudioAdvancedScene`,
   `AudioAdvancedScene`, `InputScene`, `AnimationScene`, `Camera3DScene`, `ParticlesScene`,
   `SpriteMaterialScene`, `PostProcessScene`, `ResolutionScene`, `TiledMapScene`,
   `BitmapFontScene`, `Physics2DJointsScene`, `SteeringScene`, `EntityPoolScene`,
@@ -240,7 +242,7 @@ controls.Add(backBtn);
 
 ## Audio (16–18)
 
-### Scene 16 — `AudioBasicScene.cs` [TODO]
+### Scene 16 — `AudioBasicScene.cs` [OK]
 
 > Sistemas: **AudioController**, **AudioMixer**, **AudioMixerChannel**
 
@@ -315,7 +317,7 @@ controls.Add(backBtn);
 
 ## Input (19)
 
-### Scene 19 — `InputScene.cs` [TODO]
+### Scene 19 — `InputScene.cs` [OK]
 
 > Sistemas: **InputManager**, **InputAction**, **InputActionMap**, **InputBinding**, **InputSerializer**
 
@@ -346,7 +348,7 @@ controls.Add(backBtn);
 
 ## Animación (20)
 
-### Scene 20 — `AnimationScene.cs` [TODO]
+### Scene 20 — `AnimationScene.cs` [OK]
 
 > Sistemas: **TextureAtlas**, **TextureRegion**, **Sprite**, **AnimatedSprite**, **Animation**,
 > **AnimationStateMachine**, **AnimatedSpriteBehaviour**, **AnimationStateMachineBehaviour**
@@ -410,7 +412,7 @@ controls.Add(backBtn);
 
 ## Partículas (22)
 
-### Scene 22 — `ParticlesScene.cs` [TODO]
+### Scene 22 — `ParticlesScene.cs` [OK]
 
 > Sistemas: **ParticleBuilder**, **ParticleEffectWrapper**, **ParticleEmitterBehaviour**
 
@@ -688,7 +690,7 @@ controls.Add(backBtn);
 
 ## EventBus (31)
 
-### Scene 31 — `EventBusScene.cs` [TODO]
+### Scene 31 — `EventBusScene.cs` [OK]
 
 > Sistemas: **EventBus**, **EventChannel**, **ICancellableEvent**
 
@@ -718,7 +720,7 @@ controls.Add(backBtn);
 
 ## State Machine (32)
 
-### Scene 32 — `StateMachineScene.cs` [TODO]
+### Scene 32 — `StateMachineScene.cs` [OK]
 
 > Sistemas: **StateMachine\<TState\>**, **StateMachineBehaviour\<TState\>**
 
@@ -748,7 +750,7 @@ controls.Add(backBtn);
 
 ## Timers (33)
 
-### Scene 33 — `TimersScene.cs` [TODO]
+### Scene 33 — `TimersScene.cs` [OK]
 
 > Sistemas: **TimerManager**, **GameTimer**
 
@@ -774,7 +776,7 @@ controls.Add(backBtn);
 
 ## Tweening Standalone (34)
 
-### Scene 34 — `TweeningScene.cs` [TODO]
+### Scene 34 — `TweeningScene.cs` [OK]
 
 > Sistemas: **TweeningManager**, **EasingCatalog** (todas las funciones)
 
@@ -1002,7 +1004,7 @@ controls.Add(backBtn);
 
 ## Platform (41)
 
-### Scene 41 — `PlatformScene.cs` [TODO]
+### Scene 41 — `PlatformScene.cs` [OK]
 
 > Sistemas: **PlatformManager**, **PlatformType**
 

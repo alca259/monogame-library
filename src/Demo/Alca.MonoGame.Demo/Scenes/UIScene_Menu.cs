@@ -44,8 +44,17 @@ public sealed class UIScene_Menu : Scene
         AddEntry(buttonList, "13. Camera2D (Shake, Zoom, Follow)", () => Core.SceneManager.RequestChange(Core.GetService<Camera2DScene>()));
         AddEntry(buttonList, "14. Physics2D (RigidBody, Colliders)", () => Core.SceneManager.RequestChange(Core.GetService<Physics2DScene>()));
         AddEntry(buttonList, "15. Navigation (NavGrid, A*, NavAgent)", () => Core.SceneManager.RequestChange(Core.GetService<NavigationScene>()));
+        AddEntry(buttonList, "16. Audio Basic (AudioController, Mixer)", () => Core.SceneManager.RequestChange(Core.GetService<AudioBasicScene>()));
+        AddEntry(buttonList, "19. Input (Actions, ActionMap, Rebinding)", () => Core.SceneManager.RequestChange(Core.GetService<InputScene>()));
+        AddEntry(buttonList, "20. Animation (TextureAtlas, AnimStateMachine)", () => Core.SceneManager.RequestChange(Core.GetService<AnimationScene>()));
+        AddEntry(buttonList, "22. Particles (ParticleBuilder, Emitter)", () => Core.SceneManager.RequestChange(Core.GetService<ParticlesScene>()));
+        AddEntry(buttonList, "31. EventBus (Pub/Sub, ICancellableEvent)", () => Core.SceneManager.RequestChange(Core.GetService<EventBusScene>()));
+        AddEntry(buttonList, "32. StateMachine (Generic FSM, Diagram)", () => Core.SceneManager.RequestChange(Core.GetService<StateMachineScene>()));
+        AddEntry(buttonList, "33. Timers (TimerManager, GameTimer)", () => Core.SceneManager.RequestChange(Core.GetService<TimersScene>()));
+        AddEntry(buttonList, "34. Tweening (EasingCatalog, Curves)", () => Core.SceneManager.RequestChange(Core.GetService<TweeningScene>()));
+        AddEntry(buttonList, "41. Platform (PlatformManager, OS info)", () => Core.SceneManager.RequestChange(Core.GetService<PlatformScene>()));
 
-        var scrollView = new ScrollView(Core.GraphicsDevice) { FixedSize = new Vector2(700, 340) };
+        var scrollView = new ScrollView(Core.GraphicsDevice) { FixedSize = new Vector2(700, 560) };
         scrollView.Add(buttonList);
 
         var anchor = new AnchorLayout();

@@ -25,6 +25,15 @@ public sealed class DemoGame : Core
         services.AddTransient<Camera2DScene>();
         services.AddTransient<Physics2DScene>();
         services.AddTransient<NavigationScene>();
+        services.AddTransient<AudioBasicScene>();
+        services.AddTransient<InputScene>();
+        services.AddTransient<AnimationScene>();
+        services.AddTransient<ParticlesScene>();
+        services.AddTransient<EventBusScene>();
+        services.AddTransient<StateMachineScene>();
+        services.AddTransient<TimersScene>();
+        services.AddTransient<TweeningScene>();
+        services.AddTransient<PlatformScene>();
     }
 
     protected override void PostInitialize()
