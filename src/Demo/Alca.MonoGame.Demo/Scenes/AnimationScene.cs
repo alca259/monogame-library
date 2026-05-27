@@ -20,18 +20,18 @@ public sealed class AnimationScene : Scene
     private Label _stateLabel = null!;
     private Label _speedLabel = null!;
 
-    private static readonly string[] AnimNames = { "Idle", "Walk", "Run", "Attack" };
+    private static readonly string[] _animNames = { "Idle", "Walk", "Run", "Attack" };
 
     private const int FrameW  = 64;
     private const int FrameH  = 64;
     private const int FrameCols = 4;
     private const int FrameRows = 4;
 
-    private static readonly Vector2 SpriteDrawPos = new(400, 280);
+    private static readonly Vector2 _spriteDrawPos = new(400, 280);
 
-    protected override void PostInitialize()
+    protected override void PreInitialize()
     {
-        base.PostInitialize();
+        base.PreInitialize();
         _stateMachine = new AnimationStateMachine();
     }
 
@@ -44,27 +44,27 @@ public sealed class AnimationScene : Scene
         _atlasTexture = BuildAtlasTexture(Core.GraphicsDevice);
         _atlas = new TextureAtlas(_atlasTexture);
 
-        _animations = new Animation[AnimNames.Length];
-        for (int a = 0; a < AnimNames.Length; a++)
+        _animations = new Animation[_animNames.Length];
+        for (int a = 0; a < _animNames.Length; a++)
         {
             var frames = new System.Collections.Generic.List<TextureRegion>(FrameCols);
             for (int f = 0; f < FrameCols; f++)
             {
-                TextureRegion region = _atlas.AddRegion($"{AnimNames[a]}_{f}", f * FrameW, a * FrameH, FrameW, FrameH);
+                TextureRegion region = _atlas.AddRegion($"{_animNames[a]}_{f}", f * FrameW, a * FrameH, FrameW, FrameH);
                 frames.Add(region);
             }
             var anim = new Animation(frames, TimeSpan.FromMilliseconds(180))
             {
-                Name = AnimNames[a],
+                Name = _animNames[a],
                 IsLooping = true,
                 SpeedMultiplier = 1f,
             };
             _animations[a] = anim;
-            _atlas.AddAnimation(AnimNames[a], anim);
-            _stateMachine.Register(AnimNames[a], anim);
+            _atlas.AddAnimation(_animNames[a], anim);
+            _stateMachine.Register(_animNames[a], anim);
         }
 
-        _stateMachine.Play(AnimNames[0]);
+        _stateMachine.Play(_animNames[0]);
         _uiRoot.OverlayManager = _overlayManager;
         BuildUI();
     }
@@ -130,8 +130,8 @@ public sealed class AnimationScene : Scene
             Font = _font,
             ScreenHeight = Core.GraphicsDevice.Viewport.Height,
         };
-        foreach (string name in AnimNames) dropdown.AddItem(name);
-        dropdown.SelectionChanged += i => _stateMachine.Play(AnimNames[i]);
+        foreach (string name in _animNames) dropdown.AddItem(name);
+        dropdown.SelectionChanged += i => _stateMachine.Play(_animNames[i]);
         controls.Add(new Label { Font = _font, Text = "Estado:", Color = Color.LightGray });
         controls.Add(dropdown);
 
@@ -194,7 +194,7 @@ public sealed class AnimationScene : Scene
         Core.GraphicsDevice.Clear(new Color(15, 15, 25));
 
         Core.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
-        _stateMachine.Draw(Core.SpriteBatch, SpriteDrawPos);
+        _stateMachine.Draw(Core.SpriteBatch, _spriteDrawPos);
         Core.SpriteBatch.End();
 
         _uiRoot.DrawAll(Core.SpriteBatch);
