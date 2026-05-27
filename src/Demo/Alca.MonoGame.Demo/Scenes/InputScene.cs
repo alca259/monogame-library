@@ -149,7 +149,7 @@ public sealed class InputScene : Scene
     private void UpdateBindingsLabel()
     {
         if (_bindingsLabel == null) return;
-        _bindingsLabel.Text = $"Jump: {_jumpAction.Name}  |  Fire: {_fireAction.Name}";
+        _bindingsLabel.Text = $"Jump: {_jumpAction?.Name}  |  Fire: {_fireAction?.Name}";
     }
 
     public override void Update(GameTime gameTime)

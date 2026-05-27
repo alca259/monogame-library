@@ -55,6 +55,8 @@ public sealed class Physics2DScene : Scene
         _groundTexture = CreateFilledTexture(Core.GraphicsDevice, (int)GroundWidth, (int)GroundHeight, new Color(80, 100, 80));
 
         BuildUI();
+        _interactionManager.HoverChanged += e =>
+            Console.WriteLine($"[UIHover] {e?.GetType().Name ?? "null"} | IsPointerOverUI={_interactionManager.IsPointerOverUI}");
     }
 
     private void BuildUI()
@@ -118,7 +120,13 @@ public sealed class Physics2DScene : Scene
 
     public override void Update(GameTime gameTime)
     {
-        if (Core.Input.Mouse.WasButtonJustPressed(MouseButton.Left))
+        _uiRoot.Update(gameTime);
+        Rectangle screen = new(0, 0, Core.GraphicsDevice.Viewport.Width, Core.GraphicsDevice.Viewport.Height);
+        _uiRoot.Measure(new Vector2(screen.Width, screen.Height));
+        _uiRoot.Arrange(screen);
+        _interactionManager.Update(_uiRoot, Core.Input.Mouse);
+
+        if (!_interactionManager.IsPointerOverUI && Core.Input.Mouse.WasButtonJustPressed(MouseButton.Left))
         {
             var mousePos = Core.Input.Mouse.Position.ToVector2();
             if (mousePos.X > 200f)
@@ -128,12 +136,6 @@ public sealed class Physics2DScene : Scene
         _world.Update(gameTime);
 
         _infoLabel.Text = $"Balls: {_balls.Count}/{MaxBalls}";
-
-        _uiRoot.Update(gameTime);
-        Rectangle screen = new(0, 0, Core.GraphicsDevice.Viewport.Width, Core.GraphicsDevice.Viewport.Height);
-        _uiRoot.Measure(new Vector2(screen.Width, screen.Height));
-        _uiRoot.Arrange(screen);
-        _interactionManager.Update(_uiRoot, Core.Input.Mouse);
     }
 
     public override void Draw(GameTime gameTime)

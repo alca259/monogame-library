@@ -42,7 +42,58 @@ public void Update(UIRoot root, MouseInfo mouse, UIFocusManager? focusManager = 
 - Realiza un recorrido DFS sobre el árbol; los hijos se prueban **de último a primero** (el más dibujado encima es el primero en recibir el evento).
 - Si se hace clic sobre un elemento `IFocusable`, el focus manager transfiere el foco automáticamente.
 
-### HitTest (interno)
+### IsPointerOverUI
+
+```csharp
+public bool IsPointerOverUI { get; }
+```
+
+`true` si el puntero está sobre un control interactivo (`IUIInteractable`): Button, Slider, Checkbox, TextBox, etc. Los contenedores de layout puros (AnchorLayout, StackPanel, GridLayout…) son **transparentes** a esta comprobación — no bloquean el input del juego aunque el cursor esté sobre su área.
+
+Se actualiza en cada llamada a `Update`.
+
+---
+
+## Bloqueo de input: UI vs. juego
+
+Cuando hay una capa de UI sobre el mundo del juego (botones, paneles, etc.), un clic sobre un botón UI no debe propagarse al juego subyacente.
+
+### Orden correcto en `Update`
+
+El `UIInteractionManager.Update` debe llamarse **antes** de procesar el input del juego, para que `IsPointerOverUI` esté disponible en esa misma frame:
+
+```csharp
+public override void Update(GameTime gameTime)
+{
+    // 1. Actualizar y hacer layout de la UI
+    _uiRoot.Update(gameTime);
+    Rectangle screen = new(0, 0, Core.GraphicsDevice.Viewport.Width, Core.GraphicsDevice.Viewport.Height);
+    _uiRoot.Measure(new Vector2(screen.Width, screen.Height));
+    _uiRoot.Arrange(screen);
+    _interactionManager.Update(_uiRoot, Core.Input.Mouse);  // ← primero la UI
+
+    // 2. Solo procesar input de juego si el puntero NO está sobre la UI
+    if (!_interactionManager.IsPointerOverUI)
+    {
+        if (Core.Input.Mouse.WasButtonJustPressed(MouseButton.Left))
+        {
+            SpawnObject(Core.Input.Mouse.Position.ToVector2());
+        }
+    }
+
+    _world.Update(gameTime);
+}
+```
+
+### Anti-patrón a evitar
+
+```csharp
+// MAL: el input del juego se procesa antes de que la UI lo consuma
+if (Core.Input.Mouse.WasButtonJustPressed(MouseButton.Left))
+    SpawnObject(mousePos);  // ← se ejecuta aunque se haya pulsado un botón UI
+
+_interactionManager.Update(_uiRoot, Core.Input.Mouse);  // demasiado tarde
+```
 
 ```csharp
 internal static UIElement? HitTest(UIElement element, Point point)

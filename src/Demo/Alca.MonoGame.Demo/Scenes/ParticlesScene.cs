@@ -146,7 +146,14 @@ public sealed class ParticlesScene : Scene
 
     public override void Update(GameTime gameTime)
     {
-        if (Core.Input.Mouse.WasButtonJustPressed(MouseButton.Left))
+        _uiRoot.Update(gameTime);
+        _overlayManager.Update(gameTime);
+        Rectangle screen = new(0, 0, Core.GraphicsDevice.Viewport.Width, Core.GraphicsDevice.Viewport.Height);
+        _uiRoot.Measure(new Vector2(screen.Width, screen.Height));
+        _uiRoot.Arrange(screen);
+        _interactionManager.Update(_uiRoot, Core.Input.Mouse);
+
+        if (!_interactionManager.IsPointerOverUI && Core.Input.Mouse.WasButtonJustPressed(MouseButton.Left))
             _effect?.Trigger(Core.Input.MousePosition, 0f);
 
         if (_effect is not null)
@@ -164,13 +171,6 @@ public sealed class ParticlesScene : Scene
             _countSb.Append(activeCount);
             _countLabel.Text = _countSb.ToString();
         }
-
-        _uiRoot.Update(gameTime);
-        _overlayManager.Update(gameTime);
-        Rectangle screen = new(0, 0, Core.GraphicsDevice.Viewport.Width, Core.GraphicsDevice.Viewport.Height);
-        _uiRoot.Measure(new Vector2(screen.Width, screen.Height));
-        _uiRoot.Arrange(screen);
-        _interactionManager.Update(_uiRoot, Core.Input.Mouse);
     }
 
     private static int CountActiveParticles(System.Collections.Generic.List<ParticleEmitter> emitters)

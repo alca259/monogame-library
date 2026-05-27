@@ -12,6 +12,14 @@ public sealed class UIInteractionManager
     // Reused every frame — no heap allocation in Update.
     private UIPointerEventArgs _eventArgs;
 
+    /// <summary>True if the pointer is currently over an interactive UI control (<see cref="IUIInteractable"/>).
+    /// Layout containers (AnchorLayout, StackPanel, etc.) are transparent to this check.
+    /// Call after <see cref="Update"/> to suppress game-world input.</summary>
+    public bool IsPointerOverUI => _hoveredElement is IUIInteractable;
+
+    /// <summary>Fired when the hovered element changes. Carries the new element (null = none).</summary>
+    public event Action<UIElement?>? HoverChanged;
+
     /// <summary>Processes pointer input against the UI tree.
     /// Must be called after the layout Arrange pass so Bounds are current.</summary>
     /// <param name="root">Root of the UI tree to test against.</param>
@@ -32,6 +40,7 @@ public sealed class UIInteractionManager
                 newInteractable.OnPointerEnter();
 
             _hoveredElement = newHover;
+            HoverChanged?.Invoke(_hoveredElement);
         }
 
         bool justPressed = mouse.WasButtonJustPressed(MouseButton.Left);

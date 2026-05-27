@@ -141,7 +141,7 @@
 | Clase | Descripción | Enlace |
 |---|---|---|
 | `IUIInteractable` | Interfaz para controles que reciben eventos de puntero | [05-ui/interaction.md](05-ui/interaction.md) |
-| `UIInteractionManager` | Hit testing DFS; despacha eventos OnPointerEnter/Leave/Down/Up | [05-ui/interaction.md](05-ui/interaction.md) |
+| `UIInteractionManager` | Hit testing DFS; despacha eventos OnPointerEnter/Leave/Down/Up; `IsPointerOverUI` para bloquear input del juego | [05-ui/interaction.md](05-ui/interaction.md) |
 | `IFocusable` | Interfaz para controles que pueden recibir foco | [05-ui/focus.md](05-ui/focus.md) |
 | `UIFocusManager` | Navegación por teclado/gamepad; Tab, D-Pad, vecinos | [05-ui/focus.md](05-ui/focus.md) |
 | `UITransitionManager` | Transiciones animadas entre paneles | [05-ui/transitions.md](05-ui/transitions.md) |

@@ -103,29 +103,38 @@ public sealed class NavigationScene : Scene
 
     public override void Update(GameTime gameTime)
     {
-        Point mousePixel = Core.Input.Mouse.Position;
-        Vector2 mouseWorld = mousePixel.ToVector2();
+        _uiRoot.Update(gameTime);
+        Rectangle screen = new(0, 0, Core.GraphicsDevice.Viewport.Width, Core.GraphicsDevice.Viewport.Height);
+        _uiRoot.Measure(new Vector2(screen.Width, screen.Height));
+        _uiRoot.Arrange(screen);
+        _interactionManager.Update(_uiRoot, Core.Input.Mouse);
 
-        if (Core.Input.Mouse.WasButtonJustPressed(MouseButton.Right))
+        if (!_interactionManager.IsPointerOverUI)
         {
-            _navGrid.WorldToGrid(mouseWorld, out int gx, out int gy);
-            if (_navGrid.IsInBounds(gx, gy) && _navGrid.IsWalkable(gx, gy))
+            Point mousePixel = Core.Input.Mouse.Position;
+            Vector2 mouseWorld = mousePixel.ToVector2();
+
+            if (Core.Input.Mouse.WasButtonJustPressed(MouseButton.Right))
             {
-                Vector2 dest = _navGrid.GridToWorld(gx, gy);
-                _displayPath.Clear();
-                _pathfinder.FindPath(_navGrid, _agentEntity.Transform.Position2d, dest, _displayPath);
-                _navAgent.SetDestination(dest);
+                _navGrid.WorldToGrid(mouseWorld, out int gx, out int gy);
+                if (_navGrid.IsInBounds(gx, gy) && _navGrid.IsWalkable(gx, gy))
+                {
+                    Vector2 dest = _navGrid.GridToWorld(gx, gy);
+                    _displayPath.Clear();
+                    _pathfinder.FindPath(_navGrid, _agentEntity.Transform.Position2d, dest, _displayPath);
+                    _navAgent.SetDestination(dest);
+                }
             }
-        }
 
-        if (_obstacleMode && Core.Input.Mouse.WasButtonJustPressed(MouseButton.Left))
-        {
-            _navGrid.WorldToGrid(mouseWorld, out int gx, out int gy);
-            if (_navGrid.IsInBounds(gx, gy))
+            if (_obstacleMode && Core.Input.Mouse.WasButtonJustPressed(MouseButton.Left))
             {
-                bool current = _navGrid.IsWalkable(gx, gy);
-                _navGrid.SetWalkable(gx, gy, !current);
-                _displayPath.Clear();
+                _navGrid.WorldToGrid(mouseWorld, out int gx, out int gy);
+                if (_navGrid.IsInBounds(gx, gy))
+                {
+                    bool current = _navGrid.IsWalkable(gx, gy);
+                    _navGrid.SetWalkable(gx, gy, !current);
+                    _displayPath.Clear();
+                }
             }
         }
 
@@ -133,12 +142,6 @@ public sealed class NavigationScene : Scene
 
         _stateLabel.Text = _navAgent.IsMoving ? "Agent: Moving" : "Agent: Idle";
         _waypointLabel.Text = $"Waypoints: {_displayPath.Count}";
-
-        _uiRoot.Update(gameTime);
-        Rectangle screen = new(0, 0, Core.GraphicsDevice.Viewport.Width, Core.GraphicsDevice.Viewport.Height);
-        _uiRoot.Measure(new Vector2(screen.Width, screen.Height));
-        _uiRoot.Arrange(screen);
-        _interactionManager.Update(_uiRoot, Core.Input.Mouse);
     }
 
     public override void Draw(GameTime gameTime)
