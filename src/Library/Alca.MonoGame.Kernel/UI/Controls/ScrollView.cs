@@ -109,22 +109,15 @@ public sealed class ScrollView : UIContainer
     {
         if (!IsEnabled) return;
 
-        MouseState ms = Mouse.GetState();
-        int wheel = ms.ScrollWheelValue;
-        int rawDelta = _lastWheelValue - wheel;
-        _lastWheelValue = wheel;
-
-        if (rawDelta != 0 && Bounds.Contains(ms.Position))
+        int rawDelta = -Core.Input.Mouse.ScrollWheelDelta;
+        if (rawDelta != 0 && Bounds.Contains(Core.Input.Mouse.Position))
         {
-            // rawDelta is ±120 per notch; convert to pixel distance using ScrollSpeed.
             float sign = rawDelta > 0 ? 1f : -1f;
             ScrollBy(new Vector2(0f, sign * ScrollSpeed));
         }
 
         base.Update(gameTime);
     }
-
-    private int _lastWheelValue;
 
     /// <summary>Scrolls by the given delta in pixels, clamped to content bounds.</summary>
     public void ScrollBy(Vector2 delta)

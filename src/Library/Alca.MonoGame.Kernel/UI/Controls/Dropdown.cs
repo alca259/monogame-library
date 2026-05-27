@@ -1,4 +1,5 @@
 using Alca.MonoGame.Kernel.Graphics;
+using Alca.MonoGame.Kernel.Input;
 using Alca.MonoGame.Kernel.UI.Focus;
 using Alca.MonoGame.Kernel.UI.Interaction;
 
@@ -74,10 +75,6 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
     private int _highlightedIndex = -1;
     private Rectangle _listBounds;
     private int _screenHeight;
-
-    private KeyboardState _prevKeyState;
-    private GamePadState _prevGamePadState;
-    private MouseState _prevMouseState;
 
     #endregion
 
@@ -235,13 +232,10 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
     {
         if (!IsEnabled) return;
 
-        MouseState ms = Mouse.GetState();
-
         if (_isExpanded)
         {
-            Point mousePos = ms.Position;
-            bool justClicked = ms.LeftButton == ButtonState.Pressed
-                            && _prevMouseState.LeftButton == ButtonState.Released;
+            Point mousePos = Core.Input.Mouse.Position;
+            bool justClicked = Core.Input.Mouse.WasButtonJustPressed(MouseButton.Left);
 
             if (justClicked)
             {
@@ -287,61 +281,47 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
             }
         }
 
-        _prevMouseState = ms;
-
         if (_isFocused)
         {
-            KeyboardState ks = Keyboard.GetState();
-            GamePadState gp = GamePad.GetState(PlayerIndex.One);
-
             if (_isExpanded)
             {
-                if (WasKeyJustPressed(ks, Keys.Up) || WasPadJustPressed(gp, Buttons.DPadUp))
+                if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Up) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadUp))
                 {
                     if (_highlightedIndex > 0) _highlightedIndex--;
                     else _highlightedIndex = _options.Count - 1;
                 }
-                else if (WasKeyJustPressed(ks, Keys.Down) || WasPadJustPressed(gp, Buttons.DPadDown))
+                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Down) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadDown))
                 {
                     if (_highlightedIndex < _options.Count - 1) _highlightedIndex++;
                     else _highlightedIndex = 0;
                 }
-                else if (WasKeyJustPressed(ks, Keys.Enter) || WasPadJustPressed(gp, Buttons.A))
+                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Enter) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.A))
                 {
                     if (_highlightedIndex >= 0)
                         SelectedIndex = _highlightedIndex;
                     Close();
                 }
-                else if (WasKeyJustPressed(ks, Keys.Escape) || WasPadJustPressed(gp, Buttons.B))
+                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Escape) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.B))
                 {
                     Close();
                 }
             }
             else
             {
-                if (WasKeyJustPressed(ks, Keys.Enter) || WasKeyJustPressed(ks, Keys.Space) || WasPadJustPressed(gp, Buttons.A))
+                if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Enter) || Core.Input.Keyboard.WasKeyJustPressed(Keys.Space) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.A))
                     Open();
-                else if (WasKeyJustPressed(ks, Keys.Up) || WasPadJustPressed(gp, Buttons.DPadUp))
+                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Up) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadUp))
                 {
                     if (_selectedIndex > 0) SelectedIndex = _selectedIndex - 1;
                 }
-                else if (WasKeyJustPressed(ks, Keys.Down) || WasPadJustPressed(gp, Buttons.DPadDown))
+                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Down) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadDown))
                 {
                     if (_selectedIndex < _options.Count - 1) SelectedIndex = _selectedIndex + 1;
                     else if (_selectedIndex == -1 && _options.Count > 0) SelectedIndex = 0;
                 }
             }
-
-            _prevKeyState = ks;
-            _prevGamePadState = gp;
         }
     }
-
-    private bool WasKeyJustPressed(KeyboardState current, Keys key)
-        => current.IsKeyDown(key) && _prevKeyState.IsKeyUp(key);
-
-    private bool WasPadJustPressed(GamePadState current, Buttons button)
-        => current.IsButtonDown(button) && _prevGamePadState.IsButtonUp(button);
 
     /// <inheritdoc/>
     public override void Draw(SpriteBatch spriteBatch)
@@ -428,8 +408,6 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
     public void OnFocusGained()
     {
         _isFocused = true;
-        _prevKeyState = Keyboard.GetState();
-        _prevGamePadState = GamePad.GetState(PlayerIndex.One);
     }
 
     /// <inheritdoc/>

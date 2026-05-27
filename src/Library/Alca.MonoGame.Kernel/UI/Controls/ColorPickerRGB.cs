@@ -1,4 +1,5 @@
 using Alca.MonoGame.Kernel.Graphics;
+using Alca.MonoGame.Kernel.Input;
 
 namespace Alca.MonoGame.Kernel.UI.Controls;
 
@@ -249,9 +250,8 @@ public sealed class ColorPickerRGB : UIContainer
         if (!IsEnabled) return;
         base.Update(gameTime);
 
-        MouseState ms = Mouse.GetState();
-        Point mousePos = ms.Position;
-        bool held = ms.LeftButton == ButtonState.Pressed;
+        Point mousePos = Core.Input.Mouse.Position;
+        bool held = Core.Input.Mouse.IsButtonDown(MouseButton.Left);
 
         if (_draggingHue)
         {
@@ -277,7 +277,7 @@ public sealed class ColorPickerRGB : UIContainer
                 ApplySvDrag(mousePos);
             }
         }
-        else if (ms.LeftButton == ButtonState.Pressed)
+        else if (Core.Input.Mouse.IsButtonDown(MouseButton.Left))
         {
             if (_hueBarBounds.Contains(mousePos))
             {

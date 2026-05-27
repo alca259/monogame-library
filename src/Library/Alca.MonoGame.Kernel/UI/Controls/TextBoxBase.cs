@@ -31,9 +31,6 @@ public abstract class TextBoxBase : UIElement, IUIInteractable, IFocusable
     private string _cachedSelectionText = string.Empty;
     private bool _cursorDirty;
 
-    private KeyboardState _prevKeyState;
-    private bool _keyStateInitialized;
-
     #endregion
 
     #region Properties
@@ -317,17 +314,7 @@ public abstract class TextBoxBase : UIElement, IUIInteractable, IFocusable
 
     private void HandleKeyboardUpdate()
     {
-        KeyboardState current = Keyboard.GetState();
-
-        if (!_keyStateInitialized)
-        {
-            _prevKeyState = current;
-            _keyStateInitialized = true;
-            return;
-        }
-
-        ProcessKeyboardInput(current, _prevKeyState);
-        _prevKeyState = current;
+        ProcessKeyboardInput(Core.Input.Keyboard.CurrentState, Core.Input.Keyboard.PreviousState);
     }
 
     /// <summary>Processes keyboard navigation keys. Override to add variant-specific key handling.</summary>
@@ -468,7 +455,6 @@ public abstract class TextBoxBase : UIElement, IUIInteractable, IFocusable
         _isFocused = true;
         _cursorVisible = true;
         _blinkTimer = 0f;
-        _keyStateInitialized = false;
         _window?.TextInput += OnWindowTextInput;
     }
 

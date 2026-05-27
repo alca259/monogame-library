@@ -1,4 +1,5 @@
 using Alca.MonoGame.Kernel.Graphics;
+using Alca.MonoGame.Kernel.Input;
 using Alca.MonoGame.Kernel.UI.Focus;
 using Alca.MonoGame.Kernel.UI.Interaction;
 
@@ -16,9 +17,6 @@ public sealed class Slider : UIElement, IUIInteractable, IFocusable
 
     private Rectangle _trackRect;
     private Rectangle _thumbVisualRect;
-
-    private KeyboardState _prevKeyState;
-    private GamePadState _prevGamePadState;
 
     #endregion
 
@@ -190,53 +188,40 @@ public sealed class Slider : UIElement, IUIInteractable, IFocusable
 
         if (_isDragging)
         {
-            MouseState ms = Mouse.GetState();
-            if (ms.LeftButton == ButtonState.Released)
+            if (!Core.Input.Mouse.IsButtonDown(MouseButton.Left))
             {
                 _isDragging = false;
             }
             else
             {
-                SetValueFromPosition(ms.X, ms.Y);
+                SetValueFromPosition(Core.Input.Mouse.Position.X, Core.Input.Mouse.Position.Y);
                 UpdateThumbRects();
             }
         }
 
         if (_isFocused)
         {
-            KeyboardState ks = Keyboard.GetState();
-            GamePadState gp = GamePad.GetState(PlayerIndex.One);
-
             float step = Step > 0f ? Step : (MaxValue - MinValue) * 0.01f;
 
             if (Orientation == Orientation.Horizontal)
             {
-                if (WasKeyJustPressed(ks, Keys.Left) || WasPadJustPressed(gp, Buttons.DPadLeft))
+                if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Left) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadLeft))
                 { Value -= step; UpdateThumbRects(); }
-                else if (WasKeyJustPressed(ks, Keys.Right) || WasPadJustPressed(gp, Buttons.DPadRight))
+                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Right) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadRight))
                 { Value += step; UpdateThumbRects(); }
             }
             else
             {
-                if (WasKeyJustPressed(ks, Keys.Down) || WasPadJustPressed(gp, Buttons.DPadDown))
+                if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Down) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadDown))
                 { Value -= step; UpdateThumbRects(); }
-                else if (WasKeyJustPressed(ks, Keys.Up) || WasPadJustPressed(gp, Buttons.DPadUp))
+                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Up) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadUp))
                 { Value += step; UpdateThumbRects(); }
             }
 
-            if (WasKeyJustPressed(ks, Keys.Home)) { Value = MinValue; UpdateThumbRects(); }
-            else if (WasKeyJustPressed(ks, Keys.End)) { Value = MaxValue; UpdateThumbRects(); }
-
-            _prevKeyState = ks;
-            _prevGamePadState = gp;
+            if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Home)) { Value = MinValue; UpdateThumbRects(); }
+            else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.End)) { Value = MaxValue; UpdateThumbRects(); }
         }
     }
-
-    private bool WasKeyJustPressed(KeyboardState current, Keys key)
-        => current.IsKeyDown(key) && _prevKeyState.IsKeyUp(key);
-
-    private bool WasPadJustPressed(GamePadState current, Buttons button)
-        => current.IsButtonDown(button) && _prevGamePadState.IsButtonUp(button);
 
     /// <inheritdoc/>
     public override void Draw(SpriteBatch spriteBatch)
@@ -325,8 +310,6 @@ public sealed class Slider : UIElement, IUIInteractable, IFocusable
     public void OnFocusGained()
     {
         _isFocused = true;
-        _prevKeyState = Keyboard.GetState();
-        _prevGamePadState = GamePad.GetState(PlayerIndex.One);
     }
 
     /// <inheritdoc/>
