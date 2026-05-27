@@ -12,6 +12,9 @@ public sealed class EditorScene
     /// <summary>Optional 2D world bounds in pixels. Zero = unbounded.</summary>
     public EditorVector2 WorldSize { get; set; } = EditorVector2.Zero;
 
+    /// <summary>Optional subsystem configuration for the GameWorld. Null = plain new GameWorld() with no subsystems.</summary>
+    public EditorWorldConfig? WorldConfig { get; set; }
+
     /// <summary>Top-level game objects in this scene (no parent).</summary>
     public List<EditorGameObject> RootGameObjects { get; } = [];
 }

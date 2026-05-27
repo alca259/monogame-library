@@ -86,7 +86,20 @@ public sealed class SceneCodeGenerator : ICodeGenService
         sb.AppendLine($"// Source: {relSource}");
         sb.AppendLine("// Safe to commit; regenerated automatically on scene save.");
         sb.AppendLine("using Alca.MonoGame.Kernel.ECS;");
+        sb.AppendLine("using Alca.MonoGame.Kernel.Scenes;");
         sb.AppendLine("using Microsoft.Xna.Framework;");
+        if (HasSpriteRenderer(roots))
+            sb.AppendLine("using Microsoft.Xna.Framework.Graphics;");
+
+        EditorWorldConfig? cfg = scene.WorldConfig;
+        if (cfg?.UsePhysics2D == true)
+            sb.AppendLine("using Alca.MonoGame.Kernel.Physics;");
+        if (cfg?.UseLighting == true)
+            sb.AppendLine("using Alca.MonoGame.Kernel.Lighting;");
+        if (cfg?.UseNavigation == true)
+            sb.AppendLine("using Alca.MonoGame.Kernel.Navigation;");
+        if (cfg?.UseAudio == true)
+            sb.AppendLine("using Alca.MonoGame.Kernel.Audio;");
 
         foreach (string ns in extraUsings)
             sb.AppendLine($"using {ns};");
@@ -96,9 +109,12 @@ public sealed class SceneCodeGenerator : ICodeGenService
         sb.AppendLine();
         sb.AppendLine($"public sealed partial class {scene.Name}Scene : Scene");
         sb.AppendLine("{");
-        sb.AppendLine("    /// <summary>Creates and registers all entities defined in the editor scene.</summary>");
-        sb.AppendLine("    protected override void OnLoad(GameWorld world)");
+        AppendCreateWorldMethod(sb, cfg);
+        sb.AppendLine();
+        sb.AppendLine("    /// <summary>Populates the world with all entities defined in the editor scene.</summary>");
+        sb.AppendLine("    protected override void InitializeWorld()");
         sb.AppendLine("    {");
+        sb.AppendLine("        var world = World!;");
 
         for (int i = 0; i < roots.Count; i++)
             AppendEntity(sb, roots[i], null, names, indent: "        ");
@@ -159,11 +175,38 @@ public sealed class SceneCodeGenerator : ICodeGenService
             string          bShort  = GetShortTypeName(b.TypeName);
             string          bVar    = names.Allocate(ToCamelCase(bShort));
 
-            sb.AppendLine($"{indent}var {bVar} = {varName}.AddComponent<{bShort}>();");
+            if (bShort == "SpriteRendererBehaviour")
+            {
+                // SpriteRendererBehaviour has no parameterless ctor — requires Texture2D.
+                // Generate: new SpriteRendererBehaviour(Content.Load<Texture2D>("path"))
+                string spritePath = b.Properties.TryGetValue("SpritePath", out JsonElement sp)
+                    && sp.ValueKind == JsonValueKind.String
+                    && sp.GetString() is { Length: > 0 } p
+                    ? EscapeString(p)
+                    : string.Empty;
 
-            foreach (KeyValuePair<string, JsonElement> prop in b.Properties)
-                AppendPropertyAssignment(sb, bVar, prop.Key, prop.Value, indent);
+                if (spritePath.Length > 0)
+                {
+                    sb.AppendLine($"{indent}var {bVar} = new SpriteRendererBehaviour(Content.Load<Texture2D>(\"{spritePath}\"));");
+                    sb.AppendLine($"{indent}{varName}.Add({bVar});");
+                    foreach (KeyValuePair<string, JsonElement> prop in b.Properties)
+                    {
+                        if (prop.Key == "SpritePath") continue;
+                        AppendPropertyAssignment(sb, bVar, prop.Key, prop.Value, indent);
+                    }
+                }
+            }
+            else
+            {
+                sb.AppendLine($"{indent}var {bVar} = {varName}.AddComponent<{bShort}>();");
+                foreach (KeyValuePair<string, JsonElement> prop in b.Properties)
+                    AppendPropertyAssignment(sb, bVar, prop.Key, prop.Value, indent);
+            }
         }
+
+        List<string> tags = entity.Tags;
+        for (int i = 0; i < tags.Count; i++)
+            sb.AppendLine($"{indent}{varName}.AddTag(\"{EscapeString(tags[i])}\");");
 
         List<EditorGameObject> children = entity.Children;
         for (int i = 0; i < children.Count; i++)
@@ -254,9 +297,64 @@ public sealed class SceneCodeGenerator : ICodeGenService
     //  Helpers
     // ──────────────────────────────────────────────────────────
 
+    private static bool HasSpriteRenderer(List<EditorGameObject> objects)
+    {
+        for (int i = 0; i < objects.Count; i++)
+        {
+            EditorGameObject obj = objects[i];
+            for (int j = 0; j < obj.Behaviours.Count; j++)
+                if (GetShortTypeName(obj.Behaviours[j].TypeName) == "SpriteRendererBehaviour")
+                    return true;
+            if (HasSpriteRenderer(obj.Children)) return true;
+        }
+        return false;
+    }
+
     private static string FormatFloat(float v) => $"{v:G}f";
 
     private static string EscapeString(string s) => s.Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+    private static void AppendCreateWorldMethod(StringBuilder sb, EditorWorldConfig? cfg)
+    {
+        bool hasSubsystems = cfg is not null
+            && (cfg.UsePhysics2D || cfg.UseLighting || cfg.UseNavigation || cfg.UseAudio);
+
+        sb.AppendLine("    /// <inheritdoc/>");
+        if (!hasSubsystems)
+        {
+            sb.AppendLine("    protected override GameWorld? CreateWorld() => new GameWorld();");
+            return;
+        }
+
+        sb.AppendLine("    protected override GameWorld? CreateWorld()");
+        sb.AppendLine("    {");
+        sb.AppendLine("        var world = new GameWorld();");
+
+        if (cfg!.UsePhysics2D)
+            sb.AppendLine($"        world.PhysicsWorld = new Physics2DWorld(new Vector2({FormatFloat(cfg.GravityX)}, {FormatFloat(cfg.GravityY)}));");
+
+        if (cfg.UseLighting)
+        {
+            int[] c = cfg.AmbientColorRgba;
+            string ambient = (c[0] == 0 && c[1] == 0 && c[2] == 0 && c[3] == 255)
+                ? "Color.Black"
+                : $"new Color({c[0]}, {c[1]}, {c[2]}, {c[3]})";
+            sb.AppendLine($"        world.LightingWorld = new LightingWorld {{ AmbientColor = {ambient} }};");
+        }
+
+        if (cfg.UseNavigation)
+        {
+            int cap = cfg.NavGridWidth * cfg.NavGridHeight;
+            sb.AppendLine($"        world.NavGrid = new NavGrid({cfg.NavGridWidth}, {cfg.NavGridHeight}, {FormatFloat(cfg.NavGridCellSize)}, new Vector2({FormatFloat(cfg.NavGridOriginX)}, {FormatFloat(cfg.NavGridOriginY)}));");
+            sb.AppendLine($"        world.Pathfinder = new Pathfinder({cap});");
+        }
+
+        if (cfg.UseAudio)
+            sb.AppendLine("        world.AudioController = new AudioController();");
+
+        sb.AppendLine("        return world;");
+        sb.AppendLine("    }");
+    }
 
     private static string GetShortTypeName(string typeName)
     {

@@ -1,6 +1,11 @@
 using System.Reflection;
+using Alca.MonoGame.Kernel.Audio;
 using Alca.MonoGame.Kernel.ECS;
+using Alca.MonoGame.Kernel.Lighting;
+using Alca.MonoGame.Kernel.Navigation;
+using Alca.MonoGame.Kernel.Physics;
 using Microsoft.Xna.Framework;
+using MonoGame.Editor.Core.Models;
 using MonoGame.Editor.Core.Registry;
 
 namespace MonoGame.Editor.Core.PlayMode;
@@ -12,6 +17,7 @@ public static class SceneToWorldConverter
     public static GameWorld Convert(EditorScene scene, GameObjectRegistry registry)
     {
         var world = new GameWorld();
+        ApplyWorldConfig(world, scene.WorldConfig);
         foreach (var root in scene.RootGameObjects)
             CreateRecursive(world, root, null, registry);
         return world;
@@ -26,6 +32,7 @@ public static class SceneToWorldConverter
         var entity = world.CreateEntity(obj.Name, new Vector2(obj.Position.X, obj.Position.Y));
 
         ApplyTransform(entity, obj);
+        entity.Active = obj.Active;
 
         if (parent is not null)
             entity.SetParent(parent);
@@ -35,6 +42,9 @@ public static class SceneToWorldConverter
             if (b.Enabled)
                 TryAddBehaviour(entity, b, registry);
         }
+
+        for (int i = 0; i < obj.Tags.Count; i++)
+            entity.AddTag(obj.Tags[i]);
 
         foreach (var child in obj.Children)
             CreateRecursive(world, child, entity, registry);
@@ -71,6 +81,9 @@ public static class SceneToWorldConverter
 
         if (type is null) return;
 
+        // SpriteRendererBehaviour requires a Texture2D constructor argument — not instantiable at edit time.
+        if (type.Name == "SpriteRendererBehaviour") return;
+
         try
         {
             var instance = (GameBehaviour)Activator.CreateInstance(type)!;
@@ -86,6 +99,34 @@ public static class SceneToWorldConverter
         {
             // Type lacks a parameterless constructor or Add threw — skip this behaviour.
         }
+    }
+
+    private static void ApplyWorldConfig(GameWorld world, EditorWorldConfig? cfg)
+    {
+        if (cfg is null) return;
+
+        if (cfg.UsePhysics2D)
+            world.PhysicsWorld = new Physics2DWorld(new Vector2(cfg.GravityX, cfg.GravityY));
+
+        if (cfg.UseLighting)
+        {
+            int[] c = cfg.AmbientColorRgba;
+            world.LightingWorld = new LightingWorld
+            {
+                AmbientColor = new Microsoft.Xna.Framework.Color(c[0], c[1], c[2], c[3])
+            };
+        }
+
+        if (cfg.UseNavigation)
+        {
+            int cap = cfg.NavGridWidth * cfg.NavGridHeight;
+            world.NavGrid = new NavGrid(cfg.NavGridWidth, cfg.NavGridHeight, cfg.NavGridCellSize,
+                new Vector2(cfg.NavGridOriginX, cfg.NavGridOriginY));
+            world.Pathfinder = new Pathfinder(cap);
+        }
+
+        if (cfg.UseAudio)
+            world.AudioController = new AudioController();
     }
 
     private static void ApplyProperties(

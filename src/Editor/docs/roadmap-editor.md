@@ -776,7 +776,8 @@ public sealed record CodeGenResult(
 
 **`CodeGen/SceneCodeGenerator.cs`** (implementa `ICodeGenService`):
 
-- Genera `{SceneName}Scene.Generated.cs` con método `OnLoad(GameWorld world)` (ver Fase 14 para el patrón exacto)
+- Genera `{SceneName}Scene.Generated.cs` con override de `CreateWorld()` (devuelve `new GameWorld()`) e `InitializeWorld()` (usa `World!` para poblar entidades)
+- **Nota:** el contrato usa `Scene.CreateWorld()` + `Scene.InitializeWorld()` del Kernel. No existe `OnLoad(GameWorld world)` en la clase base `Scene`.
 - Usa `StringBuilder` (sin LINQ en el bucle de generación)
 - Calcula hash MD5 del contenido antes de escribir: si coincide con el archivo existente, no sobreescribe (preserva timestamps)
 - Si el archivo es nuevo: llama `CsprojFileEditor.EnsureFileIncludedAsync`
@@ -876,6 +877,7 @@ Para una escena "Gameplay" con un "Player" (`PlayerMovementBehaviour` Speed=5.0)
 // Source: Editor/Scenes/Gameplay.scene.json
 // Safe to commit; regenerated automatically on scene save.
 using Alca.MonoGame.Kernel.ECS;
+using Alca.MonoGame.Kernel.Scenes;
 using Microsoft.Xna.Framework;
 using MyGame.Behaviours;
 
@@ -883,9 +885,14 @@ namespace MyGame.Scenes;
 
 public sealed partial class GameplayScene : Scene
 {
-    /// <summary>Creates and registers all entities defined in the editor scene.</summary>
-    protected override void OnLoad(GameWorld world)
+    /// <inheritdoc/>
+    protected override GameWorld? CreateWorld() => new GameWorld();
+
+    /// <summary>Populates the world with all entities defined in the editor scene.</summary>
+    protected override void InitializeWorld()
     {
+        var world = World!;
+
         // ── Entity: Player ──────────────────────────────────────────────────────
         var player_0 = world.CreateEntity("Player", new Vector2(100f, 200f));
         var playerMovement_0 = player_0.AddComponent<PlayerMovementBehaviour>();
@@ -1098,3 +1105,279 @@ MyGame/
 - Todos los textos de la UI del editor en inglés
 - Clases `sealed` por defecto, campos `_camelCase`, namespaces file-scoped
 - Sin LINQ en bucles de generación de código (`StringBuilder` directo)
+
+---
+
+## Fase 16 — Corrección de bugs críticos en generadores ✅ COMPLETADA
+
+### Contexto
+
+Análisis post-implementación reveló 3 bugs que producen código C# que no compila. Bugs corregidos directamente en los generadores.
+
+### Bug 1 — `BehaviourSkeletonGenerator`: firma `Draw` incorrecta
+
+`GameBehaviour.Draw` tiene firma `(GameTime gameTime, SpriteBatch spriteBatch)`. El generador emitía `(GameTime gameTime)` → `CS0115`. Corregido en `AppendLifecycleMethod` + `using Microsoft.Xna.Framework.Graphics;` condicional cuando Draw está seleccionado.
+
+### Bug 2 — `SceneCodeGenerator`: falta `using Alca.MonoGame.Kernel.Scenes`
+
+La clase generada hereda de `Scene` (namespace `Alca.MonoGame.Kernel.Scenes`) pero el generador no emitía ese using → `CS0246`. Añadido.
+
+### Bug 3 — `SceneCodeGenerator`: `OnLoad(GameWorld world)` no existe en `Scene`
+
+La API real del Kernel expone `Scene.CreateWorld()` (devuelve `GameWorld?`) y `Scene.InitializeWorld()` (sin parámetros, usa la propiedad `World`). El generador emitía `OnLoad(GameWorld world)` inexistente → `CS0115` + `NullReferenceException` en runtime. Corregido al patrón `CreateWorld() => new GameWorld()` + `InitializeWorld() { var world = World!; ... }`.
+
+### Archivos modificados
+
+- `MonoGame.Editor.Core/CodeGen/BehaviourSkeletonGenerator.cs`
+- `MonoGame.Editor.Core/CodeGen/SceneCodeGenerator.cs`
+
+### Resultado: código generado correcto tras Fase 16
+
+```csharp
+// AUTO-GENERATED — DO NOT EDIT MANUALLY
+using Alca.MonoGame.Kernel.ECS;
+using Alca.MonoGame.Kernel.Scenes;
+using Microsoft.Xna.Framework;
+using MyGame.Behaviours;
+
+namespace MyGame.Scenes;
+
+public sealed partial class GameplayScene : Scene
+{
+    /// <inheritdoc/>
+    protected override GameWorld? CreateWorld() => new GameWorld();
+
+    /// <summary>Populates the world with all entities defined in the editor scene.</summary>
+    protected override void InitializeWorld()
+    {
+        var world = World!;
+
+        // ── Entity: Player ──────────────────────────────────────────────────────
+        var player_0 = world.CreateEntity("Player", new Vector2(100f, 200f));
+        player_0.AddTag("Damageable");
+        var playerMovement_0 = player_0.AddComponent<PlayerMovementBehaviour>();
+        playerMovement_0.Speed = 5f;
+    }
+}
+```
+
+---
+
+## Fase 17 — Configuración de subsistemas del mundo (Physics, Lighting, Nav, Audio) ⬜ PENDIENTE
+
+### Objetivo
+
+Permitir que una escena declare qué subsistemas opcionales del `GameWorld` necesita. El generador emite un `CreateWorld()` más rico que los configura antes de que `InitializeWorld()` pueble las entidades.
+
+### Proyecto: MonoGame.Editor.Core
+
+**Nuevo `Models/EditorWorldConfig.cs`:**
+
+```csharp
+public sealed class EditorWorldConfig
+{
+    public bool UsePhysics2D     { get; set; }
+    public float GravityX        { get; set; } = 0f;
+    public float GravityY        { get; set; } = -9.8f;
+
+    public bool UseLighting      { get; set; }
+    /// <summary>RGBA del color ambiente. Default: negro (0,0,0,255).</summary>
+    public int[] AmbientColorRgba { get; set; } = [0, 0, 0, 255];
+
+    public bool UseNavigation    { get; set; }
+    public int   NavGridWidth    { get; set; } = 32;
+    public int   NavGridHeight   { get; set; } = 32;
+    public float NavGridCellSize { get; set; } = 32f;
+    public float NavGridOriginX  { get; set; }
+    public float NavGridOriginY  { get; set; }
+
+    public bool UseAudio         { get; set; }
+}
+```
+
+**`Models/EditorScene.cs`** — añadir:
+
+```csharp
+/// <summary>Subsistemas opcionales del GameWorld. Null = solo new GameWorld().</summary>
+public EditorWorldConfig? WorldConfig { get; set; }
+```
+
+Compatibilidad hacia atrás garantizada: al deserializar escenas antiguas `WorldConfig` queda `null` y el generador emite `CreateWorld() => new GameWorld()` sin cambios.
+
+**`CodeGen/SceneCodeGenerator.cs`** — `BuildSceneSource`:
+
+- Reemplazar la línea `CreateWorld() => new GameWorld()` por una llamada al nuevo método privado `AppendCreateWorldMethod(sb, scene.WorldConfig)`.
+- Emitir condicional antes del bucle `extraUsings` los usings de `Alca.MonoGame.Kernel.Physics`, `.Lighting`, `.Navigation`, `.Audio`.
+
+```csharp
+private static void AppendCreateWorldMethod(StringBuilder sb, EditorWorldConfig? cfg)
+{
+    if (cfg is null || (!cfg.UsePhysics2D && !cfg.UseLighting && !cfg.UseNavigation && !cfg.UseAudio))
+    {
+        sb.AppendLine("    /// <inheritdoc/>");
+        sb.AppendLine("    protected override GameWorld? CreateWorld() => new GameWorld();");
+        return;
+    }
+
+    sb.AppendLine("    /// <inheritdoc/>");
+    sb.AppendLine("    protected override GameWorld? CreateWorld()");
+    sb.AppendLine("    {");
+    sb.AppendLine("        var world = new GameWorld();");
+
+    if (cfg.UsePhysics2D)
+        sb.AppendLine($"        world.PhysicsWorld = new Physics2DWorld(new Vector2({FormatFloat(cfg.GravityX)}, {FormatFloat(cfg.GravityY)}));");
+
+    if (cfg.UseLighting)
+    {
+        int[] c = cfg.AmbientColorRgba;
+        string ambient = (c[0] == 0 && c[1] == 0 && c[2] == 0 && c[3] == 255)
+            ? "Color.Black"
+            : $"new Color({c[0]}, {c[1]}, {c[2]}, {c[3]})";
+        sb.AppendLine($"        world.LightingWorld = new LightingWorld {{ AmbientColor = {ambient} }};");
+    }
+
+    if (cfg.UseNavigation)
+    {
+        int cap = cfg.NavGridWidth * cfg.NavGridHeight;
+        sb.AppendLine($"        world.NavGrid = new NavGrid({cfg.NavGridWidth}, {cfg.NavGridHeight}, {FormatFloat(cfg.NavGridCellSize)}, new Vector2({FormatFloat(cfg.NavGridOriginX)}, {FormatFloat(cfg.NavGridOriginY)}));");
+        sb.AppendLine($"        world.Pathfinder = new Pathfinder({cap});");
+    }
+
+    if (cfg.UseAudio)
+        sb.AppendLine("        world.AudioController = new AudioController();");
+
+    sb.AppendLine("        return world;");
+    sb.AppendLine("    }");
+}
+```
+
+### Proyecto: MonoGame.Editor.WinForms
+
+**`Dialogs/WorldConfigDialog.cs`** (nuevo) — accesible desde `Scene > Configure World Subsystems...`:
+
+| Subsistema | Controles |
+|---|---|
+| Physics 2D | `CheckBox` + `NumericUpDown` GravityX/Y |
+| Lighting | `CheckBox` + `Panel` (color amb.) + `Button "..."` → `ColorDialog` |
+| Navigation | `CheckBox` + `NumericUpDown` GridWidth/Height/CellSize/OriginX/Y |
+| Audio | `CheckBox` solo |
+
+Al confirmar → actualiza `scene.WorldConfig` + `MarkSceneDirty()`.
+
+---
+
+## Fase 18 — Tags y SpriteRendererBehaviour en CodeGen ⬜ PENDIENTE
+
+### 18a — Tags ✅ COMPLETADA (incluida en Fase 16)
+
+En `AppendEntity`, tras el bucle de behaviours, se emite `entity.AddTag(...)` para cada tag del `EditorGameObject`. No requiere nuevos usings.
+
+### 18b — SpriteRendererBehaviour (ctor especial) ⬜ PENDIENTE
+
+`SpriteRendererBehaviour` tiene constructor `(Texture2D texture)` — sin ctor sin parámetros. `AddComponent<T>()` requiere `new()` y no compila para este tipo.
+
+**`SceneCodeGenerator.cs`** — `AppendEntity`: añadir rama especial antes del flujo estándar:
+
+```csharp
+if (bShort == "SpriteRendererBehaviour")
+{
+    string spritePath = b.Properties.TryGetValue("SpritePath", out var sp)
+        && sp.ValueKind == JsonValueKind.String
+        && sp.GetString() is { Length: > 0 } p ? EscapeString(p) : string.Empty;
+    if (spritePath.Length > 0)
+    {
+        sb.AppendLine($"{indent}var {bVar} = new SpriteRendererBehaviour(Content.Load<Texture2D>(\"{spritePath}\"));");
+        sb.AppendLine($"{indent}{varName}.Add({bVar});");
+        foreach (var prop in b.Properties)
+        {
+            if (prop.Key == "SpritePath") continue;
+            AppendPropertyAssignment(sb, bVar, prop.Key, prop.Value, indent);
+        }
+    }
+}
+else
+{
+    sb.AppendLine($"{indent}var {bVar} = {varName}.AddComponent<{bShort}>();");
+    foreach (var prop in b.Properties)
+        AppendPropertyAssignment(sb, bVar, prop.Key, prop.Value, indent);
+}
+```
+
+Emitir `using Microsoft.Xna.Framework.Graphics;` cuando alguna entidad de la jerarquía usa `SpriteRendererBehaviour`.
+
+---
+
+## Fase 19 — Auditoría y corrección de SceneToWorldConverter (PlayMode) ⬜ PENDIENTE
+
+### Hallazgos en `PlayMode/SceneToWorldConverter.cs`
+
+| Problema | Impacto |
+|---|---|
+| No transfiere `obj.Active` | Entidades desactivadas en editor se ejecutan en PlayMode |
+| No transfiere `obj.Tags` | Queries por tag en `Start()` devuelven vacío |
+| `Activator.CreateInstance` falla silenciosamente con `SpriteRendererBehaviour` | Sprites omitidos sin aviso |
+| No configura subsistemas (Physics/Lighting/Nav/Audio) | Subsistemas son null aunque la escena los declare (tras Fase 17) |
+
+### Correcciones en `CreateRecursive`
+
+```csharp
+// Después de ApplyTransform:
+entity.Active = obj.Active;
+
+// Después del bucle de behaviours:
+foreach (var tag in obj.Tags)
+    entity.AddTag(tag);
+```
+
+### Corrección en `TryAddBehaviour`
+
+```csharp
+// Antes de Activator.CreateInstance — tipos que requieren parámetros en ctor:
+if (type.Name == "SpriteRendererBehaviour") return;
+```
+
+### Nuevo método `ApplyWorldConfig` (dependiente de Fase 17)
+
+```csharp
+private static void ApplyWorldConfig(GameWorld world, EditorWorldConfig? cfg)
+{
+    if (cfg is null) return;
+    if (cfg.UsePhysics2D)
+        world.PhysicsWorld = new Physics2DWorld(new Vector2(cfg.GravityX, cfg.GravityY));
+    if (cfg.UseLighting)
+        world.LightingWorld = new LightingWorld
+        {
+            AmbientColor = new Color(cfg.AmbientColorRgba[0], cfg.AmbientColorRgba[1],
+                                     cfg.AmbientColorRgba[2], cfg.AmbientColorRgba[3])
+        };
+    if (cfg.UseNavigation)
+    {
+        world.NavGrid = new NavGrid(cfg.NavGridWidth, cfg.NavGridHeight,
+                                    cfg.NavGridCellSize,
+                                    new Vector2(cfg.NavGridOriginX, cfg.NavGridOriginY));
+        world.Pathfinder = new Pathfinder(cfg.NavGridWidth * cfg.NavGridHeight);
+    }
+    if (cfg.UseAudio)
+        world.AudioController = new AudioController();
+}
+```
+
+`Convert` llama `ApplyWorldConfig(world, scene.WorldConfig)` antes del bucle de entidades.
+
+### Checklist de verificación manual
+
+- [ ] Entidad inactiva en editor → no dibuja ni actualiza en PlayMode
+- [ ] Tags en editor → consultables por `World.GetEntitiesByTag` en `Start()`
+- [ ] `SpriteRendererBehaviour` → PlayMode no lanza excepción (sprite omitido)
+- [ ] (Fase 17) `UsePhysics2D` activo → cuerpos responden a gravedad en PlayMode
+
+---
+
+## Resumen de archivos — Fases 16–19
+
+| Fase | Archivos Core | Archivos WinForms |
+|------|--------------|-------------------|
+| **16** | `CodeGen/BehaviourSkeletonGenerator.cs`, `CodeGen/SceneCodeGenerator.cs` | — |
+| **17** | `Models/EditorWorldConfig.cs` (nuevo), `Models/EditorScene.cs`, `CodeGen/SceneCodeGenerator.cs` | `Dialogs/WorldConfigDialog.cs+Designer` (nuevo), `EditorForm.cs` |
+| **18b** | `CodeGen/SceneCodeGenerator.cs` | — |
+| **19** | `PlayMode/SceneToWorldConverter.cs` | — |

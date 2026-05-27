@@ -585,6 +585,12 @@ public sealed partial class EditorForm : Form
         ToolStripMenuItem newBehaviourItem = new() { Text = "New Behaviour..." };
         newBehaviourItem.Click += OnNewBehaviourClick;
         _projectMenu.DropDownItems.Add(newBehaviourItem);
+
+        _projectMenu.DropDownItems.Add(new ToolStripSeparator());
+
+        ToolStripMenuItem worldConfigItem = new() { Text = "Configure World Subsystems..." };
+        worldConfigItem.Click += OnConfigureWorldSubsystemsClick;
+        _projectMenu.DropDownItems.Add(worldConfigItem);
     }
 
     private async void OnBuildContentClick(object? sender, EventArgs e)
@@ -946,6 +952,24 @@ public sealed partial class EditorForm : Form
             _consolePanel.AppendLine($"[CodeGen] Error: {ex.Message}", LogLevel.Error);
             _statusLabel.Text = "Error.";
         }
+    }
+
+    private void OnConfigureWorldSubsystemsClick(object? sender, EventArgs e)
+    {
+        EditorScene? scene = _context.ActiveScene;
+        if (scene is null)
+        {
+            MessageBox.Show(this, "No scene is currently open.", "Configure World Subsystems", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        using WorldConfigDialog dlg = new();
+        dlg.LoadFrom(scene.WorldConfig);
+        if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+        scene.WorldConfig = dlg.BuildConfig();
+        _context.MarkSceneDirty();
+        _consolePanel.AppendLine("[Scene] World subsystems configuration updated.", LogLevel.Info);
     }
 
     #endregion
