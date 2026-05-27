@@ -23,7 +23,7 @@ public sealed class ResolutionManager : IDisposable
 
     /// <summary>
     /// Gets the uniform scale matrix for 2D world rendering with letterboxing.
-    /// Preserves the virtual aspect ratio; combine with <see cref="Camera2D.GetTransformMatrix"/>.
+    /// Preserves the virtual aspect ratio; combine with <see cref="Camera.Camera2D.GetTransformMatrix"/>.
     /// </summary>
     public Matrix WorldScaleMatrix => _worldScaleMatrix;
 

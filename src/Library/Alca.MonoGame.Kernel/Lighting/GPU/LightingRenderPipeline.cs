@@ -94,7 +94,7 @@ public sealed class LightingRenderPipeline : IDisposable
 
     /// <summary>
     /// Recreates the internal render targets for the new resolution.
-    /// Call from a <see cref="ResolutionManager"/> viewport-changed event.
+    /// Call from a <see cref="Graphics.ResolutionManager"/> viewport-changed event.
     /// </summary>
     public void Resize(int width, int height)
     {

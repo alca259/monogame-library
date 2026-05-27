@@ -37,7 +37,7 @@ public sealed class TextureAtlas
     /// <summary>Gets the region from this texture atlas with the specified name.</summary>
     /// <param name="name">The name of the region to retrieve.</param>
     public TextureRegion? GetRegion(string name)
-        => _regions.TryGetValue(name, out TextureRegion region) ? region : null;
+        => _regions.TryGetValue(name, out TextureRegion? region) ? region : null;
 
     /// <summary>Removes the region from this texture atlas with the specified name.</summary>
     /// <param name="name">The name of the texture region to remove.</param>
@@ -178,8 +178,11 @@ public sealed class TextureAtlas
             foreach (var frameElement in frameElements)
             {
                 string? regionName = frameElement.Attribute("region")?.Value ?? string.Empty;
-                TextureRegion region = atlas.GetRegion(regionName);
-                frames.Add(region);
+                TextureRegion? region = atlas.GetRegion(regionName);
+                if (region != null)
+                {
+                    frames.Add(region);
+                }
             }
 
             Animation animation = new(frames, delay);

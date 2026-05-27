@@ -9,7 +9,7 @@ public sealed class MeshRenderer
     private Texture2D? _textureOverride;
     private Matrix[]? _boneTransforms;
 
-    /// <summary>Gets the world-space bounding sphere of the loaded model, or <see cref="BoundingSphere.CreateMerged"/> of all meshes.</summary>
+    /// <summary>Gets the world-space bounding sphere of the loaded model, or <see cref="BoundingSphere.CreateMerged(BoundingSphere, BoundingSphere)"/> of all meshes.</summary>
     public BoundingSphere BoundingSphere { get; private set; }
 
     /// <summary>Loads the model from the content pipeline.</summary>

@@ -123,7 +123,7 @@ public sealed class SceneManager
     }
 
     /// <summary>Draws the scene hierarchy.
-    /// When overlays are stacked: draws <see cref="Scene.CurrentScene"/> first (if the top overlay is an overlay scene),
+    /// When overlays are stacked: draws <see cref="CurrentScene"/> first (if the top overlay is an overlay scene),
     /// then all overlays from bottom to top. Only the topmost scene receives <see cref="Update"/>.</summary>
     public void Draw(GameTime gameTime)
     {
