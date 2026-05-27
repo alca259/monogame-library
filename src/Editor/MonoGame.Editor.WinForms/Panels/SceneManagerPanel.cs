@@ -4,6 +4,7 @@ namespace MonoGame.Editor.WinForms.Panels;
 public sealed class SceneManagerPanel : UserControl
 {
     private EditorContext? _context;
+    private System.Drawing.Font? _boldFont;
 
     private readonly ToolStrip _toolStrip;
     private readonly ToolStripButton _newSceneButton;
@@ -117,6 +118,8 @@ public sealed class SceneManagerPanel : UserControl
             _context.EventBus.Unsubscribe<ProjectOpenedEvent>(OnProjectOpened);
             _context.EventBus.Unsubscribe<SceneLoadedEvent>(OnSceneLoaded);
         }
+        _boldFont?.Dispose();
+        _boldFont = null;
         base.OnHandleDestroyed(e);
     }
 
@@ -286,15 +289,14 @@ public sealed class SceneManagerPanel : UserControl
     private void UpdateActiveSceneBold()
     {
         string? activePath = _context?.ActiveScene?.ScenePath;
+        _boldFont ??= new System.Drawing.Font(_sceneList.Font, System.Drawing.FontStyle.Bold);
 
         for (int i = 0; i < _sceneList.Items.Count; i++)
         {
             ListViewItem item = _sceneList.Items[i];
             bool isActive = activePath is not null &&
                 string.Equals(item.Tag as string, activePath, StringComparison.OrdinalIgnoreCase);
-            item.Font = isActive
-                ? new System.Drawing.Font(_sceneList.Font, System.Drawing.FontStyle.Bold)
-                : _sceneList.Font;
+            item.Font = isActive ? _boldFont : _sceneList.Font;
         }
     }
 

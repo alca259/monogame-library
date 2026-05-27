@@ -306,7 +306,18 @@ public sealed partial class EditorForm : Form
 
     private void StartPlayMode()
     {
-        _context.TakePlaySnapshot();
+        try
+        {
+            _context.TakePlaySnapshot();
+        }
+        catch (Exception ex)
+        {
+            _context.Logger.LogError($"[PlayMode] Failed to snapshot scene: {ex.Message}");
+            MessageBox.Show(this, $"Could not start play mode: {ex.Message}", "Play Mode Error",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
         _playRunner = new PlayModeRunner(_context.ActiveScene!, _registry);
         _context.Logger.Log("[PlayMode] Started.", LogLevel.Info);
         _viewport.IsActive = false;
@@ -321,7 +332,16 @@ public sealed partial class EditorForm : Form
         _playRunner?.Dispose();
         _playRunner = null;
 
-        EditorScene? restored = _context.RestoreFromSnapshot();
+        EditorScene? restored = null;
+        try
+        {
+            restored = _context.RestoreFromSnapshot();
+        }
+        catch (Exception ex)
+        {
+            _context.Logger.LogError($"[PlayMode] Failed to restore snapshot: {ex.Message}");
+        }
+
         _context.ClearPlaySnapshot();
 
         if (restored is not null)

@@ -1163,7 +1163,7 @@ public sealed partial class GameplayScene : Scene
 
 ---
 
-## Fase 17 — Configuración de subsistemas del mundo (Physics, Lighting, Nav, Audio) ⬜ PENDIENTE
+## Fase 17 — Configuración de subsistemas del mundo (Physics, Lighting, Nav, Audio) ✅ COMPLETADA
 
 ### Objetivo
 
@@ -1272,7 +1272,7 @@ Al confirmar → actualiza `scene.WorldConfig` + `MarkSceneDirty()`.
 
 En `AppendEntity`, tras el bucle de behaviours, se emite `entity.AddTag(...)` para cada tag del `EditorGameObject`. No requiere nuevos usings.
 
-### 18b — SpriteRendererBehaviour (ctor especial) ⬜ PENDIENTE
+### 18b — SpriteRendererBehaviour (ctor especial) ✅ COMPLETADA
 
 `SpriteRendererBehaviour` tiene constructor `(Texture2D texture)` — sin ctor sin parámetros. `AddComponent<T>()` requiere `new()` y no compila para este tipo.
 
@@ -1307,7 +1307,7 @@ Emitir `using Microsoft.Xna.Framework.Graphics;` cuando alguna entidad de la jer
 
 ---
 
-## Fase 19 — Auditoría y corrección de SceneToWorldConverter (PlayMode) ⬜ PENDIENTE
+## Fase 19 — Auditoría y corrección de SceneToWorldConverter (PlayMode) ✅ COMPLETADA
 
 ### Hallazgos en `PlayMode/SceneToWorldConverter.cs`
 

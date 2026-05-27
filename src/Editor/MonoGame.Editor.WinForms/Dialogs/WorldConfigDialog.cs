@@ -5,7 +5,7 @@ namespace MonoGame.Editor.WinForms.Dialogs;
 /// <summary>Dialog for configuring optional GameWorld subsystems for a scene.</summary>
 public sealed partial class WorldConfigDialog : Form
 {
-    private Color _ambientColor = Color.Black;
+    private System.Drawing.Color _ambientColor = System.Drawing.Color.Black;
 
     /// <summary>Initializes the dialog.</summary>
     public WorldConfigDialog() => InitializeComponent();

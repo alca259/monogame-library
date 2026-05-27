@@ -20,6 +20,7 @@ public sealed class ConsolePanel : UserControl
 
     private LogLevel? _activeFilter;
     private readonly List<(string text, System.Drawing.Color color, bool bold)> _entries = [];
+    private System.Drawing.Font? _boldFont;
 
     private EditorContext? _context;
     private Action<LogEntryAddedEvent>? _onLogEntry;
@@ -92,6 +93,11 @@ public sealed class ConsolePanel : UserControl
     {
         if (disposing && _context is not null && _onLogEntry is not null)
             _context.EventBus.Unsubscribe(_onLogEntry);
+        if (disposing)
+        {
+            _boldFont?.Dispose();
+            _boldFont = null;
+        }
         base.Dispose(disposing);
     }
 
@@ -204,9 +210,11 @@ public sealed class ConsolePanel : UserControl
         _output.SelectionStart  = _output.TextLength;
         _output.SelectionLength = 0;
         _output.SelectionColor  = color;
-        _output.SelectionFont   = bold
-            ? new System.Drawing.Font(_output.Font, System.Drawing.FontStyle.Bold)
-            : _output.Font;
+        if (bold)
+        {
+            _boldFont ??= new System.Drawing.Font(_output.Font, System.Drawing.FontStyle.Bold);
+            _output.SelectionFont = _boldFont;
+        }
         _output.AppendText(text + Environment.NewLine);
         _output.SelectionFont  = _output.Font;
         _output.SelectionColor = _output.ForeColor;
