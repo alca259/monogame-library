@@ -34,12 +34,9 @@ public sealed class SteeringScene : Scene
     private bool _showRadii;
     private bool _leftMouseWasDown;
 
-    // Reusable neighbor list filled each frame (no LINQ, no alloc)
-    private readonly System.Collections.Generic.List<Vector2> _neighborsScratch = new(8);
-
-    protected override void PostInitialize()
+    protected override void PreInitialize()
     {
-        base.PostInitialize();
+        base.PreInitialize();
         _world.AudioController = Core.Audio;
 
         int w = Core.GraphicsDevice.Viewport.Width;

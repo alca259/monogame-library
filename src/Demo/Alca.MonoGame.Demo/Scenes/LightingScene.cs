@@ -34,9 +34,9 @@ public sealed class LightingScene : Scene
     private int _dragging = -1; // 0=point, 1=spot
     private bool _leftWasDown;
 
-    protected override void PostInitialize()
+    protected override void PreInitialize()
     {
-        base.PostInitialize();
+        base.PreInitialize();
         _lightingWorld = new LightingWorld { AmbientColor = new Color(20, 20, 30) };
         _world.LightingWorld = _lightingWorld;
         _world.AudioController = Core.Audio;

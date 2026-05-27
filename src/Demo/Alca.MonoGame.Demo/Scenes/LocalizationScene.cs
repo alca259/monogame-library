@@ -12,21 +12,20 @@ public sealed class LocalizationScene : Scene
 
     private LocalizationManager _loc = null!;
     private string _selectedCulture = "es";
-    private readonly string[] _cultures = ["es", "en", "fr"];
 
     private readonly Label[] _localizedLabels = new Label[8];
     private Label _activeLangLabel = null!;
 
-    private static readonly string[] LabelKeys =
+    private static readonly string[] _labelKeys =
     [
         "titulo", "subtitulo", "descripcion",
         "menu.inicio", "menu.opciones", "menu.salir",
         "msg.bienvenida", "msg.puntuacion"
     ];
 
-    protected override void PostInitialize()
+    protected override void PreInitialize()
     {
-        base.PostInitialize();
+        base.PreInitialize();
         _loc = new LocalizationManager();
         EnsureLocaleFiles();
         _loc.LoadLanguage("es");
@@ -131,10 +130,10 @@ public sealed class LocalizationScene : Scene
         var stringsCol = new StackPanel { Orientation = Orientation.Vertical, Spacing = 6 };
         stringsCol.Add(new Label { Font = _font, Text = "Cadenas localizadas:", Color = Color.Yellow });
 
-        for (int i = 0; i < LabelKeys.Length; i++)
+        for (int i = 0; i < _labelKeys.Length; i++)
         {
             int idx = i;
-            _localizedLabels[i] = new Label { Font = _font, Text = $"{LabelKeys[idx]}: …", Color = Color.White };
+            _localizedLabels[i] = new Label { Font = _font, Text = $"{_labelKeys[idx]}: …", Color = Color.White };
             stringsCol.Add(_localizedLabels[i]);
         }
 
@@ -147,8 +146,8 @@ public sealed class LocalizationScene : Scene
 
     private void RefreshLocalizedLabels()
     {
-        for (int i = 0; i < LabelKeys.Length; i++)
-            _localizedLabels[i].Text = $"{LabelKeys[i]}: {_loc[LabelKeys[i]].Value}";
+        for (int i = 0; i < _labelKeys.Length; i++)
+            _localizedLabels[i].Text = $"{_labelKeys[i]}: {_loc[_labelKeys[i]].Value}";
         _activeLangLabel.Text = $"Idioma activo: {_loc.CurrentCulture}";
     }
 

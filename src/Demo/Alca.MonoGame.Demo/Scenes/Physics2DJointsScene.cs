@@ -11,6 +11,7 @@ public sealed class Physics2DJointsScene : Scene
     private SpriteFont _font = null!;
 
     private readonly GameWorld _world = new();
+    private const float Gravity = 500f;
     private bool _layerFilterActive;
 
     private Label _bodiesLabel = null!;
@@ -36,6 +37,8 @@ public sealed class Physics2DJointsScene : Scene
     {
         float hw = Core.GraphicsDevice.Viewport.Width / 2f;
         float hh = Core.GraphicsDevice.Viewport.Height;
+
+        _world.PhysicsWorld = new Physics2DWorld(new Vector2(0, Gravity));
 
         // Static floor and walls
         var floor = _world.CreateEntity("Floor", new Vector2(hw, hh - 20));
