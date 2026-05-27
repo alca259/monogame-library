@@ -19,3 +19,46 @@
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Compressed
 /build:DefaultFont.spritefont
+
+#begin Music/theme.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/theme.ogg
+
+#begin Music/track_a.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/track_a.ogg
+
+#begin Music/track_b.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/track_b.ogg
+
+#begin SFX/beep.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/build:SFX/beep.wav
+
+#begin SFX/ambient.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/build:SFX/ambient.wav
+
+#begin Shaders/SpriteTint.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/SpriteTint.fx
+
+#begin Shaders/Grayscale.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Grayscale.fx
+
+#begin Shaders/Vignette.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Vignette.fx

@@ -2,14 +2,15 @@ namespace Alca.MonoGame.Kernel.Graphics;
 
 public static class DrawHelper
 {
-    public static void DrawLine(Texture2D texture, SpriteBatch sb, Vector2 from, Vector2 to, Color color, float thickness = 2f)
+    public static void DrawLine(Texture2D? texture, SpriteBatch sb, Vector2 from, Vector2 to, Color color, float thickness = 2f)
     {
+        Texture2D tex = texture ?? DefaultPixelTexture;
         var delta = to - from;
         var angle = MathF.Atan2(delta.Y, delta.X);
         var length = delta.Length();
 
         sb.Draw(
-            texture,
+            tex,
             from,
             null,
             color,
@@ -21,15 +22,16 @@ public static class DrawHelper
         );
     }
 
-    public static void DrawRect(Texture2D texture, SpriteBatch sb, Rectangle rect, Color color)
-        => sb.Draw(texture, rect, color);
+    public static void DrawRect(Texture2D? texture, SpriteBatch sb, Rectangle rect, Color color)
+        => sb.Draw(texture ?? DefaultPixelTexture, rect, color);
 
-    public static void DrawBorder(Texture2D texture, SpriteBatch sb, Rectangle rect, Color color, int thickness = 2)
+    public static void DrawBorder(Texture2D? texture, SpriteBatch sb, Rectangle rect, Color color, int thickness = 2)
     {
-        sb.Draw(texture, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
-        sb.Draw(texture, new Rectangle(rect.X, rect.Bottom - thickness, rect.Width, thickness), color);
-        sb.Draw(texture, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
-        sb.Draw(texture, new Rectangle(rect.Right - thickness, rect.Y, thickness, rect.Height), color);
+        Texture2D tex = texture ?? DefaultPixelTexture;
+        sb.Draw(tex, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
+        sb.Draw(tex, new Rectangle(rect.X, rect.Bottom - thickness, rect.Width, thickness), color);
+        sb.Draw(tex, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
+        sb.Draw(tex, new Rectangle(rect.Right - thickness, rect.Y, thickness, rect.Height), color);
     }
 
     public static void DrawCenteredString(SpriteBatch sb, SpriteFont font, string text,
