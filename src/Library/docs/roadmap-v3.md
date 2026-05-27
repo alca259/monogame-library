@@ -40,11 +40,11 @@ Priority order: integration gaps first, missing features second, architecture la
 
 ---
 
-## GROUP A — Integration Fixes
+## GROUP A ✅ COMPLETADO — Integration Fixes
 
 ---
 
-## PHASE 11 — Critical Integration Bridges
+## PHASE 11 ✅ COMPLETADO — Critical Integration Bridges
 
 > **Goal:** Repair the eight identified broken/missing connections between existing subsystems so they work together without manual wiring boilerplate in every game project.
 
@@ -53,7 +53,7 @@ Priority order: integration gaps first, missing features second, architecture la
 
 ---
 
-### Milestone 11.1 — ParticleEmitterBehaviour (Particles ↔ ECS) ✅ TODO
+### Milestone 11.1 — ParticleEmitterBehaviour (Particles ↔ ECS) ✅ COMPLETADO
 
 **Gap:** `ParticleEffectWrapper` and `ParticleBuilder` exist but are standalone; no `GameBehaviour` subclass bridges them into the ECS lifecycle. Every game must manually call `wrapper.Update()` and `wrapper.Draw()` outside the entity update loop.
 
@@ -77,7 +77,7 @@ Priority order: integration gaps first, missing features second, architecture la
 
 ---
 
-### Milestone 11.2 — Scene ↔ GameWorld lifecycle binding ✅ TODO
+### Milestone 11.2 — Scene ↔ GameWorld lifecycle binding ✅ COMPLETADO
 
 **Gap:** `Scene` and `GameWorld` have no automatic connection. The scene has no `World` property, so users must manually call `_world.Update(gameTime)` and `_world.Draw(gameTime, spriteBatch)` inside each scene's overrides, and manually dispose entities on scene unload.
 
@@ -120,7 +120,7 @@ Priority order: integration gaps first, missing features second, architecture la
 
 ---
 
-### Milestone 11.3 — UI ↔ Scene automatic wiring ✅ TODO
+### Milestone 11.3 — UI ↔ Scene automatic wiring ✅ COMPLETADO
 
 **Gap:** `UIRoot` must be manually created, positioned, and connected in every scene. `Scene.InitializeUI()` exists as a hook but the `UIRoot` instance is not wired to `Draw` or to `UIOverlayManager`.
 
@@ -145,7 +145,7 @@ Priority order: integration gaps first, missing features second, architecture la
 
 ---
 
-### Milestone 11.4 — Core.Update — Automatic UI input propagation ✅ TODO
+### Milestone 11.4 — Core.Update — Automatic UI input propagation ✅ COMPLETADO
 
 **Gap:** `UIInteractionManager.Update()` must be called manually by each scene or the game class, with the right `UIRoot` and `MouseInfo` arguments. In practice this means every game project calling it differently and inconsistently.
 
@@ -169,7 +169,7 @@ This makes `UIInteractionManager` a first-class part of the game loop, removes i
 
 ---
 
-### Milestone 11.5 — Animation ↔ ECS test coverage ✅ TODO
+### Milestone 11.5 — Animation ↔ ECS test coverage ✅ COMPLETADO
 
 **Gap:** `AnimatedSpriteBehaviour` and `AnimationStateMachineBehaviour` were implemented in v2 but their unit test files contain only tests for the non-ECS `AnimatedSprite` and `AnimationStateMachine` classes. The ECS behaviours themselves have zero test coverage.
 
@@ -190,7 +190,7 @@ This makes `UIInteractionManager` a first-class part of the game loop, removes i
 
 ---
 
-### Milestone 11.6 — NavGrid ↔ Physics walkability sync ✅ TODO
+### Milestone 11.6 — NavGrid ↔ Physics walkability sync ✅ COMPLETADO
 
 **Gap:** When a `RigidBody2D` with a `BoxCollider2D` or `CircleCollider2D` moves or is created, the `NavGrid` walkability data is never updated. Static geometry is generally set up once, but dynamic obstacles (doors, crates, enemies) will silently allow agents to walk through them.
 
@@ -215,7 +215,7 @@ This makes `UIInteractionManager` a first-class part of the game loop, removes i
 
 ---
 
-### Milestone 11.7 — Networking ↔ Physics velocity sync ✅ TODO
+### Milestone 11.7 — Networking ↔ Physics velocity sync ✅ COMPLETADO
 
 **Gap:** `NetworkTransformSync` syncs position and rotation but not the physics body's linear/angular velocity. On a client, a synced entity will teleport to positions rather than smoothly continue physics motion. Physics forces and impulses applied on the authoritative peer are never replicated.
 
@@ -243,11 +243,11 @@ This makes `UIInteractionManager` a first-class part of the game loop, removes i
 
 ---
 
-## GROUP B — Missing Features
+## GROUP B ✅ COMPLETADO — Missing Features
 
 ---
 
-## PHASE 12 — Physics System Completion
+## PHASE 12 ✅ COMPLETADO — Physics System Completion
 
 > **Goal:** Bring the physics layer to feature parity with what game projects actually need: layer-filtered collisions and world queries (raycasts and overlaps).
 
@@ -256,7 +256,7 @@ This makes `UIInteractionManager` a first-class part of the game loop, removes i
 
 ---
 
-### Milestone 12.1 — Collision Layers and Masks ✅ TODO
+### Milestone 12.1 — Collision Layers and Masks ✅ COMPLETADO
 
 **Gap:** All colliders collide with all other colliders. There is no way to make player bullets ignore allied entities or to have trigger zones that only respond to the player.
 
@@ -285,7 +285,7 @@ This makes `UIInteractionManager` a first-class part of the game loop, removes i
 
 ---
 
-### Milestone 12.2 — Physics Queries ✅ TODO
+### Milestone 12.2 — Physics Queries ✅ COMPLETADO
 
 **Gap:** There is no way to cast a ray against the physics world, check if a point is inside a collider, or find all colliders within a region. Without this, AI line-of-sight, bullet hit detection, and proximity checks require manual geometry calculations outside the physics system.
 
@@ -320,7 +320,7 @@ This makes `UIInteractionManager` a first-class part of the game loop, removes i
 
 ---
 
-## PHASE 13 — Core Game Systems
+## PHASE 13 ✅ COMPLETADO — Core Game Systems
 
 > **Goal:** Add the three utility systems that game projects universally need but that no existing library module provides: a generic state machine, a timer/coroutine scheduler, and an improved event bus.
 
@@ -329,7 +329,7 @@ This makes `UIInteractionManager` a first-class part of the game loop, removes i
 
 ---
 
-### Milestone 13.1 — Generic Finite State Machine ✅ TODO
+### Milestone 13.1 — Generic Finite State Machine ✅ COMPLETADO
 
 **Gap:** `AnimationStateMachine` is animation-specific. There is no reusable FSM for AI behavior, game flow, UI modes, or player controllers. Game projects currently use raw `enum` + `switch` blocks, which have no lifecycle hooks.
 
@@ -371,7 +371,7 @@ public interface IState<TState> where TState : Enum
 
 ---
 
-### Milestone 13.2 — Timer / Scheduler System ✅ TODO
+### Milestone 13.2 — Timer / Scheduler System ✅ COMPLETADO
 
 **Gap:** The only time-scheduling option is C# `Task`/`async`, which is clumsy for game-time logic (e.g., "fire this in 2 seconds of game time, respecting pause"). A lightweight game-time scheduler that pauses when the scene pauses is universally needed.
 
@@ -409,7 +409,7 @@ public interface IState<TState> where TState : Enum
 
 ---
 
-### Milestone 13.3 — Event Bus Improvements ✅ TODO
+### Milestone 13.3 — Event Bus Improvements ✅ COMPLETADO
 
 **Gap:** `EventBus` is a functional global dispatcher but lacks: one-shot subscriptions (fire-and-forget handlers), priority ordering (critical handlers must run first), cancellable events (consuming an event before it reaches lower-priority handlers), and scope isolation (a scene should be able to subscribe/unsubscribe cleanly without clearing the global bus).
 
@@ -440,7 +440,7 @@ New overloads:
 
 ---
 
-## PHASE 14 — Developer Experience
+## PHASE 14 ✅ COMPLETADO — Developer Experience
 
 > **Goal:** Add the debug tooling, camera helpers, and persistence framework that elevate the library from a functional engine to an ergonomic one.
 
@@ -449,7 +449,7 @@ New overloads:
 
 ---
 
-### Milestone 14.1 — Debug Draw System ✅ TODO
+### Milestone 14.1 — Debug Draw System ✅ COMPLETADO
 
 **Gap:** `NavGridDebugRenderer` exists as an isolated tool, but there is no centralized system for rendering debug geometry (lines, circles, rects, text) that any subsystem can write to and that renders on top of everything else with optional frame durations. Developers must use `PrimitiveBatch` directly and manage state manually.
 
@@ -497,7 +497,7 @@ New overloads:
 
 ---
 
-### Milestone 14.2 — Camera Effects Helpers ✅ TODO
+### Milestone 14.2 — Camera Effects Helpers ✅ COMPLETADO
 
 **Gap:** `TweeningManager` exists, but using it to animate the camera requires knowing internal property paths and writing boilerplate. Screen shake specifically requires a time-based oscillation that `TweeningManager` does not provide natively (it animates to a single target value). Every project reimplements camera shake from scratch.
 
@@ -526,7 +526,7 @@ New overloads:
 
 ---
 
-### Milestone 14.3 — Save / Load System ✅ TODO
+### Milestone 14.3 — Save / Load System ✅ COMPLETADO
 
 **Gap:** There is no persistence framework. Games must implement their own serialization, slot management, and async I/O. This is complex enough that most projects defer or implement it inconsistently.
 
@@ -566,7 +566,7 @@ New overloads:
 
 ---
 
-## PHASE 15 — Feature Completion
+## PHASE 15 ✅ COMPLETADO — Feature Completion
 
 > **Goal:** Complete the remaining missing features: UI animation helpers, audio crossfade, navigation steering behaviors, and attribute-based network replication.
 
@@ -575,7 +575,7 @@ New overloads:
 
 ---
 
-### Milestone 15.1 — UI Transitions / Animations ✅ TODO
+### Milestone 15.1 — UI Transitions / Animations ✅ COMPLETADO
 
 **Gap:** `TweeningManager` is available, but there are no helpers to animate common UI transitions (fade in/out, slide in/out). Every control's show/hide cycle is hardcoded or ignored.
 
@@ -602,7 +602,7 @@ New overloads:
 
 ---
 
-### Milestone 15.2 — Audio Crossfade ✅ TODO
+### Milestone 15.2 — Audio Crossfade ✅ COMPLETADO
 
 **Gap:** There is no way to smoothly transition between two music tracks. `AudioController` plays/stops instances but has no concept of cross-fading. Volume transitions must be manually scripted with `TweeningManager`.
 
@@ -630,7 +630,7 @@ New overloads:
 
 ---
 
-### Milestone 15.3 — Navigation Steering Behaviors ✅ TODO
+### Milestone 15.3 — Navigation Steering Behaviors ✅ COMPLETADO
 
 **Gap:** `NavAgent` follows A*-computed waypoint paths but has no capacity for emergent locomotion behaviors (seeking, fleeing, separation, wander). Combining pathfinding with flocking or avoidance requires reimplementing the movement layer.
 
@@ -682,7 +682,7 @@ New overloads:
 
 ---
 
-### Milestone 15.4 — Networking: Attribute-based Field Replication ✅ TODO
+### Milestone 15.4 — Networking: Attribute-based Field Replication ✅ COMPLETADO
 
 **Gap:** `NetworkIdentity.RegisterField()` requires manual registration in each component's `Awake()`. For entities with many synchronized properties (position, health, score, state flags), this produces large amounts of boilerplate. There is no way to declare "sync this property" declaratively.
 
@@ -717,11 +717,11 @@ New overloads:
 
 ---
 
-## GROUP C — Architectural Improvements
+## GROUP C ✅ COMPLETADO — Architectural Improvements
 
 ---
 
-## PHASE 16 — Lighting: GPU-Accelerated Path
+## PHASE 16 ✅ COMPLETADO — Lighting: GPU-Accelerated Path
 
 > **Goal:** Provide an opt-in shader-based lighting renderer that replaces the O(lights × queries) CPU accumulation loop with a single GPU pass. The CPU path remains fully supported.
 
@@ -730,7 +730,7 @@ New overloads:
 
 ---
 
-### Milestone 16.1 — GPU Lighting Render Pipeline ✅ TODO
+### Milestone 16.1 — GPU Lighting Render Pipeline ✅ COMPLETADO
 
 **Background:** The existing `LightingWorld.Resolve(Vector2, LightingLayer)` method is called per-query by the game (e.g., for each sprite draw call) and is O(L) per query. With 16+ lights and 200+ sprites, this runs thousands of light evaluation iterations per frame. A shader-based approach runs once per pixel on the GPU, independent of sprite count.
 
@@ -780,7 +780,7 @@ Lighting/
 
 ---
 
-## PHASE 17 — Pathfinding: Async Background Support
+## PHASE 17 ✅ COMPLETADO — Pathfinding: Async Background Support
 
 > **Goal:** Move long pathfinding requests off the main thread without breaking the existing synchronous `Pathfinder` API or requiring `NavAgent` changes for simple use cases.
 
@@ -789,7 +789,7 @@ Lighting/
 
 ---
 
-### Milestone 17.1 — AsyncPathfinder ✅ TODO
+### Milestone 17.1 — AsyncPathfinder ✅ COMPLETADO
 
 **Background:** `Pathfinder.FindPath()` is synchronous and runs on the main thread. On large grids (e.g., 256×256 = 65,536 cells), a worst-case path search can take several milliseconds, causing visible frame drops. `NavGrid` data is read-only during pathfinding; mutations (walkability changes) must be externally synchronized.
 
@@ -818,7 +818,7 @@ Lighting/
 
 ---
 
-## PHASE 18 — ECS Performance Pass
+## PHASE 18 ✅ COMPLETADO — ECS Performance Pass
 
 > **Goal:** Targeted, measurement-driven improvements to the ECS hot path. No speculative rewrites — changes are made only where benchmarks demonstrate cost.
 
@@ -829,7 +829,7 @@ Lighting/
 
 ---
 
-### Milestone 18.1 — Benchmark Baseline ✅ TODO
+### Milestone 18.1 — Benchmark Baseline ✅ COMPLETADO
 
 **`Benchmarks/ECS/GameWorldBenchmarks.cs`** — using `BenchmarkDotNet`
 - `Benchmark_Update_100Entities`
@@ -843,7 +843,7 @@ Reference targets (60Hz budget = 16.67ms total; ECS should consume < 1ms for 100
 
 ---
 
-### Milestone 18.2 — Targeted Hot Path Improvements ✅ TODO
+### Milestone 18.2 — Targeted Hot Path Improvements ✅ COMPLETADO
 
 **Based on expected benchmark results, apply the following improvements if justified:**
 

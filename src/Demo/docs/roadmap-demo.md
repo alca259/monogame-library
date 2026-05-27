@@ -78,21 +78,8 @@ src/Demo/Alca.MonoGame.Demo/
 └── Alca.MonoGame.Demo.csproj
 ```
 
-**`DemoGame.cs`:**
-- Registrar todas las escenas en `ConfigureServices` como `AddTransient`.
-- Escenas ya registradas (01–16, 19, 20, 22, 31–34, 41): `UIScene_Menu`, `UIScene_BasicControls`, `UIScene_InputText`,
-  `UIScene_TextArea`, `UIScene_Sliders`, `UIScene_Selection`, `UIScene_ColorPicker`,
-  `UIScene_Layout`, `UIScene_ScrollView`, `UIScene_Tooltip`, `UIScene_Focus`,
-  `UIScene_Transitions`, `EcsDemoScene`, `Camera2DScene`, `Physics2DScene`, `NavigationScene`,
-  `AudioBasicScene`, `InputScene`, `AnimationScene`, `ParticlesScene`, `EventBusScene`,
-  `StateMachineScene`, `TimersScene`, `TweeningScene`, `PlatformScene`.
-- Escenas pendientes de registrar (17–18, 21, 23–30, 35–40): `AudioSpatialScene`, `AudioAdvancedScene`,
-  `AudioAdvancedScene`, `InputScene`, `AnimationScene`, `Camera3DScene`, `ParticlesScene`,
-  `SpriteMaterialScene`, `PostProcessScene`, `ResolutionScene`, `TiledMapScene`,
-  `BitmapFontScene`, `Physics2DJointsScene`, `SteeringScene`, `EntityPoolScene`,
-  `EventBusScene`, `StateMachineScene`, `TimersScene`, `TweeningScene`, `DebugScene`,
-  `PersistenceScene`, `LocalizationScene`, `AsyncContentScene`, `LightingScene`,
-  `NetworkingScene`, `PlatformScene`.
+**`DemoGame.cs`:** ✅ COMPLETADO
+- Todas las 41 escenas registradas en `ConfigureServices` como `AddTransient`.
 - `PostInitialize` arranca en `UIScene_Menu`.
 
 ---
