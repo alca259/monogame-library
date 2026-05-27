@@ -16,8 +16,9 @@
 - Escenas ECS:
   - `Scenes/EcsDemoScene.cs` — demo de jerarquía ECS con `TransformBehaviour` padre/hijo
 - Escenas UI:
-  - 10 escenas que cubren todos los controles del sistema UI
-  - `[←] / [→]` navega entre escenas UI; `[Space]` salta a `EcsDemoScene`
+  - `UIScene_Menu` — menú principal de navegación; punto de entrada de la aplicación
+  - 12 escenas de demostración (UI + ECS) accesibles desde el menú
+  - Cada escena UI expone un botón `← Menú` que vuelve a `UIScene_Menu`
 - Añadir escenas nuevas conforme se completen nuevas fases
 
 **Para añadir fuentes al demo:**
@@ -32,17 +33,22 @@
 ```
 src/Demo/Alca.MonoGame.Demo/
 ├── Scenes/
-│   ├── EcsDemoScene.cs
-│   ├── UIScene_BasicControls.cs
-│   ├── UIScene_InputText.cs
-│   ├── UIScene_TextArea.cs
-│   ├── UIScene_Sliders.cs
-│   ├── UIScene_Selection.cs
-│   ├── UIScene_ColorPicker.cs
-│   ├── UIScene_Layout.cs
-│   ├── UIScene_ScrollView.cs
-│   ├── UIScene_Tooltip.cs
-│   └── UIScene_Focus.cs
+│   ├── UIScene_Menu.cs               [OK]
+│   ├── UIScene_BasicControls.cs      [OK]
+│   ├── UIScene_InputText.cs          [OK]
+│   ├── UIScene_TextArea.cs           [OK]
+│   ├── UIScene_Sliders.cs            [OK]
+│   ├── UIScene_Selection.cs          [OK]
+│   ├── UIScene_ColorPicker.cs        [OK]
+│   ├── UIScene_Layout.cs             [OK]
+│   ├── UIScene_ScrollView.cs         [OK]
+│   ├── UIScene_Tooltip.cs            [OK]
+│   ├── UIScene_Focus.cs              [OK]
+│   ├── UIScene_Transitions.cs        [OK]
+│   ├── EcsDemoScene.cs               [OK]
+│   ├── Camera2DScene.cs              [OK]
+│   ├── Physics2DScene.cs             [OK]
+│   └── NavigationScene.cs            [OK]
 ├── DemoGame.cs
 ├── Globals.cs
 ├── Program.cs
@@ -50,10 +56,15 @@ src/Demo/Alca.MonoGame.Demo/
 ```
 
 **`DemoGame.cs`:**
-- Registrar las 10 escenas UI + `EcsDemoScene` en `ConfigureServices` como `AddTransient`.
-- `PostInitialize` arranca en `UIScene_BasicControls` (primera escena UI).
-- Cada escena UI resuelve la escena anterior/siguiente de la lista registrada via `[←]/[→]`.
-- `[Space]` navega a `EcsDemoScene` desde cualquier escena UI.
+- Registrar todas las escenas en `ConfigureServices` como `AddTransient`:
+  `UIScene_Menu`, `UIScene_BasicControls`, `UIScene_InputText`, `UIScene_TextArea`,
+  `UIScene_Sliders`, `UIScene_Selection`, `UIScene_ColorPicker`, `UIScene_Layout`,
+  `UIScene_ScrollView`, `UIScene_Tooltip`, `UIScene_Focus`,
+  `UIScene_Transitions`, `EcsDemoScene`, `Camera2DScene`, `Physics2DScene`, `NavigationScene`.
+- `PostInitialize` arranca en `UIScene_Menu` (hub principal de navegación).
+- Cada escena UI contiene un botón `← Menú` que llama
+  `Core.SceneManager.RequestChange(Core.GetService<UIScene_Menu>())`.
+- `UIScene_Menu` presenta la lista completa de escenas como botones clickables.
 
 ---
 
@@ -62,43 +73,82 @@ src/Demo/Alca.MonoGame.Demo/
 > **Objetivo:** Cada control del sistema UI debe poder probarse visualmente e interactivamente desde el proyecto Demo.
 
 **Navegación entre escenas:**
-- `[←] / [→]` — escena anterior / siguiente en el ciclo de demos de UI
-- `[Space]` — saltar a `EcsDemoScene` (demo ECS fuera del ciclo UI)
-- Cada escena muestra en la esquina superior izquierda: nombre de la escena y teclas de navegación
+- `UIScene_Menu` es el hub central; se accede a cada escena haciendo click en su botón.
+- Cada escena UI tiene un botón `← Menú` en la cabecera que vuelve a `UIScene_Menu`.
+- No existe navegación secuencial por teclado; toda la navegación es con ratón/click.
+- Cada escena muestra en la cabecera: título de la escena y número de orden.
 
 **Infraestructura común en cada demo UI:**
 
-Cada escena UI declara y gestiona:
+Cada escena UI declara como mínimo:
 ```csharp
-private UIRoot _uiRoot = new();
-private UIInteractionManager _interactionManager = new();
-private UIOverlayManager _overlayManager = new();   // solo si usa Dropdown/Tooltip
-private Texture2D _pixel = null!;
+private readonly UIRoot _uiRoot = new();
+private readonly UIInteractionManager _interactionManager = new();
+private Texture2D _pixel = null!;   // solo si la escena usa controles que requieren pixel
 private SpriteFont _font = null!;
+```
+
+Opcional — solo en escenas con navegación por teclado/gamepad:
+```csharp
+private readonly UIFocusManager _focusManager = new();
+```
+
+Opcional — solo en escenas con Dropdown o Tooltip:
+```csharp
+private readonly UIOverlayManager _overlayManager = new();
 ```
 
 Ciclo de vida:
 ```csharp
 // LoadContent
-_pixel = new Texture2D(GraphicsDevice, 1, 1);
+_pixel = new Texture2D(Core.GraphicsDevice, 1, 1);
 _pixel.SetData(new[] { Color.White });
 _font = Content.Load<SpriteFont>("DefaultFont");
-_uiRoot.OverlayManager = _overlayManager;
-// construir árbol UI aquí...
+// construir árbol UI aquí (BuildUI)...
 
 // Update
-Rectangle screen = new(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+_uiRoot.Update(gameTime);
+Rectangle screen = new(0, 0, Core.GraphicsDevice.Viewport.Width, Core.GraphicsDevice.Viewport.Height);
+_uiRoot.Measure(new Vector2(screen.Width, screen.Height));
 _uiRoot.Arrange(screen);
 _interactionManager.Update(_uiRoot, Core.Input.Mouse);
+// con foco: _focusManager.Update(Core.Input.Keyboard, Core.Input.GamePads[0]);
 
 // Draw
-GraphicsDevice.Clear(new Color(20, 20, 30));
+Core.GraphicsDevice.Clear(new Color(20, 20, 30));
 _uiRoot.DrawAll(Core.SpriteBatch);
+```
+
+Patrón del botón "← Menú" en `BuildUI`:
+```csharp
+var backBtn = new Button(_font, "← Menú") { BackgroundPixel = _pixel };
+backBtn.Clicked += () => Core.SceneManager.RequestChange(Core.GetService<UIScene_Menu>());
+root.Add(backBtn);
 ```
 
 ---
 
-### Scene 1 — `UIScene_BasicControls.cs`
+### Menu — `UIScene_Menu.cs` [OK]
+
+> Tipo: hub de navegación. No demuestra ningún control en sí — es el punto de entrada de la aplicación.
+
+**Layout:** `AnchorLayout` centrado; `ScrollView` (700×340 px) con un `StackPanel` vertical de botones.
+
+| Elemento | Configuración |
+|----------|--------------|
+| `Label` título | "MonoGame UI Demo — Selecciona una escena" — `Color.Yellow`, `HAlign.Center` |
+| 12 `Button` | Uno por escena, texto numerado, `HAlign.Left` |
+| `ScrollView` | 700×340 px — permite añadir escenas futuras sin cambiar el layout |
+
+**Comportamiento:**
+- Cada botón llama `Core.SceneManager.RequestChange(Core.GetService<TScene>())`.
+- Fondo `new Color(15, 15, 25)` (más oscuro que el resto de escenas).
+- No usa `_focusManager` ni `_overlayManager`.
+- Botones usan `HoveredColor = Color.LightGray`; no necesitan `_pixel` de borde (color plano).
+
+---
+
+### Scene 1 — `UIScene_BasicControls.cs` [OK]
 
 > Controles cubiertos: **Button**, **Label**, **Checkbox**, **Panel**
 
@@ -119,7 +169,7 @@ _uiRoot.DrawAll(Core.SpriteBatch);
 
 ---
 
-### Scene 2 — `UIScene_InputText.cs`
+### Scene 2 — `UIScene_InputText.cs` [OK]
 
 > Controles cubiertos: **TextBox**, **NumericBox**, **PasswordBox**
 
@@ -138,7 +188,7 @@ _uiRoot.DrawAll(Core.SpriteBatch);
 
 ---
 
-### Scene 3 — `UIScene_TextArea.cs`
+### Scene 3 — `UIScene_TextArea.cs` [OK]
 
 > Controles cubiertos: **TextArea**
 
@@ -151,7 +201,7 @@ _uiRoot.DrawAll(Core.SpriteBatch);
 
 ---
 
-### Scene 4 — `UIScene_Sliders.cs`
+### Scene 4 — `UIScene_Sliders.cs` [OK]
 
 > Controles cubiertos: **Slider** (horizontal y vertical), **ProgressBar** (horizontal y vertical, gradiente)
 
@@ -175,7 +225,7 @@ _uiRoot.DrawAll(Core.SpriteBatch);
 
 ---
 
-### Scene 5 — `UIScene_Selection.cs`
+### Scene 5 — `UIScene_Selection.cs` [OK]
 
 > Controles cubiertos: **Dropdown**, **RadioGroup** / **RadioButton**
 
@@ -196,7 +246,7 @@ _uiRoot.DrawAll(Core.SpriteBatch);
 
 ---
 
-### Scene 6 — `UIScene_ColorPicker.cs`
+### Scene 6 — `UIScene_ColorPicker.cs` [OK]
 
 > Controles cubiertos: **ColorPickerRGB**, **ColorPickerHSV**
 
@@ -212,7 +262,7 @@ _uiRoot.DrawAll(Core.SpriteBatch);
 
 ---
 
-### Scene 7 — `UIScene_Layout.cs`
+### Scene 7 — `UIScene_Layout.cs` [OK]
 
 > Controles cubiertos: **StackPanel**, **FlowLayoutPanel**, **GridLayout**, **AnchorLayout**, **Canvas**
 
@@ -232,7 +282,7 @@ _uiRoot.DrawAll(Core.SpriteBatch);
 
 ---
 
-### Scene 8 — `UIScene_ScrollView.cs`
+### Scene 8 — `UIScene_ScrollView.cs` [OK]
 
 > Controles cubiertos: **ScrollView**
 
@@ -247,7 +297,7 @@ _uiRoot.DrawAll(Core.SpriteBatch);
 
 ---
 
-### Scene 9 — `UIScene_Tooltip.cs`
+### Scene 9 — `UIScene_Tooltip.cs` [OK]
 
 > Controles cubiertos: **Tooltip**, **UISprite**, **UIOverlayManager**
 
@@ -267,7 +317,7 @@ _uiRoot.DrawAll(Core.SpriteBatch);
 
 ---
 
-### Scene 10 — `UIScene_Focus.cs`
+### Scene 10 — `UIScene_Focus.cs` [OK]
 
 > Controles cubiertos: **UIFocusManager**, navegación por teclado con Tab y flechas
 
@@ -286,13 +336,99 @@ _uiRoot.DrawAll(Core.SpriteBatch);
 
 ---
 
+### Scene 11 — `UIScene_Transitions.cs` [OK]
+
+> Controles cubiertos: **UITransitionManager**, **UITweenExtensions**
+> (FadeIn, FadeOut, SlideInFromLeft/Right/Top/Bottom, SlideOutToLeft/Right/Top/Bottom)
+
+**Layout:** Dos columnas lado a lado.
+
+**Columna izquierda — controles (≈400 px):**
+
+| Control | Configuración |
+|---------|--------------|
+| `Label` | "Transitions Demo" — header |
+| `Dropdown` | "Transition In:" — 5 opciones de entrada (FadeIn, SlideInFrom×4) |
+| `Dropdown` | "Transition Out:" — 5 opciones de salida (FadeOut, SlideOutTo×4) |
+| `Label` + `Slider` | "Duración: X.Xs" — rango 0.2–2.0 s, step 0.1 |
+| `Dropdown` | "Easing:" — Linear, EaseOutQuad, EaseInQuad, EaseInOutQuad, EaseOutBounce |
+| `Button` | "▶ Play In" — ejecuta la transición de entrada seleccionada |
+| `Button` | "▶ Play Out" — ejecuta la transición de salida seleccionada |
+| `Button` | "Reset" — restaura `Opacity=1` y posición original del target |
+| `Label` | Reactivo: "Estado: Idle / Playing" |
+
+**Columna derecha — target (≈400 px):**
+- `Panel` de 200×120 px con `Label` "Target" centrado — es el elemento sobre el que se ejecutan las transiciones.
+- `Label` debajo: "Última transición: {nombre}" en `Color.DimGray`.
+
+**Notas:**
+- `private UITransitionManager _transitions = new();`
+- Guardar `_targetPanel.Bounds` original en `LoadContent` para el botón Reset.
+- El estado Playing/Idle se gestiona con un `bool _isPlaying` local.
+- Registrar `UIScene_Transitions` en `DemoGame.ConfigureServices`.
+- Añadir botón `"11. UI Transitions (UITransitionManager)"` en `UIScene_Menu.BuildUI`.
+- Requiere `using Alca.MonoGame.Kernel.UI.Transitions;` (o añadir al `Globals.cs`).
+
+---
+
 ## ECS Demo Scene
 
-### `EcsDemoScene.cs`
+### `EcsDemoScene.cs` [OK]
 
 > Controles cubiertos: **GameEntity**, **TransformBehaviour**, **GameWorld**
 
 - Entidad padre en el centro de pantalla.
 - Entidad hijo que orbita alrededor del padre (modifica `LocalPosition` con ángulo creciente).
 - Labels en pantalla mostrando posición world y local de cada entidad.
-- `[Space]` vuelve al ciclo de escenas UI.
+- Botón `← Menú` para volver al hub de navegación.
+
+---
+
+## Escenas Futuras / Pendientes
+
+> No hay escenas pendientes — todas las escenas del roadmap han sido implementadas.
+
+### Camera2D Demo — `Camera2DScene.cs` [OK]
+
+> Sistemas: **Camera2D**, **CameraEffects** (Shake, ZoomTo, Follow)
+
+- Sprite/rectángulo orbitando en mundo 2D renderizado con `SpriteBatch.Begin(transformMatrix: camera.GetTransformMatrix(...))`.
+- Panel UI superpuesto sin transformación: botones Shake, Zoom In/Out/Reset, Toggle Follow.
+- `Label` reactivo con posición y zoom actuales.
+- `_cameraEffects.Update(gameTime)` en `Update`.
+
+**Notas:**
+- El mundo se dibuja con `SpriteBatch.Begin(transformMatrix: camera.GetTransformMatrix(viewport))`.
+- La UI se dibuja en una segunda pasada sin transformación de cámara.
+
+---
+
+### Physics2D Demo — `Physics2DScene.cs` [OK]
+
+> Sistemas: **Physics2DWorld**, **RigidBody2D**, **BoxCollider2D**, **CircleCollider2D**, **Physics2DQuery**
+
+- `Physics2DWorld` con gravedad `(0, 9.8f)`.
+- Suelo estático: entidad con `BoxCollider2D`, `IsStatic = true`.
+- Click para spawnear bolas dinámicas (`CircleCollider2D` + `RigidBody2D`).
+- Panel de controles UI: botones Spawn Ball, Apply Impulse, Raycast.
+- `DebugDraw` opcional para visualizar AABB de colliders.
+
+**Notas:**
+- `GameWorld.PhysicsWorld = new Physics2DWorld(gravity)` antes de crear entidades.
+- La conversión posición ratón → mundo requiere la inversa de la matrix de cámara.
+
+---
+
+### Navigation Demo — `NavigationScene.cs` [OK]
+
+> Sistemas: **NavGrid**, **Pathfinder**, **NavAgent**, **SteeringController**
+
+- `NavGrid` 20×15 celdas con obstáculos configurables en runtime.
+- Click derecho → `navAgent.SetDestination(worldPos)` con ruta A* visualizada.
+- Panel de controles UI: Toggle Obstacle, Recompute Path, Show/Hide Grid.
+- `Label` reactivo: estado del agente (`Idle`/`Moving`) y nº de waypoints.
+
+**Notas:**
+- `Pathfinder` se instancia con `new Pathfinder(gridCapacity: 20 * 15)`.
+- La conversión posición ratón → celda: `navGrid.WorldToCell(mouseWorldPos)`.
+- Ruta visualizada con `DebugDraw.DrawLine` entre waypoints consecutivos.

@@ -13,3 +13,4 @@ global using Alca.MonoGame.Kernel.UI.Controls;
 global using Alca.MonoGame.Kernel.UI.Focus;
 global using Alca.MonoGame.Kernel.UI.Interaction;
 global using Alca.MonoGame.Kernel.UI.Layout;
+global using Alca.MonoGame.Kernel.Input;

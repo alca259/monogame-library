@@ -39,7 +39,11 @@ public sealed class UIScene_Menu : Scene
         AddEntry(buttonList, "08. ScrollView", () => Core.SceneManager.RequestChange(Core.GetService<UIScene_ScrollView>()));
         AddEntry(buttonList, "09. Tooltip", () => Core.SceneManager.RequestChange(Core.GetService<UIScene_Tooltip>()));
         AddEntry(buttonList, "10. Focus Manager (Tab navigation)", () => Core.SceneManager.RequestChange(Core.GetService<UIScene_Focus>()));
-        AddEntry(buttonList, "11. ECS Hierarchy Demo", () => Core.SceneManager.RequestChange(Core.GetService<EcsDemoScene>()));
+        AddEntry(buttonList, "11. UI Transitions (UITransitionManager)", () => Core.SceneManager.RequestChange(Core.GetService<UIScene_Transitions>()));
+        AddEntry(buttonList, "12. ECS Hierarchy Demo", () => Core.SceneManager.RequestChange(Core.GetService<EcsDemoScene>()));
+        AddEntry(buttonList, "13. Camera2D (Shake, Zoom, Follow)", () => Core.SceneManager.RequestChange(Core.GetService<Camera2DScene>()));
+        AddEntry(buttonList, "14. Physics2D (RigidBody, Colliders)", () => Core.SceneManager.RequestChange(Core.GetService<Physics2DScene>()));
+        AddEntry(buttonList, "15. Navigation (NavGrid, A*, NavAgent)", () => Core.SceneManager.RequestChange(Core.GetService<NavigationScene>()));
 
         var scrollView = new ScrollView(Core.GraphicsDevice) { FixedSize = new Vector2(700, 340) };
         scrollView.Add(buttonList);

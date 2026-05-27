@@ -20,7 +20,11 @@ public sealed class DemoGame : Core
         services.AddTransient<UIScene_ScrollView>();
         services.AddTransient<UIScene_Tooltip>();
         services.AddTransient<UIScene_Focus>();
+        services.AddTransient<UIScene_Transitions>();
         services.AddTransient<EcsDemoScene>();
+        services.AddTransient<Camera2DScene>();
+        services.AddTransient<Physics2DScene>();
+        services.AddTransient<NavigationScene>();
     }
 
     protected override void PostInitialize()
