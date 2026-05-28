@@ -40,6 +40,13 @@ public sealed class WeatherParticleLayer : IDisposable
     /// <summary>Gets or sets the width of the emitter band in world units. Default 1600.</summary>
     public float EmitterWidth { get; set; } = 1600f;
 
+    /// <summary>
+    /// Gets or sets whether the current rendering context is interior.
+    /// When <see langword="true"/>, <see cref="Draw"/> renders nothing.
+    /// Set automatically by <see cref="WeatherWorld"/> each frame.
+    /// </summary>
+    public bool IsInterior { get; set; } = false;
+
     // ── Content loading ───────────────────────────────────────────────────────
 
     /// <summary>
@@ -106,6 +113,7 @@ public sealed class WeatherParticleLayer : IDisposable
     /// </summary>
     public void Draw(SpriteBatch spriteBatch)
     {
+        if (IsInterior) return;
         DrawEffect(spriteBatch, _rainEffect);
         DrawEffect(spriteBatch, _snowEffect);
         DrawEffect(spriteBatch, _hailEffect);

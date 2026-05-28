@@ -23,6 +23,8 @@ public sealed class WeatherScene : Scene
     private Label _tempLabel = null!;
     private Label _windLabel = null!;
     private Slider _transitionSlider = null!;
+    private Slider _tempSpeedSlider = null!;
+    private Slider _windSpeedSlider = null!;
 
     private float _labelTimer;
 
@@ -64,6 +66,14 @@ public sealed class WeatherScene : Scene
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
         _world.Update(gameTime);
+
+        WeatherWorld? wwSync = _world.WeatherWorld;
+        if (wwSync is not null)
+        {
+            wwSync.TemperatureTransitionSpeed = _tempSpeedSlider.Value;
+            wwSync.WindTransitionSpeed        = _windSpeedSlider.Value;
+        }
+
         ResetFallenLeaves();
 
         _labelTimer += dt;
@@ -145,6 +155,16 @@ public sealed class WeatherScene : Scene
         _transitionSlider = new Slider(_pixel) { MinValue = 0f, MaxValue = 10f, Step = 0.5f };
         _transitionSlider.Value = 3f;
         panel.Add(_transitionSlider);
+
+        panel.Add(new Label { Font = _font, Text = "Temp transition speed:", Color = Color.LightGray });
+        _tempSpeedSlider = new Slider(_pixel) { MinValue = 0.1f, MaxValue = 2.0f, Step = 0.1f };
+        _tempSpeedSlider.Value = 0.3f;
+        panel.Add(_tempSpeedSlider);
+
+        panel.Add(new Label { Font = _font, Text = "Wind transition speed:", Color = Color.LightGray });
+        _windSpeedSlider = new Slider(_pixel) { MinValue = 0.1f, MaxValue = 2.0f, Step = 0.1f };
+        _windSpeedSlider.Value = 1.0f;
+        panel.Add(_windSpeedSlider);
 
         panel.Add(new Label { Font = _font, Text = "--- Info ---", Color = Color.Yellow });
 

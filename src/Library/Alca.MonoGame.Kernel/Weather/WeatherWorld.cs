@@ -14,6 +14,8 @@ public sealed class WeatherWorld
     private readonly Dictionary<string, WeatherProfile> _catalog = new(16, StringComparer.OrdinalIgnoreCase);
     private readonly List<WeatherBehaviour> _registeredBehaviours = new(32);
 
+    private static readonly List<WeatherBehaviour> _emptyBehaviourList = new(0);
+
     private WeatherTypeId _currentWeather;
     private WeatherTypeId _targetWeather;
     private WeatherProfile _fromProfile;
@@ -22,6 +24,19 @@ public sealed class WeatherWorld
     private float _transitionDuration;
     private float _currentTemperature;
     private float _totalElapsed;
+
+    // Gust state machine
+    private float _windGustSpeed;
+    private float _windGustTarget;
+    private float _windGustTimer;
+    private float _windGustDuration;
+    private bool _windGustActive;
+
+    // Temperature random walk
+    private float _tempWalkTarget;
+    private float _tempWalkTimer;
+    private float _tempWalkDuration;
+    private bool _tempWalkActive;
 
     // ── Public state ──────────────────────────────────────────────────────────
 
@@ -59,6 +74,39 @@ public sealed class WeatherWorld
     /// Default 1 means 1 km/h = 1 world unit/s. Adjust to match your world scale.
     /// </summary>
     public float WorldUnitsPerKmh { get; set; } = 1f;
+
+    /// <summary>
+    /// Gets or sets the speed multiplier for temperature field interpolation during weather transitions.
+    /// Values below 1 slow down temperature changes (e.g. 0.3 = temperature takes ~3× longer to transition).
+    /// Values above 1 make temperature transition faster than the overall duration.
+    /// Does NOT affect the in-state random walk. Default 0.3.
+    /// </summary>
+    public float TemperatureTransitionSpeed { get; set; } = 0.3f;
+
+    /// <summary>
+    /// Gets or sets the speed multiplier for wind field interpolation during weather transitions.
+    /// Mirrors <see cref="TemperatureTransitionSpeed"/> but applies to wind speed, direction, and turbulence.
+    /// Default 1.0 (wind transitions at the same rate as the overall profile).
+    /// </summary>
+    public float WindTransitionSpeed { get; set; } = 1.0f;
+
+    /// <summary>
+    /// Gets or sets whether the weather world is currently in an interior context.
+    /// When <see langword="true"/>: no precipitation particles are rendered, wind is not dispatched to
+    /// <see cref="WeatherBehaviour"/> entities, ambient lighting is not updated, and temperature
+    /// stabilizes at <see cref="IndoorTemperature"/>. Lightning flash and audio remain active.
+    /// Lightning impulses are NOT dispatched to entities indoors.
+    /// </summary>
+    public bool IsInterior { get; set; } = false;
+
+    /// <summary>Gets or sets the stable temperature used when <see cref="IsInterior"/> is <see langword="true"/>. Default 22 °C.</summary>
+    public float IndoorTemperature { get; set; } = 22f;
+
+    /// <summary>
+    /// Gets or sets the audio volume multiplier applied to all weather audio when <see cref="IsInterior"/> is <see langword="true"/>.
+    /// Default 0.2 (muffled outdoor sounds heard through walls).
+    /// </summary>
+    public float IndoorAudioMultiplier { get; set; } = 0.2f;
 
     // ── Optional subsystems ───────────────────────────────────────────────────
 
@@ -200,13 +248,30 @@ public sealed class WeatherWorld
             AdvanceTransition(dt);
 
         UpdateTemperature(dt);
-        UpdateWind();
-        DispatchLighting();
-        DispatchWind();
+        UpdateWind(dt);
 
-        Particles?.Update(gameTime, ActiveProfile, CurrentWind);
-        Audio?.Update(gameTime, ActiveProfile);
-        Lightning?.Update(gameTime, ActiveProfile, _registeredBehaviours);
+        if (Particles is not null)
+            Particles.IsInterior = IsInterior;
+
+        if (!IsInterior)
+        {
+            DispatchLighting();
+            DispatchWind();
+            Particles?.Update(gameTime, ActiveProfile, CurrentWind);
+        }
+
+        WeatherProfile audioProfile = IsInterior
+            ? ActiveProfile with
+              {
+                  RainVolume    = ActiveProfile.RainVolume    * IndoorAudioMultiplier,
+                  WindVolume    = ActiveProfile.WindVolume    * IndoorAudioMultiplier,
+                  ThunderVolume = ActiveProfile.ThunderVolume * IndoorAudioMultiplier,
+              }
+            : ActiveProfile;
+
+        Audio?.Update(gameTime, audioProfile);
+        Lightning?.Update(gameTime, ActiveProfile,
+            IsInterior ? _emptyBehaviourList : _registeredBehaviours);
     }
 
     // ── ECS registration (called by WeatherBehaviour, not user code) ──────────
@@ -253,6 +318,11 @@ public sealed class WeatherWorld
         IsTransitioning    = false;
         TransitionProgress = 1f;
         _currentTemperature = MathHelper.Lerp(profile.TemperatureMin, profile.TemperatureMax, 0.5f);
+
+        // Reset random-walk state so gusts start fresh for the new profile
+        _windGustSpeed  = MathHelper.Lerp(profile.WindSpeedMinKmh, profile.WindSpeedMaxKmh, 0.5f);
+        _windGustActive = false;
+        _tempWalkActive = false;
     }
 
     private void AdvanceTransition(float dt)
@@ -263,7 +333,21 @@ public sealed class WeatherWorld
             : 1f;
 
         TransitionProgress = t;
-        ActiveProfile = WeatherProfile.Lerp(_fromProfile, _toProfile, t);
+
+        // Independent progress values let temperature and wind interpolate at their own rates
+        float tTemp = Math.Clamp(t * TemperatureTransitionSpeed, 0f, 1f);
+        float tWind = Math.Clamp(t * WindTransitionSpeed, 0f, 1f);
+
+        WeatherProfile lerped = WeatherProfile.Lerp(_fromProfile, _toProfile, t);
+        ActiveProfile = lerped with
+        {
+            TemperatureMin  = MathHelper.Lerp(_fromProfile.TemperatureMin,  _toProfile.TemperatureMin,  tTemp),
+            TemperatureMax  = MathHelper.Lerp(_fromProfile.TemperatureMax,  _toProfile.TemperatureMax,  tTemp),
+            WindSpeedMinKmh = MathHelper.Lerp(_fromProfile.WindSpeedMinKmh, _toProfile.WindSpeedMinKmh, tWind),
+            WindSpeedMaxKmh = MathHelper.Lerp(_fromProfile.WindSpeedMaxKmh, _toProfile.WindSpeedMaxKmh, tWind),
+            WindDirection   = Vector2.Lerp(_fromProfile.WindDirection,       _toProfile.WindDirection,   tWind),
+            WindTurbulence  = MathHelper.Lerp(_fromProfile.WindTurbulence,   _toProfile.WindTurbulence,  tWind),
+        };
 
         if (t >= 1f)
             CompleteTransition();
@@ -277,24 +361,54 @@ public sealed class WeatherWorld
         IsTransitioning    = false;
         TransitionProgress = 1f;
         _transitionTimer   = 0f;
+
+        // Clamp gust speed to new profile range and let the gust machine pick a new target
+        _windGustSpeed  = Math.Clamp(_windGustSpeed, _toProfile.WindSpeedMinKmh, _toProfile.WindSpeedMaxKmh);
+        _windGustActive = false;
+        _tempWalkActive = false;
     }
 
     private void UpdateTemperature(float dt)
     {
-        float min = ActiveProfile.TemperatureMin;
-        float max = ActiveProfile.TemperatureMax;
-        // Gentle sinusoidal oscillation within the range
+        if (IsInterior)
+        {
+            _currentTemperature = MathHelper.Lerp(_currentTemperature, IndoorTemperature, dt * 0.3f);
+            return;
+        }
+
+        float min   = ActiveProfile.TemperatureMin;
+        float max   = ActiveProfile.TemperatureMax;
         float range = max - min;
-        float target = min + range * (0.5f + 0.5f * MathF.Sin(_totalElapsed * 0.05f));
-        float speed = range > 0.01f ? dt * 0.5f : 1f;
-        _currentTemperature = MathHelper.Lerp(_currentTemperature, target, speed);
+
+        _tempWalkTimer += dt;
+        if (!_tempWalkActive || _tempWalkTimer >= _tempWalkDuration)
+        {
+            _tempWalkTarget   = min + range * Random.Shared.NextSingle();
+            _tempWalkDuration = MathHelper.Lerp(60f, 180f, Random.Shared.NextSingle());
+            _tempWalkTimer    = 0f;
+            _tempWalkActive   = true;
+        }
+
+        float lerpSpeed = range > 0.01f ? 0.02f : 1f;
+        _currentTemperature = MathHelper.Lerp(_currentTemperature, _tempWalkTarget, dt * lerpSpeed);
+        _currentTemperature = Math.Clamp(_currentTemperature, min, max);
     }
 
-    private void UpdateWind()
+    private void UpdateWind(float dt)
     {
         WeatherProfile p = ActiveProfile;
-        float speed = MathHelper.Lerp(p.WindSpeedMinKmh, p.WindSpeedMaxKmh,
-            0.5f + 0.5f * MathF.Sin(_totalElapsed * 0.1f));
+
+        _windGustTimer += dt;
+        if (!_windGustActive || _windGustTimer >= _windGustDuration)
+        {
+            _windGustTarget   = MathHelper.Lerp(p.WindSpeedMinKmh, p.WindSpeedMaxKmh, Random.Shared.NextSingle());
+            _windGustDuration = MathHelper.Lerp(2f, 15f, Random.Shared.NextSingle());
+            _windGustTimer    = 0f;
+            _windGustActive   = true;
+        }
+
+        _windGustSpeed = MathHelper.Lerp(_windGustSpeed, _windGustTarget, dt * 1.5f);
+        _windGustSpeed = Math.Clamp(_windGustSpeed, p.WindSpeedMinKmh, p.WindSpeedMaxKmh);
 
         Vector2 dir = p.WindDirection.LengthSquared() > 0.001f
             ? Vector2.Normalize(p.WindDirection)
@@ -303,7 +417,7 @@ public sealed class WeatherWorld
         CurrentWind = new WindState
         {
             Direction  = dir,
-            SpeedKmh   = speed,
+            SpeedKmh   = _windGustSpeed,
             Turbulence = p.WindTurbulence
         };
     }
