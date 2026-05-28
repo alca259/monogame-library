@@ -41,6 +41,8 @@ public sealed class InspectorPanel : UserControl
     private NumericUpDown? _scaleXInput;
     private NumericUpDown? _scaleYInput;
 
+    private readonly ToolTip _toolTip;
+
     #endregion
 
     #region Constructor
@@ -48,6 +50,7 @@ public sealed class InspectorPanel : UserControl
     /// <summary>Creates the panel. Call <see cref="Initialize"/> to connect to the editor context.</summary>
     public InspectorPanel()
     {
+        _toolTip = new ToolTip { AutoPopDelay = 4000, InitialDelay = 500, ReshowDelay = 200 };
         _scrollPanel = new Panel
         {
             Dock       = DockStyle.Fill,
@@ -88,6 +91,7 @@ public sealed class InspectorPanel : UserControl
             if (_onRedo is not null) _context.EventBus.Unsubscribe<RedoPerformedEvent>(_onRedo);
             if (_onTransformChanged is not null) _context.EventBus.Unsubscribe<GameObjectTransformChangedEvent>(_onTransformChanged);
         }
+        if (disposing) _toolTip.Dispose();
         base.Dispose(disposing);
     }
 
@@ -166,6 +170,15 @@ public sealed class InspectorPanel : UserControl
             return;
         }
 
+        IReadOnlyList<EditorGameObject> multi = _context?.MultiSelection ?? [];
+        if (multi.Count > 1)
+        {
+            BuildMultiSelectionContent(multi);
+            _scrollPanel.ResumeLayout();
+            _suppressUpdate = false;
+            return;
+        }
+
         int y     = SidePadding;
         int width = ContentWidth();
 
@@ -226,6 +239,99 @@ public sealed class InspectorPanel : UserControl
 
     private int ContentWidth() =>
         Math.Max(0, _scrollPanel.ClientSize.Width - SidePadding * 2 - SystemInformation.VerticalScrollBarWidth);
+
+    private void BuildMultiSelectionContent(IReadOnlyList<EditorGameObject> objects)
+    {
+        int y     = SidePadding;
+        int width = ContentWidth();
+
+        // Header
+        Panel header = new Panel
+        {
+            Height    = 32,
+            BackColor = System.Drawing.SystemColors.ControlDarkDark,
+            Location  = new System.Drawing.Point(SidePadding, y),
+            Width     = width,
+        };
+        Label countLabel = new Label
+        {
+            Dock      = DockStyle.Fill,
+            Text      = $"{objects.Count} objects selected",
+            Font      = new System.Drawing.Font("Segoe UI", 9.5f, System.Drawing.FontStyle.Bold),
+            TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
+        };
+        header.Controls.Add(countLabel);
+        _scrollPanel.Controls.Add(header);
+        y += header.Height + SectionGap;
+
+        // Delta-transform section
+        GroupBox grp = new GroupBox
+        {
+            Text     = "Move Selection (Δ)",
+            Height   = 24 + RowHeight * 2 + 12,
+            Location = new System.Drawing.Point(SidePadding, y),
+            Width    = width,
+            Padding  = new System.Windows.Forms.Padding(4),
+        };
+
+        TableLayoutPanel table = new TableLayoutPanel
+        {
+            Dock        = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount    = 2,
+            Padding     = new System.Windows.Forms.Padding(0),
+        };
+        table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, LabelWidth));
+        table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+        table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
+        table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
+
+        // ΔX row
+        table.Controls.Add(MakeLabel("ΔX"), 0, 0);
+        Panel deltaXPanel = new Panel { Height = RowHeight };
+        NumericUpDown deltaXInput = CreateNumericUpDown(0m, -100_000m, 100_000m, 1);
+        deltaXInput.Dock = DockStyle.Fill;
+        _toolTip.SetToolTip(deltaXInput, "Offset all selected objects by this amount on the X axis");
+        deltaXPanel.Controls.Add(deltaXInput);
+        table.Controls.Add(deltaXPanel, 1, 0);
+
+        // ΔY row
+        table.Controls.Add(MakeLabel("ΔY"), 0, 1);
+        Panel deltaYPanel = new Panel { Height = RowHeight };
+        NumericUpDown deltaYInput = CreateNumericUpDown(0m, -100_000m, 100_000m, 1);
+        deltaYInput.Dock = DockStyle.Fill;
+        _toolTip.SetToolTip(deltaYInput, "Offset all selected objects by this amount on the Y axis");
+        deltaYPanel.Controls.Add(deltaYInput);
+        table.Controls.Add(deltaYPanel, 1, 1);
+
+        grp.Controls.Add(table);
+        _scrollPanel.Controls.Add(grp);
+        y += grp.Height + SectionGap;
+
+        // Apply button
+        Panel applyPanel = new Panel { Height = 36, Location = new System.Drawing.Point(SidePadding, y), Width = width };
+        Button applyBtn = new Button
+        {
+            Text      = "Apply Delta",
+            Height    = 28,
+            Dock      = DockStyle.Fill,
+            FlatStyle = FlatStyle.Flat,
+            Padding   = new System.Windows.Forms.Padding(4, 2, 4, 2),
+        };
+        applyBtn.FlatAppearance.BorderColor = System.Drawing.SystemColors.ControlDark;
+        applyBtn.Click += (_, _) =>
+        {
+            float dx = (float)deltaXInput.Value;
+            float dy = (float)deltaYInput.Value;
+            if (dx == 0f && dy == 0f) return;
+            EditorGameObject[] snapshot = [.. objects];
+            _context!.Commands.Execute(new BatchMoveCommand(snapshot, new EditorVector2(dx, dy)));
+            deltaXInput.Value = 0m;
+            deltaYInput.Value = 0m;
+        };
+        applyPanel.Controls.Add(applyBtn);
+        _scrollPanel.Controls.Add(applyPanel);
+    }
 
     #endregion
 
@@ -661,6 +767,8 @@ public sealed class InspectorPanel : UserControl
 
             string label = attr?.Label ?? prop.Name;
             Control ctrl = CreateControlForProperty(prop, attr, behaviour, owner);
+            if (attr?.Tooltip is { Length: > 0 } tip)
+                _toolTip.SetToolTip(ctrl, tip);
             rows.Add((label, ctrl));
         }
         return rows;
@@ -735,7 +843,7 @@ public sealed class InspectorPanel : UserControl
                 _context!.Commands.Execute(new SetPropertyCommand<JsonElement>(
                     $"Set {prop.Name}", prevEl, newEl,
                     ev => behaviour.Properties[prop.Name] = ev));
-            });
+            }, attr);
         }
 
         if (pType.IsEnum)
@@ -906,14 +1014,28 @@ public sealed class InspectorPanel : UserControl
         Height    = RowHeight,
     };
 
-    private Panel MakeFloatControl(float value, float min, float max, Action<float> onChange)
+    private Panel MakeFloatControl(float value, float min, float max, Action<float> onChange, EditorPropertyAttribute? attr = null)
     {
         Panel panel = new Panel { Height = RowHeight };
         NumericUpDown num = CreateNumericUpDown((decimal)value,
             (decimal)Math.Max(min, (float)decimal.MinValue),
             (decimal)Math.Min(max, (float)decimal.MaxValue), 3);
         num.Dock = DockStyle.Fill;
-        num.ValueChanged += (_, _) => onChange((float)num.Value);
+
+        bool hasUserMin = attr is not null && attr.Min != float.MinValue;
+        bool hasUserMax = attr is not null && attr.Max != float.MaxValue;
+
+        void UpdateLimitHint()
+        {
+            bool atLimit = (hasUserMin && (float)num.Value <= min + 0.0001f)
+                        || (hasUserMax && (float)num.Value >= max - 0.0001f);
+            num.BackColor = atLimit
+                ? System.Drawing.Color.FromArgb(255, 200, 200)
+                : System.Drawing.SystemColors.Window;
+        }
+
+        num.ValueChanged += (_, _) => { onChange((float)num.Value); UpdateLimitHint(); };
+        UpdateLimitHint();
         panel.Controls.Add(num);
         return panel;
     }

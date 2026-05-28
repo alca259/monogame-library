@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Text.Json;
 using System.Windows.Forms;
 using SDColor = System.Drawing.Color;
 using SDRectangle = System.Drawing.Rectangle;
@@ -32,6 +33,9 @@ public sealed class TilemapPalettePanel : Panel
         _cboLayer.SelectedIndex >= 0 && _currentTilemap is not null
             ? _currentTilemap.Layers[_cboLayer.SelectedIndex]
             : null;
+
+    /// <summary>Gets the currently loaded tilemap asset, or <c>null</c> when none is loaded.</summary>
+    public EditorTilemapAsset? CurrentTilemap => _currentTilemap;
 
     /// <summary>Initializes a new instance of <see cref="TilemapPalettePanel"/>.</summary>
     public TilemapPalettePanel()
@@ -141,8 +145,71 @@ public sealed class TilemapPalettePanel : Panel
 
     private void OnGameObjectSelected(GameObjectSelectedEvent e)
     {
-        // Integration point: future phases will check if the selected object has a
-        // TiledMapRenderer and automatically load its tilemap here.
+        if (InvokeRequired) { BeginInvoke(() => OnGameObjectSelected(e)); return; }
+
+        EditorGameObject? obj = e.GameObject;
+        if (obj is null) { ClearTilemap(); return; }
+
+        EditorBehaviour? renderer = null;
+        for (int i = 0; i < obj.Behaviours.Count; i++)
+        {
+            if (obj.Behaviours[i].TypeName.EndsWith("TiledMapRenderer", StringComparison.Ordinal))
+            {
+                renderer = obj.Behaviours[i];
+                break;
+            }
+        }
+
+        if (renderer is null) { ClearTilemap(); return; }
+
+        if (!renderer.Properties.TryGetValue("TilemapPath", out JsonElement pathEl)) return;
+        string tilemapPath = pathEl.GetString() ?? string.Empty;
+        if (string.IsNullOrEmpty(tilemapPath)) return;
+
+        string? resolvedPath = ResolveTilemapPath(tilemapPath);
+        if (resolvedPath is null) return;
+
+        try
+        {
+            EditorTilemapAsset asset = TilemapImporter.Load(resolvedPath);
+            LoadTilemap(asset);
+        }
+        catch { /* path invalid or file unreadable — leave panel empty */ }
+    }
+
+    private void ClearTilemap()
+    {
+        _currentTilemap = null;
+        _cboLayer.Items.Clear();
+        _tilesetBitmap?.Dispose();
+        _tilesetBitmap = null;
+        _pbTileset.Image = null;
+        _selectedTileGid = -1;
+        _selectedRect = SDRectangle.Empty;
+        _hoverRect = SDRectangle.Empty;
+        _pbTileset.Invalidate();
+    }
+
+    private string? ResolveTilemapPath(string path)
+    {
+        if (Path.IsPathRooted(path) && File.Exists(path))
+            return path;
+
+        string? contentPath = _context?.ActiveProject?.ContentPath;
+        if (contentPath is not null)
+        {
+            string candidate = Path.Combine(contentPath, path);
+            if (File.Exists(candidate)) return candidate;
+        }
+
+        string? rootPath = _context?.ActiveProject?.RootPath;
+        if (rootPath is not null)
+        {
+            string candidate = Path.Combine(rootPath, path);
+            if (File.Exists(candidate)) return candidate;
+        }
+
+        return null;
     }
 
     private void OnTilesetClick(object? sender, MouseEventArgs e)

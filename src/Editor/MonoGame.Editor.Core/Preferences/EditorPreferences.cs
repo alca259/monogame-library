@@ -51,6 +51,12 @@ public sealed class EditorPreferences
     /// <summary>Whether the input map editor panel is visible.</summary>
     public bool InputMapEditorVisible { get; set; } = false;
 
+    /// <summary>Whether the tilemap palette panel is visible.</summary>
+    public bool TilemapPaletteVisible { get; set; } = false;
+
+    /// <summary>Whether the undo history panel is visible.</summary>
+    public bool UndoHistoryVisible { get; set; } = false;
+
     /// <summary>Absolute path of the last project opened, or empty if none.</summary>
     public string LastProjectPath { get; set; } = string.Empty;
 
@@ -110,6 +116,8 @@ public sealed class EditorPreferences
             SceneManagerVisible = loaded.SceneManagerVisible;
             LocalizationBrowserVisible = loaded.LocalizationBrowserVisible;
             InputMapEditorVisible = loaded.InputMapEditorVisible;
+            TilemapPaletteVisible = loaded.TilemapPaletteVisible;
+            UndoHistoryVisible = loaded.UndoHistoryVisible;
             LastProjectPath = loaded.LastProjectPath;
             AssetBrowserSplitterDistance = loaded.AssetBrowserSplitterDistance;
             BehaviourSectionCollapsed.Clear();

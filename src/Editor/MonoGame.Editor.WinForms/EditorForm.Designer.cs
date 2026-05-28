@@ -38,6 +38,12 @@ partial class EditorForm
     private ToolStripButton _handModeButton = null!;
     private ToolStripSeparator _gizmoSeparator = null!;
     private ToolStripButton _sceneViewModeButton = null!;
+    private ToolStripSeparator _snapSeparator = null!;
+    private ToolStripButton _snapButton = null!;
+    private ToolStripSeparator _navSeparator = null!;
+    private ToolStripButton _navButton = null!;
+    private ToolStripSeparator _resSeparator = null!;
+    private ToolStripButton _resButton = null!;
     private Panel _playbackCell = null!;
     private ToolStrip _playbackStrip = null!;
     private ToolStripButton _playButton = null!;
@@ -47,6 +53,7 @@ partial class EditorForm
     // ── Status ────────────────────────────────────────────────────────────
     private StatusStrip _statusStrip = null!;
     private ToolStripStatusLabel _statusLabel = null!;
+    private ToolStripStatusLabel _fpsStatusLabel = null!;
 
     // ── Split containers ──────────────────────────────────────────────────
     private SplitContainer _mainSplit = null!;
@@ -74,12 +81,18 @@ partial class EditorForm
     private LocalizationBrowserPanel _localizationPanel = null!;
     private TabPage _inputMapEditorTab = null!;
     private InputMapEditorPanel _inputMapEditorPanel = null!;
+    private TabPage _tilemapPaletteTab = null!;
+    private TilemapPalettePanel _tilemapPalettePanel = null!;
+    private TabPage _undoHistoryTab = null!;
+    private UndoHistoryPanel _undoHistoryPanel = null!;
 
     // ── View menu ─────────────────────────────────────────────────────────
     // (declared alongside _viewSceneManagerMenuItem below in field declarations)
     private ToolStripMenuItem _viewSceneManagerMenuItem = null!;
     private ToolStripMenuItem _viewLocalizationMenuItem = null!;
     private ToolStripMenuItem _viewInputMapEditorMenuItem = null!;
+    private ToolStripMenuItem _viewTilemapPaletteMenuItem = null!;
+    private ToolStripMenuItem _viewUndoHistoryMenuItem = null!;
 
     protected override void Dispose(bool disposing)
     {
@@ -120,6 +133,12 @@ partial class EditorForm
         _handModeButton           = new ToolStripButton();
         _gizmoSeparator           = new ToolStripSeparator();
         _sceneViewModeButton      = new ToolStripButton();
+        _snapSeparator            = new ToolStripSeparator();
+        _snapButton               = new ToolStripButton();
+        _navSeparator             = new ToolStripSeparator();
+        _navButton                = new ToolStripButton();
+        _resSeparator             = new ToolStripSeparator();
+        _resButton                = new ToolStripButton();
         _playbackCell             = new Panel();
         _playbackStrip            = new ToolStrip();
         _playButton               = new ToolStripButton();
@@ -127,6 +146,7 @@ partial class EditorForm
         _stopButton               = new ToolStripButton();
         _statusStrip              = new StatusStrip();
         _statusLabel              = new ToolStripStatusLabel();
+        _fpsStatusLabel           = new ToolStripStatusLabel();
         _mainSplit                = new SplitContainer();
         _outerSplit               = new SplitContainer();
         _hierarchyPanel           = new SceneHierarchyPanel();
@@ -148,9 +168,15 @@ partial class EditorForm
         _localizationPanel        = new LocalizationBrowserPanel();
         _inputMapEditorTab        = new TabPage();
         _inputMapEditorPanel      = new InputMapEditorPanel();
+        _tilemapPaletteTab        = new TabPage();
+        _tilemapPalettePanel      = new TilemapPalettePanel();
+        _undoHistoryTab           = new TabPage();
+        _undoHistoryPanel         = new UndoHistoryPanel();
         _viewSceneManagerMenuItem = new ToolStripMenuItem();
         _viewLocalizationMenuItem = new ToolStripMenuItem();
         _viewInputMapEditorMenuItem = new ToolStripMenuItem();
+        _viewTilemapPaletteMenuItem = new ToolStripMenuItem();
+        _viewUndoHistoryMenuItem = new ToolStripMenuItem();
 
         _toolbarTable.SuspendLayout();
         _playbackCell.SuspendLayout();
@@ -173,6 +199,8 @@ partial class EditorForm
         _sceneManagerTab.SuspendLayout();
         _localizationTab.SuspendLayout();
         _inputMapEditorTab.SuspendLayout();
+        _tilemapPaletteTab.SuspendLayout();
+        _undoHistoryTab.SuspendLayout();
         SuspendLayout();
 
         // _mainMenuStrip
@@ -240,7 +268,7 @@ partial class EditorForm
         _editSeparator1.Size = new System.Drawing.Size(177, 6);
 
         // _viewMenu
-        _viewMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { _viewHierarchyMenuItem, _viewInspectorMenuItem, _viewAssetBrowserMenuItem, _viewConsoleMenuItem, _viewSceneManagerMenuItem, _viewLocalizationMenuItem, _viewInputMapEditorMenuItem, _viewMenuSeparator1, _resetLayoutMenuItem });
+        _viewMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { _viewHierarchyMenuItem, _viewInspectorMenuItem, _viewAssetBrowserMenuItem, _viewConsoleMenuItem, _viewSceneManagerMenuItem, _viewLocalizationMenuItem, _viewInputMapEditorMenuItem, _viewTilemapPaletteMenuItem, _viewUndoHistoryMenuItem, _viewMenuSeparator1, _resetLayoutMenuItem });
         _viewMenu.Name = "_viewMenu";
         _viewMenu.Size = new System.Drawing.Size(44, 20);
         _viewMenu.Text = "View";
@@ -308,6 +336,24 @@ partial class EditorForm
         _viewInputMapEditorMenuItem.Text = "Input Map Editor";
         _viewInputMapEditorMenuItem.Click += OnViewMenuItemClick;
 
+        // _viewTilemapPaletteMenuItem
+        _viewTilemapPaletteMenuItem.CheckOnClick = true;
+        _viewTilemapPaletteMenuItem.Checked = false;
+        _viewTilemapPaletteMenuItem.CheckState = CheckState.Unchecked;
+        _viewTilemapPaletteMenuItem.Name = "_viewTilemapPaletteMenuItem";
+        _viewTilemapPaletteMenuItem.Size = new System.Drawing.Size(163, 22);
+        _viewTilemapPaletteMenuItem.Text = "Tilemap Palette";
+        _viewTilemapPaletteMenuItem.Click += OnViewMenuItemClick;
+
+        // _viewUndoHistoryMenuItem
+        _viewUndoHistoryMenuItem.CheckOnClick = true;
+        _viewUndoHistoryMenuItem.Checked = false;
+        _viewUndoHistoryMenuItem.CheckState = CheckState.Unchecked;
+        _viewUndoHistoryMenuItem.Name = "_viewUndoHistoryMenuItem";
+        _viewUndoHistoryMenuItem.Size = new System.Drawing.Size(163, 22);
+        _viewUndoHistoryMenuItem.Text = "Undo History";
+        _viewUndoHistoryMenuItem.Click += OnViewMenuItemClick;
+
         // _viewMenuSeparator1
         _viewMenuSeparator1.Name = "_viewMenuSeparator1";
         _viewMenuSeparator1.Size = new System.Drawing.Size(160, 6);
@@ -331,7 +377,7 @@ partial class EditorForm
         // _gizmoStrip — horizontal, auto-sizes to button content
         _gizmoStrip.AutoSize = true;
         _gizmoStrip.GripStyle = ToolStripGripStyle.Hidden;
-        _gizmoStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _selectModeButton, _moveModeButton, _rotateModeButton, _scaleModeButton, _rectModeButton, _handModeButton, _gizmoSeparator, _sceneViewModeButton });
+        _gizmoStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _selectModeButton, _moveModeButton, _rotateModeButton, _scaleModeButton, _rectModeButton, _handModeButton, _gizmoSeparator, _sceneViewModeButton, _snapSeparator, _snapButton, _navSeparator, _navButton, _resSeparator, _resButton });
         _gizmoStrip.LayoutStyle = ToolStripLayoutStyle.HorizontalStackWithOverflow;
         _gizmoStrip.Location = new System.Drawing.Point(0, 0);
         _gizmoStrip.Name = "_gizmoStrip";
@@ -406,6 +452,42 @@ partial class EditorForm
         _sceneViewModeButton.ToolTipText = "Toggle Scene View 2D/2.5D";
         _sceneViewModeButton.Click += OnSceneViewModeClick;
 
+        // _snapSeparator
+        _snapSeparator.Name = "_snapSeparator";
+        _snapSeparator.Size = new System.Drawing.Size(6, 25);
+
+        // _snapButton
+        _snapButton.CheckOnClick = true;
+        _snapButton.DisplayStyle = ToolStripItemDisplayStyle.Text;
+        _snapButton.Name = "_snapButton";
+        _snapButton.Text = "SNAP";
+        _snapButton.ToolTipText = "Snap transforms to grid (Ctrl still works without snap)";
+        _snapButton.Click += OnSnapButtonClick;
+
+        // _navSeparator
+        _navSeparator.Name = "_navSeparator";
+        _navSeparator.Size = new System.Drawing.Size(6, 25);
+
+        // _navButton
+        _navButton.CheckOnClick = true;
+        _navButton.DisplayStyle = ToolStripItemDisplayStyle.Text;
+        _navButton.Name = "_navButton";
+        _navButton.Text = "NAV";
+        _navButton.ToolTipText = "Toggle NavGrid preview overlay";
+        _navButton.Click += OnNavButtonClick;
+
+        // _resSeparator
+        _resSeparator.Name = "_resSeparator";
+        _resSeparator.Size = new System.Drawing.Size(6, 25);
+
+        // _resButton
+        _resButton.CheckOnClick = true;
+        _resButton.DisplayStyle = ToolStripItemDisplayStyle.Text;
+        _resButton.Name = "_resButton";
+        _resButton.Text = "RES";
+        _resButton.ToolTipText = "Toggle virtual resolution preview (pillarbox/letterbox)";
+        _resButton.Click += OnResButtonClick;
+
         // _playbackStrip — positioned at runtime in center of full toolbar width
         _playbackStrip.AutoSize = true;
         _playbackStrip.GripStyle = ToolStripGripStyle.Hidden;
@@ -466,7 +548,7 @@ partial class EditorForm
         _toolbarTable.TabIndex = 1;
 
         // _statusStrip
-        _statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _statusLabel });
+        _statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _statusLabel, _fpsStatusLabel });
         _statusStrip.Location = new System.Drawing.Point(0, 778);
         _statusStrip.Name = "_statusStrip";
         _statusStrip.Size = new System.Drawing.Size(1280, 22);
@@ -476,6 +558,11 @@ partial class EditorForm
         _statusLabel.Name = "_statusLabel";
         _statusLabel.Size = new System.Drawing.Size(43, 17);
         _statusLabel.Text = "Editing";
+
+        // _fpsStatusLabel
+        _fpsStatusLabel.Name = "_fpsStatusLabel";
+        _fpsStatusLabel.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+        _fpsStatusLabel.Text = string.Empty;
 
         // _hierarchyPanel
         _hierarchyPanel.Dock = DockStyle.Fill;
@@ -637,12 +724,46 @@ partial class EditorForm
         _inputMapEditorTab.TabIndex = 4;
         _inputMapEditorTab.Text = "Input Maps";
 
+        // _tilemapPalettePanel
+        _tilemapPalettePanel.Dock = DockStyle.Fill;
+        _tilemapPalettePanel.Location = new System.Drawing.Point(0, 0);
+        _tilemapPalettePanel.Name = "_tilemapPalettePanel";
+        _tilemapPalettePanel.Size = new System.Drawing.Size(1280, 172);
+        _tilemapPalettePanel.TabIndex = 0;
+
+        // _tilemapPaletteTab
+        _tilemapPaletteTab.Controls.Add(_tilemapPalettePanel);
+        _tilemapPaletteTab.Location = new System.Drawing.Point(4, 24);
+        _tilemapPaletteTab.Name = "_tilemapPaletteTab";
+        _tilemapPaletteTab.Padding = new System.Windows.Forms.Padding(0);
+        _tilemapPaletteTab.Size = new System.Drawing.Size(1280, 172);
+        _tilemapPaletteTab.TabIndex = 5;
+        _tilemapPaletteTab.Text = "Tilemap";
+
+        // _undoHistoryPanel
+        _undoHistoryPanel.Dock = DockStyle.Fill;
+        _undoHistoryPanel.Location = new System.Drawing.Point(0, 0);
+        _undoHistoryPanel.Name = "_undoHistoryPanel";
+        _undoHistoryPanel.Size = new System.Drawing.Size(1280, 172);
+        _undoHistoryPanel.TabIndex = 0;
+
+        // _undoHistoryTab
+        _undoHistoryTab.Controls.Add(_undoHistoryPanel);
+        _undoHistoryTab.Location = new System.Drawing.Point(4, 24);
+        _undoHistoryTab.Name = "_undoHistoryTab";
+        _undoHistoryTab.Padding = new System.Windows.Forms.Padding(0);
+        _undoHistoryTab.Size = new System.Drawing.Size(1280, 172);
+        _undoHistoryTab.TabIndex = 6;
+        _undoHistoryTab.Text = "History";
+
         // _bottomTabControl
         _bottomTabControl.Controls.Add(_assetsTab);
         _bottomTabControl.Controls.Add(_consoleTab);
         _bottomTabControl.Controls.Add(_sceneManagerTab);
         _bottomTabControl.Controls.Add(_localizationTab);
         _bottomTabControl.Controls.Add(_inputMapEditorTab);
+        _bottomTabControl.Controls.Add(_tilemapPaletteTab);
+        _bottomTabControl.Controls.Add(_undoHistoryTab);
         _bottomTabControl.Dock = DockStyle.Fill;
         _bottomTabControl.Location = new System.Drawing.Point(0, 0);
         _bottomTabControl.Name = "_bottomTabControl";
@@ -699,6 +820,8 @@ partial class EditorForm
         _sceneManagerTab.ResumeLayout(false);
         _localizationTab.ResumeLayout(false);
         _inputMapEditorTab.ResumeLayout(false);
+        _tilemapPaletteTab.ResumeLayout(false);
+        _undoHistoryTab.ResumeLayout(false);
         ResumeLayout(false);
         PerformLayout();
     }

@@ -26,6 +26,11 @@ partial class ProjectSettingsDialog
     private System.Windows.Forms.TextBox _editorFolderBox = null!;
     private System.Windows.Forms.Label _rootNamespaceLabel = null!;
     private System.Windows.Forms.TextBox _rootNamespaceBox = null!;
+    private System.Windows.Forms.Label _virtualResLabel = null!;
+    private System.Windows.Forms.Panel _virtualResRow = null!;
+    private System.Windows.Forms.NumericUpDown _virtualWidthInput = null!;
+    private System.Windows.Forms.Label _virtualResXLabel = null!;
+    private System.Windows.Forms.NumericUpDown _virtualHeightInput = null!;
 
     // ── Content tab ───────────────────────────────────────────────────────
     private System.Windows.Forms.TableLayoutPanel _contentLayout = null!;
@@ -95,6 +100,11 @@ partial class ProjectSettingsDialog
         _editorFolderBox            = new System.Windows.Forms.TextBox();
         _rootNamespaceLabel         = new System.Windows.Forms.Label();
         _rootNamespaceBox           = new System.Windows.Forms.TextBox();
+        _virtualResLabel            = new System.Windows.Forms.Label();
+        _virtualResRow              = new System.Windows.Forms.Panel();
+        _virtualWidthInput          = new System.Windows.Forms.NumericUpDown();
+        _virtualResXLabel           = new System.Windows.Forms.Label();
+        _virtualHeightInput         = new System.Windows.Forms.NumericUpDown();
         _contentLayout              = new System.Windows.Forms.TableLayoutPanel();
         _contentFolderLabel         = new System.Windows.Forms.Label();
         _contentFolderRow           = new System.Windows.Forms.Panel();
@@ -129,6 +139,8 @@ partial class ProjectSettingsDialog
         _okButton                   = new System.Windows.Forms.Button();
 
         ((System.ComponentModel.ISupportInitialize)_supportedLocalesGrid).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)_virtualWidthInput).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)_virtualHeightInput).BeginInit();
         _generalTab.SuspendLayout();
         _contentTab.SuspendLayout();
         _localizationTab.SuspendLayout();
@@ -218,6 +230,42 @@ partial class ProjectSettingsDialog
         _rootNamespaceBox.Name = "_rootNamespaceBox";
         _rootNamespaceBox.Size = new System.Drawing.Size(400, 23);
 
+        // _virtualResLabel
+        _virtualResLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+        _virtualResLabel.AutoSize = true;
+        _virtualResLabel.Name = "_virtualResLabel";
+        _virtualResLabel.Text = "Virtual resolution:";
+
+        // _virtualWidthInput
+        _virtualWidthInput.Dock = System.Windows.Forms.DockStyle.Left;
+        _virtualWidthInput.Minimum = 1;
+        _virtualWidthInput.Maximum = 7680;
+        _virtualWidthInput.Value = 1920;
+        _virtualWidthInput.Name = "_virtualWidthInput";
+        _virtualWidthInput.Width = 70;
+
+        // _virtualResXLabel
+        _virtualResXLabel.Dock = System.Windows.Forms.DockStyle.Left;
+        _virtualResXLabel.AutoSize = false;
+        _virtualResXLabel.Width = 14;
+        _virtualResXLabel.Name = "_virtualResXLabel";
+        _virtualResXLabel.Text = " x";
+        _virtualResXLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+
+        // _virtualHeightInput
+        _virtualHeightInput.Dock = System.Windows.Forms.DockStyle.Fill;
+        _virtualHeightInput.Minimum = 1;
+        _virtualHeightInput.Maximum = 4320;
+        _virtualHeightInput.Value = 1080;
+        _virtualHeightInput.Name = "_virtualHeightInput";
+
+        // _virtualResRow
+        _virtualResRow.Controls.Add(_virtualHeightInput);
+        _virtualResRow.Controls.Add(_virtualResXLabel);
+        _virtualResRow.Controls.Add(_virtualWidthInput);
+        _virtualResRow.Dock = System.Windows.Forms.DockStyle.Fill;
+        _virtualResRow.Name = "_virtualResRow";
+
         // _generalLayout
         _generalLayout.ColumnCount = 2;
         _generalLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 130F));
@@ -232,11 +280,14 @@ partial class ProjectSettingsDialog
         _generalLayout.Controls.Add(_editorFolderBox, 1, 3);
         _generalLayout.Controls.Add(_rootNamespaceLabel, 0, 4);
         _generalLayout.Controls.Add(_rootNamespaceBox, 1, 4);
+        _generalLayout.Controls.Add(_virtualResLabel, 0, 5);
+        _generalLayout.Controls.Add(_virtualResRow, 1, 5);
         _generalLayout.Dock = System.Windows.Forms.DockStyle.Fill;
         _generalLayout.Location = new System.Drawing.Point(3, 3);
         _generalLayout.Name = "_generalLayout";
         _generalLayout.Padding = new System.Windows.Forms.Padding(4);
-        _generalLayout.RowCount = 5;
+        _generalLayout.RowCount = 6;
+        _generalLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
         _generalLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
         _generalLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
         _generalLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
@@ -559,6 +610,8 @@ partial class ProjectSettingsDialog
         Text = "Project Settings";
 
         ((System.ComponentModel.ISupportInitialize)_supportedLocalesGrid).EndInit();
+        ((System.ComponentModel.ISupportInitialize)_virtualWidthInput).EndInit();
+        ((System.ComponentModel.ISupportInitialize)_virtualHeightInput).EndInit();
         _generalTab.ResumeLayout(false);
         _contentTab.ResumeLayout(false);
         _localizationTab.ResumeLayout(false);

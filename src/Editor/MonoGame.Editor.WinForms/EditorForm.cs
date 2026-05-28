@@ -18,6 +18,8 @@ public sealed partial class EditorForm : Form
     private readonly GizmoController _gizmoCtrl      = new();
     private GizmoRenderer?           _gizmoRenderer;
     private EditModeRenderer?        _editRenderer;
+    private NavGridPreviewRenderer?       _navGridRenderer;
+    private ResolutionPreviewRenderer?    _resRenderer;
     private PlayModeRunner?          _playRunner;
     private readonly ContentWatcher  _contentWatcher  = null!;
     private ToolStripMenuItem        _saveSceneMenuItem   = null!;
@@ -29,6 +31,15 @@ public sealed partial class EditorForm : Form
     private SceneViewMode _sceneViewMode = SceneViewMode.TwoD;
     private bool _handToolEnabled;
     private readonly HashSet<Keys> _pressedNavigationKeys = [];
+    private bool _tilemapPainting;
+
+    // FPS counter (written/read on render thread; label updated on UI thread via BeginInvoke)
+    private double _fpsAccumTime;
+    private int    _fpsFrameCount;
+    private float  _fpsCurrent;
+
+    // Default clear color for the scene viewport
+    private static readonly Microsoft.Xna.Framework.Color DefaultClearColor = new(30, 30, 30);
 
     /// <summary>Designer-only constructor.</summary>
     public EditorForm() => InitializeComponent();
@@ -69,6 +80,8 @@ public sealed partial class EditorForm : Form
         _viewSceneManagerMenuItem.Checked = _preferences.SceneManagerVisible;
         _viewLocalizationMenuItem.Checked = _preferences.LocalizationBrowserVisible;
         _viewInputMapEditorMenuItem.Checked = _preferences.InputMapEditorVisible;
+        _viewTilemapPaletteMenuItem.Checked = _preferences.TilemapPaletteVisible;
+        _viewUndoHistoryMenuItem.Checked = _preferences.UndoHistoryVisible;
         _assetBrowserPanel.SplitterDistance = _preferences.AssetBrowserSplitterDistance;
 
         UpdatePanelVisibility();
@@ -122,6 +135,8 @@ public sealed partial class EditorForm : Form
         _sceneManagerPanel.Initialize(_context);
         _localizationPanel.Initialize(_context);
         _inputMapEditorPanel.Initialize(_context);
+        _tilemapPalettePanel.Initialize(_context, _context.EventBus);
+        _undoHistoryPanel.Initialize(_context, _context.EventBus);
 
         _context.EventBus.Subscribe<BehaviourAddedEvent>(OnBehaviourAdded);
         _context.EventBus.Subscribe<InputMapLoadedEvent>(OnInputMapLoaded);
@@ -145,6 +160,8 @@ public sealed partial class EditorForm : Form
         _preferences.SceneManagerVisible = _viewSceneManagerMenuItem.Checked;
         _preferences.LocalizationBrowserVisible = _viewLocalizationMenuItem.Checked;
         _preferences.InputMapEditorVisible = _viewInputMapEditorMenuItem.Checked;
+        _preferences.TilemapPaletteVisible = _viewTilemapPaletteMenuItem.Checked;
+        _preferences.UndoHistoryVisible = _viewUndoHistoryMenuItem.Checked;
         _preferences.Save();
     }
 
@@ -162,6 +179,8 @@ public sealed partial class EditorForm : Form
         _contentWatcher.Dispose();
         _gizmoRenderer?.Dispose();
         _editRenderer?.Dispose();
+        _navGridRenderer?.Dispose();
+        _resRenderer?.Dispose();
         base.OnFormClosed(e);
     }
 
@@ -426,6 +445,15 @@ public sealed partial class EditorForm : Form
         _viewport.Invalidate();
     }
 
+    private void OnSnapButtonClick(object? sender, EventArgs e)
+    {
+        _gizmoCtrl.SnapEnabled = _snapButton.Checked;
+    }
+
+    private void OnNavButtonClick(object? sender, EventArgs e) { /* state is read from _navButton.Checked in DrawEditorGizmos */ }
+
+    private void OnResButtonClick(object? sender, EventArgs e) { /* state is read from _resButton.Checked in DrawEditorGizmos */ }
+
     private void OnFormClosing(object? sender, FormClosingEventArgs e)
     {
         if (_context.IsSceneDirty)
@@ -472,15 +500,19 @@ public sealed partial class EditorForm : Form
         bool sceneManagerVisible  = _viewSceneManagerMenuItem.Checked;
         bool localizationVisible  = _viewLocalizationMenuItem.Checked;
         bool inputMapVisible      = _viewInputMapEditorMenuItem.Checked;
+        bool tilemapPaletteVisible = _viewTilemapPaletteMenuItem.Checked;
+        bool undoHistoryVisible    = _viewUndoHistoryMenuItem.Checked;
 
         _bottomTabControl.TabPages.Clear();
-        if (assetsVisible)       _bottomTabControl.TabPages.Add(_assetsTab);
-        if (consoleVisible)      _bottomTabControl.TabPages.Add(_consoleTab);
-        if (sceneManagerVisible) _bottomTabControl.TabPages.Add(_sceneManagerTab);
-        if (localizationVisible) _bottomTabControl.TabPages.Add(_localizationTab);
-        if (inputMapVisible)     _bottomTabControl.TabPages.Add(_inputMapEditorTab);
+        if (assetsVisible)         _bottomTabControl.TabPages.Add(_assetsTab);
+        if (consoleVisible)        _bottomTabControl.TabPages.Add(_consoleTab);
+        if (sceneManagerVisible)   _bottomTabControl.TabPages.Add(_sceneManagerTab);
+        if (localizationVisible)   _bottomTabControl.TabPages.Add(_localizationTab);
+        if (inputMapVisible)       _bottomTabControl.TabPages.Add(_inputMapEditorTab);
+        if (tilemapPaletteVisible) _bottomTabControl.TabPages.Add(_tilemapPaletteTab);
+        if (undoHistoryVisible)    _bottomTabControl.TabPages.Add(_undoHistoryTab);
 
-        _mainSplit.Panel2Collapsed = !assetsVisible && !consoleVisible && !sceneManagerVisible && !localizationVisible && !inputMapVisible;
+        _mainSplit.Panel2Collapsed = !assetsVisible && !consoleVisible && !sceneManagerVisible && !localizationVisible && !inputMapVisible && !tilemapPaletteVisible && !undoHistoryVisible;
     }
 
     private void OnViewMenuItemClick(object? sender, EventArgs e) => UpdatePanelVisibility();
@@ -498,6 +530,8 @@ public sealed partial class EditorForm : Form
         _viewSceneManagerMenuItem.Checked = defaults.SceneManagerVisible;
         _viewLocalizationMenuItem.Checked = defaults.LocalizationBrowserVisible;
         _viewInputMapEditorMenuItem.Checked = defaults.InputMapEditorVisible;
+        _viewTilemapPaletteMenuItem.Checked = defaults.TilemapPaletteVisible;
+        _viewUndoHistoryMenuItem.Checked = defaults.UndoHistoryVisible;
         UpdatePanelVisibility();
 
         _outerSplit.Panel1MinSize = 180;
@@ -517,11 +551,13 @@ public sealed partial class EditorForm : Form
     private void OnUndoClick(object? sender, EventArgs e)
     {
         _context.Commands.Undo();
+        _undoHistoryPanel.Refresh(_context.Commands);
     }
 
     private void OnRedoClick(object? sender, EventArgs e)
     {
         _context.Commands.Redo();
+        _undoHistoryPanel.Refresh(_context.Commands);
     }
 
     private void OnUndoPerformed(UndoPerformedEvent _)
@@ -1425,6 +1461,7 @@ public sealed partial class EditorForm : Form
     {
         if (InvokeRequired) { BeginInvoke(() => OnSceneLoaded(evt)); return; }
         UpdateFormTitle();
+        UpdateViewportClearColor(evt.Scene);
     }
 
     private void OnSceneDirtyChanged(SceneDirtyChangedEvent evt)
@@ -1455,6 +1492,20 @@ public sealed partial class EditorForm : Form
         Text = $"MonoGame Editor — {project.Name} — {scene.Name}{dirtyMarker}";
     }
 
+    private void UpdateViewportClearColor(EditorScene? scene)
+    {
+        if (scene is { WorldConfig.UseLighting: true })
+        {
+            int[] rgba = scene.WorldConfig.AmbientColorRgba;
+            Microsoft.Xna.Framework.Color ambient = new(rgba[0], rgba[1], rgba[2]);
+            _viewport.ClearColor = Microsoft.Xna.Framework.Color.Lerp(DefaultClearColor, ambient, 0.4f);
+        }
+        else
+        {
+            _viewport.ClearColor = DefaultClearColor;
+        }
+    }
+
     #endregion
 
     #region Viewport rendering
@@ -1469,6 +1520,17 @@ public sealed partial class EditorForm : Form
     private void OnViewportRenderFrame(object? sender, RenderEventArgs e)
     {
         ApplyKeyboardNavigation(e.Elapsed);
+
+        // Accumulate FPS counter; update label every 0.5s
+        _fpsAccumTime  += e.Elapsed.TotalSeconds;
+        _fpsFrameCount++;
+        if (_fpsAccumTime >= 0.5)
+        {
+            _fpsCurrent    = (float)(_fpsFrameCount / _fpsAccumTime);
+            _fpsAccumTime  = 0;
+            _fpsFrameCount = 0;
+            BeginInvoke(() => _fpsStatusLabel.Text = $"{_fpsCurrent:F0} fps");
+        }
 
         // Scene tab always renders the edit-mode overlay (grid, gizmos, sprite previews)
         // regardless of play state — mirrors the Unity Scene view behaviour.
@@ -1536,8 +1598,26 @@ public sealed partial class EditorForm : Form
         if (_context.ActiveScene is not null)
             _editRenderer.DrawScene(_context.ActiveScene, cameraTransform);
 
+        // NavGrid overlay (only when NAV button is checked)
+        if (_navButton.Checked)
+        {
+            _navGridRenderer ??= new NavGridPreviewRenderer();
+            if (!_navGridRenderer.IsInitialized)
+                _navGridRenderer.Initialize(e.GraphicsDevice);
+            _navGridRenderer.Draw(_context.ActiveScene?.WorldConfig, cameraTransform);
+        }
+
         _gizmoRenderer.Draw(_context.SelectedObject, cameraTransform, w, h, _gizmoCtrl.IsDepthMode,
             _context.ActiveScene?.RootGameObjects);
+
+        // Resolution preview overlay (only when RES button is checked)
+        if (_resButton.Checked && _projectSettings is not null)
+        {
+            _resRenderer ??= new ResolutionPreviewRenderer();
+            if (!_resRenderer.IsInitialized)
+                _resRenderer.Initialize(e.GraphicsDevice);
+            _resRenderer.Draw(_projectSettings.VirtualWidth, _projectSettings.VirtualHeight, w, h);
+        }
     }
 
     #endregion
@@ -1567,11 +1647,16 @@ public sealed partial class EditorForm : Form
         Vector2 objScreen = Vector2.Transform(
             new Vector2(selected.Position.X, selected.Position.Y), camMatrix);
 
-        _gizmoCtrl.BeginDrag(
+        bool gizmoHit = _gizmoCtrl.BeginDrag(
             e.X, e.Y,
             objScreen.X, objScreen.Y,
             worldPos.X,  worldPos.Y,
             selected);
+
+        if (!gizmoHit)
+        {
+            _tilemapPainting = TryPaintTileAtWorldPos(worldPos, selected);
+        }
     }
 
     private void OnViewportMouseMove(object? sender, MouseEventArgs e)
@@ -1601,6 +1686,9 @@ public sealed partial class EditorForm : Form
             selected);
 
         _context.EventBus.Publish(new GameObjectTransformChangedEvent(selected));
+
+        if (_tilemapPainting && e.Button == MouseButtons.Left)
+            TryPaintTileAtWorldPos(worldPos, selected);
     }
 
     private void OnViewportMouseUp(object? sender, MouseEventArgs e)
@@ -1610,11 +1698,43 @@ public sealed partial class EditorForm : Form
 
         if (e.Button != MouseButtons.Left) return;
 
+        _tilemapPainting = false;
+
         bool ctrlHeld         = ModifierKeys.HasFlag(Keys.Control);
         IEditorCommand? cmd   = _gizmoCtrl.EndDrag(_context.SelectedObject, ctrlHeld);
 
         if (cmd != null)
+        {
             _context.Commands.Execute(cmd);
+            _undoHistoryPanel.Refresh(_context.Commands);
+        }
+    }
+
+    private bool TryPaintTileAtWorldPos(Vector2 worldPos, EditorGameObject selected)
+    {
+        int gid = _tilemapPalettePanel.SelectedTileGid;
+        if (gid < 0) return false;
+
+        EditorTilemapAsset? asset = _tilemapPalettePanel.CurrentTilemap;
+        EditorTileLayer? layer = _tilemapPalettePanel.ActiveLayer;
+        if (asset is null || layer is null) return false;
+        if (asset.TileWidth <= 0 || asset.TileHeight <= 0) return false;
+
+        float offsetX = worldPos.X - selected.Position.X;
+        float offsetY = worldPos.Y - selected.Position.Y;
+
+        int col = (int)Math.Floor(offsetX / asset.TileWidth);
+        int row = (int)Math.Floor(offsetY / asset.TileHeight);
+
+        if (col < 0 || col >= layer.Width || row < 0 || row >= layer.Height)
+            return true;
+
+        int? existing = layer.GetTile(col, row);
+        if (existing == gid) return true;
+
+        _context.Commands.Execute(new PaintTileCommand(layer, col, row, gid));
+        _undoHistoryPanel.Refresh(_context.Commands);
+        return true;
     }
 
     #endregion

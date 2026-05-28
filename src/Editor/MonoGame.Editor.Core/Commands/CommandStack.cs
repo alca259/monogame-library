@@ -19,6 +19,24 @@ public sealed class CommandStack
     /// <summary>Description of the command that would be redone next, or <c>null</c> if the redo stack is empty.</summary>
     public string? RedoDescription => _redoStack.TryPeek(out IEditorCommand? cmd) ? cmd.Description : null;
 
+    /// <summary>Returns all undo history descriptions from most-recent to oldest.</summary>
+    public IReadOnlyList<string> GetUndoDescriptions()
+    {
+        var result = new List<string>(_undoHistory.Count);
+        for (LinkedListNode<IEditorCommand>? node = _undoHistory.Last; node is not null; node = node.Previous)
+            result.Add(node.Value.Description);
+        return result;
+    }
+
+    /// <summary>Returns all redo stack descriptions from next-to-redo to furthest.</summary>
+    public IReadOnlyList<string> GetRedoDescriptions()
+    {
+        var result = new List<string>(_redoStack.Count);
+        foreach (IEditorCommand cmd in _redoStack)
+            result.Add(cmd.Description);
+        return result;
+    }
+
     /// <param name="maxHistory">Maximum number of commands to keep. Defaults to 100.</param>
     /// <param name="eventBus">Optional bus; if provided, publishes undo/redo events.</param>
     public CommandStack(int maxHistory = 100, IEditorEventBus? eventBus = null)

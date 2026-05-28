@@ -10,21 +10,29 @@ namespace MonoGame.Editor.WinForms.Gizmos;
 public sealed class GizmoRenderer : IDisposable
 {
     // ── Colours ───────────────────────────────────────────────────────────────
-    private static readonly XnaColor _gridColor       = new(70,  70,  70,  180);
-    private static readonly XnaColor _originAxisColor = new(140, 140, 140, 220);
-    private static readonly XnaColor _boundsColor     = new(255, 255, 255, 110);
-    private static readonly XnaColor _dimBoundsColor  = new(180, 180, 180, 40);
-    private static readonly XnaColor _axisXColor      = new(220, 60,  60);
-    private static readonly XnaColor _axisYColor      = new(60,  200, 60);
-    private static readonly XnaColor _axisXYColor     = new(230, 200, 40);
-    private static readonly XnaColor _axisZColor      = new(60,  120, 240);
-    private static readonly XnaColor _rotateColor     = new(255, 210, 80);
-    private static readonly XnaColor _rectBoundsColor = new(60,  200, 255, 180);
+    private static readonly XnaColor _gridColor        = new(70,  70,  70,  180);
+    private static readonly XnaColor _originAxisColor  = new(140, 140, 140, 220);
+    private static readonly XnaColor _boundsColor      = new(255, 255, 255, 110);
+    private static readonly XnaColor _dimBoundsColor   = new(180, 180, 180, 40);
+    private static readonly XnaColor _axisXColor       = new(220, 60,  60);
+    private static readonly XnaColor _axisYColor       = new(60,  200, 60);
+    private static readonly XnaColor _axisXYColor      = new(230, 200, 40);
+    private static readonly XnaColor _axisZColor       = new(60,  120, 240);
+    private static readonly XnaColor _rotateColor      = new(255, 210, 80);
+    private static readonly XnaColor _rectBoundsColor  = new(60,  200, 255, 180);
+    private static readonly XnaColor _colliderColor    = new(0,   220, 220, 200);
+    private static readonly XnaColor _lightRangeColor  = new(255, 210, 50,  140);
 
     // ── Drawing constants ────────────────────────────────────────────────────
     private const float  LineThickness          = 2.5f;
     private const int    MaxGridLines           = 100;
     private const string SpriteRendererSuffix   = "SpriteRendererBehaviour";
+    private const string BoxColliderSuffix      = "BoxCollider2D";
+    private const string CircleColliderSuffix   = "CircleCollider2D";
+    private const string PolygonColliderSuffix  = "PolygonCollider2D";
+    private const string PointLightSuffix       = "PointLight2D";
+    private const string SpotLightSuffix        = "SpotLight2D";
+    private const string DirectionalLightSuffix = "DirectionalLight2D";
 
     // ── Dependencies ─────────────────────────────────────────────────────────
     private readonly GizmoController _ctrl;
@@ -76,6 +84,28 @@ public sealed class GizmoRenderer : IDisposable
         if (selected == null && !hasDimWork) return;
 
         float zoom = cameraTransform.M11;
+
+        // ── Pass 1b: world-space collider and light gizmos ───────────────────
+        if (selected != null)
+        {
+            XnaVector2 worldOrigin = new(selected.Position.X, selected.Position.Y);
+            float lineW = 1.5f / Math.Max(0.001f, zoom);
+
+            _spriteBatch.Begin(
+                transformMatrix: cameraTransform,
+                samplerState: SamplerState.PointClamp,
+                blendState: BlendState.AlphaBlend);
+            try
+            {
+                DrawColliderGizmos(selected.Behaviours, worldOrigin, lineW);
+                DrawLightGizmos(selected.Behaviours, worldOrigin, lineW, zoom);
+            }
+            catch { /* ignore gizmo errors */ }
+            finally
+            {
+                _spriteBatch.End();
+            }
+        }
 
         _spriteBatch.Begin(
             samplerState: SamplerState.PointClamp,
@@ -367,6 +397,145 @@ public sealed class GizmoRenderer : IDisposable
         if (_pixel == null || _spriteBatch == null) return;
         _spriteBatch.Draw(_pixel, rect, color);
     }
+
+    // ── Collider gizmos ──────────────────────────────────────────────────────
+
+    private void DrawColliderGizmos(List<EditorBehaviour> behaviours, XnaVector2 worldOrigin, float lineW)
+    {
+        for (int i = 0; i < behaviours.Count; i++)
+        {
+            EditorBehaviour b = behaviours[i];
+
+            if (b.TypeName.EndsWith(BoxColliderSuffix, StringComparison.Ordinal))
+            {
+                XnaVector2 size   = ReadVec2(b.Properties, "Size",   new XnaVector2(32, 32));
+                XnaVector2 offset = ReadVec2(b.Properties, "Offset", XnaVector2.Zero);
+                XnaVector2 center = worldOrigin + offset;
+                float hw = size.X * 0.5f, hh = size.Y * 0.5f;
+
+                XnaVector2 tl = center + new XnaVector2(-hw, -hh);
+                XnaVector2 tr = center + new XnaVector2( hw, -hh);
+                XnaVector2 br = center + new XnaVector2( hw,  hh);
+                XnaVector2 bl = center + new XnaVector2(-hw,  hh);
+
+                DrawLine(tl, tr, _colliderColor, lineW);
+                DrawLine(tr, br, _colliderColor, lineW);
+                DrawLine(br, bl, _colliderColor, lineW);
+                DrawLine(bl, tl, _colliderColor, lineW);
+            }
+            else if (b.TypeName.EndsWith(CircleColliderSuffix, StringComparison.Ordinal))
+            {
+                float radius = ReadFloat(b.Properties, "Radius", 16f);
+                XnaVector2 offset = ReadVec2(b.Properties, "Offset", XnaVector2.Zero);
+                DrawCircleWorld(worldOrigin + offset, radius, _colliderColor, lineW);
+            }
+            else if (b.TypeName.EndsWith(PolygonColliderSuffix, StringComparison.Ordinal))
+            {
+                if (!b.Properties.TryGetValue("Vertices", out JsonElement verts) || verts.ValueKind != JsonValueKind.Array)
+                    continue;
+
+                List<XnaVector2> pts = [];
+                foreach (JsonElement v in verts.EnumerateArray())
+                    pts.Add(worldOrigin + ReadVec2FromElement(v));
+
+                for (int j = 0; j < pts.Count; j++)
+                    DrawLine(pts[j], pts[(j + 1) % pts.Count], _colliderColor, lineW);
+            }
+        }
+    }
+
+    // ── Light gizmos ─────────────────────────────────────────────────────────
+
+    private void DrawLightGizmos(List<EditorBehaviour> behaviours, XnaVector2 worldOrigin, float lineW, float zoom)
+    {
+        for (int i = 0; i < behaviours.Count; i++)
+        {
+            EditorBehaviour b = behaviours[i];
+
+            if (b.TypeName.EndsWith(PointLightSuffix, StringComparison.Ordinal))
+            {
+                float range = ReadFloat(b.Properties, "Range", 100f);
+                DrawCircleWorld(worldOrigin, range, _lightRangeColor, lineW, 32);
+            }
+            else if (b.TypeName.EndsWith(SpotLightSuffix, StringComparison.Ordinal))
+            {
+                float range     = ReadFloat(b.Properties, "Range", 100f);
+                float angleDeg  = ReadFloat(b.Properties, "Angle", 45f);
+                XnaVector2 dir  = ReadVec2(b.Properties, "Direction", new XnaVector2(1, 0));
+                float baseAngle = MathF.Atan2(dir.Y, dir.X);
+                float halfRad   = MathHelper.ToRadians(angleDeg * 0.5f);
+
+                XnaVector2 end1 = worldOrigin + new XnaVector2(MathF.Cos(baseAngle - halfRad), MathF.Sin(baseAngle - halfRad)) * range;
+                XnaVector2 end2 = worldOrigin + new XnaVector2(MathF.Cos(baseAngle + halfRad), MathF.Sin(baseAngle + halfRad)) * range;
+
+                DrawLine(worldOrigin, end1, _lightRangeColor, lineW);
+                DrawLine(worldOrigin, end2, _lightRangeColor, lineW);
+                DrawArcWorld(worldOrigin, range, baseAngle - halfRad, baseAngle + halfRad, _lightRangeColor, lineW);
+            }
+            else if (b.TypeName.EndsWith(DirectionalLightSuffix, StringComparison.Ordinal))
+            {
+                XnaVector2 dir = ReadVec2(b.Properties, "Direction", new XnaVector2(1, 0));
+                if (dir.LengthSquared() < 0.0001f) continue;
+
+                dir = XnaVector2.Normalize(dir);
+                float arrowLen = 80f / Math.Max(0.001f, zoom);
+                XnaVector2 end = worldOrigin + dir * arrowLen;
+                DrawLine(worldOrigin, end, _lightRangeColor, lineW);
+
+                float ang  = MathF.Atan2(dir.Y, dir.X);
+                float ah   = 12f / Math.Max(0.001f, zoom);
+                var left   = end + new XnaVector2(MathF.Cos(ang + 2.4f), MathF.Sin(ang + 2.4f)) * ah;
+                var right  = end + new XnaVector2(MathF.Cos(ang - 2.4f), MathF.Sin(ang - 2.4f)) * ah;
+                DrawLine(end, left,  _lightRangeColor, lineW);
+                DrawLine(end, right, _lightRangeColor, lineW);
+            }
+        }
+    }
+
+    private void DrawCircleWorld(XnaVector2 center, float radius, XnaColor color, float lineW, int segments = 24)
+    {
+        float step = MathHelper.TwoPi / segments;
+        for (int i = 0; i < segments; i++)
+        {
+            float a1 = step * i;
+            float a2 = step * (i + 1);
+            XnaVector2 p1 = center + new XnaVector2(MathF.Cos(a1), MathF.Sin(a1)) * radius;
+            XnaVector2 p2 = center + new XnaVector2(MathF.Cos(a2), MathF.Sin(a2)) * radius;
+            DrawLine(p1, p2, color, lineW);
+        }
+    }
+
+    private void DrawArcWorld(XnaVector2 center, float radius, float startAngle, float endAngle, XnaColor color, float lineW, int segments = 16)
+    {
+        float range = endAngle - startAngle;
+        float step  = range / segments;
+        for (int i = 0; i < segments; i++)
+        {
+            float a1 = startAngle + step * i;
+            float a2 = startAngle + step * (i + 1);
+            XnaVector2 p1 = center + new XnaVector2(MathF.Cos(a1), MathF.Sin(a1)) * radius;
+            XnaVector2 p2 = center + new XnaVector2(MathF.Cos(a2), MathF.Sin(a2)) * radius;
+            DrawLine(p1, p2, color, lineW);
+        }
+    }
+
+    // ── JSON property helpers ─────────────────────────────────────────────────
+
+    private static XnaVector2 ReadVec2(Dictionary<string, JsonElement> props, string key, XnaVector2 def)
+    {
+        if (!props.TryGetValue(key, out JsonElement el) || el.ValueKind != JsonValueKind.Object) return def;
+        return ReadVec2FromElement(el);
+    }
+
+    private static XnaVector2 ReadVec2FromElement(JsonElement el)
+    {
+        float x = el.TryGetProperty("X", out JsonElement xe) ? xe.GetSingle() : 0f;
+        float y = el.TryGetProperty("Y", out JsonElement ye) ? ye.GetSingle() : 0f;
+        return new XnaVector2(x, y);
+    }
+
+    private static float ReadFloat(Dictionary<string, JsonElement> props, string key, float def)
+        => props.TryGetValue(key, out JsonElement el) ? el.GetSingle() : def;
 
     // ── IDisposable ───────────────────────────────────────────────────────────
 

@@ -31,6 +31,14 @@ public sealed class ProjectSettings
     [JsonPropertyName("buildConfiguration")]
     public string BuildConfiguration { get; set; } = "Debug";
 
+    /// <summary>Virtual (game) resolution width in pixels used for pillarbox/letterbox preview.</summary>
+    [JsonPropertyName("virtualWidth")]
+    public int VirtualWidth { get; set; } = 1920;
+
+    /// <summary>Virtual (game) resolution height in pixels used for pillarbox/letterbox preview.</summary>
+    [JsonPropertyName("virtualHeight")]
+    public int VirtualHeight { get; set; } = 1080;
+
     private static string GetPath(EditorProject project)
         => Path.Combine(project.EditorPath, FileName);
 

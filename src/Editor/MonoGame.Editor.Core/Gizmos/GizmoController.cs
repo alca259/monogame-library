@@ -59,6 +59,15 @@ public sealed class GizmoController
     /// <summary>When <c>true</c> (2.5D mode) the Move gizmo exposes a Z-depth handle.</summary>
     public bool IsDepthMode { get; set; }
 
+    /// <summary>When <c>true</c>, transform operations snap to grid/angle/scale steps during drag.</summary>
+    public bool SnapEnabled { get; set; }
+
+    /// <summary>Rotation snap increment in degrees. Active when <see cref="SnapEnabled"/> is true.</summary>
+    public float SnapRotationDegrees { get; set; } = 15f;
+
+    /// <summary>Scale snap step. Active when <see cref="SnapEnabled"/> is true.</summary>
+    public float SnapScaleStep { get; set; } = 0.1f;
+
     private float _gridCellSize = 32f;
 
     // ── Drag API ─────────────────────────────────────────────────────────────
@@ -131,14 +140,17 @@ public sealed class GizmoController
         {
             case GizmoDragAxis.X:
                 selected.Position = new EditorVector2(posStartX + dx, posStartY);
+                if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
                 break;
 
             case GizmoDragAxis.Y:
                 selected.Position = new EditorVector2(posStartX, posStartY + dy);
+                if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
                 break;
 
             case GizmoDragAxis.XY:
                 selected.Position = new EditorVector2(posStartX + dx, posStartY + dy);
+                if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
                 break;
 
             case GizmoDragAxis.Z:
@@ -149,25 +161,30 @@ public sealed class GizmoController
             case GizmoDragAxis.Rotate:
             {
                 float angle = MathF.Atan2(screenY - objScreenY, screenX - objScreenX);
-                selected.Rotation = angle * (180f / MathF.PI);
+                float deg = angle * (180f / MathF.PI);
+                if (SnapEnabled && SnapRotationDegrees > 0f)
+                    deg = MathF.Round(deg / SnapRotationDegrees) * SnapRotationDegrees;
+                selected.Rotation = deg;
                 break;
             }
 
             case GizmoDragAxis.ScaleX:
             {
                 float delta = dx * 0.02f;
-                selected.Scale = new EditorVector2(
-                    Math.Max(0.01f, scaleStartX + delta),
-                    Math.Max(0.01f, scaleStartY));
+                float newX = Math.Max(0.01f, scaleStartX + delta);
+                if (SnapEnabled && SnapScaleStep > 0f)
+                    newX = MathF.Round(newX / SnapScaleStep) * SnapScaleStep;
+                selected.Scale = new EditorVector2(Math.Max(0.01f, newX), Math.Max(0.01f, scaleStartY));
                 break;
             }
 
             case GizmoDragAxis.ScaleY:
             {
                 float delta = -dy * 0.02f;
-                selected.Scale = new EditorVector2(
-                    Math.Max(0.01f, scaleStartX),
-                    Math.Max(0.01f, scaleStartY + delta));
+                float newY = Math.Max(0.01f, scaleStartY + delta);
+                if (SnapEnabled && SnapScaleStep > 0f)
+                    newY = MathF.Round(newY / SnapScaleStep) * SnapScaleStep;
+                selected.Scale = new EditorVector2(Math.Max(0.01f, scaleStartX), Math.Max(0.01f, newY));
                 break;
             }
 
@@ -176,9 +193,10 @@ public sealed class GizmoController
                 float dist  = MathF.Sqrt(dx * dx + dy * dy);
                 float sign  = (dx + dy) > 0 ? 1f : -1f;
                 float delta = sign * dist * 0.02f;
-                selected.Scale = new EditorVector2(
-                    Math.Max(0.01f, scaleStartX + delta),
-                    Math.Max(0.01f, scaleStartY + delta));
+                float newVal = Math.Max(0.01f, scaleStartX + delta);
+                if (SnapEnabled && SnapScaleStep > 0f)
+                    newVal = MathF.Round(newVal / SnapScaleStep) * SnapScaleStep;
+                selected.Scale = new EditorVector2(Math.Max(0.01f, newVal), Math.Max(0.01f, scaleStartY + delta));
                 break;
             }
         }
@@ -209,7 +227,9 @@ public sealed class GizmoController
 
         if (!wasDragging || selected is null) return null;
 
-        if (ctrlHeld && axis is GizmoDragAxis.X or GizmoDragAxis.Y or GizmoDragAxis.XY)
+        // Snap on release: when SnapEnabled, already snapped during drag.
+        // When Ctrl is held and SnapEnabled is off, apply a one-shot grid snap.
+        if (!SnapEnabled && ctrlHeld && axis is GizmoDragAxis.X or GizmoDragAxis.Y or GizmoDragAxis.XY)
             selected.Position = SnapToGrid(selected.Position);
 
         EditorVector2 startPos   = new(posStartX, posStartY);

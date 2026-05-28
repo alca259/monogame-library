@@ -27,6 +27,8 @@ public sealed partial class ProjectSettingsDialog : Form
         _csprojBox.Text        = _project.GameCsprojPath;
         _editorFolderBox.Text  = _project.EditorPath;
         _rootNamespaceBox.Text = _settings.RootNamespace;
+        _virtualWidthInput.Value  = Math.Clamp(_settings.VirtualWidth,  (int)_virtualWidthInput.Minimum,  (int)_virtualWidthInput.Maximum);
+        _virtualHeightInput.Value = Math.Clamp(_settings.VirtualHeight, (int)_virtualHeightInput.Minimum, (int)_virtualHeightInput.Maximum);
 
         // Content tab
         _contentFolderBox.Text = _project.ContentPath;
@@ -158,6 +160,8 @@ public sealed partial class ProjectSettingsDialog : Form
     {
         _settings.RootNamespace       = _rootNamespaceBox.Text.Trim();
         _settings.BuildConfiguration  = _buildConfigCombo.SelectedItem?.ToString() ?? "Debug";
+        _settings.VirtualWidth        = (int)_virtualWidthInput.Value;
+        _settings.VirtualHeight       = (int)_virtualHeightInput.Value;
         string folder = _outputFolderBox.Text.Trim();
         _settings.GeneratedCodeFolder = folder.Length > 0 ? folder : "Generated";
         _settings.GenerateOnSave      = _generateOnSaveCheckBox.Checked;
