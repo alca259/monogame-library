@@ -82,6 +82,7 @@ public sealed partial class EditorForm : Form
         _viewInputMapEditorMenuItem.Checked = _preferences.InputMapEditorVisible;
         _viewTilemapPaletteMenuItem.Checked = _preferences.TilemapPaletteVisible;
         _viewUndoHistoryMenuItem.Checked = _preferences.UndoHistoryVisible;
+        _viewScriptsMenuItem.Checked     = _preferences.ScriptsBrowserVisible;
         _assetBrowserPanel.SplitterDistance = _preferences.AssetBrowserSplitterDistance;
 
         UpdatePanelVisibility();
@@ -134,6 +135,7 @@ public sealed partial class EditorForm : Form
         _inputMapEditorPanel.Initialize(_context);
         _tilemapPalettePanel.Initialize(_context, _context.EventBus);
         _undoHistoryPanel.Initialize(_context, _context.EventBus);
+        _scriptBrowserPanel.Initialize(_context);
 
         _context.EventBus.Subscribe<BehaviourAddedEvent>(OnBehaviourAdded);
         _context.EventBus.Subscribe<InputMapLoadedEvent>(OnInputMapLoaded);
@@ -159,6 +161,7 @@ public sealed partial class EditorForm : Form
         _preferences.InputMapEditorVisible = _viewInputMapEditorMenuItem.Checked;
         _preferences.TilemapPaletteVisible = _viewTilemapPaletteMenuItem.Checked;
         _preferences.UndoHistoryVisible = _viewUndoHistoryMenuItem.Checked;
+        _preferences.ScriptsBrowserVisible = _viewScriptsMenuItem.Checked;
         _preferences.Save();
     }
 
@@ -395,11 +398,9 @@ public sealed partial class EditorForm : Form
         System.Drawing.Color normal = System.Drawing.SystemColors.Control;
 
         _playButton.BackColor  = state == EditorState.Playing ? accent : normal;
-        _pauseButton.BackColor = state == EditorState.Paused  ? accent : normal;
         _stopButton.BackColor  = normal;
 
         _playButton.Enabled  = state != EditorState.Playing;
-        _pauseButton.Enabled = state == EditorState.Playing;
         _stopButton.Enabled  = state != EditorState.Editing;
     }
 
@@ -514,6 +515,7 @@ public sealed partial class EditorForm : Form
         bool inputMapVisible      = _viewInputMapEditorMenuItem.Checked;
         bool tilemapPaletteVisible = _viewTilemapPaletteMenuItem.Checked;
         bool undoHistoryVisible    = _viewUndoHistoryMenuItem.Checked;
+        bool scriptsVisible        = _viewScriptsMenuItem.Checked;
 
         _bottomTabControl.TabPages.Clear();
         if (assetsVisible)         _bottomTabControl.TabPages.Add(_assetsTab);
@@ -523,8 +525,9 @@ public sealed partial class EditorForm : Form
         if (inputMapVisible)       _bottomTabControl.TabPages.Add(_inputMapEditorTab);
         if (tilemapPaletteVisible) _bottomTabControl.TabPages.Add(_tilemapPaletteTab);
         if (undoHistoryVisible)    _bottomTabControl.TabPages.Add(_undoHistoryTab);
+        if (scriptsVisible)        _bottomTabControl.TabPages.Add(_scriptsTab);
 
-        _mainSplit.Panel2Collapsed = !assetsVisible && !consoleVisible && !sceneManagerVisible && !localizationVisible && !inputMapVisible && !tilemapPaletteVisible && !undoHistoryVisible;
+        _mainSplit.Panel2Collapsed = !assetsVisible && !consoleVisible && !sceneManagerVisible && !localizationVisible && !inputMapVisible && !tilemapPaletteVisible && !undoHistoryVisible && !scriptsVisible;
     }
 
     private void OnViewMenuItemClick(object? sender, EventArgs e) => UpdatePanelVisibility();
@@ -544,6 +547,7 @@ public sealed partial class EditorForm : Form
         _viewInputMapEditorMenuItem.Checked = defaults.InputMapEditorVisible;
         _viewTilemapPaletteMenuItem.Checked = defaults.TilemapPaletteVisible;
         _viewUndoHistoryMenuItem.Checked = defaults.UndoHistoryVisible;
+        _viewScriptsMenuItem.Checked     = defaults.ScriptsBrowserVisible;
         UpdatePanelVisibility();
 
         _outerSplit.Panel1MinSize = 180;

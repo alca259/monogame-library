@@ -39,9 +39,7 @@ public sealed class AssetBrowserPanel : UserControl
     #region Fields
 
     private EditorContext? _context;
-    private string _contentRoot      = string.Empty;
-    private string _scriptsRoot      = string.Empty;
-    private string _translationsRoot = string.Empty;
+    private string _contentRoot  = string.Empty;
     private string _currentFolder = string.Empty;
     private bool _largeIconMode;
 
@@ -60,20 +58,6 @@ public sealed class AssetBrowserPanel : UserControl
     private readonly FlowLayoutPanel   _breadcrumb;
     private readonly ContextMenuStrip  _itemContextMenu;
     private readonly System.Windows.Forms.Timer _searchDebounce;
-
-    // Tab control
-    private readonly TabControl        _tabControl;
-    private readonly TabPage           _assetsPage;
-    private readonly TabPage           _scriptsPage;
-    private readonly TabPage           _translationsPage;
-
-    // Scripts tab
-    private readonly TreeView          _scriptsTree;
-    private readonly Button            _newScriptButton;
-
-    // Translations tab
-    private readonly ListView          _translationsList;
-    private readonly Button            _newLocaleButton;
 
     #endregion
 
@@ -233,64 +217,7 @@ public sealed class AssetBrowserPanel : UserControl
         _outerSplit.Panel1.Controls.Add(_folderTree);
         _outerSplit.Panel2.Controls.Add(_rightSplit);
 
-        // ── Scripts tab ───────────────────────────────────────────────────
-        _scriptsTree = new TreeView
-        {
-            Dock          = DockStyle.Fill,
-            HideSelection = false,
-            ShowLines     = true,
-            ShowPlusMinus = true,
-            BorderStyle   = BorderStyle.None,
-            ImageList     = _typeIcons,
-        };
-        _newScriptButton = new Button
-        {
-            Text      = "New Script",
-            Dock      = DockStyle.Bottom,
-            Height    = 28,
-            FlatStyle = FlatStyle.Flat,
-        };
-        Panel scriptsPanel = new Panel { Dock = DockStyle.Fill };
-        scriptsPanel.Controls.Add(_scriptsTree);
-        scriptsPanel.Controls.Add(_newScriptButton);
-
-        // ── Translations tab ──────────────────────────────────────────────
-        _translationsList = new ListView
-        {
-            Dock          = DockStyle.Fill,
-            View          = View.Details,
-            FullRowSelect = true,
-            MultiSelect   = false,
-            BorderStyle   = BorderStyle.None,
-        };
-        _translationsList.Columns.Add("Locale", 160);
-        _translationsList.Columns.Add("Size", 70);
-        _newLocaleButton = new Button
-        {
-            Text      = "New Locale",
-            Dock      = DockStyle.Bottom,
-            Height    = 28,
-            FlatStyle = FlatStyle.Flat,
-        };
-        Panel translationsPanel = new Panel { Dock = DockStyle.Fill };
-        translationsPanel.Controls.Add(_translationsList);
-        translationsPanel.Controls.Add(_newLocaleButton);
-
-        // ── Tab pages ─────────────────────────────────────────────────────
-        _assetsPage       = new TabPage("Assets");
-        _scriptsPage      = new TabPage("Scripts");
-        _translationsPage = new TabPage("Translations");
-
-        _assetsPage.Controls.Add(_outerSplit);
-        _scriptsPage.Controls.Add(scriptsPanel);
-        _translationsPage.Controls.Add(translationsPanel);
-
-        _tabControl = new TabControl { Dock = DockStyle.Fill };
-        _tabControl.TabPages.Add(_assetsPage);
-        _tabControl.TabPages.Add(_scriptsPage);
-        _tabControl.TabPages.Add(_translationsPage);
-
-        Controls.Add(_tabControl);
+        Controls.Add(_outerSplit);
         AllowDrop = true;
 
         // Wire up
@@ -301,8 +228,6 @@ public sealed class AssetBrowserPanel : UserControl
         _contentView.DragEnter              += OnDragEnter;
         _contentView.DragDrop               += OnDragDrop;
         _viewToggleBtn.Click                += OnViewToggle;
-        _newScriptButton.Click              += OnNewScriptClick;
-        _newLocaleButton.Click              += OnNewLocaleClick;
         DragEnter                           += OnDragEnter;
         DragDrop                            += OnDragDrop;
     }
@@ -371,13 +296,6 @@ public sealed class AssetBrowserPanel : UserControl
     {
         if (InvokeRequired) { BeginInvoke(() => OnProjectOpened(evt)); return; }
         SetRootDirectory(evt.Project?.ContentPath ?? string.Empty);
-        if (evt.Project is not null)
-        {
-            _scriptsRoot      = Path.Combine(evt.Project.RootPath, "src", "GameScripts");
-            _translationsRoot = Path.Combine(evt.Project.RootPath, "src", "GameApp", "i18n");
-            LoadScriptsTab(_scriptsRoot);
-            LoadTranslationsTab(_translationsRoot);
-        }
     }
 
     private void OnAssetImported(AssetImportedEvent evt)
@@ -817,89 +735,6 @@ public sealed class AssetBrowserPanel : UserControl
         using System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(bmp);
         g.Clear(color);
         return bmp;
-    }
-
-    #endregion
-
-    #region Scripts tab
-
-    private void LoadScriptsTab(string root)
-    {
-        _scriptsTree.Nodes.Clear();
-        if (!Directory.Exists(root)) return;
-
-        _scriptsTree.BeginUpdate();
-        PopulateScriptsNodes(_scriptsTree.Nodes, root);
-        _scriptsTree.EndUpdate();
-    }
-
-    private static void PopulateScriptsNodes(TreeNodeCollection nodes, string dirPath)
-    {
-        string[] dirs = Directory.GetDirectories(dirPath);
-        Array.Sort(dirs, StringComparer.OrdinalIgnoreCase);
-        for (int i = 0; i < dirs.Length; i++)
-        {
-            TreeNode folderNode = new(Path.GetFileName(dirs[i]))
-            {
-                Tag                = dirs[i],
-                ImageIndex         = IconFolder,
-                SelectedImageIndex = IconFolder,
-            };
-            nodes.Add(folderNode);
-            PopulateScriptsNodes(folderNode.Nodes, dirs[i]);
-        }
-
-        string[] files = Directory.GetFiles(dirPath, "*.cs");
-        Array.Sort(files, StringComparer.OrdinalIgnoreCase);
-        for (int i = 0; i < files.Length; i++)
-        {
-            TreeNode fileNode = new(Path.GetFileName(files[i]))
-            {
-                Tag                = files[i],
-                ImageIndex         = IconScript,
-                SelectedImageIndex = IconScript,
-            };
-            nodes.Add(fileNode);
-        }
-    }
-
-    private void OnNewScriptClick(object? sender, EventArgs e)
-    {
-        if (string.IsNullOrEmpty(_scriptsRoot)) return;
-        using ScriptCreationDialog dlg = new(_scriptsRoot);
-        if (dlg.ShowDialog(this) == DialogResult.OK)
-            LoadScriptsTab(_scriptsRoot);
-    }
-
-    #endregion
-
-    #region Translations tab
-
-    private void LoadTranslationsTab(string root)
-    {
-        _translationsList.Items.Clear();
-        if (!Directory.Exists(root)) return;
-
-        string[] files = Directory.GetFiles(root, "*.json");
-        Array.Sort(files, StringComparer.OrdinalIgnoreCase);
-
-        _translationsList.BeginUpdate();
-        for (int i = 0; i < files.Length; i++)
-        {
-            FileInfo fi = new(files[i]);
-            ListViewItem item = new(fi.Name) { Tag = files[i] };
-            item.SubItems.Add(FormatSize(fi.Length));
-            _translationsList.Items.Add(item);
-        }
-        _translationsList.EndUpdate();
-    }
-
-    private void OnNewLocaleClick(object? sender, EventArgs e)
-    {
-        if (string.IsNullOrEmpty(_translationsRoot)) return;
-        using LocaleCreationDialog dlg = new(_translationsRoot);
-        if (dlg.ShowDialog(this) == DialogResult.OK)
-            LoadTranslationsTab(_translationsRoot);
     }
 
     #endregion

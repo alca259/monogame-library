@@ -57,6 +57,9 @@ public sealed class EditorPreferences
     /// <summary>Whether the undo history panel is visible.</summary>
     public bool UndoHistoryVisible { get; set; } = false;
 
+    /// <summary>Whether the scripts browser panel is visible.</summary>
+    public bool ScriptsBrowserVisible { get; set; } = false;
+
     /// <summary>Absolute path of the last project opened, or empty if none.</summary>
     public string LastProjectPath { get; set; } = string.Empty;
 
@@ -118,6 +121,7 @@ public sealed class EditorPreferences
             InputMapEditorVisible = loaded.InputMapEditorVisible;
             TilemapPaletteVisible = loaded.TilemapPaletteVisible;
             UndoHistoryVisible = loaded.UndoHistoryVisible;
+            ScriptsBrowserVisible = loaded.ScriptsBrowserVisible;
             LastProjectPath = loaded.LastProjectPath;
             AssetBrowserSplitterDistance = loaded.AssetBrowserSplitterDistance;
             BehaviourSectionCollapsed.Clear();

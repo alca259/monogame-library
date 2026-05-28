@@ -5,6 +5,12 @@ public sealed class LocalizationBrowserPanel : UserControl
 {
     private EditorContext? _context;
     private LocalizationEditorModel? _model;
+    private string _localizationRoot        = string.Empty;
+    private string _currentLocalizationPath = string.Empty;
+
+    // ── Folder tree ──────────────────────────────────────────────────────
+    private readonly SplitContainer _mainSplit;
+    private readonly TreeView       _folderTree;
 
     // ── Top toolbar ──────────────────────────────────────────────────────
     private readonly ToolStrip _toolStrip;
@@ -32,6 +38,8 @@ public sealed class LocalizationBrowserPanel : UserControl
     /// <summary>Initializes the panel layout.</summary>
     public LocalizationBrowserPanel()
     {
+        _mainSplit        = new SplitContainer();
+        _folderTree       = new TreeView();
         _toolStrip        = new ToolStrip();
         _addKeyButton     = new ToolStripButton();
         _removeKeyButton  = new ToolStripButton();
@@ -48,6 +56,10 @@ public sealed class LocalizationBrowserPanel : UserControl
 
         _toolStrip.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)_grid).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)_mainSplit).BeginInit();
+        _mainSplit.Panel1.SuspendLayout();
+        _mainSplit.Panel2.SuspendLayout();
+        _mainSplit.SuspendLayout();
         SuspendLayout();
 
         // _addKeyButton
@@ -137,16 +149,39 @@ public sealed class LocalizationBrowserPanel : UserControl
         _statusLabel.Padding    = new System.Windows.Forms.Padding(4, 0, 0, 0);
         _statusLabel.Text       = "0 keys, 0 locales";
 
-        Controls.Add(_grid);
-        Controls.Add(_filterBox);
-        Controls.Add(_toolStrip);
-        Controls.Add(_statusLabel);
+        // _folderTree
+        _folderTree.Dock          = DockStyle.Fill;
+        _folderTree.HideSelection = false;
+        _folderTree.ShowLines     = true;
+        _folderTree.ShowPlusMinus = true;
+        _folderTree.BorderStyle   = BorderStyle.None;
+        _folderTree.Name          = "_folderTree";
+        _folderTree.AfterSelect  += OnFolderSelected;
+
+        // _mainSplit — Panel1: folder tree | Panel2: editor
+        _mainSplit.Dock             = DockStyle.Fill;
+        _mainSplit.Orientation      = Orientation.Vertical;
+        _mainSplit.SplitterDistance = 180;
+        _mainSplit.Panel1MinSize    = 80;
+        _mainSplit.Panel2MinSize    = 200;
+        _mainSplit.Name             = "_mainSplit";
+        _mainSplit.Panel1.Controls.Add(_folderTree);
+        _mainSplit.Panel2.Controls.Add(_grid);
+        _mainSplit.Panel2.Controls.Add(_filterBox);
+        _mainSplit.Panel2.Controls.Add(_toolStrip);
+        _mainSplit.Panel2.Controls.Add(_statusLabel);
+
+        Controls.Add(_mainSplit);
         Font = new System.Drawing.Font("Segoe UI", 9f);
         Name = "LocalizationBrowserPanel";
 
         _toolStrip.ResumeLayout(false);
         _toolStrip.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)_grid).EndInit();
+        _mainSplit.Panel1.ResumeLayout(false);
+        _mainSplit.Panel2.ResumeLayout(false);
+        ((System.ComponentModel.ISupportInitialize)_mainSplit).EndInit();
+        _mainSplit.ResumeLayout(false);
         ResumeLayout(false);
         PerformLayout();
     }
@@ -172,25 +207,87 @@ public sealed class LocalizationBrowserPanel : UserControl
     private void OnProjectOpened(ProjectOpenedEvent evt)
     {
         if (InvokeRequired) { BeginInvoke(() => OnProjectOpened(evt)); return; }
-        LoadFromProjectAsync(evt.Project).ConfigureAwait(false);
+
+        if (evt.Project is null || string.IsNullOrEmpty(evt.Project.LocalizationPath))
+        {
+            _localizationRoot = string.Empty;
+            _folderTree.Nodes.Clear();
+            _model = null;
+            RebuildGrid();
+            return;
+        }
+
+        _localizationRoot = evt.Project.LocalizationPath;
+        BuildFolderTree(_localizationRoot);
+    }
+
+    #endregion
+
+    #region Folder tree
+
+    private void OnFolderSelected(object? sender, TreeViewEventArgs e)
+    {
+        if (e.Node?.Tag is not string path) return;
+        _ = LoadFromFolderAsync(path);
+    }
+
+    private void BuildFolderTree(string rootPath)
+    {
+        _folderTree.BeginUpdate();
+        _folderTree.Nodes.Clear();
+
+        if (!Directory.Exists(rootPath))
+        {
+            _folderTree.EndUpdate();
+            return;
+        }
+
+        string name = Path.GetFileName(rootPath);
+        if (string.IsNullOrEmpty(name)) name = rootPath;
+
+        TreeNode root = new(name) { Tag = rootPath };
+        PopulateFolderNodes(root.Nodes, rootPath);
+        _folderTree.Nodes.Add(root);
+        root.Expand();
+
+        _folderTree.EndUpdate();
+        _folderTree.SelectedNode = root;
+    }
+
+    private static void PopulateFolderNodes(TreeNodeCollection nodes, string path)
+    {
+        try
+        {
+            string[] dirs = Directory.GetDirectories(path);
+            Array.Sort(dirs, StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < dirs.Length; i++)
+            {
+                string dirName = Path.GetFileName(dirs[i]);
+                if (string.IsNullOrEmpty(dirName)) continue;
+                TreeNode node = new(dirName) { Tag = dirs[i] };
+                PopulateFolderNodes(node.Nodes, dirs[i]);
+                nodes.Add(node);
+            }
+        }
+        catch (UnauthorizedAccessException) { }
     }
 
     #endregion
 
     #region Load / Rebuild
 
-    private async Task LoadFromProjectAsync(EditorProject? project)
+    private async Task LoadFromFolderAsync(string folderPath)
     {
-        if (project is null || string.IsNullOrEmpty(project.LocalizationPath))
+        _currentLocalizationPath = folderPath;
+
+        if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
         {
             _model = null;
             RebuildGrid();
             return;
         }
 
-        _model = await LocalizationEditorModel.LoadAsync(project.LocalizationPath)
-            .ConfigureAwait(true);
-
+        _model = await LocalizationEditorModel.LoadAsync(folderPath).ConfigureAwait(true);
         _context?.EventBus.Publish(new LocalizationLoadedEvent(_model));
         RebuildGrid();
     }
@@ -316,13 +413,17 @@ public sealed class LocalizationBrowserPanel : UserControl
     {
         if (_context?.ActiveProject is null) return;
 
+        string initialDir = !string.IsNullOrEmpty(_currentLocalizationPath) && Directory.Exists(_currentLocalizationPath)
+            ? _currentLocalizationPath
+            : Directory.Exists(_context.ActiveProject.LocalizationPath)
+                ? _context.ActiveProject.LocalizationPath
+                : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
         using OpenFileDialog dlg = new()
         {
             Title            = "Import Locale File",
             Filter           = "JSON files (*.json)|*.json|All files (*.*)|*.*",
-            InitialDirectory = Directory.Exists(_context.ActiveProject.LocalizationPath)
-                ? _context.ActiveProject.LocalizationPath
-                : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            InitialDirectory = initialDir,
         };
 
         if (dlg.ShowDialog(this) != DialogResult.OK) return;
@@ -341,9 +442,12 @@ public sealed class LocalizationBrowserPanel : UserControl
                 return;
             }
 
+            string loadPath = string.IsNullOrEmpty(_currentLocalizationPath)
+                ? _context.ActiveProject.LocalizationPath
+                : _currentLocalizationPath;
+
             if (_model is null)
-                _model = await LocalizationEditorModel.LoadAsync(
-                    _context.ActiveProject.LocalizationPath).ConfigureAwait(true);
+                _model = await LocalizationEditorModel.LoadAsync(loadPath).ConfigureAwait(true);
 
             _model.AddLocale(locale);
             foreach (System.Collections.Generic.KeyValuePair<string, string> kv in entries)

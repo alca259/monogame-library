@@ -9,14 +9,14 @@ El editor está compuesto por un formulario principal (`EditorForm`) y varios pa
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  MenuStrip (Archivo, Proyecto, Escena, Vista, Ayuda)    │
-│  ToolStrip (Play ▶ / Pause ⏸ / Stop ⏹ + modos gizmo)   │
+│  ToolStrip (Play ▶ / Stop ⏹ + modos gizmo)              │
 ├──────────────┬──────────────────────────┬───────────────┤
 │              │                          │               │
 │  Jerarquía  │     Viewport             │  Inspector    │
 │  de escena  │   (MonoGameControl)      │               │
 │             │                          │               │
 ├──────────────┴──────────────────────────┴───────────────┤
-│   Consola  │ Assets │ Escenas │ Localización │ InputMap  │
+│  Assets │ Consola │ Escenas │ Localización │ Scripts ...│
 │  (panel inferior con pestañas)                          │
 └─────────────────────────────────────────────────────────┘
 │  StatusStrip (estado del editor, info de posición)      │
@@ -110,32 +110,12 @@ Cada cambio manual en el transform genera el comando correspondiente (`MoveEntit
 
 ## Panel: Asset Browser (`AssetBrowserPanel`)
 
-Explorador de archivos del proyecto organizado en tres pestañas.
+Explorador de dos paneles para los assets del proyecto.
 
-### Pestaña Assets
+- **Panel izquierdo**: árbol de carpetas de `src/GameApp/Content/`.
+- **Panel derecho**: lista de assets de la carpeta seleccionada con filtro de texto, toggle lista/iconos y breadcrumb de ruta.
 
-Explorador de assets de `src/GameApp/Content/`.
-
-- **Barra superior**: campo de filtro de texto con debounce de 150ms; toggle entre vista lista y vista iconos grandes.
-- **Breadcrumb**: muestra la ruta actual con enlaces clicables para navegar.
-- **Panel izquierdo**: árbol de carpetas.
-- **Panel derecho**: lista de assets de la carpeta seleccionada.
-
-### Pestaña Scripts
-
-Árbol de archivos `.cs` en `src/GameScripts/`.
-
-- **TreeView**: muestra subcarpetas y archivos `.cs` con sus íconos.
-- **Botón "New Script"**: abre `ScriptCreationDialog` para crear un nuevo `GameBehaviour` stub.
-
-### Pestaña Translations
-
-Lista de archivos `.json` en `src/GameApp/i18n/`.
-
-- **ListView**: columnas "Locale" y "Size".
-- **Botón "New Locale"**: abre `LocaleCreationDialog` para crear un archivo `{locale}.json` vacío.
-
-### Tipos de asset reconocidos (pestaña Assets)
+### Tipos de asset reconocidos
 
 | Extensión | Tipo |
 |-----------|------|
@@ -150,7 +130,7 @@ Lista de archivos `.json` en `src/GameApp/i18n/`.
 | `.input.json` | InputMap |
 | `.cs` | Script |
 
-### Menú contextual (pestaña Assets)
+### Menú contextual
 
 | Opción | Acción |
 |--------|--------|
@@ -216,12 +196,23 @@ Lista todas las escenas del proyecto y permite gestionar su ciclo de vida.
 
 ---
 
+## Panel: Explorador de scripts (`ScriptBrowserPanel`)
+
+Explorador de dos paneles para los archivos de código del proyecto. Visible y oculto desde **Vista > Scripts**.
+
+- **Panel izquierdo**: árbol de carpetas con carga perezosa (*lazy-load*) enraizado en `{RootPath}/src/GameScripts`.
+- **Panel derecho**: lista de archivos `.cs` de la carpeta seleccionada (columnas: nombre y tamaño).
+- **Botón "New Script"**: abre `ScriptCreationDialog` en la carpeta actualmente seleccionada (o en la raíz si ninguna está seleccionada).
+
+---
+
 ## Panel: Editor de localización (`LocalizationBrowserPanel`)
 
 Editor tabular para los archivos de localización del juego (`.json` en la carpeta `Localization`).
 
 ### Controles
 
+- **Panel izquierdo**: árbol de carpetas con la estructura de la carpeta `Localization` del proyecto. Al seleccionar una carpeta, se recargan automáticamente los archivos de locale de esa carpeta.
 - **Barra superior**: Add Key, Remove Key, Add Locale, Import .json, Export .csv, Save.
 - **Campo de filtro**: filtra las claves visibles sin reconstruir la tabla.
 - **DataGridView**: primera columna = clave (solo lectura), una columna por locale (editable).
@@ -229,7 +220,7 @@ Editor tabular para los archivos de localización del juego (`.json` en la carpe
 
 ### Comportamiento
 
-- Se carga al recibir `ProjectOpenedEvent` leyendo todos los `.json` de la carpeta `Localization`.
+- Se carga al recibir `ProjectOpenedEvent` construyendo el árbol de carpetas y seleccionando la raíz, lo que dispara la carga inicial de los archivos de locale.
 - Cada edición de celda genera un `SetLocalizationValueCommand` (con soporte de undo/redo).
 - El botón Save guarda todos los archivos de locale.
 

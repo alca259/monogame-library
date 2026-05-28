@@ -47,7 +47,6 @@ partial class EditorForm
     private Panel _playbackCell = null!;
     private ToolStrip _playbackStrip = null!;
     private ToolStripButton _playButton = null!;
-    private ToolStripButton _pauseButton = null!;
     private ToolStripButton _stopButton = null!;
 
     // ── Status ────────────────────────────────────────────────────────────
@@ -64,9 +63,7 @@ partial class EditorForm
     private SceneHierarchyPanel _hierarchyPanel = null!;
     private TabControl _centerTabControl = null!;
     private TabPage _sceneTab = null!;
-    private TabPage _gameTab = null!;
     private MonoGameControl _viewport = null!;
-    private MonoGameControl _gameViewport = null!;
     private InspectorPanel _inspectorPanel = null!;
 
     // ── Bottom tabs ───────────────────────────────────────────────────────
@@ -85,6 +82,8 @@ partial class EditorForm
     private TilemapPalettePanel _tilemapPalettePanel = null!;
     private TabPage _undoHistoryTab = null!;
     private UndoHistoryPanel _undoHistoryPanel = null!;
+    private TabPage _scriptsTab = null!;
+    private ScriptBrowserPanel _scriptBrowserPanel = null!;
 
     // ── View menu ─────────────────────────────────────────────────────────
     // (declared alongside _viewSceneManagerMenuItem below in field declarations)
@@ -93,6 +92,7 @@ partial class EditorForm
     private ToolStripMenuItem _viewInputMapEditorMenuItem = null!;
     private ToolStripMenuItem _viewTilemapPaletteMenuItem = null!;
     private ToolStripMenuItem _viewUndoHistoryMenuItem = null!;
+    private ToolStripMenuItem _viewScriptsMenuItem = null!;
 
     protected override void Dispose(bool disposing)
     {
@@ -142,7 +142,6 @@ partial class EditorForm
         _playbackCell             = new Panel();
         _playbackStrip            = new ToolStrip();
         _playButton               = new ToolStripButton();
-        _pauseButton              = new ToolStripButton();
         _stopButton               = new ToolStripButton();
         _statusStrip              = new StatusStrip();
         _statusLabel              = new ToolStripStatusLabel();
@@ -153,9 +152,7 @@ partial class EditorForm
         _innerSplit               = new SplitContainer();
         _centerTabControl         = new TabControl();
         _sceneTab                 = new TabPage();
-        _gameTab                  = new TabPage();
         _viewport                 = new MonoGameControl();
-        _gameViewport             = new MonoGameControl();
         _inspectorPanel           = new InspectorPanel();
         _bottomTabControl         = new TabControl();
         _assetsTab                = new TabPage();
@@ -172,6 +169,9 @@ partial class EditorForm
         _tilemapPalettePanel      = new TilemapPalettePanel();
         _undoHistoryTab           = new TabPage();
         _undoHistoryPanel         = new UndoHistoryPanel();
+        _scriptsTab               = new TabPage();
+        _scriptBrowserPanel       = new ScriptBrowserPanel();
+        _viewScriptsMenuItem      = new ToolStripMenuItem();
         _viewSceneManagerMenuItem = new ToolStripMenuItem();
         _viewLocalizationMenuItem = new ToolStripMenuItem();
         _viewInputMapEditorMenuItem = new ToolStripMenuItem();
@@ -193,7 +193,6 @@ partial class EditorForm
         _innerSplit.Panel2.SuspendLayout();
         _innerSplit.SuspendLayout();
         _sceneTab.SuspendLayout();
-        _gameTab.SuspendLayout();
         _assetsTab.SuspendLayout();
         _consoleTab.SuspendLayout();
         _sceneManagerTab.SuspendLayout();
@@ -201,6 +200,7 @@ partial class EditorForm
         _inputMapEditorTab.SuspendLayout();
         _tilemapPaletteTab.SuspendLayout();
         _undoHistoryTab.SuspendLayout();
+        _scriptsTab.SuspendLayout();
         SuspendLayout();
 
         // _mainMenuStrip
@@ -268,7 +268,7 @@ partial class EditorForm
         _editSeparator1.Size = new System.Drawing.Size(177, 6);
 
         // _viewMenu
-        _viewMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { _viewHierarchyMenuItem, _viewInspectorMenuItem, _viewAssetBrowserMenuItem, _viewConsoleMenuItem, _viewSceneManagerMenuItem, _viewLocalizationMenuItem, _viewInputMapEditorMenuItem, _viewTilemapPaletteMenuItem, _viewUndoHistoryMenuItem, _viewMenuSeparator1, _resetLayoutMenuItem });
+        _viewMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { _viewHierarchyMenuItem, _viewInspectorMenuItem, _viewAssetBrowserMenuItem, _viewConsoleMenuItem, _viewSceneManagerMenuItem, _viewLocalizationMenuItem, _viewInputMapEditorMenuItem, _viewTilemapPaletteMenuItem, _viewUndoHistoryMenuItem, _viewScriptsMenuItem, _viewMenuSeparator1, _resetLayoutMenuItem });
         _viewMenu.Name = "_viewMenu";
         _viewMenu.Size = new System.Drawing.Size(44, 20);
         _viewMenu.Text = "View";
@@ -353,6 +353,15 @@ partial class EditorForm
         _viewUndoHistoryMenuItem.Size = new System.Drawing.Size(163, 22);
         _viewUndoHistoryMenuItem.Text = "Undo History";
         _viewUndoHistoryMenuItem.Click += OnViewMenuItemClick;
+
+        // _viewScriptsMenuItem
+        _viewScriptsMenuItem.CheckOnClick = true;
+        _viewScriptsMenuItem.Checked = false;
+        _viewScriptsMenuItem.CheckState = CheckState.Unchecked;
+        _viewScriptsMenuItem.Name = "_viewScriptsMenuItem";
+        _viewScriptsMenuItem.Size = new System.Drawing.Size(163, 22);
+        _viewScriptsMenuItem.Text = "Scripts";
+        _viewScriptsMenuItem.Click += OnViewMenuItemClick;
 
         // _viewMenuSeparator1
         _viewMenuSeparator1.Name = "_viewMenuSeparator1";
@@ -491,7 +500,7 @@ partial class EditorForm
         // _playbackStrip — positioned at runtime in center of full toolbar width
         _playbackStrip.AutoSize = true;
         _playbackStrip.GripStyle = ToolStripGripStyle.Hidden;
-        _playbackStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _playButton, _pauseButton, _stopButton });
+        _playbackStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _playButton, _stopButton });
         _playbackStrip.LayoutStyle = ToolStripLayoutStyle.HorizontalStackWithOverflow;
         _playbackStrip.Location = new System.Drawing.Point(0, 0);
         _playbackStrip.Name = "_playbackStrip";
@@ -505,15 +514,6 @@ partial class EditorForm
         _playButton.Text = "▶ Play";
         _playButton.ToolTipText = "Play (F5)";
         _playButton.Click += OnPlayClick;
-
-        // _pauseButton
-        _pauseButton.DisplayStyle = ToolStripItemDisplayStyle.Text;
-        _pauseButton.Enabled = false;
-        _pauseButton.Name = "_pauseButton";
-        _pauseButton.Size = new System.Drawing.Size(46, 22);
-        _pauseButton.Text = "⏸ Pause";
-        _pauseButton.ToolTipText = "Pause";
-        _pauseButton.Click += OnPauseClick;
 
         // _stopButton
         _stopButton.DisplayStyle = ToolStripItemDisplayStyle.Text;
@@ -579,14 +579,6 @@ partial class EditorForm
         _viewport.Size = new System.Drawing.Size(776, 499);
         _viewport.TabIndex = 0;
 
-        // _gameViewport
-        _gameViewport.BackColor = System.Drawing.Color.FromArgb(20, 20, 20);
-        _gameViewport.Dock = DockStyle.Fill;
-        _gameViewport.Location = new System.Drawing.Point(0, 0);
-        _gameViewport.Name = "_gameViewport";
-        _gameViewport.Size = new System.Drawing.Size(776, 499);
-        _gameViewport.TabIndex = 0;
-
         // _sceneTab
         _sceneTab.Controls.Add(_viewport);
         _sceneTab.Location = new System.Drawing.Point(4, 24);
@@ -596,18 +588,8 @@ partial class EditorForm
         _sceneTab.TabIndex = 0;
         _sceneTab.Text = "Scene";
 
-        // _gameTab
-        _gameTab.Controls.Add(_gameViewport);
-        _gameTab.Location = new System.Drawing.Point(4, 24);
-        _gameTab.Name = "_gameTab";
-        _gameTab.Padding = new System.Windows.Forms.Padding(0);
-        _gameTab.Size = new System.Drawing.Size(776, 499);
-        _gameTab.TabIndex = 1;
-        _gameTab.Text = "Game";
-
         // _centerTabControl
         _centerTabControl.Controls.Add(_sceneTab);
-        _centerTabControl.Controls.Add(_gameTab);
         _centerTabControl.Dock = DockStyle.Fill;
         _centerTabControl.Location = new System.Drawing.Point(0, 0);
         _centerTabControl.Name = "_centerTabControl";
@@ -756,6 +738,22 @@ partial class EditorForm
         _undoHistoryTab.TabIndex = 6;
         _undoHistoryTab.Text = "History";
 
+        // _scriptBrowserPanel
+        _scriptBrowserPanel.Dock = DockStyle.Fill;
+        _scriptBrowserPanel.Location = new System.Drawing.Point(0, 0);
+        _scriptBrowserPanel.Name = "_scriptBrowserPanel";
+        _scriptBrowserPanel.Size = new System.Drawing.Size(1280, 172);
+        _scriptBrowserPanel.TabIndex = 0;
+
+        // _scriptsTab
+        _scriptsTab.Controls.Add(_scriptBrowserPanel);
+        _scriptsTab.Location = new System.Drawing.Point(4, 24);
+        _scriptsTab.Name = "_scriptsTab";
+        _scriptsTab.Padding = new System.Windows.Forms.Padding(0);
+        _scriptsTab.Size = new System.Drawing.Size(1280, 172);
+        _scriptsTab.TabIndex = 7;
+        _scriptsTab.Text = "Scripts";
+
         // _bottomTabControl
         _bottomTabControl.Controls.Add(_assetsTab);
         _bottomTabControl.Controls.Add(_consoleTab);
@@ -764,6 +762,7 @@ partial class EditorForm
         _bottomTabControl.Controls.Add(_inputMapEditorTab);
         _bottomTabControl.Controls.Add(_tilemapPaletteTab);
         _bottomTabControl.Controls.Add(_undoHistoryTab);
+        _bottomTabControl.Controls.Add(_scriptsTab);
         _bottomTabControl.Dock = DockStyle.Fill;
         _bottomTabControl.Location = new System.Drawing.Point(0, 0);
         _bottomTabControl.Name = "_bottomTabControl";
@@ -814,7 +813,6 @@ partial class EditorForm
         ((System.ComponentModel.ISupportInitialize)_innerSplit).EndInit();
         _innerSplit.ResumeLayout(false);
         _sceneTab.ResumeLayout(false);
-        _gameTab.ResumeLayout(false);
         _assetsTab.ResumeLayout(false);
         _consoleTab.ResumeLayout(false);
         _sceneManagerTab.ResumeLayout(false);
@@ -822,6 +820,7 @@ partial class EditorForm
         _inputMapEditorTab.ResumeLayout(false);
         _tilemapPaletteTab.ResumeLayout(false);
         _undoHistoryTab.ResumeLayout(false);
+        _scriptsTab.ResumeLayout(false);
         ResumeLayout(false);
         PerformLayout();
     }
