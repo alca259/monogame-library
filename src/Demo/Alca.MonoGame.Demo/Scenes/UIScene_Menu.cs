@@ -70,6 +70,7 @@ public sealed class UIScene_Menu : Scene
         AddEntry(buttonList, "39. Lighting 2D (LightingWorld, PointLight, SpotLight)", () => Core.SceneManager.RequestChange(Core.GetService<LightingScene>()));
         AddEntry(buttonList, "40. Networking (NetworkServer, NetworkClient)", () => Core.SceneManager.RequestChange(Core.GetService<NetworkingScene>()));
         AddEntry(buttonList, "41. Platform (PlatformManager, OS info)", () => Core.SceneManager.RequestChange(Core.GetService<PlatformScene>()));
+        AddEntry(buttonList, "42. Weather System (WeatherWorld, particles, wind)", () => Core.SceneManager.RequestChange(Core.GetService<WeatherScene>()));
 
         var scrollView = new ScrollView(Core.GraphicsDevice) { FixedSize = new Vector2(700, 560) };
         scrollView.Add(buttonList);

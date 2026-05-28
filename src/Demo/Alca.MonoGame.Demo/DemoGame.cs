@@ -51,6 +51,7 @@ public sealed class DemoGame : Core
         services.AddTransient<LightingScene>();
         services.AddTransient<NetworkingScene>();
         services.AddTransient<PlatformScene>();
+        services.AddTransient<WeatherScene>();
     }
 
     protected override void PostInitialize()

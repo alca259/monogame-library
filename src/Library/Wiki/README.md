@@ -112,6 +112,7 @@ public sealed class MainMenuScene : Scene
 | **Debug** | DebugDraw, DebugOverlay, comandos | [12-misc/debug.md](12-misc/debug.md) |
 | **AsyncContent** | Carga asíncrona de assets con progreso | [12-misc/async-content.md](12-misc/async-content.md) |
 | **Timers** | TimerManager, cooldowns, respawns | [12-misc/timers.md](12-misc/timers.md) |
+| **Weather** | WeatherWorld, perfiles, viento, rayos, audio | [13-weather/overview.md](13-weather/overview.md) |
 
 ---
 

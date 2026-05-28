@@ -273,3 +273,22 @@
 | `DebugOverlay` | Overlay de información de juego | [12-misc/debug.md](12-misc/debug.md) |
 | `AsyncContentLoader` | Carga de assets en background con progreso y cancelación | [12-misc/async-content.md](12-misc/async-content.md) |
 | `TimerManager` | Scheduler de temporizadores únicos y repetidos; pool zero-alloc | [12-misc/timers.md](12-misc/timers.md) |
+
+---
+
+## 13 · Weather (Sistema de Climatología)
+
+| Clase | Descripción | Enlace |
+|---|---|---|
+| Visión general | Diagrama del sistema, distinción temperatura/clima, quickstart | [13-weather/overview.md](13-weather/overview.md) |
+| `WeatherWorld` | Servicio central: catálogo, transiciones, temperatura, viento | [13-weather/weather-world.md](13-weather/weather-world.md) |
+| `WeatherProfile` | `readonly struct` que describe un estado atmosférico completo | [13-weather/profiles.md](13-weather/profiles.md) |
+| `WeatherTypeId` | Identificador extensible de clima (string-based) | [13-weather/profiles.md](13-weather/profiles.md) |
+| `WeatherProfiles` | Catálogo de 10 perfiles predefinidos | [13-weather/profiles.md](13-weather/profiles.md) |
+| `WindState` | `readonly struct` con dirección, velocidad y turbulencia de viento | [13-weather/weather-world.md](13-weather/weather-world.md) |
+| `PrecipitationIntensity` | Enum de intensidad (`None`, `Low`, `Medium`, `High`, `VeryHigh`) | [13-weather/profiles.md](13-weather/profiles.md) |
+| `LightningStrikeEvent` | `readonly struct` con datos de un impacto de rayo | [13-weather/lightning.md](13-weather/lightning.md) |
+| `WeatherBehaviour` | `GameBehaviour` opt-in: recibe viento e impulsos de rayo | [13-weather/behaviour.md](13-weather/behaviour.md) |
+| `WeatherParticleLayer` | Capa de partículas: lluvia, nieve, granizo, niebla, viento | [13-weather/particles.md](13-weather/particles.md) |
+| `LightningController` | Temporizador de rayos, flash `PointLight2D`, impulso, audio | [13-weather/lightning.md](13-weather/lightning.md) |
+| `WeatherAudioLayer` | Loops ambiente (lluvia/viento/trueno) + pool de truenos espaciales | [13-weather/audio.md](13-weather/audio.md) |

@@ -23,6 +23,7 @@
 | `AudioMixer` | `AudioMixer?` | Routing de volumen por canal |
 | `NetworkServer` | `NetworkServer?` | Servidor UDP; set por `NetworkManagerBehaviour` |
 | `NetworkClient` | `NetworkClient?` | Cliente UDP; set por `NetworkManagerBehaviour` |
+| `WeatherWorld` | `WeatherWorld?` | Simulación meteorológica; `Update` automático en cada frame |
 
 ---
 

@@ -74,6 +74,14 @@ public sealed class GameWorld
     /// </summary>
     public Network.NetworkClient? NetworkClient { get; set; }
 
+    /// <summary>
+    /// Gets or sets the weather simulation world. When set, <see cref="Update"/> automatically
+    /// steps the weather simulation and dispatches wind forces to registered
+    /// <see cref="Weather.WeatherBehaviour"/> components each frame.
+    /// Optional — omit for projects that do not use weather effects.
+    /// </summary>
+    public Weather.WeatherWorld? WeatherWorld { get; set; }
+
     // ── Lifecycle ──────────────────────────────────────────────────────────────
 
     /// <summary>Flushes pending creation/destruction then updates all active entities.</summary>
@@ -86,6 +94,8 @@ public sealed class GameWorld
         PhysicsWorld?.Step(gameTime);
         if (NavPhysicsSync is not null && NavGrid is not null)
             NavPhysicsSync.SyncAll(NavGrid);
+
+        WeatherWorld?.Update(gameTime);
 
         for (int i = 0; i < _entities.Count; i++)
             _entities[i].Update(gameTime);
