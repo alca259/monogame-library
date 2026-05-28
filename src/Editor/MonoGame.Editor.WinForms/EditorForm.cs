@@ -20,7 +20,7 @@ public sealed partial class EditorForm : Form
     private EditModeRenderer?        _editRenderer;
     private NavGridPreviewRenderer?       _navGridRenderer;
     private ResolutionPreviewRenderer?    _resRenderer;
-    private PlayModeRunner?          _playRunner;
+    private ExternalPlayLauncher?     _playLauncher;
     private readonly ContentWatcher  _contentWatcher  = null!;
     private ToolStripMenuItem        _saveSceneMenuItem   = null!;
     private ToolStripMenuItem        _saveSceneAsMenuItem = null!;
@@ -113,9 +113,6 @@ public sealed partial class EditorForm : Form
 
         FormClosing += OnFormClosing;
         _viewport.RenderFrame += OnViewportRenderFrame;
-        _gameViewport.RenderFrame += OnGameViewportRenderFrame;
-        _gameViewport.ClearColor = new Microsoft.Xna.Framework.Color(15, 15, 25); // dark blue — distinct from scene
-        _gameViewport.IsActive   = false; // game tab not selected at startup
         _centerTabControl.SelectedIndexChanged += OnCenterTabChanged;
         _toolbarTable.Resize  += (_, _) => CenterPlaybackStrip();
 
@@ -181,6 +178,7 @@ public sealed partial class EditorForm : Form
         _editRenderer?.Dispose();
         _navGridRenderer?.Dispose();
         _resRenderer?.Dispose();
+        _playLauncher?.Dispose();
         base.OnFormClosed(e);
     }
 
@@ -338,19 +336,34 @@ public sealed partial class EditorForm : Form
             return;
         }
 
-        _playRunner = new PlayModeRunner(_context.ActiveScene!, _registry);
-        _context.Logger.Log("[PlayMode] Started.", LogLevel.Info);
-        _viewport.IsActive = false;
-        _gameViewport.IsActive = true;
-        _centerTabControl.SelectedTab = _gameTab;
-        _gameViewport.BringToFront();
-        _gameViewport.Invalidate();
+        EditorProject? project = _context.ActiveProject;
+        if (project is null)
+        {
+            _consolePanel.AppendLine("[PlayMode] No active project.");
+            return;
+        }
+
+        string config   = _projectSettings?.BuildConfiguration ?? "Debug";
+        string exePath  = Path.Combine(project.RootPath, "src", "GameApp", "bin", config, "net10.0", "GameApp.exe");
+        string scenePath = _context.ActiveScene?.ScenePath ?? string.Empty;
+
+        if (!File.Exists(exePath))
+        {
+            _consolePanel.AppendLine($"[PlayMode] Executable not found: {exePath}");
+            _consolePanel.AppendLine("[PlayMode] Build the project first (Project > Build).");
+            return;
+        }
+
+        _playLauncher ??= new ExternalPlayLauncher();
+        _playLauncher.Launch(exePath, scenePath,
+            line => BeginInvoke(() => _consolePanel.AppendLine($"[Game] {line}")));
+
+        _context.Logger.Log("[PlayMode] External process launched.", LogLevel.Info);
     }
 
     private void StopPlayMode()
     {
-        _playRunner?.Dispose();
-        _playRunner = null;
+        _playLauncher?.Stop();
 
         EditorScene? restored = null;
         try
@@ -368,7 +381,6 @@ public sealed partial class EditorForm : Form
             _context.SetActiveScene(restored);
 
         _context.Logger.Log("[PlayMode] Stopped — scene restored.", LogLevel.Info);
-        _gameViewport.IsActive = false;
         _viewport.IsActive = true;
         _centerTabControl.SelectedTab = _sceneTab;
         _viewport.BringToFront();
@@ -1292,24 +1304,8 @@ public sealed partial class EditorForm : Form
 
         try
         {
-            string rootPath = Path.Combine(dlg.ParentPath, dlg.ProjectName);
-            string contentRel = string.IsNullOrWhiteSpace(dlg.ContentPath)
-                ? "Content"
-                : Path.GetRelativePath(
-                    string.IsNullOrWhiteSpace(dlg.GameCsprojPath)
-                        ? rootPath
-                        : Path.GetDirectoryName(dlg.GameCsprojPath)!,
-                    dlg.ContentPath);
-            string locRel = string.IsNullOrWhiteSpace(dlg.LocalizationPath)
-                ? "Localization"
-                : Path.GetRelativePath(
-                    string.IsNullOrWhiteSpace(dlg.GameCsprojPath)
-                        ? rootPath
-                        : Path.GetDirectoryName(dlg.GameCsprojPath)!,
-                    dlg.LocalizationPath);
-
             EditorProject project = await Task.Run(() =>
-                ProjectManager.Create(dlg.ProjectName, dlg.ParentPath, dlg.GameCsprojPath, contentRel, locRel));
+                ProjectManager.Create(dlg.ProjectName, dlg.ParentPath, dlg.GameCsprojPath));
             _context.SetActiveProject(project);
             _preferences.LastProjectPath = project.RootPath;
             _preferences.AddRecentProject(project.RootPath);
@@ -1513,8 +1509,7 @@ public sealed partial class EditorForm : Form
     private void OnCenterTabChanged(object? sender, EventArgs e)
     {
         bool sceneVisible = _centerTabControl.SelectedTab == _sceneTab;
-        _viewport.IsActive     = sceneVisible;
-        _gameViewport.IsActive = !sceneVisible;
+        _viewport.IsActive = sceneVisible;
     }
 
     private void OnViewportRenderFrame(object? sender, RenderEventArgs e)
@@ -1559,20 +1554,6 @@ public sealed partial class EditorForm : Form
 
         delta.Normalize();
         _viewport.Camera.Pan(delta * speed * dt / _viewport.Camera.Zoom);
-    }
-
-    private void OnGameViewportRenderFrame(object? sender, RenderEventArgs e)
-    {
-        EditorState state = _context.State;
-        if (state != EditorState.Playing && state != EditorState.Paused) return;
-
-        if (_playRunner is null) return;
-        _playRunner.EnsureInitialized(e.GraphicsDevice);
-
-        if (state == EditorState.Playing)
-            _playRunner.Update(e.Elapsed);
-
-        _playRunner.Draw(e.Elapsed);
     }
 
     private void DrawEditorGizmos(RenderEventArgs e)

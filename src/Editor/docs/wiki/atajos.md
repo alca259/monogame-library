@@ -142,9 +142,8 @@ Los botones Play/Pause/Stop cambian de color de acento cuando están activos.
 ### Probar el juego en el editor
 
 1. Tener la escena guardada.
-2. Clic en ▶ **Play**.
-3. Para ver el estado: clic en ⏸ **Pause**.
-4. Para terminar: clic en ⏹ **Stop** (los cambios del Play se descartan).
+2. Clic en ▶ **Play** — compila `GameApp.csproj` y lanza `GameApp.exe --scene {ruta}`.
+3. Para terminar: clic en ⏹ **Stop** (termina el proceso externo).
 
 ### Generar código y compilar
 

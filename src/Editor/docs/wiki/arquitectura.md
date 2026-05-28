@@ -1,17 +1,20 @@
 # Arquitectura general del editor
 
-## Dos proyectos, dos responsabilidades
+## Tres proyectos, tres responsabilidades
 
-La solución tiene una separación limpia en dos capas:
+La solución tiene una separación limpia en tres capas:
 
 ```
-MonoGame.Editor.Core         ← Lógica pura, sin UI
-MonoGame.Editor.WinForms     ← Presentación, controles WinForms
+MonoGame.Editor.Core             ← Lógica pura, sin UI
+MonoGame.Editor.WinForms         ← Presentación, controles WinForms
+MonoGame.Editor.SourceGenerator  ← Roslyn Source Generator (netstandard2.0)
 ```
 
-**Core** contiene todo lo que el editor "sabe hacer": manipular escenas, ejecutar comandos, serializar datos, generar código, gestionar proyectos. No tiene ninguna dependencia de WinForms.
+**Core** contiene todo lo que el editor "sabe hacer": manipular escenas, ejecutar comandos, serializar datos, generar código, gestionar proyectos, lanzar el proceso de juego. No tiene ninguna dependencia de WinForms.
 
 **WinForms** contiene los formularios, paneles, diálogos y controles. Solo llama a Core; nunca al revés.
+
+**SourceGenerator** es un `IIncrementalGenerator` de Roslyn empaquetado como analizador en `GameApp.csproj`. Lee los `*.scene.json` declarados como `<AdditionalFiles>` y emite una clase estática por escena compatible con AOT (sin reflexión en runtime).
 
 ---
 
@@ -153,10 +156,10 @@ MonoGame.Editor.Core/
 ├── Localization/    ← Modelo del editor de localización
 ├── Logging/         ← Logger del editor
 ├── Models/          ← Modelos de datos (escena, entidad, behaviour...)
-├── PlayMode/        ← Conversión de escena a GameWorld para ejecutar
+├── PlayMode/        ← ExternalPlayLauncher: lanza GameApp.exe como proceso externo
 ├── Prefabs/         ← Gestión de prefabs
 ├── Preferences/     ← Preferencias persistidas del editor
-├── Project/         ← Gestión de proyectos (crear, cargar, configurar)
+├── Project/         ← Gestión de proyectos (crear, cargar, configurar, scaffolding)
 ├── Registry/        ← Registro de GameBehaviour disponibles
 ├── Serialization/   ← Serialización JSON de escenas y prefabs
 └── Tilemaps/        ← Importador y modelo de tilemaps
@@ -166,12 +169,25 @@ MonoGame.Editor.Core/
 
 ```
 MonoGame.Editor.WinForms/
-├── Controls/        ← MonoGameControl (viewport), EditorCamera2D
+├── Controls/        ← MonoGameControl (viewport editor), EditorCamera2D
 ├── Dialogs/         ← Todos los diálogos modales
 ├── Gizmos/          ← GizmoRenderer (dibuja los gizmos con GPU)
 ├── Panels/          ← Todos los paneles del editor
 ├── Rendering/       ← EditModeRenderer (dibuja escena en modo edición)
 └── EditorForm.cs    ← Formulario principal
+```
+
+## Organización del SourceGenerator
+
+```
+MonoGame.Editor.SourceGenerator/
+└── SceneSourceGenerator.cs   ← IIncrementalGenerator: *.scene.json → *_Scene.g.cs
+```
+
+Se referencia desde `GameApp.csproj` como:
+```xml
+<ProjectReference Include="..." OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+<AdditionalFiles Include="../../../.editor/scenes/**/*.scene.json" />
 ```
 
 ---

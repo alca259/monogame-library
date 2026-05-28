@@ -110,16 +110,32 @@ Cada cambio manual en el transform genera el comando correspondiente (`MoveEntit
 
 ## Panel: Asset Browser (`AssetBrowserPanel`)
 
-Explorador de archivos del proyecto enfocado en assets de juego.
+Explorador de archivos del proyecto organizado en tres pestañas.
 
-### Controles
+### Pestaña Assets
 
-- **Barra superior**: botones Import, Refresh, New Folder; campo de filtro de texto con debounce de 150ms; toggle entre vista lista y vista iconos grandes.
+Explorador de assets de `src/GameApp/Content/`.
+
+- **Barra superior**: campo de filtro de texto con debounce de 150ms; toggle entre vista lista y vista iconos grandes.
 - **Breadcrumb**: muestra la ruta actual con enlaces clicables para navegar.
 - **Panel izquierdo**: árbol de carpetas.
 - **Panel derecho**: lista de assets de la carpeta seleccionada.
 
-### Tipos de asset reconocidos
+### Pestaña Scripts
+
+Árbol de archivos `.cs` en `src/GameScripts/`.
+
+- **TreeView**: muestra subcarpetas y archivos `.cs` con sus íconos.
+- **Botón "New Script"**: abre `ScriptCreationDialog` para crear un nuevo `GameBehaviour` stub.
+
+### Pestaña Translations
+
+Lista de archivos `.json` en `src/GameApp/i18n/`.
+
+- **ListView**: columnas "Locale" y "Size".
+- **Botón "New Locale"**: abre `LocaleCreationDialog` para crear un archivo `{locale}.json` vacío.
+
+### Tipos de asset reconocidos (pestaña Assets)
 
 | Extensión | Tipo |
 |-----------|------|
@@ -134,7 +150,7 @@ Explorador de archivos del proyecto enfocado en assets de juego.
 | `.input.json` | InputMap |
 | `.cs` | Script |
 
-### Menú contextual
+### Menú contextual (pestaña Assets)
 
 | Opción | Acción |
 |--------|--------|
@@ -194,7 +210,7 @@ Lista todas las escenas del proyecto y permite gestionar su ciclo de vida.
 
 ### Comportamiento
 
-- Se carga al recibir `ProjectOpenedEvent` escaneando `{EditorPath}/Scenes/*.scene.json`.
+- Se carga al recibir `ProjectOpenedEvent` escaneando `{EditorPath}/scenes/*.scene.json`.
 - Doble clic en una escena la carga (pregunta antes si hay cambios sin guardar).
 - Si se elimina la escena activa, se cierra y la escena queda vacía.
 
@@ -265,7 +281,7 @@ Panel especializado para edición de tilemaps importados desde archivos `.tmx` (
 
 ## Controles del viewport (`MonoGameControl` y `EditorCamera2D`)
 
-El viewport es un control WinForms personalizado que embebe un `GraphicsDevice` de MonoGame para renderizar en tiempo real.
+El viewport es un control WinForms personalizado que embebe un `GraphicsDevice` de MonoGame para renderizar la escena en **modo edición**. Durante el modo Play, el juego se ejecuta como proceso externo (ver [modo-juego](modo-juego.md)) y el viewport no se usa.
 
 ### MonoGameControl
 

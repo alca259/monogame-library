@@ -18,16 +18,6 @@ partial class NewProjectDialog
     private System.Windows.Forms.TextBox _csprojTextBox;
     private System.Windows.Forms.Button _browseCsprojButton;
 
-    // Content folder
-    private System.Windows.Forms.Label _contentLabel;
-    private System.Windows.Forms.TextBox _contentTextBox;
-    private System.Windows.Forms.Button _browseContentButton;
-
-    // Localization folder
-    private System.Windows.Forms.Label _localizationLabel;
-    private System.Windows.Forms.TextBox _localizationTextBox;
-    private System.Windows.Forms.Button _browseLocalizationButton;
-
     // Buttons
     private System.Windows.Forms.Button _okButton;
     private System.Windows.Forms.Button _cancelButton;
@@ -36,8 +26,6 @@ partial class NewProjectDialog
     private System.Windows.Forms.TableLayoutPanel _gridPanel;
     private System.Windows.Forms.TableLayoutPanel _locationRow;
     private System.Windows.Forms.TableLayoutPanel _csprojRow;
-    private System.Windows.Forms.TableLayoutPanel _contentRow;
-    private System.Windows.Forms.TableLayoutPanel _localizationRow;
     private System.Windows.Forms.FlowLayoutPanel _buttonPanel;
     private System.Windows.Forms.Label _separatorLabel;
 
@@ -50,37 +38,27 @@ partial class NewProjectDialog
 
     private void InitializeComponent()
     {
-        _nameLabel           = new System.Windows.Forms.Label();
-        _nameTextBox         = new System.Windows.Forms.TextBox();
-        _locationLabel       = new System.Windows.Forms.Label();
-        _locationTextBox     = new System.Windows.Forms.TextBox();
-        _browseButton        = new System.Windows.Forms.Button();
-        _previewLabel        = new System.Windows.Forms.Label();
-        _previewValueLabel   = new System.Windows.Forms.Label();
-        _separatorLabel      = new System.Windows.Forms.Label();
-        _csprojLabel         = new System.Windows.Forms.Label();
-        _csprojTextBox       = new System.Windows.Forms.TextBox();
-        _browseCsprojButton  = new System.Windows.Forms.Button();
-        _contentLabel        = new System.Windows.Forms.Label();
-        _contentTextBox      = new System.Windows.Forms.TextBox();
-        _browseContentButton = new System.Windows.Forms.Button();
-        _localizationLabel        = new System.Windows.Forms.Label();
-        _localizationTextBox      = new System.Windows.Forms.TextBox();
-        _browseLocalizationButton = new System.Windows.Forms.Button();
-        _okButton            = new System.Windows.Forms.Button();
-        _cancelButton        = new System.Windows.Forms.Button();
-        _gridPanel           = new System.Windows.Forms.TableLayoutPanel();
-        _locationRow         = new System.Windows.Forms.TableLayoutPanel();
-        _csprojRow           = new System.Windows.Forms.TableLayoutPanel();
-        _contentRow          = new System.Windows.Forms.TableLayoutPanel();
-        _localizationRow     = new System.Windows.Forms.TableLayoutPanel();
-        _buttonPanel         = new System.Windows.Forms.FlowLayoutPanel();
+        _nameLabel          = new System.Windows.Forms.Label();
+        _nameTextBox        = new System.Windows.Forms.TextBox();
+        _locationLabel      = new System.Windows.Forms.Label();
+        _locationTextBox    = new System.Windows.Forms.TextBox();
+        _browseButton       = new System.Windows.Forms.Button();
+        _previewLabel       = new System.Windows.Forms.Label();
+        _previewValueLabel  = new System.Windows.Forms.Label();
+        _separatorLabel     = new System.Windows.Forms.Label();
+        _csprojLabel        = new System.Windows.Forms.Label();
+        _csprojTextBox      = new System.Windows.Forms.TextBox();
+        _browseCsprojButton = new System.Windows.Forms.Button();
+        _okButton           = new System.Windows.Forms.Button();
+        _cancelButton       = new System.Windows.Forms.Button();
+        _gridPanel          = new System.Windows.Forms.TableLayoutPanel();
+        _locationRow        = new System.Windows.Forms.TableLayoutPanel();
+        _csprojRow          = new System.Windows.Forms.TableLayoutPanel();
+        _buttonPanel        = new System.Windows.Forms.FlowLayoutPanel();
 
         _gridPanel.SuspendLayout();
         _locationRow.SuspendLayout();
         _csprojRow.SuspendLayout();
-        _contentRow.SuspendLayout();
-        _localizationRow.SuspendLayout();
         _buttonPanel.SuspendLayout();
         SuspendLayout();
 
@@ -140,7 +118,7 @@ partial class NewProjectDialog
         _csprojLabel.AutoSize  = true;
         _csprojLabel.Dock      = System.Windows.Forms.DockStyle.Fill;
         _csprojLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-        _csprojLabel.Text      = "Game .csproj:";
+        _csprojLabel.Text      = "Game .csproj (optional):";
 
         // ── _csprojTextBox ────────────────────────────────────────────────────────
         _csprojTextBox.Dock     = System.Windows.Forms.DockStyle.Fill;
@@ -160,56 +138,6 @@ partial class NewProjectDialog
         _csprojRow.Dock     = System.Windows.Forms.DockStyle.Fill;
         _csprojRow.RowCount = 1;
         _csprojRow.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-
-        // ── _contentLabel ─────────────────────────────────────────────────────────
-        _contentLabel.AutoSize  = true;
-        _contentLabel.Dock      = System.Windows.Forms.DockStyle.Fill;
-        _contentLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-        _contentLabel.Text      = "Content folder:";
-
-        // ── _contentTextBox ───────────────────────────────────────────────────────
-        _contentTextBox.Dock     = System.Windows.Forms.DockStyle.Fill;
-        _contentTextBox.ReadOnly = true;
-
-        // ── _browseContentButton ──────────────────────────────────────────────────
-        _browseContentButton.AutoSize = true;
-        _browseContentButton.Text     = "Browse...";
-        _browseContentButton.Dock     = System.Windows.Forms.DockStyle.Right;
-
-        // ── _contentRow ───────────────────────────────────────────────────────────
-        _contentRow.ColumnCount = 2;
-        _contentRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-        _contentRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize));
-        _contentRow.Controls.Add(_contentTextBox, 0, 0);
-        _contentRow.Controls.Add(_browseContentButton, 1, 0);
-        _contentRow.Dock     = System.Windows.Forms.DockStyle.Fill;
-        _contentRow.RowCount = 1;
-        _contentRow.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-
-        // ── _localizationLabel ────────────────────────────────────────────────────
-        _localizationLabel.AutoSize  = true;
-        _localizationLabel.Dock      = System.Windows.Forms.DockStyle.Fill;
-        _localizationLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-        _localizationLabel.Text      = "Localization folder:";
-
-        // ── _localizationTextBox ──────────────────────────────────────────────────
-        _localizationTextBox.Dock     = System.Windows.Forms.DockStyle.Fill;
-        _localizationTextBox.ReadOnly = true;
-
-        // ── _browseLocalizationButton ─────────────────────────────────────────────
-        _browseLocalizationButton.AutoSize = true;
-        _browseLocalizationButton.Text     = "Browse...";
-        _browseLocalizationButton.Dock     = System.Windows.Forms.DockStyle.Right;
-
-        // ── _localizationRow ──────────────────────────────────────────────────────
-        _localizationRow.ColumnCount = 2;
-        _localizationRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-        _localizationRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize));
-        _localizationRow.Controls.Add(_localizationTextBox, 0, 0);
-        _localizationRow.Controls.Add(_browseLocalizationButton, 1, 0);
-        _localizationRow.Dock     = System.Windows.Forms.DockStyle.Fill;
-        _localizationRow.RowCount = 1;
-        _localizationRow.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
 
         // ── _okButton ─────────────────────────────────────────────────────────────
         _okButton.Text    = "OK";
@@ -233,43 +161,35 @@ partial class NewProjectDialog
         // Row 0: Project Name  (28px)
         // Row 1: Location      (28px)
         // Row 2: Full path     (26px)
-        // Row 3: separator     (6px)
+        // Row 3: separator     (8px)
         // Row 4: Game .csproj  (28px)
-        // Row 5: Content       (28px)
-        // Row 6: Localization  (28px)
         _gridPanel.ColumnCount = 2;
-        _gridPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 130F));
+        _gridPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 150F));
         _gridPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-        _gridPanel.Controls.Add(_nameLabel,          0, 0);
-        _gridPanel.Controls.Add(_nameTextBox,         1, 0);
-        _gridPanel.Controls.Add(_locationLabel,       0, 1);
-        _gridPanel.Controls.Add(_locationRow,         1, 1);
-        _gridPanel.Controls.Add(_previewLabel,        0, 2);
-        _gridPanel.Controls.Add(_previewValueLabel,   1, 2);
-        _gridPanel.Controls.Add(_separatorLabel,      0, 3);
+        _gridPanel.Controls.Add(_nameLabel,        0, 0);
+        _gridPanel.Controls.Add(_nameTextBox,       1, 0);
+        _gridPanel.Controls.Add(_locationLabel,     0, 1);
+        _gridPanel.Controls.Add(_locationRow,       1, 1);
+        _gridPanel.Controls.Add(_previewLabel,      0, 2);
+        _gridPanel.Controls.Add(_previewValueLabel, 1, 2);
+        _gridPanel.Controls.Add(_separatorLabel,    0, 3);
         _gridPanel.SetColumnSpan(_separatorLabel, 2);
-        _gridPanel.Controls.Add(_csprojLabel,         0, 4);
-        _gridPanel.Controls.Add(_csprojRow,           1, 4);
-        _gridPanel.Controls.Add(_contentLabel,        0, 5);
-        _gridPanel.Controls.Add(_contentRow,          1, 5);
-        _gridPanel.Controls.Add(_localizationLabel,   0, 6);
-        _gridPanel.Controls.Add(_localizationRow,     1, 6);
+        _gridPanel.Controls.Add(_csprojLabel,       0, 4);
+        _gridPanel.Controls.Add(_csprojRow,         1, 4);
         _gridPanel.Dock     = System.Windows.Forms.DockStyle.Top;
-        _gridPanel.Height   = 204;
+        _gridPanel.Height   = 150;
         _gridPanel.Padding  = new System.Windows.Forms.Padding(8);
-        _gridPanel.RowCount = 7;
+        _gridPanel.RowCount = 5;
         _gridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
         _gridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
         _gridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 26F));
         _gridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 8F));
         _gridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
-        _gridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
-        _gridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
 
         // ── NewProjectDialog ──────────────────────────────────────────────────────
         AcceptButton    = _okButton;
         CancelButton    = _cancelButton;
-        ClientSize      = new System.Drawing.Size(500, 256);
+        ClientSize      = new System.Drawing.Size(500, 200);
         Controls.Add(_gridPanel);
         Controls.Add(_buttonPanel);
         Font            = new System.Drawing.Font("Segoe UI", 9F);
@@ -282,8 +202,6 @@ partial class NewProjectDialog
         _gridPanel.ResumeLayout(false);
         _locationRow.ResumeLayout(false);
         _csprojRow.ResumeLayout(false);
-        _contentRow.ResumeLayout(false);
-        _localizationRow.ResumeLayout(false);
         _buttonPanel.ResumeLayout(false);
         ResumeLayout(false);
     }

@@ -39,8 +39,24 @@ public sealed class ProjectSettings
     [JsonPropertyName("virtualHeight")]
     public int VirtualHeight { get; set; } = 1080;
 
+    /// <summary>Relative path to the main game .csproj (relative to project root). Stored here for portability.</summary>
+    [JsonPropertyName("gameAppCsprojRelPath")]
+    public string GameAppCsprojRelPath { get; set; } = string.Empty;
+
+    /// <summary>Relative path to the GameScripts .csproj (relative to project root).</summary>
+    [JsonPropertyName("gameScriptsCsprojRelPath")]
+    public string GameScriptsCsprojRelPath { get; set; } = string.Empty;
+
+    /// <summary>Relative path to the content folder (relative to GameAppCsproj directory or project root).</summary>
+    [JsonPropertyName("contentRelPath")]
+    public string ContentRelPath { get; set; } = "Content";
+
+    /// <summary>Relative path to the localization folder (relative to GameAppCsproj directory or project root).</summary>
+    [JsonPropertyName("localizationRelPath")]
+    public string LocalizationRelPath { get; set; } = "Localization";
+
     private static string GetPath(EditorProject project)
-        => Path.Combine(project.EditorPath, FileName);
+        => Path.Combine(project.ConfigPath, FileName);
 
     /// <summary>
     /// Loads settings from <c>{EditorPath}/settings.json</c>.

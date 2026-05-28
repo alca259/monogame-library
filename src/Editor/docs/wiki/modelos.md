@@ -16,7 +16,7 @@ Representa una escena completa del juego tal como la gestiona el editor.
 | `WorldConfig` | `EditorWorldConfig?` | Configuración de subsistemas (Physics, Lighting, Navigation, Audio). `null` si no hay subsistemas. |
 | `RootGameObjects` | `List<EditorGameObject>` | Lista de entidades raíz (sin padre) de la escena |
 
-**Serialización**: los campos se guardan en `Editor/Scenes/{nombre}.scene.json`. Los vínculos de padre a hijo se reconstruyen automáticamente al deserializar (no se guardan en el JSON para evitar referencias circulares).
+**Serialización**: los campos se guardan en `.editor/scenes/{nombre}.scene.json`. Los vínculos de padre a hijo se reconstruyen automáticamente al deserializar (no se guardan en el JSON para evitar referencias circulares).
 
 ---
 
@@ -103,22 +103,23 @@ Representa el proyecto de juego cargado en el editor.
 | Propiedad | Tipo | Descripción |
 |-----------|------|-------------|
 | `Name` | `string` | Nombre del proyecto |
-| `RootPath` | `string` | Ruta absoluta a la carpeta raíz del proyecto (donde está el `.sln`) |
-| `EditorPath` | `string` | `{RootPath}/Editor/` |
-| `ScenesPath` | `string` | `{EditorPath}/Scenes/` |
-| `PrefabsPath` | `string` | `{EditorPath}/Prefabs/` |
-| `ContentPath` | `string` | Configurable (por defecto `{RootPath}/Content`) |
-| `LocalizationPath` | `string` | Configurable (por defecto `{RootPath}/Localization`) |
-| `GameCsprojPath` | `string` | Ruta absoluta al `.csproj` del juego. Vacía si no está configurado. |
-| `GameSourcePath` | `string` | Carpeta del `.csproj` = directorio padre de `GameCsprojPath`. Vacía si no está configurado. |
-
-Las rutas `ContentPath` y `LocalizationPath` se calculan relativas a `GameSourcePath` (si hay `.csproj`) o a `RootPath`.
+| `RootPath` | `string` | Ruta absoluta a la carpeta raíz del proyecto |
+| `BaseNamespace` | `string` | Namespace base para generación de código |
+| `SolutionPath` | `string` | Ruta absoluta a `src/{Name}.slnx` |
+| `EditorPath` | `string` | `{RootPath}/.editor/` |
+| `ConfigPath` | `string` | `{EditorPath}/config/` — contiene `settings.json` |
+| `LogsPath` | `string` | `{EditorPath}/logs/` |
+| `ScenesPath` | `string` | `{EditorPath}/scenes/` |
+| `PrefabsPath` | `string` | `{EditorPath}/prefabs/` |
+| `ContentPath` | `string` | Configurable (por defecto `{RootPath}/src/GameApp/Content`) |
+| `LocalizationPath` | `string` | Configurable (por defecto `{RootPath}/src/GameApp/i18n`) |
+| `GameCsprojPath` | `string` | Ruta al `.csproj` del juego (apunta a `src/GameApp/GameApp.csproj` tras scaffolding) |
 
 ---
 
 ## Configuración del proyecto: `ProjectSettings`
 
-Configuración adicional del proyecto. Se guarda en `Editor/settings.json`.
+Configuración adicional del proyecto. Se guarda en `.editor/config/settings.json`.
 
 | Propiedad | Tipo | Default | Descripción |
 |-----------|------|---------|-------------|
@@ -128,6 +129,10 @@ Configuración adicional del proyecto. Se guarda en `Editor/settings.json`.
 | `DefaultLocale` | `string` | `"en-US"` | Locale por defecto |
 | `SupportedLocales` | `List<string>` | `["en-US"]` | Lista de locales del juego |
 | `BuildConfiguration` | `string` | `"Debug"` | Configuración de MSBuild (`Debug` / `Release`) |
+| `GameAppCsprojRelPath` | `string` | `""` | Ruta relativa al `.csproj` del ejecutable |
+| `GameScriptsCsprojRelPath` | `string` | `""` | Ruta relativa al `.csproj` de la librería de scripts |
+| `ContentRelPath` | `string` | `"Content"` | Ruta relativa a la carpeta de Content |
+| `LocalizationRelPath` | `string` | `"Localization"` | Ruta relativa a la carpeta de localización |
 
 ---
 

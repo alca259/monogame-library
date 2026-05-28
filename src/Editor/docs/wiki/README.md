@@ -13,7 +13,7 @@ Documentación técnica del editor visual para proyectos MonoGame. Esta wiki exp
 | [Flujos principales](flujos.md) | Paso a paso de las operaciones más importantes |
 | [Sistema de comandos (Undo/Redo)](comandos.md) | Cómo funciona el historial de acciones |
 | [Modelos de datos](modelos.md) | Clases de dominio: escenas, entidades, behaviours, etc. |
-| [Generación de código](codegen.md) | Cómo el editor produce archivos `.cs` del juego |
+| [Generación de código](codegen.md) | SourceGenerator Roslyn + cómo el editor produce archivos `.cs` del juego |
 | [Modo juego (Play/Pause/Stop)](modo-juego.md) | Ciclo de vida del modo de ejecución dentro del editor |
 | [Atajos de teclado y referencia rápida](atajos.md) | Todos los atajos y accesos directos del editor |
 
@@ -22,13 +22,15 @@ Documentación técnica del editor visual para proyectos MonoGame. Esta wiki exp
 ## Estructura de la solución
 
 ```
-MonoGame.Editor.sln
-├── MonoGame.Editor.Core       ← Lógica del editor, sin UI
-└── MonoGame.Editor.WinForms   ← Aplicación WinForms, interfaz de usuario
+MonoGame.Editor.slnx
+├── MonoGame.Editor.Core             ← Lógica del editor, sin UI
+├── MonoGame.Editor.WinForms         ← Aplicación WinForms, interfaz de usuario
+└── MonoGame.Editor.SourceGenerator  ← Roslyn IIncrementalGenerator (netstandard2.0)
 ```
 
 - **Core** no contiene ninguna referencia a `System.Windows.Forms`.
 - **WinForms** solo referencia a `Core`.
+- **SourceGenerator** se empaqueta como analizador en `GameApp.csproj`; convierte `*.scene.json` en C# estático compatible AOT.
 - La comunicación entre paneles es exclusivamente a través de `IEditorEventBus`.
 
 ---
@@ -37,26 +39,21 @@ MonoGame.Editor.sln
 
 ```
 MiJuego/
-├── MiJuego.sln
-├── src/
-│   ├── MiJuego.csproj           ← Apuntado por gameCsprojPath en project.json
-│   ├── Game.cs
-│   ├── Behaviours/
-│   └── Scenes/
-│       ├── GameplayScene.cs     ← Parte manual (partial class del desarrollador)
-│       └── Generated/
-│           └── GameplayScene.Generated.cs  ← AUTO-GENERADO por el editor
-├── Content/
-│   ├── Content.mgcb
-│   ├── Textures/
-│   ├── Audio/
-│   └── Fonts/
-├── Localization/
-│   ├── es.json
-│   └── en.json
-└── Editor/                      ← Archivos del editor (versionables con git)
-    ├── project.json             ← Descriptor del proyecto + rutas
-    ├── settings.json            ← Configuración (namespace, build config, etc.)
-    ├── Scenes/                  ← Archivos .scene.json
-    └── Prefabs/                 ← Archivos .prefab.json
+├── project.json                 ← Descriptor del proyecto (en la raíz)
+├── .editor/                     ← Carpeta interna del editor (versionable con git)
+│   ├── config/
+│   │   └── settings.json        ← Configuración (namespace, build config, etc.)
+│   ├── logs/                    ← Logs del editor y del proceso de juego
+│   ├── scenes/                  ← Archivos .scene.json
+│   └── prefabs/                 ← Archivos .prefab.json
+└── src/                         ← Código fuente del juego (generado al crear proyecto)
+    ├── MiJuego.slnx             ← Solución del juego
+    ├── GameApp/                 ← Proyecto ejecutable
+    │   ├── GameApp.csproj
+    │   ├── Program.cs
+    │   ├── Game1.cs
+    │   ├── Content/             ← Assets compilados (MGCB)
+    │   └── i18n/                ← Archivos de localización *.json
+    └── GameScripts/             ← Librería de scripts del juego
+        └── GameScripts.csproj
 ```

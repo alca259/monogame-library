@@ -1,142 +1,103 @@
 # Modo juego (Play / Pause / Stop)
 
-El editor incluye un modo de ejecución en tiempo real que permite probar el juego directamente dentro del viewport, sin salir del editor.
+El modo Play lanza el juego compilado como **proceso externo** (`GameApp.exe`). El editor no embebe ningún `GraphicsDevice` de MonoGame para el juego: el proceso tiene su propia ventana nativa.
 
 ---
 
 ## Estados del editor
 
 ```
-┌────────────┐  Play  ┌────────────┐  Pause  ┌────────────┐
-│            │───────►│            │────────►│            │
-│  Editing   │        │  Playing   │         │  Paused    │
-│            │◄───────│            │◄────────│            │
-└────────────┘  Stop  └────────────┘ Resume  └────────────┘
-      ▲                                              │
-      └──────────────────── Stop ───────────────────┘
+┌────────────┐  Play  ┌────────────┐
+│            │───────►│            │
+│  Editing   │        │  Playing   │
+│            │◄───────│            │
+└────────────┘  Stop  └────────────┘
 ```
 
-| Estado | Update | Draw | Gizmos | Inspector |
-|--------|--------|------|--------|-----------|
-| `Editing` | No | Render del editor | Visibles | Editable |
-| `Playing` | Sí (`GameWorld.Update`) | `GameWorld.Draw` | Ocultos | Solo lectura |
-| `Paused` | No | `GameWorld.Draw` | Visibles | Editable en caliente |
+| Estado | Viewport editor | Proceso externo | Inspector |
+|--------|----------------|-----------------|-----------|
+| `Editing` | Activo (gizmos, render) | — | Editable |
+| `Playing` | Solo modo editor en pausa | `GameApp.exe` en ejecución | Solo lectura |
+
+> El estado `Paused` del enum `EditorState` sigue existiendo para posibles extensiones futuras, pero el proceso externo no soporta pausa por defecto.
 
 ---
 
 ## Flujo detallado: entrar en modo Play
 
-1. El usuario hace clic en el botón **Play** (o usa el atajo `F5` si está configurado).
+1. El usuario hace clic en **Play** (o atajo `F5`).
 2. Si no hay escena activa: se muestra un `MessageBox` informativo y se cancela.
-3. Si hay un archivo `Content.mgcb`, el editor compila el contenido primero (`MgcbRunner`).
-4. **TakePlaySnapshot()**: se serializa la escena activa completa a JSON en memoria. Este snapshot se usará para restaurar la escena al detener.
-5. Se llama a `context.SetState(EditorState.Playing)`.
-6. Se publica `EditorStateChangedEvent(Editing, Playing)`.
-7. `EditorForm` crea un `PlayModeRunner` con la escena actual.
-8. `PlayModeRunner` llama a `SceneToWorldConverter.Convert(scene, registry)` para construir un `GameWorld` real del Kernel.
-9. El viewport cambia al modo de juego (los gizmos se ocultan).
-10. El game loop arranca: cada frame llama `_playRunner.Update(elapsed)` y `_playRunner.Draw(elapsed)`.
-
----
-
-## Flujo detallado: Pause y Resume
-
-### Pause
-1. El usuario hace clic en **Pause**.
-2. `context.SetState(EditorState.Paused)`.
-3. `PlayModeRunner.Update` deja de llamarse.
-4. `PlayModeRunner.Draw` sigue llamándose (se ve el estado congelado del juego).
-5. Los gizmos se vuelven a dibujar sobre el juego pausado.
-6. El inspector se vuelve editable para modificar valores "en caliente".
-
-### Resume
-1. El usuario hace clic en **Play** (mientras está en Paused).
-2. `context.SetState(EditorState.Playing)`.
-3. `Update` se reanuda desde donde se pausó.
+3. Se guarda la escena automáticamente si tiene cambios sin guardar.
+4. **Compilación**: `EditorForm` ejecuta `dotnet build src/GameApp/GameApp.csproj -c Debug` vía `Process`. Cada línea de salida se envía al `ConsolePanel` vía `BuildOutputLineEvent`.
+5. Si el build falla: se cancela el modo Play y los errores se muestran en la consola.
+6. Si el build tiene éxito: se calcula la ruta al ejecutable:
+   ```
+   {RootPath}/src/GameApp/bin/Debug/net10.0/GameApp.exe
+   ```
+7. Se crea `ExternalPlayLauncher` y se llama a `Launch(exePath, scenePath, logLine)`:
+   - `scenePath`: ruta absoluta al archivo `.scene.json` activo.
+   - `logLine`: callback que envía cada línea de stderr al `ConsolePanel`.
+8. Internamente, `ExternalPlayLauncher` lanza:
+   ```
+   GameApp.exe --scene "{path/.editor/scenes/NombreEscena.scene.json}"
+   ```
+9. `context.SetState(EditorState.Playing)`.
+10. Se publica `EditorStateChangedEvent(Editing, Playing)`.
 
 ---
 
 ## Flujo detallado: detener el modo Play (Stop)
 
 1. El usuario hace clic en **Stop**.
-2. `PlayModeRunner.Dispose()` libera el `SpriteBatch` y limpia los recursos.
-3. `context.RestoreFromSnapshot()`: deserializa el JSON del snapshot guardado antes de entrar en Play.
-4. `context.SetActiveScene(escenaRestaurada)`.
-5. `context.ClearPlaySnapshot()`: libera el snapshot de memoria.
-6. `context.SetState(EditorState.Editing)`.
-7. Se publica `EditorStateChangedEvent(Playing, Editing)`.
-8. El viewport vuelve al modo editor con los gizmos visibles.
-9. La jerarquía y el inspector reflejan el estado original de la escena (antes de Play).
-
-**Regla importante**: cualquier cambio hecho durante el modo Play (mover entidades, modificar propiedades) se **descarta** al pulsar Stop, porque se restaura el snapshot pre-play.
+2. `_playLauncher.Stop()` llama a `Process.Kill(entireProcessTree: true)` — termina el proceso y todos sus hijos.
+3. `context.SetState(EditorState.Editing)`.
+4. Se publica `EditorStateChangedEvent(Playing, Editing)`.
+5. El viewport del editor vuelve a estar activo.
 
 ---
 
-## `SceneToWorldConverter`: de escena editor a GameWorld real
+## `ExternalPlayLauncher`: gestión del proceso
 
-`SceneToWorldConverter.Convert(editorScene, registry)` traduce el modelo del editor al modelo del Kernel:
+`ExternalPlayLauncher` encapsula el `Process` del juego.
 
-### Conversión de entidades
+| Miembro | Descripción |
+|---------|-------------|
+| `IsRunning` | `true` si el proceso existe y no ha terminado |
+| `Launch(exePath, scenePath, logLine?)` | Inicia el proceso con `--scene {scenePath}`. Redirige stderr; cada línea invoca `logLine`. |
+| `Stop()` | `Process.Kill(entireProcessTree: true)` |
+| `Dispose()` | Llama a `Stop()` |
 
-Para cada `EditorGameObject`:
-1. Crea un `GameEntity` con `world.CreateEntity(nombre, posición)`.
-2. Aplica el transform (posición, rotación, escala).
-3. Establece `entity.Active = obj.Active`.
-4. Añade cada tag: `entity.AddTag(tag)`.
-5. Establece el padre si tiene: `entity.SetParent(padreEntity)`.
-6. Para cada behaviour, intenta instanciarlo y añadirlo.
+### Argumentos del proceso de juego
 
-### Instanciación de behaviours
+`GameApp.exe` generado por el scaffolding espera:
 
-1. Busca el tipo por `TypeName` en el registry.
-2. Llama a `Activator.CreateInstance(type)` para crear la instancia.
-3. Usa `entity.Add<T>()` con `MakeGenericMethod` para añadirlo al entity.
-4. Deserializa cada propiedad del diccionario `JsonElement` al tipo correcto.
-5. Asigna las propiedades via reflexión.
-
-### Casos especiales
-
-- **`SpriteRendererBehaviour`**: se omite silenciosamente en PlayMode (requiere `Texture2D` como parámetro del constructor, y en el editor no tenemos el `ContentManager` del juego disponible).
-- **Entidades inactivas**: se transmite correctamente `entity.Active = false`.
-- **Tags**: se transmiten todos para que las queries `World.GetEntitiesByTag` funcionen en los `Start()`.
-
-### Configuración de subsistemas
-
-Antes del bucle de entidades, `ApplyWorldConfig(world, scene.WorldConfig)` inicializa los subsistemas:
-
-```
-UsePhysics2D=true  → world.PhysicsWorld = new Physics2DWorld(gravedad)
-UseLighting=true   → world.LightingWorld = new LightingWorld { AmbientColor = ... }
-UseNavigation=true → world.NavGrid = new NavGrid(...); world.Pathfinder = new Pathfinder(...)
-UseAudio=true      → world.AudioController = new AudioController()
+```csharp
+// Program.cs generado
+string scenePath = args.SkipWhile(a => a != "--scene").Skip(1).FirstOrDefault() ?? string.Empty;
+using var game = new Game1(scenePath);
+game.Run();
 ```
 
----
-
-## `PlayModeRunner`: el game loop del editor
-
-`PlayModeRunner` encapsula el `GameWorld` activo durante el modo Play.
-
-| Método | Qué hace |
-|--------|----------|
-| Constructor | Llama a `SceneToWorldConverter.Convert()` para construir el mundo |
-| `EnsureInitialized(graphicsDevice)` | Crea el `SpriteBatch` la primera vez que se llama (en el render thread) |
-| `Update(elapsed)` | Llama a `world.Update(gameTime)` con el delta time del frame |
-| `Draw(elapsed)` | Llama a `SpriteBatch.Begin()`, `world.Draw(...)`, `SpriteBatch.End()`. Envuelto en try-catch para que los behaviours sin contenido fallen silenciosamente. |
-| `Dispose()` | Libera el `SpriteBatch` |
+Si `scenePath` está vacío, el juego arranca sin cargar una escena específica.
 
 ---
 
-## Consideraciones importantes al desarrollar behaviours para Play Mode
+## Comparación con el modo Play embebido anterior
 
-1. **SpriteRendererBehaviour no funciona en Play Mode del editor** (el sprite no se renderiza). Para ver sprites necesitas ejecutar el juego real con `Project → Run Game`.
+| Aspecto | Antes (embebido) | Ahora (externo) |
+|---------|-----------------|-----------------|
+| Renderizado | `MonoGameControl` dentro del editor | Ventana nativa del proceso |
+| Inicio | Conversión de escena a `GameWorld` por reflexión | Compilación + `GameApp.exe` |
+| Assets | Sin `ContentManager` disponible | `ContentManager` completo del juego |
+| Sprites | No se renderizaban | Se renderizan correctamente |
+| Stop | `PlayModeRunner.Dispose()` + restaurar snapshot | `Process.Kill()` |
 
-2. **Los cambios del modo Play se descartan**. Si necesitas probar cambios persistentes, edita en modo `Editing`.
+---
 
-3. **Los behaviours deben tener constructor sin parámetros** para que el editor pueda instanciarlos. Si tu behaviour necesita dependencias, usa el método `Awake()` o `Start()` del ciclo de vida.
+## Consideraciones al desarrollar con el modo Play
 
-4. **Las propiedades deben ser públicas con getter y setter** para que el editor pueda leerlas y escribirlas por reflexión.
-
-5. **Los queries por tag funcionan correctamente** en PlayMode (los tags se transfieren del editor al Kernel).
-
-6. **Los subsistemas (Physics, Lighting, etc.) solo están disponibles si se configuran** en `Scene → Configure World Subsystems...`.
+1. **El primer Play siempre compila**. Si el código tiene errores, el modo Play no arranca.
+2. **Los cambios de escena durante Play no persisten** — la escena en disco no cambia mientras el juego corre.
+3. **Los behaviours pueden tener cualquier constructor** — ya no es necesario el constructor sin parámetros que requería la reflexión del editor.
+4. **La salida de stderr del juego** (excepciones no capturadas, logs de depuración) aparece en el `ConsolePanel` del editor.
+5. **La ventana del juego es independiente** — el usuario puede redimensionarla o moverla libremente.

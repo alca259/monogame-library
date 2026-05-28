@@ -8,31 +8,44 @@ Esta página describe paso a paso los flujos de trabajo más importantes del edi
 
 **Menú**: `File → New Project`
 
-1. Se abre `NewProjectDialog` con campos para: nombre del proyecto, carpeta padre, ruta al `.csproj` del juego (opcional), carpeta de Content y carpeta de Localization.
-2. Al seleccionar el `.csproj`, el diálogo rellena automáticamente las rutas de Content y Localization con valores sugeridos (`{csprojDir}/Content` y `{csprojDir}/Localization`).
-3. El usuario confirma con OK.
-4. `EditorForm` llama a `ProjectManager.Create(name, parentPath, csprojPath, contentRelative, localizationRelative)`.
-5. `ProjectManager.Create()` hace:
+1. Se abre `NewProjectDialog` con campos para: nombre del proyecto y carpeta padre.
+2. El usuario confirma con OK.
+3. `EditorForm` llama a `ProjectManager.Create(name, parentPath)`.
+4. `ProjectManager.Create()` hace:
    - Crea la carpeta `{parentPath}/{name}/`.
-   - Crea las subcarpetas `Editor/`, `Editor/Scenes/`, `Editor/Prefabs/`.
-   - Crea las carpetas `Content/` y `Localization/` si no existen.
-   - Escribe `Editor/project.json` con las rutas relativas.
-6. El proyecto se convierte en el activo: `context.SetActiveProject(project)`.
-7. Se publica `ProjectOpenedEvent(project)`.
-8. Todos los paneles reaccionan:
+   - Crea las subcarpetas `.editor/config/`, `.editor/logs/`, `.editor/scenes/`, `.editor/prefabs/`.
+   - Escribe `project.json` en la **raíz** del proyecto.
+   - Llama a `ProjectScaffolder.Scaffold(project)` que genera toda la estructura `src/`.
+5. El proyecto se convierte en el activo: `context.SetActiveProject(project)`.
+6. Se publica `ProjectOpenedEvent(project)`.
+7. Todos los paneles reaccionan:
    - El gestor de behaviours escanea tipos disponibles.
-   - El gestor de escenas escanea `.scene.json`.
-   - `ContentWatcher` empieza a monitorear la carpeta Content.
-   - Se cargan las `ProjectSettings` de `Editor/settings.json`.
+   - El gestor de escenas escanea `.scene.json` en `.editor/scenes/`.
+   - `ContentWatcher` empieza a monitorear `src/GameApp/Content/`.
+   - Se cargan las `ProjectSettings` de `.editor/config/settings.json`.
 
-**Formato de `project.json`**:
+**Estructura `src/` generada por `ProjectScaffolder`**:
+```
+src/
+├── {Name}.slnx
+├── GameApp/
+│   ├── GameApp.csproj   ← exe, MonoGame.Framework.DesktopGL
+│   ├── Program.cs       ← args parsing: --scene <path>
+│   ├── Game1.cs         ← stub MonoGame Game class
+│   ├── Content/
+│   └── i18n/
+└── GameScripts/
+    └── GameScripts.csproj   ← lib, referencia a GameApp
+```
+
+**Formato de `project.json`** (en la raíz del proyecto):
 ```json
 {
   "name": "MiJuego",
-  "version": "1.0",
-  "gameCsprojPath": "src/MiJuego/MiJuego.csproj",
-  "contentPath": "src/MiJuego/Content",
-  "localizationPath": "src/MiJuego/Localization"
+  "baseNamespace": "MiJuego",
+  "engineVersion": "3.8.4",
+  "solutionPath": "src/MiJuego.slnx",
+  "lastOpenedScene": ""
 }
 ```
 
@@ -43,7 +56,7 @@ Esta página describe paso a paso los flujos de trabajo más importantes del edi
 **Menú**: `File → Open Project`
 
 1. Se abre un `FolderBrowserDialog` para seleccionar la carpeta raíz del proyecto.
-2. `ProjectManager.Load(carpeta)` deserializa `Editor/project.json`.
+2. `ProjectManager.Load(carpeta)` deserializa `{carpeta}/project.json` (en la **raíz**, no en `Editor/`).
 3. Se construye `EditorProject` con todas las rutas absolutas calculadas.
 4. Mismo flujo que al crear: `SetActiveProject` → `ProjectOpenedEvent`.
 
@@ -177,6 +190,35 @@ Esta página describe paso a paso los flujos de trabajo más importantes del edi
 
 ---
 
+## Crear un script nuevo
+
+**Asset Browser → pestaña Scripts → botón "New Script"**
+
+1. Se abre `ScriptCreationDialog` con campos: nombre de clase (validado como identificador C#) y namespace (por defecto `{BaseNamespace}.Scripts`).
+2. Al confirmar, se genera `src/GameScripts/{ClassName}.cs` con el stub:
+   ```csharp
+   namespace MiJuego.Scripts;
+
+   public sealed class NombreClase : GameBehaviour
+   {
+       public override void Start()  { }
+       public override void Update() { }
+   }
+   ```
+3. El árbol de scripts se recarga automáticamente.
+
+---
+
+## Crear un archivo de locale
+
+**Asset Browser → pestaña Translations → botón "New Locale"**
+
+1. Se abre `LocaleCreationDialog` con un campo para el código de locale (validado como `xx` o `xx-XX`, ej. `es-ES`).
+2. Al confirmar, se genera `src/GameApp/i18n/{locale}.json` con contenido `{}`.
+3. La lista de traducciones se recarga automáticamente.
+
+---
+
 ## Crear un Behaviour nuevo (esqueleto de código)
 
 **Menú**: `Project → New Behaviour...`
@@ -205,17 +247,20 @@ Ver [Generación de código](codegen.md) para el flujo detallado.
 
 **Menú**: `Project → Build Game` | **Atajo**: `Ctrl+B`
 
-1. Se llama a `MgcbRunner.RunDotnetBuildAsync(GameCsprojPath, BuildConfiguration, callback)`.
+1. Se llama a `MgcbRunner.RunDotnetBuildAsync(GameCsprojPath, BuildConfiguration, callback)` donde `GameCsprojPath` apunta a `src/GameApp/GameApp.csproj`.
 2. Cada línea de salida de MSBuild se envía al `ConsolePanel` vía `BuildOutputLineEvent`.
 3. Si el build termina con éxito, se ejecuta automáticamente un rescan de behaviours (`GameBehaviourScanner.ScanAssemblyAsync(dllPath)`).
 
 ---
 
-## Ejecutar el juego desde el editor
+## Ejecutar el juego desde el editor (Play Mode)
 
-**Menú**: `Project → Run Game` | **Atajo**: `Ctrl+F5`
+**Barra de herramientas**: ▶ Play | **Atajo**: `F5`
 
-Lanza `dotnet run --project "{GameCsprojPath}"` como un proceso externo. La salida aparece en la consola.
+Ver [Modo juego](modo-juego.md) para el flujo completo. En resumen:
+1. Build de `GameApp.csproj` (si no está compilado).
+2. Lanzar `GameApp.exe --scene {ruta}` como proceso externo vía `ExternalPlayLauncher`.
+3. Stop → `Process.Kill(entireProcessTree: true)`.
 
 ---
 
@@ -232,7 +277,7 @@ Se abre `ProjectSettingsDialog` con cuatro pestañas:
 | Localization | Carpeta de Localization, locale por defecto, locales soportados |
 | Code Generation | Carpeta de salida del código generado, auto-generación al guardar |
 
-Los cambios se guardan en `Editor/settings.json`.
+Los cambios se guardan en `.editor/config/settings.json`.
 
 ---
 

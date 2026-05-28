@@ -3,15 +3,15 @@ namespace MonoGame.Editor.Core.Project;
 /// <summary>Creates and loads editor projects from disk.</summary>
 public static class ProjectManager
 {
-    /// <summary>Name of the editor subdirectory inside the project root.</summary>
-    public const string EditorFolderName = "Editor";
+    /// <summary>Name of the editor hidden subfolder inside the project root.</summary>
+    public const string EditorFolderName = ".editor";
 
-    /// <summary>Name of the project descriptor file written inside the <c>Editor/</c> subfolder.</summary>
+    /// <summary>Name of the project descriptor file written at the project root.</summary>
     public const string ProjectFileName = "project.json";
 
-    /// <summary>Returns the absolute path to the editor project descriptor file for a given root.</summary>
+    /// <summary>Returns the absolute path to the project descriptor file for a given root.</summary>
     public static string GetProjectFilePath(string rootPath) =>
-        Path.Combine(rootPath, EditorFolderName, ProjectFileName);
+        Path.Combine(rootPath, ProjectFileName);
 
     /// <summary>
     /// Creates or initializes an editor project named <paramref name="name"/> inside <paramref name="parentPath"/>.
@@ -50,9 +50,7 @@ public static class ProjectManager
 
         EditorProject project = new(name, rootPath, gameCsprojPath, contentRelativePath, localizationRelativePath);
 
-        Directory.CreateDirectory(project.EditorPath);
-        Directory.CreateDirectory(project.ScenesPath);
-        Directory.CreateDirectory(project.PrefabsPath);
+        EnsureEditorDirectories(project);
 
         if (!Directory.Exists(project.ContentPath))
             Directory.CreateDirectory(project.ContentPath);
@@ -61,12 +59,13 @@ public static class ProjectManager
             Directory.CreateDirectory(project.LocalizationPath);
 
         WriteProjectFile(project);
+        ProjectScaffolder.Scaffold(project);
 
         return project;
     }
 
     /// <summary>
-    /// Loads an existing project from <paramref name="projectPath"/> by reading <c>Editor/project.json</c>.
+    /// Loads an existing project from <paramref name="projectPath"/> by reading <c>project.json</c> in the root.
     /// Returns <c>null</c> if the folder does not contain a valid editor project file.
     /// </summary>
     public static EditorProject? Load(string projectPath)
@@ -86,13 +85,16 @@ public static class ProjectManager
                 return null;
 
             string gameCsprojAbs = ResolveAbsolutePath(projectPath, data.GameCsprojPath);
+            string solutionAbs   = ResolveAbsolutePath(projectPath, data.SolutionPath);
 
             return new EditorProject(
                 data.Name,
                 projectPath,
                 gameCsprojAbs,
                 string.IsNullOrWhiteSpace(data.ContentPath) ? "Content" : data.ContentPath,
-                string.IsNullOrWhiteSpace(data.LocalizationPath) ? "Localization" : data.LocalizationPath);
+                string.IsNullOrWhiteSpace(data.LocalizationPath) ? "Localization" : data.LocalizationPath,
+                solutionPath: solutionAbs,
+                baseNamespace: data.BaseNamespace);
         }
         catch (JsonException)
         {
@@ -128,8 +130,8 @@ public static class ProjectManager
 
     /// <summary>
     /// Initializes an existing MonoGame solution folder as an editor project:
-    /// writes <c>Editor/project.json</c> (name inferred from the solution) and creates
-    /// any missing editor folders (<c>Editor/Scenes/</c>, <c>Editor/Prefabs/</c>) plus
+    /// writes <c>project.json</c> at the root (name inferred from the solution) and creates
+    /// any missing editor folders (<c>.editor/scenes/</c>, <c>.editor/prefabs/</c>) plus
     /// standard game folders (<c>Content/</c>, <c>Localization/</c>) if absent.
     /// </summary>
     /// <param name="projectPath">Path to the existing solution root.</param>
@@ -147,9 +149,7 @@ public static class ProjectManager
 
         EditorProject project = new(name, projectPath, gameCsprojPath);
 
-        Directory.CreateDirectory(project.EditorPath);
-        Directory.CreateDirectory(project.ScenesPath);
-        Directory.CreateDirectory(project.PrefabsPath);
+        EnsureEditorDirectories(project);
 
         if (!Directory.Exists(project.ContentPath))
             Directory.CreateDirectory(project.ContentPath);
@@ -158,8 +158,43 @@ public static class ProjectManager
             Directory.CreateDirectory(project.LocalizationPath);
 
         WriteProjectFile(project);
+        ProjectScaffolder.Scaffold(project);
 
         return project;
+    }
+
+    /// <summary>Persists the last opened scene path to <c>project.json</c>.</summary>
+    public static void SaveLastOpenedScene(EditorProject project, string scenePath)
+    {
+        ArgumentNullException.ThrowIfNull(project);
+
+        string jsonPath = GetProjectFilePath(project.RootPath);
+        if (!File.Exists(jsonPath)) return;
+
+        try
+        {
+            string json = File.ReadAllText(jsonPath);
+            ProjectFileData? data = JsonSerializer.Deserialize<ProjectFileData>(json);
+            if (data is null) return;
+
+            data.LastOpenedScene = string.IsNullOrWhiteSpace(scenePath)
+                ? string.Empty
+                : Path.GetRelativePath(project.RootPath, scenePath);
+
+            File.WriteAllText(jsonPath, JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch (Exception ex) when (ex is JsonException or IOException)
+        {
+            // non-fatal — skip persisting
+        }
+    }
+
+    private static void EnsureEditorDirectories(EditorProject project)
+    {
+        Directory.CreateDirectory(project.ConfigPath);
+        Directory.CreateDirectory(project.LogsPath);
+        Directory.CreateDirectory(project.ScenesPath);
+        Directory.CreateDirectory(project.PrefabsPath);
     }
 
     private static void WriteProjectFile(EditorProject project)
@@ -170,16 +205,21 @@ public static class ProjectManager
             ? string.Empty
             : Path.GetRelativePath(project.RootPath, project.GameCsprojPath);
 
+        string solutionRelative = string.IsNullOrWhiteSpace(project.SolutionPath)
+            ? string.Empty
+            : Path.GetRelativePath(project.RootPath, project.SolutionPath);
+
+        string baseForPaths = string.IsNullOrWhiteSpace(project.GameSourcePath) ? project.RootPath : project.GameSourcePath;
+
         ProjectFileData data = new()
         {
             Name             = project.Name,
+            BaseNamespace    = project.BaseNamespace,
+            EngineVersion    = "3.8.4",
+            SolutionPath     = solutionRelative,
             GameCsprojPath   = gameCsprojRelative,
-            ContentPath      = Path.GetRelativePath(
-                                   string.IsNullOrWhiteSpace(project.GameSourcePath) ? project.RootPath : project.GameSourcePath,
-                                   project.ContentPath),
-            LocalizationPath = Path.GetRelativePath(
-                                   string.IsNullOrWhiteSpace(project.GameSourcePath) ? project.RootPath : project.GameSourcePath,
-                                   project.LocalizationPath),
+            ContentPath      = Path.GetRelativePath(baseForPaths, project.ContentPath),
+            LocalizationPath = Path.GetRelativePath(baseForPaths, project.LocalizationPath),
         };
 
         string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
@@ -231,15 +271,27 @@ public static class ProjectManager
         [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
 
-        [JsonPropertyName("version")]
-        public string Version { get; set; } = "1.0";
+        [JsonPropertyName("baseNamespace")]
+        public string BaseNamespace { get; set; } = string.Empty;
 
+        [JsonPropertyName("engineVersion")]
+        public string EngineVersion { get; set; } = "3.8.4";
+
+        [JsonPropertyName("solutionPath")]
+        public string SolutionPath { get; set; } = string.Empty;
+
+        [JsonPropertyName("lastOpenedScene")]
+        public string LastOpenedScene { get; set; } = string.Empty;
+
+        /// <summary>Kept for backward compatibility and optional configuration.</summary>
         [JsonPropertyName("gameCsprojPath")]
         public string GameCsprojPath { get; set; } = string.Empty;
 
+        /// <summary>Kept for backward compatibility and optional configuration.</summary>
         [JsonPropertyName("contentPath")]
         public string ContentPath { get; set; } = "Content";
 
+        /// <summary>Kept for backward compatibility and optional configuration.</summary>
         [JsonPropertyName("localizationPath")]
         public string LocalizationPath { get; set; } = "Localization";
     }

@@ -19,12 +19,6 @@ public sealed partial class NewProjectDialog : Form
     /// <summary>Absolute path to the game .csproj file selected by the user. Empty string if not chosen.</summary>
     public string GameCsprojPath => _csprojTextBox.Text.Trim();
 
-    /// <summary>Absolute path to the game Content folder. Empty string if not set.</summary>
-    public string ContentPath => _contentTextBox.Text.Trim();
-
-    /// <summary>Absolute path to the game Localization folder. Empty string if not set.</summary>
-    public string LocalizationPath => _localizationTextBox.Text.Trim();
-
     private void WireEvents()
     {
         _nameTextBox.TextChanged     += (_, _) => UpdatePreviewAndOk();
@@ -32,8 +26,6 @@ public sealed partial class NewProjectDialog : Form
         _csprojTextBox.TextChanged   += (_, _) => UpdatePreviewAndOk();
         _browseButton.Click          += OnBrowseClick;
         _browseCsprojButton.Click    += OnBrowseCsprojClick;
-        _browseContentButton.Click   += OnBrowseContentClick;
-        _browseLocalizationButton.Click += OnBrowseLocalizationClick;
         _okButton.Click              += (_, _) => { DialogResult = DialogResult.OK; Close(); };
         _cancelButton.Click          += (_, _) => { DialogResult = DialogResult.Cancel; Close(); };
 
@@ -46,9 +38,9 @@ public sealed partial class NewProjectDialog : Form
     {
         using FolderBrowserDialog dlg = new()
         {
-            Description          = "Select the parent folder for the new project",
+            Description            = "Select the parent folder for the new project",
             UseDescriptionForTitle = true,
-            InitialDirectory     = Directory.Exists(_locationTextBox.Text)
+            InitialDirectory       = Directory.Exists(_locationTextBox.Text)
                 ? _locationTextBox.Text
                 : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
         };
@@ -72,52 +64,7 @@ public sealed partial class NewProjectDialog : Form
             return;
 
         _csprojTextBox.Text = dlg.FileName;
-        AutoFillGamePaths(Path.GetDirectoryName(dlg.FileName)!);
-    }
-
-    private void OnBrowseContentClick(object? sender, EventArgs e)
-    {
-        using FolderBrowserDialog dlg = new()
-        {
-            Description          = "Select the Content folder",
-            UseDescriptionForTitle = true,
-            InitialDirectory     = Directory.Exists(_contentTextBox.Text)
-                ? _contentTextBox.Text
-                : GetCsprojDir(),
-        };
-
-        if (dlg.ShowDialog(this) == DialogResult.OK)
-            _contentTextBox.Text = dlg.SelectedPath;
-    }
-
-    private void OnBrowseLocalizationClick(object? sender, EventArgs e)
-    {
-        using FolderBrowserDialog dlg = new()
-        {
-            Description          = "Select the Localization folder",
-            UseDescriptionForTitle = true,
-            InitialDirectory     = Directory.Exists(_localizationTextBox.Text)
-                ? _localizationTextBox.Text
-                : GetCsprojDir(),
-        };
-
-        if (dlg.ShowDialog(this) == DialogResult.OK)
-            _localizationTextBox.Text = dlg.SelectedPath;
-    }
-
-    private void AutoFillGamePaths(string csprojDir)
-    {
-        _contentTextBox.Text      = Path.Combine(csprojDir, "Content");
-        _localizationTextBox.Text = Path.Combine(csprojDir, "Localization");
         UpdatePreviewAndOk();
-    }
-
-    private string GetCsprojDir()
-    {
-        string csproj = GameCsprojPath;
-        if (!string.IsNullOrWhiteSpace(csproj) && File.Exists(csproj))
-            return Path.GetDirectoryName(csproj)!;
-        return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     }
 
     private void UpdatePreviewAndOk()
@@ -150,7 +97,7 @@ public sealed partial class NewProjectDialog : Form
         string targetPath = Path.Combine(location, name);
         bool targetExists = Directory.Exists(targetPath);
         bool alreadyInitialized = targetExists
-            && File.Exists(Path.Combine(targetPath, "Editor", "project.json"));
+            && File.Exists(Path.Combine(targetPath, "project.json"));
 
         if (alreadyInitialized)
         {
