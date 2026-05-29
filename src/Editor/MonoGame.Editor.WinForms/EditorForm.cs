@@ -834,8 +834,18 @@ public sealed partial class EditorForm : Form
 
         try
         {
+            if (!string.IsNullOrEmpty(dlg.UpdatedGameCsprojPath))
+                ProjectManager.SaveGameCsprojPath(project, dlg.UpdatedGameCsprojPath);
+
             await _projectSettings.SaveAsync(project).ConfigureAwait(true);
             _consolePanel.AppendLine("[Settings] Project settings saved.");
+
+            if (!string.IsNullOrEmpty(dlg.UpdatedGameCsprojPath))
+            {
+                EditorProject? reloaded = ProjectManager.Load(project.RootPath);
+                if (reloaded is not null)
+                    _context.SetActiveProject(reloaded);
+            }
         }
         catch (Exception ex)
         {

@@ -6,6 +6,9 @@ public sealed partial class ProjectSettingsDialog : Form
     private readonly EditorProject _project = null!;
     private readonly ProjectSettings _settings = null!;
 
+    /// <summary>Updated game .csproj path after the user clicks OK. Empty string if unchanged or cleared.</summary>
+    public string UpdatedGameCsprojPath { get; private set; } = string.Empty;
+
     /// <summary>Designer-only constructor.</summary>
     public ProjectSettingsDialog() => InitializeComponent();
 
@@ -165,6 +168,10 @@ public sealed partial class ProjectSettingsDialog : Form
         string folder = _outputFolderBox.Text.Trim();
         _settings.GeneratedCodeFolder = folder.Length > 0 ? folder : "Generated";
         _settings.GenerateOnSave      = _generateOnSaveCheckBox.Checked;
+
+        string newCsproj = _csprojBox.Text.Trim();
+        if (!string.IsNullOrEmpty(newCsproj))
+            UpdatedGameCsprojPath = newCsproj;
 
         string defaultLocale = _defaultLocaleCombo.Text.Trim();
         _settings.DefaultLocale = defaultLocale.Length > 0 ? defaultLocale : "en-US";

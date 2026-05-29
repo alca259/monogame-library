@@ -163,6 +163,33 @@ public static class ProjectManager
         return project;
     }
 
+    /// <summary>Persists the game .csproj path to <c>project.json</c> if it is not already set.</summary>
+    public static void SaveGameCsprojPath(EditorProject project, string csprojPath)
+    {
+        ArgumentNullException.ThrowIfNull(project);
+
+        if (string.IsNullOrWhiteSpace(csprojPath)) return;
+
+        string jsonPath = GetProjectFilePath(project.RootPath);
+        if (!File.Exists(jsonPath)) return;
+
+        try
+        {
+            string json = File.ReadAllText(jsonPath);
+            ProjectFileData? data = JsonSerializer.Deserialize<ProjectFileData>(json);
+            if (data is null) return;
+
+            string relative = Path.GetRelativePath(project.RootPath, csprojPath);
+            data.GameCsprojPath = relative;
+
+            File.WriteAllText(jsonPath, JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch (Exception ex) when (ex is JsonException or IOException)
+        {
+            // non-fatal — skip persisting
+        }
+    }
+
     /// <summary>Persists the last opened scene path to <c>project.json</c>.</summary>
     public static void SaveLastOpenedScene(EditorProject project, string scenePath)
     {

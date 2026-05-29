@@ -10,12 +10,14 @@ public sealed class InspectorPanel : UserControl
 {
     #region Constants
 
-    private const int LabelWidth   = 72;
-    private const int RowHeight    = 26;
-    private const int SectionGap   = 6;
-    private const int SidePadding  = 6;
-    private const int NumericWidth = 68;
-    private const int HeaderHeight = 56;
+    private const int LabelWidth    = 72;
+    private const int RowHeight     = 26;
+    private const int LabelHeight   = 16;
+    private const int StackedRow    = LabelHeight + RowHeight;
+    private const int SectionGap    = 6;
+    private const int SidePadding   = 6;
+    private const int NumericWidth  = 68;
+    private const int HeaderHeight  = 56;
 
     #endregion
 
@@ -670,7 +672,7 @@ public sealed class InspectorPanel : UserControl
 
         // --- Body (properties) ---
         List<(string label, Control ctrl)> rows = BuildPropertyRows(behaviour, owner);
-        int bodyHeight = rows.Count * RowHeight + 8;
+        int bodyHeight = rows.Count * StackedRow + 8;
 
         Panel body = new Panel
         {
@@ -682,14 +684,16 @@ public sealed class InspectorPanel : UserControl
 
         for (int i = 0; i < rows.Count; i++)
         {
-            Label lbl = MakeLabel(rows[i].label);
-            lbl.Location  = new System.Drawing.Point(4, i * RowHeight + 2);
-            lbl.Width     = LabelWidth;
+            int rowY = i * StackedRow + 2;
+
+            Label lbl = MakeStackedLabel(rows[i].label);
+            lbl.Location = new System.Drawing.Point(4, rowY);
+            lbl.Width    = body.Width - 8;
             body.Controls.Add(lbl);
 
             Control ctrl = rows[i].ctrl;
-            ctrl.Location = new System.Drawing.Point(LabelWidth + 4, i * RowHeight + 2);
-            ctrl.Width    = body.Width - LabelWidth - 12;
+            ctrl.Location = new System.Drawing.Point(4, rowY + LabelHeight);
+            ctrl.Width    = body.Width - 8;
             body.Controls.Add(ctrl);
         }
 
@@ -764,6 +768,10 @@ public sealed class InspectorPanel : UserControl
             {
                 continue;
             }
+
+            // Enabled is always shown in the section header as "On" — skip it for all behaviours.
+            if (string.Equals(prop.Name, "Enabled", StringComparison.Ordinal))
+                continue;
 
             string label = attr?.Label ?? prop.Name;
             Control ctrl = CreateControlForProperty(prop, attr, behaviour, owner);
@@ -900,6 +908,58 @@ public sealed class InspectorPanel : UserControl
             return combo;
         }
 
+        if (pType == typeof(Microsoft.Xna.Framework.Color))
+        {
+            Microsoft.Xna.Framework.Color current = Microsoft.Xna.Framework.Color.White;
+            if (behaviour.Properties.TryGetValue(prop.Name, out JsonElement xnaColorEl)
+                && xnaColorEl.ValueKind == JsonValueKind.Object)
+            {
+                byte r = xnaColorEl.TryGetProperty("R", out JsonElement re) ? (byte)Math.Clamp(re.GetInt32(), 0, 255) : (byte)255;
+                byte g = xnaColorEl.TryGetProperty("G", out JsonElement ge) ? (byte)Math.Clamp(ge.GetInt32(), 0, 255) : (byte)255;
+                byte b = xnaColorEl.TryGetProperty("B", out JsonElement be) ? (byte)Math.Clamp(be.GetInt32(), 0, 255) : (byte)255;
+                byte a = xnaColorEl.TryGetProperty("A", out JsonElement ae) ? (byte)Math.Clamp(ae.GetInt32(), 0, 255) : (byte)255;
+                current = new Microsoft.Xna.Framework.Color(r, g, b, a);
+            }
+
+            Panel colorRow = new Panel { Height = RowHeight };
+            Panel swatch = new Panel
+            {
+                Dock        = DockStyle.Left,
+                Width       = 24,
+                Height      = 22,
+                BackColor   = System.Drawing.Color.FromArgb(current.A, current.R, current.G, current.B),
+                BorderStyle = BorderStyle.FixedSingle,
+            };
+            Button pickBtn = new Button { Text = "...", Dock = DockStyle.Fill };
+            pickBtn.Click += (_, _) =>
+            {
+                Microsoft.Xna.Framework.Color prev = current;
+                if (behaviour.Properties.TryGetValue(prop.Name, out JsonElement prevEl2)
+                    && prevEl2.ValueKind == JsonValueKind.Object)
+                {
+                    byte pr = prevEl2.TryGetProperty("R", out JsonElement pre) ? (byte)Math.Clamp(pre.GetInt32(), 0, 255) : (byte)255;
+                    byte pg = prevEl2.TryGetProperty("G", out JsonElement pge) ? (byte)Math.Clamp(pge.GetInt32(), 0, 255) : (byte)255;
+                    byte pb = prevEl2.TryGetProperty("B", out JsonElement pbe) ? (byte)Math.Clamp(pbe.GetInt32(), 0, 255) : (byte)255;
+                    byte pa = prevEl2.TryGetProperty("A", out JsonElement pae) ? (byte)Math.Clamp(pae.GetInt32(), 0, 255) : (byte)255;
+                    prev = new Microsoft.Xna.Framework.Color(pr, pg, pb, pa);
+                }
+
+                using RgbaColorPickerDialog dlg = new(prev);
+                if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+                Microsoft.Xna.Framework.Color chosen = dlg.SelectedColor;
+                swatch.BackColor = System.Drawing.Color.FromArgb(chosen.A, chosen.R, chosen.G, chosen.B);
+                string json = $"{{\"R\":{chosen.R},\"G\":{chosen.G},\"B\":{chosen.B},\"A\":{chosen.A}}}";
+                JsonElement prevJsonEl = behaviour.Properties.TryGetValue(prop.Name, out JsonElement pje) ? pje : default;
+                JsonElement newEl = JsonDocument.Parse(json).RootElement;
+                _context!.Commands.Execute(new SetPropertyCommand<JsonElement>(
+                    $"Set {prop.Name}", prevJsonEl, newEl, v => behaviour.Properties[prop.Name] = v));
+            };
+            colorRow.Controls.Add(pickBtn);
+            colorRow.Controls.Add(swatch);
+            return colorRow;
+        }
+
         if (pType == typeof(System.Drawing.Color))
         {
             System.Drawing.Color current = System.Drawing.Color.White;
@@ -1012,6 +1072,14 @@ public sealed class InspectorPanel : UserControl
         TextAlign = System.Drawing.ContentAlignment.MiddleRight,
         AutoSize  = false,
         Height    = RowHeight,
+    };
+
+    private static Label MakeStackedLabel(string text) => new Label
+    {
+        Text      = text,
+        TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+        AutoSize  = false,
+        Height    = LabelHeight,
     };
 
     private Panel MakeFloatControl(float value, float min, float max, Action<float> onChange, EditorPropertyAttribute? attr = null)
