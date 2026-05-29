@@ -7,21 +7,29 @@ El editor está compuesto por un formulario principal (`EditorForm`) y varios pa
 ## Layout general del formulario principal
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  MenuStrip (Archivo, Proyecto, Escena, Vista, Ayuda)    │
-│  ToolStrip (Play ▶ / Stop ⏹ + modos gizmo)              │
-├──────────────┬──────────────────────────┬───────────────┤
-│              │                          │               │
-│  Jerarquía  │     Viewport             │  Inspector    │
-│  de escena  │   (MonoGameControl)      │               │
-│             │                          │               │
-├──────────────┴──────────────────────────┴───────────────┤
-│  Assets │ Consola │ Escenas │ Localización │ Scripts │ UI Theme ...│
-│  (panel inferior con pestañas)                          │
-└─────────────────────────────────────────────────────────┘
-│  StatusStrip (estado del editor, info de posición)      │
-└─────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│  MenuStrip (Archivo, Proyecto, Escena, Vista, Ayuda)              │
+│  ToolStrip (Play ▶ / Stop ⏹ + modos gizmo)                        │
+├─────────────────┬───────────────────────────────┬─────────────────┤
+│                 │                               │                 │
+│  Jerarquía     │     Viewport                  │   Inspector     │
+│  de escena     │   (MonoGameControl)           │                 │
+│                 │                               ├─────────────────┤
+│                 │                               │  Material Ed.   │
+│                 │                               │  UI Theme Ed.   │
+│                 │                               │  (contextual)   │
+├─────────────────┴───────────────────────────────┴─────────────────┤
+│  Assets │ Consola │ Escenas │ Localización │ Input Map            │
+│  Tilemap Palette │ Undo History │ Scripts                         │
+│  Sprite Editor (contextual al seleccionar Texture/Sprite)         │
+├───────────────────────────────────────────────────────────────────┤
+│  StatusStrip (estado del editor, info de posición)                │
+└───────────────────────────────────────────────────────────────────┘
 ```
+
+> **Paneles contextuales del panel derecho** (`Material Editor`, `UI Theme Editor`): se muestran como pestañas adicionales debajo del Inspector únicamente cuando se selecciona un asset de tipo compatible en el Asset Browser.
+>
+> **Panel contextual del panel inferior** (`Sprite Editor`): aparece en el panel inferior solo al seleccionar un asset de tipo `Texture` o `Sprite`.
 
 ---
 
@@ -292,6 +300,97 @@ Panel especializado para edición de tilemaps importados desde archivos `.tmx` (
 - Aparece cuando se selecciona una entidad con un tilemap asociado.
 - Al recibir `TilemapLayerSelectedEvent` muestra los tiles de ese tileset.
 - Pintar un tile usa `PaintTileCommand`; borrar usa `EraseTileCommand`.
+
+---
+
+## Panel: Historial de deshacer (`UndoHistoryPanel`)
+
+Lista interactiva de todas las acciones realizadas en la sesión actual, organizada en dos bloques separados por un divisor.
+
+### Acceso
+
+Vista > **Undo History** (tab "Undo History" en el panel inferior).
+
+### Controles
+
+- **ListBox** con dibujado propio (`OwnerDraw`):
+  - Entradas de **deshacer** (bloque superior): nombre de cada comando ejecutado, en color normal.
+  - Separador `── redo ──` en gris cursiva (solo visible cuando hay entradas de rehacer).
+  - Entradas de **rehacer** (bloque inferior): comandos pendientes de rehacer, en azul claro.
+
+### Comportamiento
+
+- Se actualiza automáticamente al recibir `UndoPerformedEvent` o `RedoPerformedEvent`.
+- **Clic en una entrada de deshacer**: ejecuta `Undo()` tantas veces como sea necesario para alcanzar ese punto del historial.
+- **Clic en una entrada de rehacer**: ejecuta `Redo()` tantas veces como sea necesario.
+- El separador no es seleccionable.
+
+---
+
+## Panel: Inspector de sprites (`SpriteInspectorPanel`)
+
+Editor de metadatos nine-slice para assets de textura e imagen. Se activa automáticamente al seleccionar un asset de tipo `Texture` o `Sprite` en el Asset Browser.
+
+### Acceso
+
+Se muestra como tab "Sprite Editor" en el panel inferior únicamente cuando hay un asset compatible seleccionado. No tiene entrada propia en el menú Vista.
+
+### Controles
+
+- **Título**: nombre del asset activo.
+- **Vista previa** (`PictureBox` 200×200, modo Zoom): muestra la imagen del asset.
+- **Border Left / Right / Top / Bottom**: cuatro `NumericUpDown` (rango 0–512 px) que definen los insets del nine-slice.
+- **Tile edges**: checkbox para activar el tileado de los bordes en lugar de estirarlos.
+- **Tile center**: checkbox para activar el tileado del centro en lugar de estirarlo.
+- **Botón "Save .sprite.json"**: serializa los valores a JSON y los guarda junto a la textura (mismo directorio, mismo nombre base con extensión `.sprite.json`).
+
+### Comportamiento
+
+- Suscribe `AssetSelectedEvent`. Si el asset seleccionado no es `Texture` ni `Sprite`, oculta todos los controles y muestra el mensaje *"Select a texture or sprite asset to edit its 9-slice borders."*.
+- Al cargar un asset existente, busca el `.sprite.json` asociado y carga los valores almacenados; si no existe, parte de valores cero.
+- El panel no guarda automáticamente al editar — el usuario debe pulsar **Save** explícitamente.
+
+---
+
+## Panel: Inspector de materiales (`MaterialInspectorPanel`)
+
+Inspector estilo Unity para archivos de material (`.mat.json`). Se activa automáticamente al seleccionar un asset de tipo `Material` en el Asset Browser.
+
+### Acceso
+
+Se muestra como tab "Material Editor" en el **TabControl del panel derecho** (debajo del Inspector), únicamente cuando hay un material seleccionado. No tiene entrada propia en el menú Vista.
+
+### Controles
+
+**Cabecera** (siempre visible cuando hay material cargado):
+
+- **Título**: nombre del material.
+- **Shader**: desplegable con los shaders disponibles (`StandardEffect`, `SpriteTint`, `Grayscale`, `Vignette` y otros personalizados). Cambiar el shader reconstruye el área de propiedades.
+- **Rendering Mode**: desplegable (`Opaque`, `Cutout`, `Fade`, `Transparent`).
+
+**Área de propiedades** (reconstruida según el shader activo):
+
+Para el shader `StandardEffect`, se muestran dos secciones organizadas:
+
+| Sección | Propiedades |
+|---------|-------------|
+| **Main Maps** | Albedo (textura + swatch de color), Metallic (textura + slider), Smoothness (slider), Normal Map (textura + escala), Height Map (textura + escala), Occlusion (textura), Emission (textura + color + intensidad), Detail Mask (textura), Tiling/Offset (X,Y) |
+| **Secondary Maps** | Detail Albedo ×2 (textura), Normal Map (textura + escala), DetailTiling/Offset (X,Y), UV Set |
+
+Para shaders personalizados, se muestra una lista genérica de propiedades tipadas (`float`, `Color`, `Texture2D`, `Vector2`, `Vector3`, `Vector4`).
+
+**Área de vista previa** (parte inferior):
+
+- `PictureBox` 256×256 para la imagen de previsualización generada.
+- Botón **▶ Render**: solicita una renderización de vista previa al hilo de renderizado.
+- Botón **Save .mat.json**: serializa el material a JSON y lo guarda en el archivo del asset.
+
+### Comportamiento
+
+- Suscribe `AssetSelectedEvent`. Si el asset seleccionado no es `Material`, oculta todos los controles y muestra el mensaje *"Select a .mat.json file to edit it."*.
+- Al cargar un material existente, deserializa el JSON con `System.Text.Json`; si el archivo no existe o está malformado, arranca con `EditorMaterial.CreateEmpty()`.
+- Al seleccionar una textura en cualquier fila de mapa, activa automáticamente el flag `HasXXXMap` correspondiente en las propiedades del material.
+- El panel no guarda automáticamente al editar — el usuario debe pulsar **Save .mat.json** explícitamente.
 
 ---
 

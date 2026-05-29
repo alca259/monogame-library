@@ -105,6 +105,11 @@
 | Scene Manager | Mostrar/ocultar panel de gestión de escenas |
 | Localization | Mostrar/ocultar panel de localización |
 | Input Map Editor | Mostrar/ocultar panel de editor de input maps |
+| Tilemap Palette | Mostrar/ocultar panel de paleta de tilemaps |
+| Undo History | Mostrar/ocultar panel de historial de deshacer |
+| Scripts | Mostrar/ocultar explorador de scripts |
+| *(separador)* | — |
+| Reset Layout | Restaura la disposición y visibilidad de paneles por defecto |
 
 ---
 
