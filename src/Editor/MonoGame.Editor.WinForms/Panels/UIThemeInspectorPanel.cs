@@ -6,9 +6,9 @@ using MonoGame.Editor.Core.Models;
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>
-/// Displays and edits a UI theme asset (.uitheme.json).
-/// Shows NineSlice texture paths and border insets for each supported control type.
-/// Activated automatically when a <see cref="AssetType.UITheme"/> asset is selected.
+/// Muestra y edita un asset de tema de interfaz (.uitheme.json).
+/// Muestra las rutas de textura NineSlice y los márgenes de borde para cada tipo de control compatible.
+/// Se activa automáticamente cuando se selecciona un asset de tipo <see cref="AssetType.UITheme"/>.
 /// </summary>
 public sealed class UIThemeInspectorPanel : UserControl
 {
@@ -54,7 +54,7 @@ public sealed class UIThemeInspectorPanel : UserControl
 
     #region Constructor
 
-    /// <summary>Creates the panel. Call <see cref="Initialize"/> to connect to the editor context.</summary>
+    /// <summary>Crea el panel. Llama a <see cref="Initialize"/> para conectar con el contexto del editor.</summary>
     public UIThemeInspectorPanel()
     {
         _scroll = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
@@ -91,7 +91,7 @@ public sealed class UIThemeInspectorPanel : UserControl
 
     #region Initialization
 
-    /// <summary>Connects this panel to the editor context.</summary>
+    /// <summary>Conecta este panel con el contexto del editor.</summary>
     public void Initialize(EditorContext context)
     {
         _context = context;
@@ -172,7 +172,7 @@ public sealed class UIThemeInspectorPanel : UserControl
         int y = startY;
         int w = ClientSize.Width - SidePad * 2 - SystemInformation.VerticalScrollBarWidth;
 
-        // Section header
+        // Encabezado de sección
         Panel header = new Panel
         {
             Location  = new System.Drawing.Point(SidePad, y),
@@ -192,11 +192,11 @@ public sealed class UIThemeInspectorPanel : UserControl
         _scroll.Controls.Add(header);
         y += 24;
 
-        // Texture path row
+        // Fila de ruta de textura
         TextBox texBox = new TextBox();
         y = AddRow(_scroll, "Texture", y, w, BuildTextureRow(entry, texBox));
 
-        // Border rows
+        // Filas de borde
         NumericUpDown nLeft   = CreateBorderInput(entry.BorderLeft);
         NumericUpDown nRight  = CreateBorderInput(entry.BorderRight);
         NumericUpDown nTop    = CreateBorderInput(entry.BorderTop);
@@ -340,7 +340,7 @@ public sealed class UIThemeInspectorPanel : UserControl
                 string json = File.ReadAllText(path);
                 return JsonSerializer.Deserialize<EditorUITheme>(json) ?? EditorUITheme.CreateEmpty();
             }
-            catch { /* fall through */ }
+            catch { /* continuar */ }
         }
 
         return EditorUITheme.CreateEmpty();

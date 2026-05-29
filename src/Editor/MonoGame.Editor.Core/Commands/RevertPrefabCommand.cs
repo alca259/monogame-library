@@ -1,8 +1,8 @@
 namespace MonoGame.Editor.Core.Commands;
 
 /// <summary>
-/// Reverts a <see cref="EditorGameObject"/> instance to the definition stored in its prefab file,
-/// discarding any local overrides.
+/// Revierte una instancia de <see cref="EditorGameObject"/> a la definición almacenada en su archivo de prefab,
+/// descartando cualquier sobreescritura local.
 /// </summary>
 public sealed class RevertPrefabCommand : IEditorCommand
 {
@@ -11,9 +11,9 @@ public sealed class RevertPrefabCommand : IEditorCommand
     private readonly IPrefabProvider _provider;
     private EditorGameObject? _snapshotBeforeRevert;
 
-    /// <param name="instance">Instance to revert.</param>
-    /// <param name="prefabPath">Path to the source <c>.prefab.json</c> file.</param>
-    /// <param name="provider">Provider used to load prefab data.</param>
+    /// <param name="instance">Instancia a revertir.</param>
+    /// <param name="prefabPath">Ruta al archivo <c>.prefab.json</c> fuente.</param>
+    /// <param name="provider">Proveedor utilizado para cargar datos de prefab.</param>
     public RevertPrefabCommand(EditorGameObject instance, string prefabPath, IPrefabProvider provider)
     {
         _instance = instance;
@@ -27,7 +27,7 @@ public sealed class RevertPrefabCommand : IEditorCommand
     /// <inheritdoc/>
     public void Execute()
     {
-        // Snapshot the instance state BEFORE applying prefab data so Undo can restore it.
+        // Tomar instantánea del estado de la instancia ANTES de aplicar los datos del prefab para que Deshacer pueda restaurarlos.
         _snapshotBeforeRevert = new EditorGameObject
         {
             Name = _instance.Name,

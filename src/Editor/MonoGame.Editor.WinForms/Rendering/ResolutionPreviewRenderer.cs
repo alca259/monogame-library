@@ -3,9 +3,9 @@ using XnaColor = Microsoft.Xna.Framework.Color;
 namespace MonoGame.Editor.WinForms.Rendering;
 
 /// <summary>
-/// Draws pillarbox/letterbox bars over the viewport to visualise the game's virtual resolution
-/// relative to the current editor viewport size.
-/// Uses screen-space rendering (no camera transform).
+/// Dibuja barras de pillarbox/letterbox sobre el viewport para visualizar la resolución virtual del juego
+/// en relación con el tamaño actual del viewport del editor.
+/// Usa renderizado en espacio de pantalla (sin transformación de cámara).
 /// </summary>
 public sealed class ResolutionPreviewRenderer : IDisposable
 {
@@ -15,10 +15,10 @@ public sealed class ResolutionPreviewRenderer : IDisposable
     private SpriteBatch? _spriteBatch;
     private Texture2D?   _pixel;
 
-    /// <summary>Returns <c>true</c> once <see cref="Initialize"/> has been called.</summary>
+    /// <summary>Devuelve <c>true</c> una vez que se ha llamado a <see cref="Initialize"/>.</summary>
     public bool IsInitialized => _spriteBatch != null;
 
-    /// <summary>Allocates GPU resources. Must be called from the render thread.</summary>
+    /// <summary>Reserva recursos de GPU. Debe llamarse desde el hilo de renderizado.</summary>
     public void Initialize(GraphicsDevice gd)
     {
         _spriteBatch = new SpriteBatch(gd);
@@ -27,8 +27,8 @@ public sealed class ResolutionPreviewRenderer : IDisposable
     }
 
     /// <summary>
-    /// Draws letterbox/pillarbox bars and a border for the virtual resolution area.
-    /// No-op when <see cref="IsInitialized"/> is false or virtual dimensions are zero.
+    /// Dibuja las barras de letterbox/pillarbox y un borde para el área de resolución virtual.
+    /// No hace nada cuando <see cref="IsInitialized"/> es false o las dimensiones virtuales son cero.
     /// </summary>
     public void Draw(int virtualWidth, int virtualHeight, int viewportWidth, int viewportHeight)
     {
@@ -42,7 +42,7 @@ public sealed class ResolutionPreviewRenderer : IDisposable
         int drawW, drawH, offsetX, offsetY;
         if (viewportAspect >= virtualAspect)
         {
-            // Wider viewport → pillarbox (vertical bars on sides)
+            // Viewport más ancho → pillarbox (barras verticales a los lados)
             drawH   = viewportHeight;
             drawW   = (int)MathF.Round(viewportHeight * virtualAspect);
             offsetX = (viewportWidth - drawW) / 2;
@@ -50,7 +50,7 @@ public sealed class ResolutionPreviewRenderer : IDisposable
         }
         else
         {
-            // Taller viewport → letterbox (horizontal bars top/bottom)
+            // Viewport más alto → letterbox (barras horizontales arriba/abajo)
             drawW   = viewportWidth;
             drawH   = (int)MathF.Round(viewportWidth / virtualAspect);
             offsetX = 0;
@@ -59,23 +59,23 @@ public sealed class ResolutionPreviewRenderer : IDisposable
 
         _spriteBatch.Begin();
 
-        // Left bar
+        // Barra izquierda
         if (offsetX > 0)
             FillRect(0, 0, offsetX, viewportHeight, BarColor);
 
-        // Right bar
+        // Barra derecha
         if (offsetX > 0)
             FillRect(offsetX + drawW, 0, viewportWidth - offsetX - drawW, viewportHeight, BarColor);
 
-        // Top bar
+        // Barra superior
         if (offsetY > 0)
             FillRect(0, 0, viewportWidth, offsetY, BarColor);
 
-        // Bottom bar
+        // Barra inferior
         if (offsetY > 0)
             FillRect(0, offsetY + drawH, viewportWidth, viewportHeight - offsetY - drawH, BarColor);
 
-        // Border outline around the virtual area
+        // Contorno del borde alrededor del área virtual
         const int BorderThickness = 1;
         FillRect(offsetX,                  offsetY,                  drawW,            BorderThickness, BorderColor);
         FillRect(offsetX,                  offsetY + drawH - 1,      drawW,            BorderThickness, BorderColor);

@@ -1,6 +1,6 @@
 namespace MonoGame.Editor.WinForms.Panels;
 
-/// <summary>Panel for editing localization files (<c>*.json</c>) under a project's LocalizationPath.</summary>
+/// <summary>Panel para editar archivos de localización (<c>*.json</c>) bajo la ruta LocalizationPath del proyecto.</summary>
 public sealed class LocalizationBrowserPanel : UserControl
 {
     private EditorContext? _context;
@@ -8,11 +8,11 @@ public sealed class LocalizationBrowserPanel : UserControl
     private string _localizationRoot        = string.Empty;
     private string _currentLocalizationPath = string.Empty;
 
-    // ── Folder tree ──────────────────────────────────────────────────────
+    // ── Árbol de carpetas ────────────────────────────────────────────────
     private readonly SplitContainer _mainSplit;
     private readonly TreeView       _folderTree;
 
-    // ── Top toolbar ──────────────────────────────────────────────────────
+    // ── Barra de herramientas superior ───────────────────────────────────
     private readonly ToolStrip _toolStrip;
     private readonly ToolStripButton _addKeyButton;
     private readonly ToolStripButton _removeKeyButton;
@@ -24,18 +24,18 @@ public sealed class LocalizationBrowserPanel : UserControl
     private readonly ToolStripSeparator _toolSep3;
     private readonly ToolStripButton _saveButton;
 
-    // ── Filter ───────────────────────────────────────────────────────────
+    // ── Filtro ───────────────────────────────────────────────────────────
     private readonly TextBox _filterBox;
 
-    // ── Grid ─────────────────────────────────────────────────────────────
+    // ── Cuadrícula ───────────────────────────────────────────────────────
     private readonly DataGridView _grid;
 
-    // ── Status ───────────────────────────────────────────────────────────
+    // ── Estado ───────────────────────────────────────────────────────────
     private readonly Label _statusLabel;
 
     private string _activeFilter = string.Empty;
 
-    /// <summary>Initializes the panel layout.</summary>
+    /// <summary>Inicializa el diseño del panel.</summary>
     public LocalizationBrowserPanel()
     {
         _mainSplit        = new SplitContainer();
@@ -158,7 +158,7 @@ public sealed class LocalizationBrowserPanel : UserControl
         _folderTree.Name          = "_folderTree";
         _folderTree.AfterSelect  += OnFolderSelected;
 
-        // _mainSplit — Panel1: folder tree | Panel2: editor
+        // _mainSplit — Panel1: árbol de carpetas | Panel2: editor
         _mainSplit.Dock             = DockStyle.Fill;
         _mainSplit.Orientation      = Orientation.Vertical;
         _mainSplit.SplitterDistance = 180;
@@ -184,7 +184,7 @@ public sealed class LocalizationBrowserPanel : UserControl
         PerformLayout();
     }
 
-    /// <summary>Wires event-bus subscriptions and injects the editor context.</summary>
+    /// <summary>Conecta las suscripciones al bus de eventos e inyecta el contexto del editor.</summary>
     public void Initialize(EditorContext context)
     {
         _context = context;
@@ -303,7 +303,7 @@ public sealed class LocalizationBrowserPanel : UserControl
             return;
         }
 
-        // Key column (read-only)
+        // Columna de clave (solo lectura)
         DataGridViewTextBoxColumn keyCol = new()
         {
             Name         = "Key",
@@ -315,7 +315,7 @@ public sealed class LocalizationBrowserPanel : UserControl
         keyCol.DefaultCellStyle.BackColor = System.Drawing.SystemColors.ControlLight;
         _grid.Columns.Add(keyCol);
 
-        // One editable column per locale
+        // Una columna editable por idioma
         for (int i = 0; i < _model.Locales.Count; i++)
         {
             string locale = _model.Locales[i];
@@ -329,7 +329,7 @@ public sealed class LocalizationBrowserPanel : UserControl
             _grid.Columns.Add(localeCol);
         }
 
-        // Rows — one per key
+        // Filas — una por clave
         for (int r = 0; r < _model.Keys.Count; r++)
         {
             string key = _model.Keys[r];
@@ -479,7 +479,7 @@ public sealed class LocalizationBrowserPanel : UserControl
         {
             System.Text.StringBuilder sb = new();
 
-            // Header
+            // Encabezado
             sb.Append("Key");
             for (int i = 0; i < _model.Locales.Count; i++)
             {
@@ -488,7 +488,7 @@ public sealed class LocalizationBrowserPanel : UserControl
             }
             sb.AppendLine();
 
-            // Rows
+            // Filas
             for (int r = 0; r < _model.Keys.Count; r++)
             {
                 string key = _model.Keys[r];

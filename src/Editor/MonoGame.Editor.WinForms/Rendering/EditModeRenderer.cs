@@ -3,9 +3,9 @@ using XnaColor = Microsoft.Xna.Framework.Color;
 namespace MonoGame.Editor.WinForms.Rendering;
 
 /// <summary>
-/// Renders a lightweight preview of scene objects (via SpriteRendererBehaviour sprite paths)
-/// directly in the editor viewport without requiring Play mode to be active.
-/// Textures are loaded from raw image files and cached until the project changes.
+/// Renderiza una previsualización ligera de los objetos de la escena (mediante rutas de sprite de SpriteRendererBehaviour)
+/// directamente en el viewport del editor sin necesidad de activar el modo Play.
+/// Las texturas se cargan desde archivos de imagen sin procesar y se almacenan en caché hasta que cambia el proyecto.
 /// </summary>
 public sealed class EditModeRenderer : IDisposable
 {
@@ -17,10 +17,10 @@ public sealed class EditModeRenderer : IDisposable
 
     private readonly Dictionary<string, Texture2D> _textureCache = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>Returns <c>true</c> once <see cref="Initialize"/> has been called from the render thread.</summary>
+    /// <summary>Devuelve <c>true</c> una vez que se ha llamado a <see cref="Initialize"/> desde el hilo de renderizado.</summary>
     public bool IsInitialized => _spriteBatch is not null && _placeholder is not null;
 
-    /// <summary>Creates the renderer bound to the given editor context.</summary>
+    /// <summary>Crea el renderer asociado al contexto del editor indicado.</summary>
     public EditModeRenderer(EditorContext context)
     {
         _context = context;
@@ -28,8 +28,8 @@ public sealed class EditModeRenderer : IDisposable
     }
 
     /// <summary>
-    /// Allocates GPU resources. Must be called from the render thread (MonoGameControl render loop)
-    /// before <see cref="DrawScene"/>.
+    /// Reserva recursos de GPU. Debe llamarse desde el hilo de renderizado (bucle de renderizado de MonoGameControl)
+    /// antes de <see cref="DrawScene"/>.
     /// </summary>
     public void Initialize(GraphicsDevice gd)
     {
@@ -38,7 +38,7 @@ public sealed class EditModeRenderer : IDisposable
 
         _spriteBatch = new SpriteBatch(gd);
 
-        // 16×16 magenta placeholder so objects are visible even without a sprite assigned.
+        // Marcador de posición magenta de 16×16 para que los objetos sean visibles incluso sin sprite asignado.
         _placeholder = new Texture2D(gd, 16, 16);
         XnaColor[] magenta = new XnaColor[16 * 16];
         for (int i = 0; i < magenta.Length; i++) magenta[i] = XnaColor.Magenta;
@@ -46,9 +46,9 @@ public sealed class EditModeRenderer : IDisposable
     }
 
     /// <summary>
-    /// Draws all objects in <paramref name="scene"/> that carry a SpriteRendererBehaviour
-    /// using the camera transform for world→screen mapping.
-    /// Must be called from the render thread outside any active SpriteBatch pass.
+    /// Dibuja todos los objetos de <paramref name="scene"/> que tienen un SpriteRendererBehaviour
+    /// usando la transformación de cámara para el mapeo mundo→pantalla.
+    /// Debe llamarse desde el hilo de renderizado fuera de cualquier pasada activa de SpriteBatch.
     /// </summary>
     public void DrawScene(EditorScene scene, Matrix cameraTransform)
     {
@@ -68,13 +68,13 @@ public sealed class EditModeRenderer : IDisposable
             began = true;
             DrawObjectList(scene.RootGameObjects, gd);
         }
-        catch { /* ignore per-object draw errors */ }
+        catch { /* ignorar errores de dibujo por objeto */ }
         finally
         {
             if (began)
             {
                 try { _spriteBatch.End(); }
-                catch { /* ignore end-pass errors */ }
+                catch { /* ignorar errores al finalizar la pasada */ }
             }
         }
     }
@@ -90,7 +90,7 @@ public sealed class EditModeRenderer : IDisposable
         _spriteBatch = null;
     }
 
-    // ── Private helpers ──────────────────────────────────────────────────────
+    // ── Auxiliares privados ──────────────────────────────────────────────────────
 
     private void DrawObjectList(List<EditorGameObject> objects, GraphicsDevice gd)
     {
@@ -140,7 +140,7 @@ public sealed class EditModeRenderer : IDisposable
         if (string.IsNullOrEmpty(contentRoot))
             return _placeholder!;
 
-        // Try the path as-is, then with common image extensions.
+        // Probar la ruta tal cual, luego con extensiones de imagen comunes.
         string[] candidates =
         [
             Path.IsPathRooted(spritePath) ? spritePath : Path.Combine(contentRoot, spritePath),
@@ -162,7 +162,7 @@ public sealed class EditModeRenderer : IDisposable
             catch { }
         }
 
-        _textureCache[spritePath] = _placeholder!;   // cache miss → avoid repeated file IO
+        _textureCache[spritePath] = _placeholder!;   // fallo de caché → evitar IO de archivo repetido
         return _placeholder!;
     }
 

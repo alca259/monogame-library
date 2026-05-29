@@ -1,14 +1,14 @@
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Detaches a <see cref="EditorBehaviour"/> from a <see cref="EditorGameObject"/>.</summary>
+/// <summary>Desconecta un <see cref="EditorBehaviour"/> de un <see cref="EditorGameObject"/>.</summary>
 public sealed class RemoveBehaviourCommand : IEditorCommand
 {
     private readonly EditorGameObject _target;
     private readonly EditorBehaviour _behaviour;
     private int _previousIndex;
 
-    /// <param name="target">Object that owns the behaviour.</param>
-    /// <param name="behaviour">Behaviour to remove.</param>
+    /// <param name="target">Objeto propietario del behaviour.</param>
+    /// <param name="behaviour">Behaviour a eliminar.</param>
     public RemoveBehaviourCommand(EditorGameObject target, EditorBehaviour behaviour)
     {
         _target = target;

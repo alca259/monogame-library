@@ -1,10 +1,10 @@
 namespace MonoGame.Editor.WinForms.Dialogs;
 
 /// <summary>
-/// Modal dialog that lets the user pick a <c>GameBehaviour</c> subclass from
-/// the <see cref="GameObjectRegistry"/> to attach to a game object.
-/// Types are grouped by namespace in a <see cref="TreeView"/>. A "Create New..." button
-/// opens <see cref="NewBehaviourDialog"/> to scaffold a new behaviour.
+/// Diálogo modal que permite al usuario seleccionar una subclase de <c>GameBehaviour</c> del
+/// <see cref="GameObjectRegistry"/> para adjuntarla a un objeto del juego.
+/// Los tipos se agrupan por espacio de nombres en un <see cref="TreeView"/>. Un botón "Create New..."
+/// abre <see cref="NewBehaviourDialog"/> para crear un nuevo behaviour.
 /// </summary>
 public sealed class AddBehaviourDialog : Form
 {
@@ -17,13 +17,13 @@ public sealed class AddBehaviourDialog : Form
     private readonly EditorProject?   _project;
     private readonly GameObjectRegistry _registry;
 
-    // Flat list of (namespace, shortName, fullName) for rebuild
+    // Lista plana de (espacio de nombres, nombre corto, nombre completo) para reconstrucción
     private readonly List<(string Ns, string Short, string Full)> _allTypes = [];
 
-    /// <summary>Full type name selected by the user, or <c>null</c> if cancelled.</summary>
+    /// <summary>Nombre completo del tipo seleccionado por el usuario, o <c>null</c> si se canceló.</summary>
     public string? SelectedTypeName { get; private set; }
 
-    /// <summary>Creates a new dialog populated from <paramref name="registry"/>.</summary>
+    /// <summary>Crea un nuevo diálogo poblado desde <paramref name="registry"/>.</summary>
     public AddBehaviourDialog(GameObjectRegistry registry, EditorProject? project = null)
     {
         _registry = registry;
@@ -104,7 +104,7 @@ public sealed class AddBehaviourDialog : Form
         Controls.Add(_okButton);
         Controls.Add(_cancelButton);
 
-        // Populate data
+        // Poblar datos
         foreach (KeyValuePair<string, Type> kv in registry.RegisteredTypes)
         {
             string full  = kv.Key;
@@ -144,11 +144,11 @@ public sealed class AddBehaviourDialog : Form
         using NewBehaviourDialog dlg = new(gameSourcePath, projectRootPath, defaultNs);
         if (dlg.ShowDialog(this) != DialogResult.OK) return;
 
-        // Re-scan all source under root so the new .cs file is picked up as a pending type.
+        // Reescanear todo el código fuente bajo la raíz para que el nuevo archivo .cs sea detectado como tipo pendiente.
         if (!string.IsNullOrEmpty(projectRootPath))
             await _registry.ScanSourceAsync(projectRootPath).ConfigureAwait(true);
 
-        // Rebuild the types list with both compiled and pending types.
+        // Reconstruir la lista de tipos con los tipos compilados y pendientes.
         _allTypes.Clear();
         foreach (KeyValuePair<string, Type> kv in _registry.RegisteredTypes)
         {
@@ -180,7 +180,7 @@ public sealed class AddBehaviourDialog : Form
             _registry.Scan();
             string rootPath = _project?.RootPath ?? string.Empty;
 
-            // Scan all source under root — covers game projects, libs, GameScripts, etc.
+            // Escanear todo el código fuente bajo la raíz — cubre proyectos de juego, librerías, GameScripts, etc.
             if (!string.IsNullOrEmpty(rootPath))
                 await _registry.ScanSourceAsync(rootPath).ConfigureAwait(true);
 

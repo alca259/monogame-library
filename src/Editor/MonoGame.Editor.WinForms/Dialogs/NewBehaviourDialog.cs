@@ -3,8 +3,8 @@ using System.Text.RegularExpressions;
 namespace MonoGame.Editor.WinForms.Dialogs;
 
 /// <summary>
-/// Modal dialog that lets the user scaffold a new <c>GameBehaviour</c> subclass.
-/// Accessible from InspectorPanel (Add Behaviour → Create New...) and from Project menu.
+/// Diálogo modal que permite al usuario crear una nueva subclase de <c>GameBehaviour</c>.
+/// Accesible desde InspectorPanel (Añadir Behaviour → Crear Nuevo...) y desde el menú Proyecto.
 /// </summary>
 public sealed class NewBehaviourDialog : Form
 {
@@ -23,16 +23,16 @@ public sealed class NewBehaviourDialog : Form
     private readonly string _gameSourcePath;
     private readonly string _projectRootPath;
 
-    /// <summary>The validated class name entered by the user.</summary>
+    /// <summary>Nombre de clase validado introducido por el usuario.</summary>
     public string ClassName => _classNameBox.Text.Trim();
 
-    /// <summary>The namespace selected or typed by the user.</summary>
+    /// <summary>Espacio de nombres seleccionado o escrito por el usuario.</summary>
     public string NamespaceName => _namespaceBox.Text.Trim();
 
-    /// <summary>Relative subfolder (relative to GameSourcePath).</summary>
+    /// <summary>Subcarpeta relativa (relativa a GameSourcePath).</summary>
     public string RelativeFolder => _subfolderBox.Text.Trim();
 
-    /// <summary>Lifecycle methods chosen to override.</summary>
+    /// <summary>Métodos de ciclo de vida seleccionados para sobrescribir.</summary>
     public IReadOnlyList<string> SelectedMethods
     {
         get
@@ -44,7 +44,7 @@ public sealed class NewBehaviourDialog : Form
         }
     }
 
-    /// <summary>Creates the dialog, optionally pre-populating known namespaces.</summary>
+    /// <summary>Crea el diálogo, opcionalmente rellenando los espacios de nombres conocidos.</summary>
     public NewBehaviourDialog(string gameSourcePath = "", string projectRootPath = "",
         string defaultNamespace = "", IEnumerable<string>? knownNamespaces = null)
     {
@@ -59,7 +59,7 @@ public sealed class NewBehaviourDialog : Form
         MinimizeBox     = false;
         Font            = new System.Drawing.Font("Segoe UI", 9f);
 
-        // Layout
+        // Diseño
         TableLayoutPanel layout = new()
         {
             Dock        = DockStyle.Fill,
@@ -71,16 +71,16 @@ public sealed class NewBehaviourDialog : Form
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
         for (int i = 0; i < 5; i++)
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32f));
-        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));      // methods list
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 38f)); // buttons
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));      // lista de métodos
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 38f)); // botones
 
-        // Row 0 — Class name
+        // Fila 0 — Nombre de clase
         layout.Controls.Add(MakeLabel("Class name:"), 0, 0);
         _classNameBox = new TextBox { Dock = DockStyle.Fill };
         _classNameBox.TextChanged += (_, _) => UpdateValidation();
         layout.Controls.Add(_classNameBox, 1, 0);
 
-        // Row 1 — Namespace
+        // Fila 1 — Espacio de nombres
         layout.Controls.Add(MakeLabel("Namespace:"), 0, 1);
         _namespaceBox = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDown };
         if (knownNamespaces is not null)
@@ -92,7 +92,7 @@ public sealed class NewBehaviourDialog : Form
             _namespaceBox.Text = defaultNamespace;
         layout.Controls.Add(_namespaceBox, 1, 1);
 
-        // Row 2 — Subfolder
+        // Fila 2 — Subcarpeta
         layout.Controls.Add(MakeLabel("Subfolder:"), 0, 2);
         Panel subfolderRow = new() { Dock = DockStyle.Fill };
         _subfolderBox = new TextBox
@@ -111,7 +111,7 @@ public sealed class NewBehaviourDialog : Form
         subfolderRow.Controls.Add(_browseFolderButton);
         layout.Controls.Add(subfolderRow, 1, 2);
 
-        // Row 3 — Validation label
+        // Fila 3 — Etiqueta de validación
         _validationLabel = new Label
         {
             Dock      = DockStyle.Fill,
@@ -121,11 +121,11 @@ public sealed class NewBehaviourDialog : Form
         layout.SetColumnSpan(_validationLabel, 2);
         layout.Controls.Add(_validationLabel, 0, 3);
 
-        // Row 4 — Methods header
+        // Fila 4 — Encabezado de métodos
         Label methodsLabel = MakeLabel("Override:");
         layout.Controls.Add(methodsLabel, 0, 4);
 
-        // Row 5 — Methods list
+        // Fila 5 — Lista de métodos
         _methodsList = new CheckedListBox
         {
             Dock         = DockStyle.Fill,
@@ -136,7 +136,7 @@ public sealed class NewBehaviourDialog : Form
         layout.SetColumnSpan(_methodsList, 2);
         layout.Controls.Add(_methodsList, 0, 5);
 
-        // Row 6 — Buttons
+        // Fila 6 — Botones
         FlowLayoutPanel buttons = new()
         {
             Dock          = DockStyle.Fill,
@@ -179,7 +179,7 @@ public sealed class NewBehaviourDialog : Form
 
         if (dlg.ShowDialog(this) != DialogResult.OK) return;
 
-        // Validate the chosen folder is inside the project root.
+        // Valida que la carpeta elegida esté dentro del directorio del proyecto.
         string root = string.IsNullOrEmpty(_projectRootPath) ? _gameSourcePath : _projectRootPath;
         if (!string.IsNullOrEmpty(root))
         {

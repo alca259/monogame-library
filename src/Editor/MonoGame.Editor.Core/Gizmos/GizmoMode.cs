@@ -1,20 +1,20 @@
 namespace MonoGame.Editor.Core.Gizmos;
 
-/// <summary>Active transform tool in the editor viewport.</summary>
+/// <summary>Herramienta de transformación activa en el viewport del editor.</summary>
 public enum GizmoMode
 {
-    /// <summary>Selection only; no transform handles visible.</summary>
+    /// <summary>Solo selección; sin manijas de transformación visibles.</summary>
     Select,
 
-    /// <summary>Translate the selected object along one or both axes.</summary>
+    /// <summary>Traslada el objeto seleccionado a lo largo de uno o ambos ejes.</summary>
     Move,
 
-    /// <summary>Rotate the selected object around its pivot.</summary>
+    /// <summary>Rota el objeto seleccionado alrededor de su pivote.</summary>
     Rotate,
 
-    /// <summary>Scale the selected object uniformly or per-axis.</summary>
+    /// <summary>Escala el objeto seleccionado de forma uniforme o por eje.</summary>
     Scale,
 
-    /// <summary>Rectangle layout tool; shows dashed bounding box, no transform handles.</summary>
+    /// <summary>Herramienta de diseño rectangular; muestra una caja delimitadora discontinua, sin manijas de transformación.</summary>
     Rect,
 }

@@ -1,6 +1,6 @@
 namespace MonoGame.Editor.Core.CodeGen;
 
-/// <summary>Metadata about a discovered <c>GameBehaviour</c> subclass.</summary>
+/// <summary>Metadatos sobre una subclase de <c>GameBehaviour</c> descubierta.</summary>
 public sealed record TypeDescriptor(
     string  FullName,
     string  ShortName,

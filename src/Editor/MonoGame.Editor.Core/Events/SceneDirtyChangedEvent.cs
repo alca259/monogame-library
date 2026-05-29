@@ -1,4 +1,4 @@
 namespace MonoGame.Editor.Core.Events;
 
-/// <summary>Published when the active scene's dirty state changes.</summary>
+/// <summary>Publicado cuando cambia el estado de modificación de la escena activa.</summary>
 public sealed record SceneDirtyChangedEvent(bool IsDirty) : IEditorEvent;

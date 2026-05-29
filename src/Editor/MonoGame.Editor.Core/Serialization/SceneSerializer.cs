@@ -1,9 +1,9 @@
 namespace MonoGame.Editor.Core.Serialization;
 
 /// <summary>
-/// Serializes and deserializes <see cref="EditorScene"/> objects to/from JSON
-/// using <see cref="System.Text.Json"/>. Parent links are excluded from JSON
-/// and restored after deserialization.
+/// Serializa y deserializa objetos <see cref="EditorScene"/> a/desde JSON
+/// usando <see cref="System.Text.Json"/>. Los enlaces padre quedan excluidos del JSON
+/// y se restauran tras la deserialización.
 /// </summary>
 public static class SceneSerializer
 {
@@ -15,13 +15,13 @@ public static class SceneSerializer
         PreferredObjectCreationHandling = JsonObjectCreationHandling.Populate,
     };
 
-    /// <summary>Serializes <paramref name="scene"/> to an indented JSON string.</summary>
+    /// <summary>Serializa <paramref name="scene"/> en una cadena JSON con sangría.</summary>
     public static string Serialize(EditorScene scene)
         => JsonSerializer.Serialize(scene, _options);
 
     /// <summary>
-    /// Deserializes a scene from <paramref name="json"/> and restores parent links on all objects.
-    /// Returns <c>null</c> if the JSON is invalid or empty.
+    /// Deserializa una escena desde <paramref name="json"/> y restaura los enlaces padre en todos los objetos.
+    /// Devuelve <c>null</c> si el JSON es inválido o está vacío.
     /// </summary>
     public static EditorScene? Deserialize(string json)
     {
@@ -32,14 +32,14 @@ public static class SceneSerializer
         return scene;
     }
 
-    /// <summary>Saves <paramref name="scene"/> to the file at <paramref name="path"/>.</summary>
+    /// <summary>Guarda <paramref name="scene"/> en el archivo en <paramref name="path"/>.</summary>
     public static async Task SaveAsync(EditorScene scene, string path)
     {
         string json = Serialize(scene);
         await File.WriteAllTextAsync(path, json).ConfigureAwait(false);
     }
 
-    /// <summary>Loads and deserializes a scene from the file at <paramref name="path"/>.</summary>
+    /// <summary>Carga y deserializa una escena desde el archivo en <paramref name="path"/>.</summary>
     public static async Task<EditorScene?> LoadAsync(string path)
     {
         if (!File.Exists(path)) return null;

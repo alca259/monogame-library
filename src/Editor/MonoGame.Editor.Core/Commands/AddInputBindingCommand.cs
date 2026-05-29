@@ -2,16 +2,16 @@ using Alca.MonoGame.Kernel.Input;
 
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Adds a binding to an action in an <see cref="InputEditorModel"/>.</summary>
+/// <summary>Añade un enlace a una acción en un <see cref="InputEditorModel"/>.</summary>
 public sealed class AddInputBindingCommand : IEditorCommand
 {
     private readonly InputEditorModel _model;
     private readonly string _actionName;
     private readonly InputBindingEntry _binding;
 
-    /// <param name="model">Target model.</param>
-    /// <param name="actionName">Name of the action.</param>
-    /// <param name="binding">Binding to add.</param>
+    /// <param name="model">Modelo de destino.</param>
+    /// <param name="actionName">Nombre de la acción.</param>
+    /// <param name="binding">Enlace a añadir.</param>
     public AddInputBindingCommand(InputEditorModel model, string actionName, InputBindingEntry binding)
     {
         _model = model;

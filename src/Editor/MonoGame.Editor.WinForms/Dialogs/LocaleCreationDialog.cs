@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 namespace MonoGame.Editor.WinForms.Dialogs;
 
 /// <summary>
-/// Modal dialog that creates a new empty locale JSON file in <c>src/GameApp/i18n/</c>.
+/// Diálogo modal que crea un nuevo archivo JSON de localización vacío en <c>src/GameApp/i18n/</c>.
 /// </summary>
 public sealed class LocaleCreationDialog : Form
 {
@@ -17,7 +17,7 @@ public sealed class LocaleCreationDialog : Form
 
     private readonly string _translationsRoot;
 
-    /// <summary>Creates the dialog targeting the given <c>src/GameApp/i18n/</c> path.</summary>
+    /// <summary>Crea el diálogo dirigido a la ruta <c>src/GameApp/i18n/</c> indicada.</summary>
     public LocaleCreationDialog(string translationsRoot)
     {
         _translationsRoot = translationsRoot;

@@ -1,12 +1,12 @@
 namespace MonoGame.Editor.Core.Assets;
 
-/// <summary>Immutable descriptor for a single asset file on disk.</summary>
-/// <param name="AbsolutePath">Full path to the asset file.</param>
-/// <param name="RelativePath">Path relative to the Content root folder.</param>
-/// <param name="Name">Display name (filename without the outermost extension).</param>
-/// <param name="Type">Classified asset type.</param>
-/// <param name="Extension">File extension including the leading dot, lower-case.</param>
-/// <param name="SizeBytes">File size in bytes, or 0 if the file no longer exists.</param>
+/// <summary>Descriptor inmutable para un único archivo de asset en disco.</summary>
+/// <param name="AbsolutePath">Ruta completa al archivo del asset.</param>
+/// <param name="RelativePath">Ruta relativa a la carpeta raíz de Content.</param>
+/// <param name="Name">Nombre para mostrar (nombre de archivo sin la extensión más externa).</param>
+/// <param name="Type">Tipo de asset clasificado.</param>
+/// <param name="Extension">Extensión del archivo incluyendo el punto inicial, en minúsculas.</param>
+/// <param name="SizeBytes">Tamaño del archivo en bytes, o 0 si el archivo ya no existe.</param>
 public sealed record AssetInfo(
     string AbsolutePath,
     string RelativePath,

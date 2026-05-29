@@ -1,8 +1,8 @@
 namespace MonoGame.Editor.Core.Commands;
 
 /// <summary>
-/// Saves the current state of a <see cref="EditorGameObject"/> instance to its prefab file,
-/// overwriting the previous prefab definition.
+/// Guarda el estado actual de una instancia de <see cref="EditorGameObject"/> en su archivo de prefab,
+/// sobrescribiendo la definición de prefab anterior.
 /// </summary>
 public sealed class ApplyPrefabCommand : IEditorCommand
 {
@@ -11,9 +11,9 @@ public sealed class ApplyPrefabCommand : IEditorCommand
     private readonly IPrefabProvider _provider;
     private EditorGameObject? _snapshotBeforeApply;
 
-    /// <param name="instance">Instance whose state will become the new prefab definition.</param>
-    /// <param name="prefabPath">Path to the target <c>.prefab.json</c> file.</param>
-    /// <param name="provider">Provider used to load and save prefab data.</param>
+    /// <param name="instance">Instancia cuyo estado se convertirá en la nueva definición de prefab.</param>
+    /// <param name="prefabPath">Ruta al archivo <c>.prefab.json</c> de destino.</param>
+    /// <param name="provider">Proveedor utilizado para cargar y guardar datos de prefab.</param>
     public ApplyPrefabCommand(EditorGameObject instance, string prefabPath, IPrefabProvider provider)
     {
         _instance = instance;

@@ -1,7 +1,7 @@
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>
-/// Console panel with color-coded log output, per-level filtering, copy, and MSBuild-aware line parsing.
+/// Panel de consola con salida de registro codificada por colores, filtrado por nivel, copiado y análisis de líneas compatible con MSBuild.
 /// </summary>
 public sealed class ConsolePanel : UserControl
 {
@@ -29,7 +29,7 @@ public sealed class ConsolePanel : UserControl
 
     #region Constructor
 
-    /// <summary>Builds the console panel. Call <see cref="Initialize"/> to connect to the event bus.</summary>
+    /// <summary>Construye el panel de consola. Llama a <see cref="Initialize"/> para conectar con el bus de eventos.</summary>
     public ConsolePanel()
     {
         _clearBtn = new ToolStripButton("Clear") { DisplayStyle = ToolStripItemDisplayStyle.Text };
@@ -80,7 +80,7 @@ public sealed class ConsolePanel : UserControl
 
     #region Initialization
 
-    /// <summary>Subscribes to <see cref="LogEntryAddedEvent"/> on the shared event bus.</summary>
+    /// <summary>Se suscribe a <see cref="LogEntryAddedEvent"/> en el bus de eventos compartido.</summary>
     public void Initialize(EditorContext context)
     {
         _context  = context;
@@ -105,7 +105,7 @@ public sealed class ConsolePanel : UserControl
 
     #region Public API
 
-    /// <summary>Appends a log line (thread-safe).</summary>
+    /// <summary>Agrega una línea de registro (seguro para hilos).</summary>
     public void AppendLine(string message, LogLevel level = LogLevel.Info)
     {
         if (InvokeRequired) { BeginInvoke(() => AppendLine(message, level)); return; }
@@ -117,7 +117,7 @@ public sealed class ConsolePanel : UserControl
             AppendColoredLine(text, color, bold);
     }
 
-    /// <summary>Parses MSBuild output patterns and color-codes accordingly (thread-safe).</summary>
+    /// <summary>Analiza los patrones de salida de MSBuild y les asigna colores según corresponda (seguro para hilos).</summary>
     public void AppendBuildLine(string line)
     {
         if (InvokeRequired) { BeginInvoke(() => AppendBuildLine(line)); return; }
@@ -159,7 +159,7 @@ public sealed class ConsolePanel : UserControl
             AppendColoredLine(line, color, bold);
     }
 
-    /// <summary>Clears all output (thread-safe).</summary>
+    /// <summary>Borra toda la salida (seguro para hilos).</summary>
     public void Clear()
     {
         if (InvokeRequired) { BeginInvoke(Clear); return; }
@@ -184,7 +184,7 @@ public sealed class ConsolePanel : UserControl
         for (int i = 0; i < _entries.Count; i++)
         {
             (string text, System.Drawing.Color color, bool bold) = _entries[i];
-            // Infer level from color to honour filter — store level separately for correctness
+            // Inferir el nivel a partir del color para respetar el filtro — almacenar el nivel por separado para mayor precisión
             if (_activeFilter.HasValue && !EntryMatchesFilter(_entries[i].text))
                 continue;
             AppendColoredLine(text, color, bold);

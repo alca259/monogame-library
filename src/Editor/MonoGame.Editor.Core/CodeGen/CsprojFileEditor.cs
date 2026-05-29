@@ -3,15 +3,15 @@ using System.Xml;
 namespace MonoGame.Editor.Core.CodeGen;
 
 /// <summary>
-/// Utilities for reading and modifying <c>.csproj</c> files to ensure generated files are included.
-/// SDK-style projects use implicit wildcards — this class checks before editing.
+/// Utilidades para leer y modificar archivos <c>.csproj</c> y garantizar que los archivos generados estén incluidos.
+/// Los proyectos de estilo SDK usan comodines implícitos — esta clase verifica antes de editar.
 /// </summary>
 public static class CsprojFileEditor
 {
     /// <summary>
-    /// Ensures <paramref name="absoluteFilePath"/> is included in the project.
-    /// If the project already covers the file via a glob, this is a no-op.
-    /// Otherwise, an explicit <c>Compile Include</c> item is added.
+    /// Garantiza que <paramref name="absoluteFilePath"/> esté incluido en el proyecto.
+    /// Si el proyecto ya cubre el archivo mediante un glob, esta operación no hace nada.
+    /// En caso contrario, se añade un elemento <c>Compile Include</c> explícito.
     /// </summary>
     public static async Task EnsureFileIncludedAsync(string csprojPath, string absoluteFilePath)
     {
@@ -24,7 +24,7 @@ public static class CsprojFileEditor
 
         XmlNamespaceManager ns = new(doc.NameTable);
 
-        // Find or create an ItemGroup for Compile items
+        // Buscar o crear un ItemGroup para elementos Compile
         XmlNode? root = doc.DocumentElement;
         if (root is null) return;
 
@@ -34,7 +34,7 @@ public static class CsprojFileEditor
         XmlElement compileItem = doc.CreateElement("Compile");
         compileItem.SetAttribute("Include", relPath);
 
-        // Look for existing ItemGroup; add to first found or create new
+        // Buscar un ItemGroup existente; añadir al primero encontrado o crear uno nuevo
         XmlNode? itemGroup = root.SelectSingleNode("ItemGroup[Compile]");
         if (itemGroup is null)
         {
@@ -53,8 +53,8 @@ public static class CsprojFileEditor
     }
 
     /// <summary>
-    /// Returns <c>true</c> if the project is an SDK-style project with default compile items active,
-    /// meaning <paramref name="absoluteFilePath"/> is already implicitly included.
+    /// Devuelve <c>true</c> si el proyecto es de estilo SDK con los elementos de compilación predeterminados activos,
+    /// lo que significa que <paramref name="absoluteFilePath"/> ya está incluido implícitamente.
     /// </summary>
     public static bool IsFileCoveredByGlob(string csprojPath, string absoluteFilePath)
     {
@@ -70,7 +70,7 @@ public static class CsprojFileEditor
             return false;
         }
 
-        // SDK-style projects include all *.cs implicitly unless explicitly disabled
+        // Los proyectos de estilo SDK incluyen todos los *.cs implícitamente a menos que se deshabilite explícitamente
         bool hasSdkAttribute = content.Contains("Sdk=\"Microsoft.NET.Sdk\"", StringComparison.OrdinalIgnoreCase)
                             || content.Contains("Sdk=\"Microsoft.NET.Sdk.", StringComparison.OrdinalIgnoreCase);
 
@@ -81,7 +81,7 @@ public static class CsprojFileEditor
 
         if (defaultsDisabled) return false;
 
-        // Check for explicit Remove of this file or its parent folder
+        // Verificar si existe un Remove explícito de este archivo o su carpeta padre
         string relPath = Path.GetRelativePath(Path.GetDirectoryName(csprojPath)!, absoluteFilePath);
         return !content.Contains(relPath, StringComparison.OrdinalIgnoreCase);
     }

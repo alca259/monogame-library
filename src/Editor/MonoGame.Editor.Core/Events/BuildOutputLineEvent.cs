@@ -1,4 +1,4 @@
 namespace MonoGame.Editor.Core.Events;
 
-/// <summary>Published for each output line emitted during a game dotnet build.</summary>
+/// <summary>Publicado por cada línea de salida emitida durante la compilación dotnet del juego.</summary>
 public sealed record BuildOutputLineEvent(string Line, bool IsError) : IEditorEvent;

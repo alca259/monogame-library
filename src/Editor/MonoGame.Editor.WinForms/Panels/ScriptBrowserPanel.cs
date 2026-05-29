@@ -4,8 +4,8 @@ using MonoGame.Editor.Core.Project;
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>
-/// Two-pane script browser: folder tree on the left, <c>.cs</c> file list on the right.
-/// Integrates with the editor event bus to reload when a project opens.
+/// Navegador de scripts de dos paneles: árbol de carpetas a la izquierda, lista de archivos <c>.cs</c> a la derecha.
+/// Se integra con el bus de eventos del editor para recargar cuando se abre un proyecto.
 /// </summary>
 public sealed class ScriptBrowserPanel : UserControl
 {
@@ -36,12 +36,12 @@ public sealed class ScriptBrowserPanel : UserControl
 
     #region Constructor
 
-    /// <summary>Initializes the panel and builds the UI.</summary>
+    /// <summary>Inicializa el panel y construye la interfaz de usuario.</summary>
     public ScriptBrowserPanel()
     {
         _icons = BuildIconList();
 
-        // ── Folder context menu ────────────────────────────────────────────
+        // ── Menú contextual de carpeta ─────────────────────────────────────
         ToolStripMenuItem newFolderItem = new("New Folder");
         _renameFolderItem               = new("Rename");
         _deleteFolderItem               = new("Delete");
@@ -60,7 +60,7 @@ public sealed class ScriptBrowserPanel : UserControl
         _deleteFolderItem.Click    += OnDeleteFolder;
         _folderContextMenu.Opening += OnFolderContextMenuOpening;
 
-        // ── File context menu ──────────────────────────────────────────────
+        // ── Menú contextual de archivo ─────────────────────────────────────
         ToolStripMenuItem openInEditorItem = new("Open in External Editor");
         ToolStripMenuItem renameFileItem   = new("Rename");
         ToolStripMenuItem deleteFileItem   = new("Delete");
@@ -83,7 +83,7 @@ public sealed class ScriptBrowserPanel : UserControl
         copyPathItem.Click       += OnCopyPath;
         _fileContextMenu.Opening += OnFileContextMenuOpening;
 
-        // ── Folder tree (left) ────────────────────────────────────────────
+        // ── Árbol de carpetas (izquierda) ─────────────────────────────────
         _folderTree = new TreeView
         {
             Dock             = DockStyle.Fill,
@@ -96,7 +96,7 @@ public sealed class ScriptBrowserPanel : UserControl
             ContextMenuStrip = _folderContextMenu,
         };
 
-        // ── File list (right) ─────────────────────────────────────────────
+        // ── Lista de archivos (derecha) ───────────────────────────────────
         _fileList = new ListView
         {
             Dock             = DockStyle.Fill,
@@ -111,7 +111,7 @@ public sealed class ScriptBrowserPanel : UserControl
         _fileList.Columns.Add("Name", 220);
         _fileList.Columns.Add("Size", 70);
 
-        // ── New Script button ─────────────────────────────────────────────
+        // ── Botón Nuevo Script ────────────────────────────────────────────
         _newScriptButton = new Button
         {
             Text      = "New Script",
@@ -120,12 +120,12 @@ public sealed class ScriptBrowserPanel : UserControl
             FlatStyle = FlatStyle.Flat,
         };
 
-        // ── Right panel ───────────────────────────────────────────────────
+        // ── Panel derecho ──────────────────────────────────────────────────
         Panel rightPanel = new Panel { Dock = DockStyle.Fill };
         rightPanel.Controls.Add(_fileList);
         rightPanel.Controls.Add(_newScriptButton);
 
-        // ── Split container ───────────────────────────────────────────────
+        // ── Contenedor dividido ────────────────────────────────────────────
         _splitContainer = new SplitContainer
         {
             Dock             = DockStyle.Fill,
@@ -153,8 +153,8 @@ public sealed class ScriptBrowserPanel : UserControl
     #region Public API
 
     /// <summary>
-    /// Subscribes to the event bus to reload when a project opens.
-    /// Must be called once after the parent form is constructed.
+    /// Se suscribe al bus de eventos para recargar cuando se abre un proyecto.
+    /// Debe llamarse una vez después de que el formulario padre haya sido construido.
     /// </summary>
     public void Initialize(EditorContext context)
     {
@@ -221,7 +221,7 @@ public sealed class ScriptBrowserPanel : UserControl
         try
         {
             if (Directory.GetDirectories(path).Length > 0)
-                node.Nodes.Add(new TreeNode()); // lazy placeholder
+                node.Nodes.Add(new TreeNode()); // marcador de posición diferido
         }
         catch (UnauthorizedAccessException) { }
         return node;
@@ -298,7 +298,7 @@ public sealed class ScriptBrowserPanel : UserControl
             return;
         }
 
-        // Remove lazy placeholder if present
+        // Eliminar marcador de posición diferido si está presente
         if (parent.Nodes.Count == 1 && parent.Nodes[0].Tag is null)
             parent.Nodes.Clear();
 
@@ -538,10 +538,10 @@ public sealed class ScriptBrowserPanel : UserControl
     {
         if (!File.Exists(filePath)) return;
 
-        // Try VS Code (PATH or common install locations) — avoids "Open With" dialog
+        // Intentar VS Code (PATH o ubicaciones de instalación comunes) — evita el diálogo "Abrir con"
         if (TryOpenWithCode(filePath)) return;
 
-        // Use system default handler (Visual Studio, Rider, etc. if registered)
+        // Usar el controlador predeterminado del sistema (Visual Studio, Rider, etc. si está registrado)
         try
         {
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -558,7 +558,7 @@ public sealed class ScriptBrowserPanel : UserControl
 
     private static bool TryOpenWithCode(string filePath)
     {
-        // Try "code" from PATH first
+        // Intentar "code" desde PATH primero
         try
         {
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -572,7 +572,7 @@ public sealed class ScriptBrowserPanel : UserControl
         }
         catch { }
 
-        // Try common VS Code install locations
+        // Intentar ubicaciones de instalación comunes de VS Code
         string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
         string[] candidates =
@@ -611,7 +611,7 @@ public sealed class ScriptBrowserPanel : UserControl
     {
         ImageList list = new() { ImageSize = new System.Drawing.Size(16, 16) };
         list.Images.Add(MakeColorSquare(System.Drawing.Color.Teal, 16));         // 0 Script
-        list.Images.Add(MakeColorSquare(System.Drawing.Color.SaddleBrown, 16)); // 1 Folder
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.SaddleBrown, 16)); // 1 Carpeta
         return list;
     }
 

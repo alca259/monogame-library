@@ -4,8 +4,8 @@ using System.Text;
 namespace MonoGame.Editor.Core.CodeGen;
 
 /// <summary>
-/// Generates <c>{SceneName}Scene.Generated.cs</c> partial class files from the editor scene model.
-/// Uses <see cref="StringBuilder"/> directly — no LINQ in the generation loops.
+/// Genera archivos de clase parcial <c>{SceneName}Scene.Generated.cs</c> a partir del modelo de escena del editor.
+/// Utiliza <see cref="StringBuilder"/> directamente — sin LINQ en los bucles de generación.
 /// </summary>
 public sealed class SceneCodeGenerator : ICodeGenService
 {
@@ -46,7 +46,7 @@ public sealed class SceneCodeGenerator : ICodeGenService
                 await CsprojFileEditor.EnsureFileIncludedAsync(project.GameCsprojPath, outputPath)
                     .ConfigureAwait(false);
 
-            // Create the manual partial class stub only on first generation — never overwrite.
+            // Crear el esqueleto de clase parcial manual solo en la primera generación — nunca sobreescribir.
             string stubPath = Path.Combine(outputDir, $"{scene.Name}Scene.cs");
             if (!File.Exists(stubPath))
             {
@@ -77,7 +77,7 @@ public sealed class SceneCodeGenerator : ICodeGenService
             className, namespaceName, relativeFolder, lifecycleMethodsToOverride, project, cancellationToken);
 
     // ──────────────────────────────────────────────────────────
-    //  Source generation
+    //  Generación de código fuente
     // ──────────────────────────────────────────────────────────
 
     private static string BuildSceneSource(EditorScene scene, ProjectSettings settings, string outputPath)
@@ -89,7 +89,7 @@ public sealed class SceneCodeGenerator : ICodeGenService
         string timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss");
         string relSource  = scene.ScenePath is { Length: > 0 } s ? s : "(unsaved)";
 
-        // Collect extra namespaces from behaviour type names
+        // Recopilar espacios de nombres adicionales a partir de los nombres de tipo de comportamiento
         List<EditorGameObject> roots = scene.RootGameObjects;
         CollectNamespaces(roots, extraUsings);
 
@@ -209,8 +209,8 @@ public sealed class SceneCodeGenerator : ICodeGenService
 
             if (bShort == "SpriteRendererBehaviour")
             {
-                // SpriteRendererBehaviour has no parameterless ctor — requires Texture2D.
-                // Generate: new SpriteRendererBehaviour(Content.Load<Texture2D>("path"))
+                // SpriteRendererBehaviour no tiene constructor sin parámetros — requiere Texture2D.
+                // Genera: new SpriteRendererBehaviour(Content.Load<Texture2D>("path"))
                 string spritePath = b.Properties.TryGetValue("SpritePath", out JsonElement sp)
                     && sp.ValueKind == JsonValueKind.String
                     && sp.GetString() is { Length: > 0 } p
@@ -263,30 +263,30 @@ public sealed class SceneCodeGenerator : ICodeGenService
         switch (value.ValueKind)
         {
             case JsonValueKind.True:  return "true";
-            case JsonValueKind.False: return null; // false is the default for bool, skip
+            case JsonValueKind.False: return null; // false es el valor predeterminado para bool, omitir
             case JsonValueKind.String:
             {
                 string s = value.GetString() ?? string.Empty;
-                if (s.Length == 0) return null; // empty string is the default, skip
+                if (s.Length == 0) return null; // la cadena vacía es el valor predeterminado, omitir
                 return $"\"{EscapeString(s)}\"";
             }
             case JsonValueKind.Number:
             {
                 if (value.TryGetInt32(out int i))
                 {
-                    if (i == 0) return null; // 0 is the default, skip
+                    if (i == 0) return null; // 0 es el valor predeterminado, omitir
                     return i.ToString();
                 }
                 if (value.TryGetDouble(out double d))
                 {
-                    if (d == 0.0) return null; // 0.0 is the default, skip
+                    if (d == 0.0) return null; // 0.0 es el valor predeterminado, omitir
                     return $"{d}f";
                 }
                 return null;
             }
             case JsonValueKind.Object:
             {
-                // Try Color { R, G, B, A }
+                // Intentar Color { R, G, B, A }
                 if (value.TryGetProperty("R", out JsonElement r) &&
                     value.TryGetProperty("G", out JsonElement g) &&
                     value.TryGetProperty("B", out JsonElement b) &&
@@ -299,7 +299,7 @@ public sealed class SceneCodeGenerator : ICodeGenService
                     if (ri == 0 && gi == 0 && bi2 == 0 && ai == 255) return null;
                     return $"new Color({ri}, {gi}, {bi2}, {ai})";
                 }
-                // Try Vector3 { X, Y, Z }
+                // Intentar Vector3 { X, Y, Z }
                 if (value.TryGetProperty("X", out JsonElement x) &&
                     value.TryGetProperty("Y", out JsonElement y) &&
                     value.TryGetProperty("Z", out JsonElement z))
@@ -310,7 +310,7 @@ public sealed class SceneCodeGenerator : ICodeGenService
                     if (xf == 0f && yf == 0f && zf == 0f) return null;
                     return $"new Vector3({FormatFloat(xf)}, {FormatFloat(yf)}, {FormatFloat(zf)})";
                 }
-                // Try Vector2 { X, Y }
+                // Intentar Vector2 { X, Y }
                 if (value.TryGetProperty("X", out JsonElement x2) &&
                     value.TryGetProperty("Y", out JsonElement y2))
                 {
@@ -326,7 +326,7 @@ public sealed class SceneCodeGenerator : ICodeGenService
     }
 
     // ──────────────────────────────────────────────────────────
-    //  Helpers
+    //  Auxiliares
     // ──────────────────────────────────────────────────────────
 
     private static bool HasSpriteRenderer(List<EditorGameObject> objects)
@@ -421,7 +421,7 @@ public sealed class SceneCodeGenerator : ICodeGenService
     }
 
     // ──────────────────────────────────────────────────────────
-    //  Variable name tracker (collision avoidance)
+    //  Rastreador de nombres de variable (evitar colisiones)
     // ──────────────────────────────────────────────────────────
 
     private sealed class VariableNameTracker

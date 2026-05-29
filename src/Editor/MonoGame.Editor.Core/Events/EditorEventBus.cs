@@ -1,6 +1,6 @@
 namespace MonoGame.Editor.Core.Events;
 
-/// <summary>Thread-safe in-process event bus implementation.</summary>
+/// <summary>Implementación de bus de eventos en proceso con seguridad para hilos.</summary>
 public sealed class EditorEventBus : IEditorEventBus
 {
     private readonly Dictionary<Type, List<Delegate>> _handlers = [];

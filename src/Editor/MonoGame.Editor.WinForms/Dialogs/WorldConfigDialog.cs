@@ -2,15 +2,15 @@ using MonoGame.Editor.Core.Models;
 
 namespace MonoGame.Editor.WinForms.Dialogs;
 
-/// <summary>Dialog for configuring optional GameWorld subsystems for a scene.</summary>
+/// <summary>Diálogo para configurar los subsistemas opcionales de GameWorld de una escena.</summary>
 public sealed partial class WorldConfigDialog : Form
 {
     private System.Drawing.Color _ambientColor = System.Drawing.Color.Black;
 
-    /// <summary>Initializes the dialog.</summary>
+    /// <summary>Inicializa el diálogo.</summary>
     public WorldConfigDialog() => InitializeComponent();
 
-    /// <summary>Loads existing config values into the dialog controls.</summary>
+    /// <summary>Carga los valores de configuración existentes en los controles del diálogo.</summary>
     public void LoadFrom(EditorWorldConfig? cfg)
     {
         if (cfg is null) return;
@@ -36,7 +36,7 @@ public sealed partial class WorldConfigDialog : Form
         UpdateGroupBoxStates();
     }
 
-    /// <summary>Builds an <see cref="EditorWorldConfig"/> from the current dialog values.</summary>
+    /// <summary>Construye un <see cref="EditorWorldConfig"/> a partir de los valores actuales del diálogo.</summary>
     public EditorWorldConfig BuildConfig()
     {
         return new EditorWorldConfig

@@ -1,8 +1,8 @@
 namespace MonoGame.Editor.Core.Commands;
 
 /// <summary>
-/// Executes code generation for a scene via <see cref="ICodeGenService"/>.
-/// Undo restores the previous file content (or deletes it if the file was new).
+/// Ejecuta la generación de código para una escena a través de <see cref="ICodeGenService"/>.
+/// Deshacer restaura el contenido anterior del archivo (o lo elimina si el archivo era nuevo).
 /// </summary>
 public sealed class GenerateSceneCodeCommand : IEditorCommand
 {
@@ -15,10 +15,10 @@ public sealed class GenerateSceneCodeCommand : IEditorCommand
     private bool     _wasNew;
     private string   _outputPath = string.Empty;
 
-    /// <param name="service">Code generation service to invoke.</param>
-    /// <param name="scene">Scene to generate code for.</param>
-    /// <param name="project">Active editor project.</param>
-    /// <param name="settings">Project settings containing namespace and output folder.</param>
+    /// <param name="service">Servicio de generación de código a invocar.</param>
+    /// <param name="scene">Escena para la que se generará el código.</param>
+    /// <param name="project">Proyecto de editor activo.</param>
+    /// <param name="settings">Configuración del proyecto que contiene el espacio de nombres y la carpeta de salida.</param>
     public GenerateSceneCodeCommand(
         ICodeGenService service,
         EditorScene     scene,
@@ -50,7 +50,7 @@ public sealed class GenerateSceneCodeCommand : IEditorCommand
             _wasNew        = true;
         }
 
-        // Block until generation completes — acceptable for an explicit user action
+        // Bloquear hasta que la generación finalice — aceptable para una acción explícita del usuario
         _service.GenerateSceneAsync(_scene, _project, _settings)
             .GetAwaiter()
             .GetResult();

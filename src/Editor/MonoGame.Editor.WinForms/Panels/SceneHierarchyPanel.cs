@@ -1,9 +1,9 @@
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>
-/// Displays the scene's game object hierarchy in a <see cref="TreeView"/>.
-/// Subscribes to <see cref="SceneLoadedEvent"/> and <see cref="GameObjectSelectedEvent"/> via the event bus.
-/// All edits are routed through <see cref="CommandStack"/> for full undo/redo support.
+/// Muestra la jerarquía de objetos de juego de la escena en un <see cref="TreeView"/>.
+/// Se suscribe a <see cref="SceneLoadedEvent"/> y <see cref="GameObjectSelectedEvent"/> a través del bus de eventos.
+/// Todas las modificaciones se enrutan a través de <see cref="CommandStack"/> para soporte completo de deshacer/rehacer.
 /// </summary>
 public sealed class SceneHierarchyPanel : UserControl
 {
@@ -41,18 +41,18 @@ public sealed class SceneHierarchyPanel : UserControl
 
     #region Constructor
 
-    /// <summary>Creates the panel with a TreeView and context menu. Call <see cref="Initialize"/> to connect to the editor context.</summary>
+    /// <summary>Crea el panel con un TreeView y un menú contextual. Llama a <see cref="Initialize"/> para conectar con el contexto del editor.</summary>
     public SceneHierarchyPanel()
     {
-        // ── Entity icon list (16×16) ─────────────────────────────────────
+        // ── Lista de iconos de entidad (16×16) ─────────────────────────────
         _entityIcons = new ImageList { ImageSize = new System.Drawing.Size(16, 16) };
-        _entityIcons.Images.Add(MakeColorSquare(System.Drawing.Color.Gray));           // 0 Generic
-        _entityIcons.Images.Add(MakeColorSquare(System.Drawing.Color.CornflowerBlue)); // 1 Camera
-        _entityIcons.Images.Add(MakeColorSquare(System.Drawing.Color.Goldenrod));      // 2 Light
-        _entityIcons.Images.Add(MakeColorSquare(System.Drawing.Color.HotPink));        // 3 Particles
+        _entityIcons.Images.Add(MakeColorSquare(System.Drawing.Color.Gray));           // 0 Genérico
+        _entityIcons.Images.Add(MakeColorSquare(System.Drawing.Color.CornflowerBlue)); // 1 Cámara
+        _entityIcons.Images.Add(MakeColorSquare(System.Drawing.Color.Goldenrod));      // 2 Luz
+        _entityIcons.Images.Add(MakeColorSquare(System.Drawing.Color.HotPink));        // 3 Partículas
         _entityIcons.Images.Add(MakeColorSquare(System.Drawing.Color.ForestGreen));    // 4 Tilemap
 
-        // ── Toolbar ──────────────────────────────────────────────────────
+        // ── Barra de herramientas ────────────────────────────────────────
         _addBtn    = new ToolStripButton("+") { ToolTipText = "Create empty entity", DisplayStyle = ToolStripItemDisplayStyle.Text };
         _deleteBtn = new ToolStripButton("🗑") { ToolTipText = "Delete selected entity", DisplayStyle = ToolStripItemDisplayStyle.Text };
         _searchBox = new ToolStripTextBox { Width = 110 };
@@ -66,7 +66,7 @@ public sealed class SceneHierarchyPanel : UserControl
         _toolbar.Items.Add(_searchBox);
         _toolbar.Items.Add(_counterLabel);
 
-        // ── Context menu ─────────────────────────────────────────────────
+        // ── Menú contextual ───────────────────────────────────────────────
         _createEmptyItem  = new ToolStripMenuItem("Create Empty");
         _createChildItem  = new ToolStripMenuItem("Create Child");
         _duplicateItem    = new ToolStripMenuItem("Duplicate") { ShortcutKeys = Keys.Control | Keys.D, ShowShortcutKeys = true };
@@ -109,7 +109,7 @@ public sealed class SceneHierarchyPanel : UserControl
             ContextMenuStrip = _contextMenu,
         };
 
-        // ── Status label ─────────────────────────────────────────────────
+        // ── Etiqueta de estado ───────────────────────────────────────────
         _statusLabel = new Label
         {
             Dock      = DockStyle.Bottom,
@@ -137,7 +137,7 @@ public sealed class SceneHierarchyPanel : UserControl
 
     #region Initialization
 
-    /// <summary>Connects this panel to the editor context. Must be called before any scene is loaded.</summary>
+    /// <summary>Conecta este panel con el contexto del editor. Debe llamarse antes de que se cargue cualquier escena.</summary>
     public void Initialize(EditorContext context, PrefabManager? prefabManager = null)
     {
         _context      = context;
@@ -173,7 +173,7 @@ public sealed class SceneHierarchyPanel : UserControl
         if (InvokeRequired) { BeginInvoke(() => OnSceneLoaded(evt)); return; }
         RebuildTree(evt.Scene);
 
-        // Auto-select the first root object so the inspector populates immediately.
+        // Selecciona automáticamente el primer objeto raíz para que el inspector se rellene de inmediato.
         if (_tree.Nodes.Count > 0 && _tree.Nodes[0].Tag is EditorGameObject first)
         {
             _suppressSelectionEvent = true;
@@ -343,8 +343,8 @@ public sealed class SceneHierarchyPanel : UserControl
 
         if (e.Button == MouseButtons.Right)
         {
-            // WinForms TreeView does NOT auto-select on right-click, so we do it manually.
-            // Setting SelectedNode fires AfterSelect which updates _context selection.
+            // WinForms TreeView NO selecciona automáticamente al hacer clic derecho, por lo que lo hacemos manualmente.
+            // Establecer SelectedNode dispara AfterSelect, que actualiza la selección de _context.
             _tree.SelectedNode = e.Node;
             return;
         }
@@ -542,7 +542,7 @@ public sealed class SceneHierarchyPanel : UserControl
 
     private void OnTreeDragEnter(object? sender, DragEventArgs e)
     {
-        // Accept tree node reparenting or prefab file drops from asset browser
+        // Acepta reasignación de padre de nodo del árbol o archivos de prefab soltados desde el navegador de assets
         if (e.Data?.GetDataPresent(typeof(TreeNode)) == true)
         {
             e.Effect = DragDropEffects.Move;
@@ -575,14 +575,14 @@ public sealed class SceneHierarchyPanel : UserControl
 
     private void OnDragDrop(object? sender, DragEventArgs e)
     {
-        // ── Prefab file drop ─────────────────────────────────────────────
+        // ── Soltar archivo de prefab ─────────────────────────────────────
         if (e.Data?.GetData(DataFormats.Text) is string filePath && IsPrefabFile(filePath))
         {
             InstantiatePrefabAtDrop(filePath);
             return;
         }
 
-        // ── Tree node reparenting ────────────────────────────────────────
+        // ── Reasignación de padre de nodo del árbol ──────────────────────
         if (e.Data?.GetData(typeof(TreeNode)) is not TreeNode draggedNode) return;
         if (draggedNode.Tag is not EditorGameObject draggedObj) return;
 

@@ -1,14 +1,14 @@
 namespace MonoGame.Editor.Core.Events;
 
-/// <summary>Decoupled event bus for communication between editor panels.</summary>
+/// <summary>Bus de eventos desacoplado para la comunicación entre paneles del editor.</summary>
 public interface IEditorEventBus
 {
-    /// <summary>Publishes an event to all registered subscribers.</summary>
+    /// <summary>Publica un evento a todos los suscriptores registrados.</summary>
     void Publish<TEvent>(TEvent e) where TEvent : IEditorEvent;
 
-    /// <summary>Subscribes a handler to receive events of type <typeparamref name="TEvent"/>.</summary>
+    /// <summary>Suscribe un manejador para recibir eventos de tipo <typeparamref name="TEvent"/>.</summary>
     void Subscribe<TEvent>(Action<TEvent> handler) where TEvent : IEditorEvent;
 
-    /// <summary>Removes a previously registered handler.</summary>
+    /// <summary>Elimina un manejador previamente registrado.</summary>
     void Unsubscribe<TEvent>(Action<TEvent> handler) where TEvent : IEditorEvent;
 }

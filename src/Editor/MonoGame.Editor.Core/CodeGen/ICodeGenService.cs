@@ -1,11 +1,11 @@
 namespace MonoGame.Editor.Core.CodeGen;
 
-/// <summary>Generates C# source files from editor scene and behaviour data.</summary>
+/// <summary>Genera archivos fuente C# a partir de datos de escenas y comportamientos del editor.</summary>
 public interface ICodeGenService
 {
     /// <summary>
-    /// Generates or overwrites the partial class initializer for <paramref name="scene"/>.
-    /// Output: <c>{GameSourcePath}/{GeneratedFolder}/Scenes/{SceneName}Scene.Generated.cs</c>
+    /// Genera o sobreescribe el inicializador de la clase parcial para <paramref name="scene"/>.
+    /// Salida: <c>{GameSourcePath}/{GeneratedFolder}/Scenes/{SceneName}Scene.Generated.cs</c>
     /// </summary>
     Task<CodeGenResult> GenerateSceneAsync(
         EditorScene     scene,
@@ -13,7 +13,7 @@ public interface ICodeGenService
         ProjectSettings settings,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Scaffolds a new <c>GameBehaviour</c> subclass skeleton file.</summary>
+    /// <summary>Genera el esqueleto de un nuevo archivo de subclase de <c>GameBehaviour</c>.</summary>
     Task<CodeGenResult> GenerateBehaviourSkeletonAsync(
         string                  className,
         string                  namespaceName,

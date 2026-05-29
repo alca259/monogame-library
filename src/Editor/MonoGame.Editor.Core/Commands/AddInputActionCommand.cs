@@ -1,13 +1,13 @@
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Adds a new named action to an <see cref="InputEditorModel"/>.</summary>
+/// <summary>Añade una nueva acción con nombre a un <see cref="InputEditorModel"/>.</summary>
 public sealed class AddInputActionCommand : IEditorCommand
 {
     private readonly InputEditorModel _model;
     private readonly string _actionName;
 
-    /// <param name="model">Target model.</param>
-    /// <param name="actionName">Name of the action to add.</param>
+    /// <param name="model">Modelo de destino.</param>
+    /// <param name="actionName">Nombre de la acción a añadir.</param>
     public AddInputActionCommand(InputEditorModel model, string actionName)
     {
         _model = model;

@@ -1,8 +1,8 @@
 namespace MonoGame.Editor.Core.Commands;
 
 /// <summary>
-/// Generic command that sets any property from <typeparamref name="T"/> to a new value using a delegate.
-/// Suitable for inspector-driven property edits and <see cref="EditorBehaviour"/> dictionary updates.
+/// Comando genérico que establece cualquier propiedad de <typeparamref name="T"/> a un nuevo valor mediante un delegado.
+/// Adecuado para ediciones de propiedades dirigidas por el inspector y actualizaciones de diccionarios de <see cref="EditorBehaviour"/>.
 /// </summary>
 public sealed class SetPropertyCommand<T> : IEditorCommand
 {
@@ -11,10 +11,10 @@ public sealed class SetPropertyCommand<T> : IEditorCommand
     private readonly Action<T> _setter;
     private readonly string _description;
 
-    /// <param name="description">Human-readable description (e.g. "Set Speed").</param>
-    /// <param name="previousValue">Value to restore on undo.</param>
-    /// <param name="newValue">Value to apply on execute.</param>
-    /// <param name="setter">Delegate that writes the value back to the target property.</param>
+    /// <param name="description">Descripción legible (p.ej. "Set Speed").</param>
+    /// <param name="previousValue">Valor a restaurar al deshacer.</param>
+    /// <param name="newValue">Valor a aplicar al ejecutar.</param>
+    /// <param name="setter">Delegado que escribe el valor de vuelta en la propiedad de destino.</param>
     public SetPropertyCommand(string description, T previousValue, T newValue, Action<T> setter)
     {
         _description = description;

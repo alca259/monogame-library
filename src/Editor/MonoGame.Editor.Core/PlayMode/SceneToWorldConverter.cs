@@ -10,10 +10,10 @@ using MonoGame.Editor.Core.Registry;
 
 namespace MonoGame.Editor.Core.PlayMode;
 
-/// <summary>Converts an <see cref="EditorScene"/> into a live <see cref="GameWorld"/> via reflection.</summary>
+/// <summary>Convierte un <see cref="EditorScene"/> en un <see cref="GameWorld"/> activo mediante reflexión.</summary>
 public static class SceneToWorldConverter
 {
-    /// <summary>Creates a <see cref="GameWorld"/> populated with entities mirroring the editor scene hierarchy.</summary>
+    /// <summary>Crea un <see cref="GameWorld"/> poblado con entidades que reflejan la jerarquía de la escena del editor.</summary>
     public static GameWorld Convert(EditorScene scene, GameObjectRegistry registry)
     {
         var world = new GameWorld();
@@ -63,7 +63,7 @@ public static class SceneToWorldConverter
 
     private static void TryAddBehaviour(GameEntity entity, EditorBehaviour b, GameObjectRegistry registry)
     {
-        // Resolve type by full name first, then by short/simple name
+        // Resolver el tipo por nombre completo primero, luego por nombre corto/simple
         Type? type = null;
         registry.RegisteredTypes.TryGetValue(b.TypeName, out type);
 
@@ -81,7 +81,7 @@ public static class SceneToWorldConverter
 
         if (type is null) return;
 
-        // SpriteRendererBehaviour requires a Texture2D constructor argument — not instantiable at edit time.
+        // SpriteRendererBehaviour requiere un argumento Texture2D en el constructor — no es instanciable en tiempo de edición.
         if (type.Name == "SpriteRendererBehaviour") return;
 
         try
@@ -89,7 +89,7 @@ public static class SceneToWorldConverter
             var instance = (GameBehaviour)Activator.CreateInstance(type)!;
             ApplyProperties(instance, type, b.Properties);
 
-            // Invoke entity.Add<ConcreteType>(instance) with the runtime type
+            // Invocar entity.Add<TipoConcreto>(instance) con el tipo en tiempo de ejecución
             typeof(GameEntity)
                 .GetMethod("Add")!
                 .MakeGenericMethod(type)
@@ -97,7 +97,7 @@ public static class SceneToWorldConverter
         }
         catch
         {
-            // Type lacks a parameterless constructor or Add threw — skip this behaviour.
+            // El tipo carece de constructor sin parámetros o Add lanzó una excepción — omitir este GameBehaviour.
         }
     }
 

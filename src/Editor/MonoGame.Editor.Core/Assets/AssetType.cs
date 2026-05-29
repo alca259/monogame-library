@@ -1,47 +1,47 @@
 namespace MonoGame.Editor.Core.Assets;
 
-/// <summary>Classifies an asset file by its role in the game project.</summary>
+/// <summary>Clasifica un archivo de asset según su rol en el proyecto de juego.</summary>
 public enum AssetType
 {
-    /// <summary>Unrecognized or unsupported file type.</summary>
+    /// <summary>Tipo de archivo no reconocido o no compatible.</summary>
     Unknown,
 
-    /// <summary>Image file used as a texture (png, jpg, bmp, tga, …).</summary>
+    /// <summary>Archivo de imagen usado como textura (png, jpg, bmp, tga, …).</summary>
     Texture,
 
-    /// <summary>Audio file (wav, mp3, ogg, wma).</summary>
+    /// <summary>Archivo de audio (wav, mp3, ogg, wma).</summary>
     Audio,
 
-    /// <summary>Bitmap or sprite font (.spritefont, .fnt).</summary>
+    /// <summary>Fuente de mapa de bits o sprite (.spritefont, .fnt).</summary>
     Font,
 
-    /// <summary>Tiled map or tileset (.tmx, .tsx).</summary>
+    /// <summary>Mapa o tileset de Tiled (.tmx, .tsx).</summary>
     TiledMap,
 
-    /// <summary>Editor scene descriptor (.scene.json).</summary>
+    /// <summary>Descriptor de escena del editor (.scene.json).</summary>
     Scene,
 
-    /// <summary>Prefab definition (.prefab.json).</summary>
+    /// <summary>Definición de prefab (.prefab.json).</summary>
     Prefab,
 
-    /// <summary>Particle effect (.particles.json).</summary>
+    /// <summary>Efecto de partículas (.particles.json).</summary>
     Particles,
 
-    /// <summary>Sprite animation (.anim.json).</summary>
+    /// <summary>Animación de sprite (.anim.json).</summary>
     Animation,
 
-    /// <summary>Input action map (.input.json).</summary>
+    /// <summary>Mapa de acciones de entrada (.input.json).</summary>
     InputMap,
 
-    /// <summary>C# source file (.cs).</summary>
+    /// <summary>Archivo fuente de C# (.cs).</summary>
     Script,
 
-    /// <summary>Sprite metadata with 9-slice borders and import settings (.sprite.json).</summary>
+    /// <summary>Metadatos de sprite con bordes de 9 porciones y configuración de importación (.sprite.json).</summary>
     Sprite,
 
-    /// <summary>Material descriptor with shader and property overrides (.mat.json).</summary>
+    /// <summary>Descriptor de material con shader y sobreescrituras de propiedades (.mat.json).</summary>
     Material,
 
-    /// <summary>UI theme descriptor with NineSlice texture paths and border insets per control type (.uitheme.json).</summary>
+    /// <summary>Descriptor de tema de UI con rutas de textura NineSlice e insets de borde por tipo de control (.uitheme.json).</summary>
     UITheme,
 }

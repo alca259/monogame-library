@@ -3,8 +3,8 @@ using Alca.MonoGame.Kernel.Input;
 namespace MonoGame.Editor.Core.Input;
 
 /// <summary>
-/// Editor model for a <c>*.input.json</c> file. Maintains a mutable list of actions and bindings
-/// and serializes/deserializes in the same JSON format used by <see cref="Alca.MonoGame.Kernel.Input.InputSerializer"/>.
+/// Modelo de editor para un archivo <c>*.input.json</c>. Mantiene una lista mutable de acciones y enlaces,
+/// y serializa/deserializa en el mismo formato JSON utilizado por <see cref="Alca.MonoGame.Kernel.Input.InputSerializer"/>.
 /// </summary>
 public sealed class InputEditorModel
 {
@@ -16,15 +16,15 @@ public sealed class InputEditorModel
 
     private readonly List<InputActionEntry> _actions = [];
 
-    /// <summary>Gets the absolute path to the backing file.</summary>
+    /// <summary>Obtiene la ruta absoluta al archivo de respaldo.</summary>
     public string FilePath { get; }
 
-    /// <summary>Gets the ordered list of actions.</summary>
+    /// <summary>Obtiene la lista ordenada de acciones.</summary>
     public IReadOnlyList<InputActionEntry> Actions => _actions;
 
     private InputEditorModel(string filePath) => FilePath = filePath;
 
-    /// <summary>Loads or creates a model from <paramref name="filePath"/>. Returns an empty model if the file does not exist.</summary>
+    /// <summary>Carga o crea un modelo desde <paramref name="filePath"/>. Devuelve un modelo vacío si el archivo no existe.</summary>
     public static async Task<InputEditorModel> LoadAsync(string filePath)
     {
         InputEditorModel model = new(filePath);
@@ -45,7 +45,7 @@ public sealed class InputEditorModel
         return model;
     }
 
-    /// <summary>Serializes the model to <see cref="FilePath"/>.</summary>
+    /// <summary>Serializa el modelo en <see cref="FilePath"/>.</summary>
     public async Task SaveAsync()
     {
         ActionDto[] actionDtos = new ActionDto[_actions.Count];
@@ -65,14 +65,14 @@ public sealed class InputEditorModel
         await JsonSerializer.SerializeAsync(fs, new ActionMapDto { Actions = actionDtos }, _jsonOptions).ConfigureAwait(false);
     }
 
-    /// <summary>Adds a new action. Does nothing if an action with that name already exists.</summary>
+    /// <summary>Agrega una nueva acción. No hace nada si ya existe una acción con ese nombre.</summary>
     public void AddAction(string name)
     {
         if (string.IsNullOrWhiteSpace(name) || _actions.Exists(a => a.Name == name)) return;
         _actions.Add(new InputActionEntry { Name = name });
     }
 
-    /// <summary>Removes the action with the given name. Returns <c>false</c> if not found.</summary>
+    /// <summary>Elimina la acción con el nombre indicado. Devuelve <c>false</c> si no se encuentra.</summary>
     public bool RemoveAction(string name)
     {
         int idx = _actions.FindIndex(a => a.Name == name);
@@ -81,10 +81,10 @@ public sealed class InputEditorModel
         return true;
     }
 
-    /// <summary>Returns the action entry with the given name, or <c>null</c>.</summary>
+    /// <summary>Devuelve la entrada de acción con el nombre indicado, o <c>null</c>.</summary>
     public InputActionEntry? GetAction(string name) => _actions.Find(a => a.Name == name);
 
-    /// <summary>Adds a binding to the named action. Ignores duplicates.</summary>
+    /// <summary>Agrega un enlace a la acción indicada. Ignora duplicados.</summary>
     public void AddBinding(string actionName, DeviceType device, int code)
     {
         InputActionEntry? entry = GetAction(actionName);
@@ -94,11 +94,11 @@ public sealed class InputEditorModel
             entry.Bindings.Add(binding);
     }
 
-    /// <summary>Removes a binding from the named action.</summary>
+    /// <summary>Elimina un enlace de la acción indicada.</summary>
     public void RemoveBinding(string actionName, DeviceType device, int code) =>
         GetAction(actionName)?.Bindings.Remove(new InputBindingEntry(device, code));
 
-    // ── JSON DTOs (match Kernel InputSerializer format) ───────────────────
+    // ── DTOs de JSON (coinciden con el formato InputSerializer del Kernel) ──
 
     private sealed class ActionMapDto
     {

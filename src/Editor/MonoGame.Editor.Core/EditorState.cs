@@ -1,14 +1,14 @@
 namespace MonoGame.Editor.Core;
 
-/// <summary>Represents the current operational state of the editor.</summary>
+/// <summary>Representa el estado operativo actual del editor.</summary>
 public enum EditorState
 {
-    /// <summary>Editor is active; game loop is stopped, gizmos are visible.</summary>
+    /// <summary>El editor está activo; el bucle de juego está detenido, los gizmos son visibles.</summary>
     Editing,
 
-    /// <summary>Game loop is running with the game's own camera.</summary>
+    /// <summary>El bucle de juego está en ejecución con la cámara propia del juego.</summary>
     Playing,
 
-    /// <summary>Game loop is paused; render is active, Update does not execute.</summary>
+    /// <summary>El bucle de juego está en pausa; el renderizado está activo, Update no se ejecuta.</summary>
     Paused,
 }

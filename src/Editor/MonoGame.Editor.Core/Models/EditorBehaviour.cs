@@ -1,14 +1,14 @@
 namespace MonoGame.Editor.Core.Models;
 
-/// <summary>Represents a behaviour component attached to an <see cref="EditorGameObject"/>.</summary>
+/// <summary>Representa un componente de comportamiento adjunto a un <see cref="EditorGameObject"/>.</summary>
 public sealed class EditorBehaviour
 {
-    /// <summary>Assembly-qualified type name of the <c>GameBehaviour</c> subclass.</summary>
+    /// <summary>Nombre de tipo calificado con ensamblado de la subclase <c>GameBehaviour</c>.</summary>
     public string TypeName { get; set; } = string.Empty;
 
-    /// <summary>Serialized property values keyed by property name.</summary>
+    /// <summary>Valores de propiedades serializados indexados por nombre de propiedad.</summary>
     public Dictionary<string, JsonElement> Properties { get; } = [];
 
-    /// <summary>Whether this behaviour is enabled.</summary>
+    /// <summary>Indica si este comportamiento está habilitado.</summary>
     public bool Enabled { get; set; } = true;
 }

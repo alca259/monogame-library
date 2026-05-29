@@ -4,24 +4,24 @@ using System.Diagnostics;
 namespace MonoGame.Editor.Core.PlayMode;
 
 /// <summary>
-/// Launches and manages the external game process for play mode.
-/// Replaces the embedded <c>MonoGameControl</c> approach with an OS-level subprocess.
+/// Lanza y gestiona el proceso externo del juego para el modo play.
+/// Reemplaza el enfoque integrado de <c>MonoGameControl</c> con un subproceso a nivel de sistema operativo.
 /// </summary>
 public sealed class ExternalPlayLauncher : IDisposable
 {
     private Process? _process;
     private bool _disposed;
 
-    /// <summary>Returns <c>true</c> when the game process is running.</summary>
+    /// <summary>Devuelve <c>true</c> cuando el proceso del juego está en ejecución.</summary>
     public bool IsRunning => _process is { HasExited: false };
 
     /// <summary>
-    /// Builds and launches the game executable, passing an optional scene path via <c>--scene</c>.
-    /// Any previous running process is stopped first.
+    /// Compila y lanza el ejecutable del juego, pasando una ruta de escena opcional mediante <c>--scene</c>.
+    /// Se detiene cualquier proceso en ejecución previo antes de iniciar.
     /// </summary>
-    /// <param name="gameExePath">Absolute path to the game executable.</param>
-    /// <param name="scenePath">Absolute path to the scene JSON to load on startup. Empty to load default.</param>
-    /// <param name="logLine">Optional callback to receive redirected stderr lines.</param>
+    /// <param name="gameExePath">Ruta absoluta al ejecutable del juego.</param>
+    /// <param name="scenePath">Ruta absoluta al JSON de escena que se cargará al inicio. Vacío para cargar la predeterminada.</param>
+    /// <param name="logLine">Callback opcional para recibir las líneas de stderr redirigidas.</param>
     public void Launch(string gameExePath, string scenePath = "", Action<string>? logLine = null)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -49,7 +49,7 @@ public sealed class ExternalPlayLauncher : IDisposable
             };
     }
 
-    /// <summary>Terminates the game process and its child processes.</summary>
+    /// <summary>Termina el proceso del juego y sus procesos hijos.</summary>
     public void Stop()
     {
         if (_process is null) return;
@@ -61,7 +61,7 @@ public sealed class ExternalPlayLauncher : IDisposable
         }
         catch (Exception ex) when (ex is InvalidOperationException or Win32Exception)
         {
-            // process may have already exited
+            // el proceso puede haber terminado ya
         }
         finally
         {

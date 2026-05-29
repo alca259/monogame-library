@@ -1,6 +1,6 @@
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Changes the parent of a <see cref="EditorGameObject"/> within the scene hierarchy.</summary>
+/// <summary>Cambia el padre de un <see cref="EditorGameObject"/> dentro de la jerarquía de la escena.</summary>
 public sealed class ReparentEntityCommand : IEditorCommand
 {
     private readonly EditorGameObject _target;
@@ -9,9 +9,9 @@ public sealed class ReparentEntityCommand : IEditorCommand
     private EditorGameObject? _previousParent;
     private int _previousIndex;
 
-    /// <param name="target">Object to move.</param>
-    /// <param name="scene">Scene that owns the object.</param>
-    /// <param name="newParent">New parent, or <c>null</c> to move to the scene root.</param>
+    /// <param name="target">Objeto a mover.</param>
+    /// <param name="scene">Escena propietaria del objeto.</param>
+    /// <param name="newParent">Nuevo padre, o <c>null</c> para mover a la raíz de la escena.</param>
     public ReparentEntityCommand(EditorGameObject target, EditorScene scene, EditorGameObject? newParent)
     {
         _target = target;

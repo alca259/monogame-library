@@ -1,37 +1,37 @@
 namespace MonoGame.Editor.Core.Gizmos;
 
 /// <summary>
-/// Pure-logic controller for gizmo state, hit-testing, drag tracking, and command generation.
-/// All spatial parameters use screen-space pixels unless explicitly noted as world-space.
-/// Thread-safe: drag state is protected by an internal lock.
+/// Controlador de lógica pura para el estado del gizmo, prueba de colisión, seguimiento de arrastre y generación de comandos.
+/// Todos los parámetros espaciales usan píxeles en espacio de pantalla salvo que se indique explícitamente espacio de mundo.
+/// Seguro para hilos: el estado de arrastre está protegido por un bloqueo interno.
 /// </summary>
 public sealed class GizmoController
 {
-    // ── Visual constants (GizmoRenderer must match these values) ─────────────
-    /// <summary>Length of each axis arrow in screen pixels.</summary>
+    // ── Constantes visuales (GizmoRenderer debe coincidir con estos valores) ──
+    /// <summary>Longitud de cada flecha de eje en píxeles de pantalla.</summary>
     public const float ArrowLength = 80f;
 
-    /// <summary>Size of the arrowhead square in screen pixels.</summary>
+    /// <summary>Tamaño del cuadrado de la punta de flecha en píxeles de pantalla.</summary>
     public const float ArrowHeadSize = 12f;
 
-    /// <summary>Radius of the rotation circle in screen pixels.</summary>
+    /// <summary>Radio del círculo de rotación en píxeles de pantalla.</summary>
     public const float RotateRadius = 70f;
 
-    /// <summary>Size of each scale handle square in screen pixels.</summary>
+    /// <summary>Tamaño del cuadrado de cada manija de escala en píxeles de pantalla.</summary>
     public const float ScaleHandleSize = 10f;
 
-    /// <summary>Half-size of a default object bounding box in world units (at Scale 1).</summary>
+    /// <summary>Semitamaño de la caja delimitadora predeterminada de un objeto en unidades de mundo (a Escala 1).</summary>
     public const float DefaultBoundsHalfSize = 24f;
 
-    /// <summary>Screen-X offset from the gizmo origin to the Z depth handle stem.</summary>
+    /// <summary>Desplazamiento en X de pantalla desde el origen del gizmo al vástago de la manija de profundidad Z.</summary>
     public const float ZHandleOffsetX = ArrowLength + ArrowHeadSize + 14f;
 
-    /// <summary>Size of the Z depth diamond handle in screen pixels.</summary>
+    /// <summary>Tamaño de la manija de diamante de profundidad Z en píxeles de pantalla.</summary>
     public const float ZHandleSize = 12f;
 
     private const float HitTolerance = 10f;
 
-    // ── Drag state (lock-protected) ──────────────────────────────────────────
+    // ── Estado de arrastre (protegido por bloqueo) ───────────────────────────
     private readonly Lock _lock = new();
     private bool _dragging;
     private GizmoDragAxis _dragAxis;
@@ -41,42 +41,42 @@ public sealed class GizmoController
     private float _objRotStart;
     private float _objScaleStartX, _objScaleStartY;
 
-    // ── Public properties ────────────────────────────────────────────────────
+    // ── Propiedades públicas ──────────────────────────────────────────────────
 
-    /// <summary>Currently active transformation tool.</summary>
+    /// <summary>Herramienta de transformación actualmente activa.</summary>
     public GizmoMode Mode { get; set; } = GizmoMode.Select;
 
-    /// <summary>Whether the grid overlay is rendered.</summary>
+    /// <summary>Indica si se renderiza la superposición de cuadrícula.</summary>
     public bool ShowGrid { get; set; } = true;
 
-    /// <summary>World-space size of each grid cell. Clamped to a minimum of 1.</summary>
+    /// <summary>Tamaño en espacio de mundo de cada celda de cuadrícula. Limitado a un mínimo de 1.</summary>
     public float GridCellSize
     {
         get => _gridCellSize;
         set => _gridCellSize = Math.Max(1f, value);
     }
 
-    /// <summary>When <c>true</c> (2.5D mode) the Move gizmo exposes a Z-depth handle.</summary>
+    /// <summary>Cuando es <c>true</c> (modo 2.5D), el gizmo de movimiento expone una manija de profundidad Z.</summary>
     public bool IsDepthMode { get; set; }
 
-    /// <summary>When <c>true</c>, transform operations snap to grid/angle/scale steps during drag.</summary>
+    /// <summary>Cuando es <c>true</c>, las operaciones de transformación se ajustan a pasos de cuadrícula/ángulo/escala durante el arrastre.</summary>
     public bool SnapEnabled { get; set; }
 
-    /// <summary>Rotation snap increment in degrees. Active when <see cref="SnapEnabled"/> is true.</summary>
+    /// <summary>Incremento de ajuste de rotación en grados. Activo cuando <see cref="SnapEnabled"/> es true.</summary>
     public float SnapRotationDegrees { get; set; } = 15f;
 
-    /// <summary>Scale snap step. Active when <see cref="SnapEnabled"/> is true.</summary>
+    /// <summary>Paso de ajuste de escala. Activo cuando <see cref="SnapEnabled"/> es true.</summary>
     public float SnapScaleStep { get; set; } = 0.1f;
 
     private float _gridCellSize = 32f;
 
-    // ── Drag API ─────────────────────────────────────────────────────────────
+    // ── API de arrastre ───────────────────────────────────────────────────────
 
     /// <summary>
-    /// Attempts to start a drag on the gizmo handle closest to <paramref name="clickScreenX"/>,
-    /// <paramref name="clickScreenY"/>. Saves the object's initial transform for undo.
+    /// Intenta iniciar un arrastre en la manija del gizmo más cercana a <paramref name="clickScreenX"/>,
+    /// <paramref name="clickScreenY"/>. Guarda la transformación inicial del objeto para deshacer.
     /// </summary>
-    /// <returns><c>true</c> if a handle was hit and the drag started.</returns>
+    /// <returns><c>true</c> si se golpeó una manija y el arrastre se inició.</returns>
     public bool BeginDrag(
         float clickScreenX, float clickScreenY,
         float objScreenX,   float objScreenY,
@@ -106,8 +106,8 @@ public sealed class GizmoController
     }
 
     /// <summary>
-    /// Updates the selected object's transform to reflect the current mouse position during a drag.
-    /// No-op if no drag is in progress.
+    /// Actualiza la transformación del objeto seleccionado para reflejar la posición actual del ratón durante un arrastre.
+    /// No hace nada si no hay ningún arrastre en curso.
     /// </summary>
     public void UpdateDrag(
         float worldX,    float worldY,
@@ -154,7 +154,7 @@ public sealed class GizmoController
                 break;
 
             case GizmoDragAxis.Z:
-                // Drag up (decreasing screenY) = increase depth value (further from viewer).
+                // Arrastrar hacia arriba (decrece screenY) = aumentar valor de profundidad (más lejos del observador).
                 selected.PositionZ = posStartZ - dy;
                 break;
 
@@ -203,8 +203,8 @@ public sealed class GizmoController
     }
 
     /// <summary>
-    /// Finalises the drag, applies snap when <paramref name="ctrlHeld"/> is <c>true</c>,
-    /// and returns an undo/redo command. Returns <c>null</c> if no drag was in progress.
+    /// Finaliza el arrastre, aplica el ajuste cuando <paramref name="ctrlHeld"/> es <c>true</c>,
+    /// y devuelve un comando de deshacer/rehacer. Devuelve <c>null</c> si no había ningún arrastre en curso.
     /// </summary>
     public IEditorCommand? EndDrag(EditorGameObject? selected, bool ctrlHeld)
     {
@@ -227,8 +227,8 @@ public sealed class GizmoController
 
         if (!wasDragging || selected is null) return null;
 
-        // Snap on release: when SnapEnabled, already snapped during drag.
-        // When Ctrl is held and SnapEnabled is off, apply a one-shot grid snap.
+        // Ajuste al soltar: cuando SnapEnabled está activo, ya se ajustó durante el arrastre.
+        // Cuando Ctrl está presionado y SnapEnabled está desactivado, aplicar un ajuste de cuadrícula puntual.
         if (!SnapEnabled && ctrlHeld && axis is GizmoDragAxis.X or GizmoDragAxis.Y or GizmoDragAxis.XY)
             selected.Position = SnapToGrid(selected.Position);
 
@@ -251,7 +251,7 @@ public sealed class GizmoController
         };
     }
 
-    /// <summary>Snaps a world-space position to the nearest grid cell corner.</summary>
+    /// <summary>Ajusta una posición en espacio de mundo a la esquina de celda de cuadrícula más cercana.</summary>
     public EditorVector2 SnapToGrid(EditorVector2 worldPos)
     {
         float size = _gridCellSize;
@@ -260,7 +260,7 @@ public sealed class GizmoController
             MathF.Round(worldPos.Y / size) * size);
     }
 
-    // ── Hit testing ──────────────────────────────────────────────────────────
+    // ── Prueba de colisión ────────────────────────────────────────────────────
 
     private static GizmoDragAxis HitTest(float px, float py, float ox, float oy, GizmoMode mode, bool isDepthMode) =>
         mode switch
@@ -288,14 +288,14 @@ public sealed class GizmoController
 
     private static GizmoDragAxis HitTestMove(float px, float py, float ox, float oy)
     {
-        // XY-free square (check first — it overlaps the axis starts)
+        // Cuadrado libre XY (verificar primero, ya que se superpone con los inicios de eje)
         if (InRect(px, py, ox + 12, oy - 28, 16, 16)) return GizmoDragAxis.XY;
 
-        // X axis
+        // Eje X
         if (InRect(px, py, ox, oy - HitTolerance, ArrowLength + ArrowHeadSize, HitTolerance * 2))
             return GizmoDragAxis.X;
 
-        // Y axis (screen-Y up = negative direction)
+        // Eje Y (pantalla-Y arriba = dirección negativa)
         if (InRect(px, py, ox - HitTolerance, oy - ArrowLength - ArrowHeadSize, HitTolerance * 2, ArrowLength + ArrowHeadSize))
             return GizmoDragAxis.Y;
 
@@ -314,13 +314,13 @@ public sealed class GizmoController
     {
         float h = ScaleHandleSize / 2 + 4f;
 
-        // Centre (uniform scale)
+        // Centro (escala uniforme)
         if (InRect(px, py, ox - h, oy - h, h * 2, h * 2)) return GizmoDragAxis.ScaleUniform;
 
-        // X-end handle
+        // Manija del extremo X
         if (InRect(px, py, ox + ArrowLength - h, oy - h, h * 2, h * 2)) return GizmoDragAxis.ScaleX;
 
-        // Y-end handle
+        // Manija del extremo Y
         if (InRect(px, py, ox - h, oy - ArrowLength - h, h * 2, h * 2)) return GizmoDragAxis.ScaleY;
 
         return GizmoDragAxis.None;

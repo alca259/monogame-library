@@ -1,39 +1,39 @@
 namespace MonoGame.Editor.Core.Tilemaps;
 
-/// <summary>Represents a loaded and editable tilemap read from a .tmx file.</summary>
+/// <summary>Representa un tilemap cargado y editable leído desde un archivo .tmx.</summary>
 public sealed class EditorTilemapAsset
 {
     private readonly List<EditorTileset> _tilesets;
     private readonly List<EditorTileLayer> _layers;
 
-    /// <summary>Gets the absolute path to the source .tmx file.</summary>
+    /// <summary>Obtiene la ruta absoluta al archivo .tmx de origen.</summary>
     public string FilePath { get; }
 
-    /// <summary>Gets the map width in tiles.</summary>
+    /// <summary>Obtiene el ancho del mapa en tiles.</summary>
     public int MapWidth { get; }
 
-    /// <summary>Gets the map height in tiles.</summary>
+    /// <summary>Obtiene el alto del mapa en tiles.</summary>
     public int MapHeight { get; }
 
-    /// <summary>Gets the tile width in pixels.</summary>
+    /// <summary>Obtiene el ancho del tile en píxeles.</summary>
     public int TileWidth { get; }
 
-    /// <summary>Gets the tile height in pixels.</summary>
+    /// <summary>Obtiene el alto del tile en píxeles.</summary>
     public int TileHeight { get; }
 
-    /// <summary>Gets the tilesets referenced by this map.</summary>
+    /// <summary>Obtiene los tilesets referenciados por este mapa.</summary>
     public IReadOnlyList<EditorTileset> Tilesets => _tilesets;
 
-    /// <summary>Gets the tile layers in this map.</summary>
+    /// <summary>Obtiene las capas de tiles en este mapa.</summary>
     public IReadOnlyList<EditorTileLayer> Layers => _layers;
 
-    /// <param name="filePath">Absolute path to the source .tmx file.</param>
-    /// <param name="mapWidth">Map width in tiles.</param>
-    /// <param name="mapHeight">Map height in tiles.</param>
-    /// <param name="tileWidth">Tile width in pixels.</param>
-    /// <param name="tileHeight">Tile height in pixels.</param>
-    /// <param name="tilesets">Tilesets referenced by the map.</param>
-    /// <param name="layers">Tile layers.</param>
+    /// <param name="filePath">Ruta absoluta al archivo .tmx de origen.</param>
+    /// <param name="mapWidth">Ancho del mapa en tiles.</param>
+    /// <param name="mapHeight">Alto del mapa en tiles.</param>
+    /// <param name="tileWidth">Ancho del tile en píxeles.</param>
+    /// <param name="tileHeight">Alto del tile en píxeles.</param>
+    /// <param name="tilesets">Tilesets referenciados por el mapa.</param>
+    /// <param name="layers">Capas de tiles.</param>
     public EditorTilemapAsset(
         string filePath,
         int mapWidth,
@@ -53,8 +53,8 @@ public sealed class EditorTilemapAsset
     }
 
     /// <summary>
-    /// Returns the tileset that owns the given global tile ID, or <c>null</c> if none matches.
-    /// When multiple tilesets could match, returns the one with the highest <c>FirstGid</c> ≤ <paramref name="gid"/>.
+    /// Devuelve el tileset propietario del ID global de tile indicado, o <c>null</c> si ninguno coincide.
+    /// Cuando varios tilesets podrían coincidir, devuelve el que tiene el <c>FirstGid</c> más alto ≤ <paramref name="gid"/>.
     /// </summary>
     public EditorTileset? GetTilesetForGid(int gid)
     {
@@ -68,6 +68,6 @@ public sealed class EditorTilemapAsset
         return best;
     }
 
-    /// <summary>Converts a global tile ID to the local (0-based) ID within its tileset.</summary>
+    /// <summary>Convierte un ID global de tile al ID local (base 0) dentro de su tileset.</summary>
     public static int GetLocalId(int gid, EditorTileset tileset) => gid - tileset.FirstGid;
 }

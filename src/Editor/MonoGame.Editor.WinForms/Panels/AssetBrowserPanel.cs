@@ -4,9 +4,9 @@ using MonoGame.Editor.Core.Project;
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>
-/// Two-pane asset browser: folder tree on the left, file list with type icons and
-/// a metadata preview on the right. Integrates with <see cref="ContentWatcher"/> via
-/// the editor event bus.
+/// Navegador de assets de dos paneles: árbol de carpetas a la izquierda, lista de archivos con iconos de tipo y
+/// una vista previa de metadatos a la derecha. Se integra con <see cref="ContentWatcher"/> a través del
+/// bus de eventos del editor.
 /// </summary>
 public sealed class AssetBrowserPanel : UserControl
 {
@@ -71,13 +71,13 @@ public sealed class AssetBrowserPanel : UserControl
 
     #region Constructor
 
-    /// <summary>Initializes the panel and builds the UI.</summary>
+    /// <summary>Inicializa el panel y construye la interfaz de usuario.</summary>
     public AssetBrowserPanel()
     {
         _typeIcons  = BuildIconList(16);
         _largeIcons = BuildLargeIconList();
 
-        // ── Breadcrumb ────────────────────────────────────────────────────
+        // ── Ruta de navegación (breadcrumb) ──────────────────────────────
         _breadcrumb = new FlowLayoutPanel
         {
             Dock     = DockStyle.Top,
@@ -86,7 +86,7 @@ public sealed class AssetBrowserPanel : UserControl
             Padding  = new Padding(2, 0, 2, 0),
         };
 
-        // ── Top bar (filter + view toggle) ────────────────────────────────
+        // ── Barra superior (filtro + alternancia de vista) ────────────────
         _filterBox = new TextBox
         {
             Dock            = DockStyle.Fill,
@@ -104,7 +104,7 @@ public sealed class AssetBrowserPanel : UserControl
         _topBar.Controls.Add(_filterBox);
         _topBar.Controls.Add(_viewToggleBtn);
 
-        // ── File context menu ──────────────────────────────────────────────
+        // ── Menú contextual de archivo ─────────────────────────────────────
         ToolStripMenuItem openExternalItem     = new("Open with External Editor");
         ToolStripMenuItem revealInExplorerItem = new("Reveal in Explorer");
         ToolStripMenuItem renameItem           = new("Rename");
@@ -129,7 +129,7 @@ public sealed class AssetBrowserPanel : UserControl
         deleteItem.Click           += OnDeleteItem;
         copyPathItem.Click         += OnCopyRelativePath;
 
-        // ── Folder context menu ────────────────────────────────────────────
+        // ── Menú contextual de carpeta ──────────────────────────────────────
         ToolStripMenuItem newFolderItem = new("New Folder");
         _newMaterialItem                = new("New Material");
         _newUIThemeItem                 = new("New UI Theme");
@@ -154,7 +154,7 @@ public sealed class AssetBrowserPanel : UserControl
         _deleteFolderItem.Click    += OnDeleteFolder;
         _folderContextMenu.Opening += OnFolderContextMenuOpening;
 
-        // ── Debounce timer ────────────────────────────────────────────────
+        // ── Temporizador de antirrebote ───────────────────────────────────
         _searchDebounce = new System.Windows.Forms.Timer { Interval = 150 };
         _searchDebounce.Tick += (_, _) =>
         {
@@ -164,7 +164,7 @@ public sealed class AssetBrowserPanel : UserControl
         };
         _filterBox.TextChanged += (_, _) => { _searchDebounce.Stop(); _searchDebounce.Start(); };
 
-        // ── Folder tree (left) ───────────────────────────────────────────
+        // ── Árbol de carpetas (izquierda) ─────────────────────────────────
         _folderTree = new TreeView
         {
             Dock             = DockStyle.Fill,
@@ -177,7 +177,7 @@ public sealed class AssetBrowserPanel : UserControl
             ContextMenuStrip = _folderContextMenu,
         };
 
-        // ── File list (top-right) ─────────────────────────────────────────
+        // ── Lista de archivos (arriba-derecha) ────────────────────────────
         _contentView = new ListView
         {
             Dock             = DockStyle.Fill,
@@ -196,7 +196,7 @@ public sealed class AssetBrowserPanel : UserControl
         _contentView.Columns.Add("Type", 80);
         _contentView.Columns.Add("Size", 70);
 
-        // ── Preview (bottom-right) ────────────────────────────────────────
+        // ── Vista previa (abajo-derecha) ──────────────────────────────────
         _previewImage = new PictureBox
         {
             Dock        = DockStyle.Left,
@@ -221,7 +221,7 @@ public sealed class AssetBrowserPanel : UserControl
         _previewPanel.Controls.Add(_previewInfo);
         _previewPanel.Controls.Add(_previewImage);
 
-        // ── Right split (list / preview) ──────────────────────────────────
+        // ── División derecha (lista / vista previa) ───────────────────────
         Panel rightTopPanel = new Panel { Dock = DockStyle.Fill };
         rightTopPanel.Controls.Add(_contentView);
         rightTopPanel.Controls.Add(_topBar);
@@ -240,7 +240,7 @@ public sealed class AssetBrowserPanel : UserControl
         _rightSplit.Panel2.Controls.Add(_previewPanel);
         _rightSplit.Panel2Collapsed = true;
 
-        // ── Outer split (tree / right) ────────────────────────────────────
+        // ── División exterior (árbol / derecha) ───────────────────────────
         _outerSplit = new SplitContainer
         {
             Dock             = DockStyle.Fill,
@@ -255,7 +255,7 @@ public sealed class AssetBrowserPanel : UserControl
         Controls.Add(_outerSplit);
         AllowDrop = true;
 
-        // Wire up
+        // Conectar eventos
         _folderTree.AfterSelect           += OnFolderSelected;
         _folderTree.BeforeExpand          += OnBeforeExpand;
         _folderTree.MouseDown             += OnFolderTreeMouseDown;
@@ -274,7 +274,7 @@ public sealed class AssetBrowserPanel : UserControl
 
     #region Public API
 
-    /// <summary>Gets or sets the folder/content splitter distance in pixels.</summary>
+    /// <summary>Obtiene o establece la distancia del divisor carpeta/contenido en píxeles.</summary>
     [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
     public int SplitterDistance
     {
@@ -283,8 +283,8 @@ public sealed class AssetBrowserPanel : UserControl
     }
 
     /// <summary>
-    /// Subscribes to the event bus to refresh the panel when assets change or a project opens.
-    /// Must be called once after the parent form is constructed.
+    /// Se suscribe al bus de eventos para actualizar el panel cuando los assets cambian o se abre un proyecto.
+    /// Debe llamarse una vez después de que el formulario padre haya sido construido.
     /// </summary>
     public void Initialize(EditorContext context)
     {
@@ -293,7 +293,7 @@ public sealed class AssetBrowserPanel : UserControl
         _context.EventBus.Subscribe<ProjectOpenedEvent>(OnProjectOpened);
     }
 
-    /// <summary>Loads the directory tree rooted at <paramref name="rootPath"/>.</summary>
+    /// <summary>Carga el árbol de directorios con raíz en <paramref name="rootPath"/>.</summary>
     public void SetRootDirectory(string rootPath)
     {
         _contentRoot = Directory.Exists(rootPath) ? rootPath : string.Empty;
@@ -319,7 +319,7 @@ public sealed class AssetBrowserPanel : UserControl
         _folderTree.EndUpdate();
     }
 
-    /// <summary>Re-reads the currently selected folder, refreshing the file list.</summary>
+    /// <summary>Vuelve a leer la carpeta seleccionada actualmente, actualizando la lista de archivos.</summary>
     public new void Refresh()
     {
         if (_folderTree.SelectedNode?.Tag is string path)
@@ -439,7 +439,7 @@ public sealed class AssetBrowserPanel : UserControl
             return;
         }
 
-        // Remove lazy placeholder if present
+        // Eliminar marcador de posición diferido si está presente
         if (parent.Nodes.Count == 1 && parent.Nodes[0].Tag is null)
             parent.Nodes.Clear();
 
@@ -955,23 +955,23 @@ public sealed class AssetBrowserPanel : UserControl
         _            => $"{bytes} B",
     };
 
-    /// <summary>Builds the icon image list with colored squares per asset type.</summary>
+    /// <summary>Construye la lista de imágenes de iconos con cuadros de color por tipo de asset.</summary>
     private static ImageList BuildIconList(int size)
     {
         ImageList list = new() { ImageSize = new System.Drawing.Size(size, size) };
-        list.Images.Add(MakeColorSquare(System.Drawing.Color.Gray, size));           // 0 Unknown
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.Gray, size));           // 0 Desconocido
         list.Images.Add(MakeColorSquare(System.Drawing.Color.MediumPurple, size));   // 1 Texture
         list.Images.Add(MakeColorSquare(System.Drawing.Color.DodgerBlue, size));     // 2 Audio
-        list.Images.Add(MakeColorSquare(System.Drawing.Color.Goldenrod, size));      // 3 Font
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.Goldenrod, size));      // 3 Fuente
         list.Images.Add(MakeColorSquare(System.Drawing.Color.ForestGreen, size));    // 4 TiledMap
-        list.Images.Add(MakeColorSquare(System.Drawing.Color.CornflowerBlue, size)); // 5 Scene
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.CornflowerBlue, size)); // 5 Escena
         list.Images.Add(MakeColorSquare(System.Drawing.Color.Orange, size));         // 6 Prefab
-        list.Images.Add(MakeColorSquare(System.Drawing.Color.HotPink, size));        // 7 Particles
-        list.Images.Add(MakeColorSquare(System.Drawing.Color.LimeGreen, size));      // 8 Animation
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.HotPink, size));        // 7 Partículas
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.LimeGreen, size));      // 8 Animación
         list.Images.Add(MakeColorSquare(System.Drawing.Color.Tomato, size));         // 9 InputMap
         list.Images.Add(MakeColorSquare(System.Drawing.Color.Teal, size));           // 10 Script
-        list.Images.Add(MakeColorSquare(System.Drawing.Color.SaddleBrown, size));    // 11 Folder
-        list.Images.Add(MakeColorSquare(System.Drawing.Color.Turquoise, size));      // 12 Generated
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.SaddleBrown, size));    // 11 Carpeta
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.Turquoise, size));      // 12 Generado
         list.Images.Add(MakeColorSquare(System.Drawing.Color.IndianRed, size));       // 13 Material
         list.Images.Add(MakeColorSquare(System.Drawing.Color.MediumOrchid, size));    // 14 Sprite
         list.Images.Add(MakeColorSquare(System.Drawing.Color.SteelBlue, size));       // 15 UITheme
@@ -993,7 +993,7 @@ public sealed class AssetBrowserPanel : UserControl
         list.Images.Add(MakeColorSquare(System.Drawing.Color.Tomato, 64));
         list.Images.Add(MakeColorSquare(System.Drawing.Color.Teal, 64));
         list.Images.Add(MakeColorSquare(System.Drawing.Color.SaddleBrown, 64));
-        list.Images.Add(MakeColorSquare(System.Drawing.Color.Turquoise, 64));        // 12 Generated
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.Turquoise, 64));        // 12 Generado
         list.Images.Add(MakeColorSquare(System.Drawing.Color.IndianRed, 64));        // 13 Material
         list.Images.Add(MakeColorSquare(System.Drawing.Color.MediumOrchid, 64));     // 14 Sprite
         list.Images.Add(MakeColorSquare(System.Drawing.Color.SteelBlue, 64));        // 15 UITheme

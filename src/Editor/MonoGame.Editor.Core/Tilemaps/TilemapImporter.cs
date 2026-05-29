@@ -2,27 +2,27 @@ using System.Xml.Linq;
 
 namespace MonoGame.Editor.Core.Tilemaps;
 
-/// <summary>Loads and saves Tiled .tmx files as <see cref="EditorTilemapAsset"/> instances.</summary>
+/// <summary>Carga y guarda archivos .tmx de Tiled como instancias de <see cref="EditorTilemapAsset"/>.</summary>
 public static class TilemapImporter
 {
-    /// <summary>Loads a .tmx file from disk.</summary>
-    /// <param name="tmxPath">Absolute path to the .tmx file.</param>
+    /// <summary>Carga un archivo .tmx desde disco.</summary>
+    /// <param name="tmxPath">Ruta absoluta al archivo .tmx.</param>
     public static EditorTilemapAsset Load(string tmxPath)
     {
         var xml = XDocument.Load(tmxPath);
         return ParseMap(xml, tmxPath);
     }
 
-    /// <summary>Parses a .tmx XML document from a string (useful for unit testing).</summary>
-    /// <param name="xmlContent">TMX XML content.</param>
-    /// <param name="filePath">Virtual file path used as base directory for relative asset paths.</param>
+    /// <summary>Analiza un documento XML .tmx a partir de una cadena (útil para pruebas unitarias).</summary>
+    /// <param name="xmlContent">Contenido XML del TMX.</param>
+    /// <param name="filePath">Ruta de archivo virtual usada como directorio base para rutas de assets relativas.</param>
     public static EditorTilemapAsset ParseFromString(string xmlContent, string filePath = "")
     {
         var xml = XDocument.Parse(xmlContent);
         return ParseMap(xml, filePath);
     }
 
-    /// <summary>Saves the asset back to its source .tmx file using CSV encoding.</summary>
+    /// <summary>Guarda el asset de vuelta en su archivo .tmx de origen usando codificación CSV.</summary>
     public static void Save(EditorTilemapAsset asset)
     {
         var xml = BuildMap(asset);

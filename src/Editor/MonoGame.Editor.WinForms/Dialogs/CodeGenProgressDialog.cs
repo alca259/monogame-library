@@ -1,8 +1,8 @@
 namespace MonoGame.Editor.WinForms.Dialogs;
 
 /// <summary>
-/// Non-modal progress window shown while code generation is in progress.
-/// Positioned at the bottom-right corner of the screen.
+/// Ventana de progreso no modal mostrada mientras la generación de código está en curso.
+/// Se posiciona en la esquina inferior derecha de la pantalla.
 /// </summary>
 public sealed class CodeGenProgressDialog : Form
 {
@@ -17,7 +17,7 @@ public sealed class CodeGenProgressDialog : Form
 
     #region Constructor
 
-    /// <summary>Initializes the dialog and positions it at the bottom-right of the primary screen.</summary>
+    /// <summary>Inicializa el diálogo y lo posiciona en la esquina inferior derecha de la pantalla principal.</summary>
     public CodeGenProgressDialog()
     {
         Text            = "Code Generation";
@@ -76,7 +76,7 @@ public sealed class CodeGenProgressDialog : Form
 
     #region Public API
 
-    /// <summary>Adds a file entry with its generation status.</summary>
+    /// <summary>Añade una entrada de archivo con su estado de generación.</summary>
     public void AddFileResult(string filePath, bool success)
     {
         if (InvokeRequired) { BeginInvoke(() => AddFileResult(filePath, success)); return; }
@@ -89,7 +89,7 @@ public sealed class CodeGenProgressDialog : Form
         _fileList.Items.Add(item);
     }
 
-    /// <summary>Marks the dialog as complete, enabling the Close button and stopping the progress bar.</summary>
+    /// <summary>Marca el diálogo como completado, habilitando el botón Cerrar y deteniendo la barra de progreso.</summary>
     public void MarkComplete(int successCount, int failedCount)
     {
         if (InvokeRequired) { BeginInvoke(() => MarkComplete(successCount, failedCount)); return; }

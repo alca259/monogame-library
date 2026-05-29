@@ -1,6 +1,6 @@
 namespace MonoGame.Editor.Core.CodeGen;
 
-/// <summary>Result of a code generation operation.</summary>
+/// <summary>Resultado de una operación de generación de código.</summary>
 public sealed record CodeGenResult(
     bool    Success,
     string  OutputPath,

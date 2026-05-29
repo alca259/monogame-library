@@ -1,10 +1,10 @@
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>
-/// Displays and edits properties of the currently selected <see cref="EditorGameObject"/>.
-/// The Transform section is always visible; additional sections are generated per attached
-/// <see cref="EditorBehaviour"/> using reflection over <see cref="EditorPropertyAttribute"/>.
-/// All edits are routed through <see cref="CommandStack"/> for undo/redo support.
+/// Muestra y edita las propiedades del <see cref="EditorGameObject"/> actualmente seleccionado.
+/// La sección Transform es siempre visible; se generan secciones adicionales por cada
+/// <see cref="EditorBehaviour"/> adjunto, usando reflexión sobre <see cref="EditorPropertyAttribute"/>.
+/// Todas las modificaciones se enrutan a través de <see cref="CommandStack"/> para soporte de deshacer/rehacer.
 /// </summary>
 public sealed class InspectorPanel : UserControl
 {
@@ -49,7 +49,7 @@ public sealed class InspectorPanel : UserControl
 
     #region Constructor
 
-    /// <summary>Creates the panel. Call <see cref="Initialize"/> to connect to the editor context.</summary>
+    /// <summary>Crea el panel. Llama a <see cref="Initialize"/> para conectar con el contexto del editor.</summary>
     public InspectorPanel()
     {
         _toolTip = new ToolTip { AutoPopDelay = 4000, InitialDelay = 500, ReshowDelay = 200 };
@@ -66,7 +66,7 @@ public sealed class InspectorPanel : UserControl
 
     #region Initialization
 
-    /// <summary>Connects this panel to the editor context and behaviour registry.</summary>
+    /// <summary>Conecta este panel con el contexto del editor y el registro de comportamientos.</summary>
     public void Initialize(EditorContext context, GameObjectRegistry? registry = null, PrefabManager? prefabManager = null, EditorPreferences? preferences = null)
     {
         _context       = context;
@@ -184,14 +184,14 @@ public sealed class InspectorPanel : UserControl
         int y     = SidePadding;
         int width = ContentWidth();
 
-        // Entity header
+        // Encabezado de entidad
         Control entityHeader = BuildEntityHeader(_currentObject);
         entityHeader.Location = new System.Drawing.Point(SidePadding, y);
         entityHeader.Width    = width;
         _scrollPanel.Controls.Add(entityHeader);
         y += entityHeader.Height + SectionGap;
 
-        // Prefab header (only when the object is a prefab instance)
+        // Encabezado de prefab (solo cuando el objeto es una instancia de prefab)
         if (_currentObject.PrefabPath is not null && _prefabManager is not null)
         {
             Control prefabHeader = BuildPrefabHeader(_currentObject);
@@ -201,14 +201,14 @@ public sealed class InspectorPanel : UserControl
             y += prefabHeader.Height + SectionGap;
         }
 
-        // Transform section
+        // Sección de transformación
         Control transformSection = BuildTransformSection(_currentObject);
         transformSection.Location = new System.Drawing.Point(SidePadding, y);
         transformSection.Width    = width;
         _scrollPanel.Controls.Add(transformSection);
         y += transformSection.Height + SectionGap;
 
-        // One section per behaviour
+        // Una sección por comportamiento
         for (int i = 0; i < _currentObject.Behaviours.Count; i++)
         {
             EditorBehaviour b = _currentObject.Behaviours[i];
@@ -219,7 +219,7 @@ public sealed class InspectorPanel : UserControl
             y += section.Height + SectionGap;
         }
 
-        // Add Behaviour button
+        // Botón de agregar comportamiento
         Panel addPanel = new Panel { Height = 36, Location = new System.Drawing.Point(SidePadding, y) };
         Button addBtn = new Button
         {
@@ -247,7 +247,7 @@ public sealed class InspectorPanel : UserControl
         int y     = SidePadding;
         int width = ContentWidth();
 
-        // Header
+        // Encabezado
         Panel header = new Panel
         {
             Height    = 32,
@@ -266,7 +266,7 @@ public sealed class InspectorPanel : UserControl
         _scrollPanel.Controls.Add(header);
         y += header.Height + SectionGap;
 
-        // Delta-transform section
+        // Sección de transformación delta
         GroupBox grp = new GroupBox
         {
             Text     = "Move Selection (Δ)",
@@ -288,7 +288,7 @@ public sealed class InspectorPanel : UserControl
         table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
         table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
 
-        // ΔX row
+        // Fila ΔX
         table.Controls.Add(MakeLabel("ΔX"), 0, 0);
         Panel deltaXPanel = new Panel { Height = RowHeight };
         NumericUpDown deltaXInput = CreateNumericUpDown(0m, -100_000m, 100_000m, 1);
@@ -297,7 +297,7 @@ public sealed class InspectorPanel : UserControl
         deltaXPanel.Controls.Add(deltaXInput);
         table.Controls.Add(deltaXPanel, 1, 0);
 
-        // ΔY row
+        // Fila ΔY
         table.Controls.Add(MakeLabel("ΔY"), 0, 1);
         Panel deltaYPanel = new Panel { Height = RowHeight };
         NumericUpDown deltaYInput = CreateNumericUpDown(0m, -100_000m, 100_000m, 1);
@@ -310,7 +310,7 @@ public sealed class InspectorPanel : UserControl
         _scrollPanel.Controls.Add(grp);
         y += grp.Height + SectionGap;
 
-        // Apply button
+        // Botón de aplicar
         Panel applyPanel = new Panel { Height = 36, Location = new System.Drawing.Point(SidePadding, y), Width = width };
         Button applyBtn = new Button
         {
@@ -348,7 +348,7 @@ public sealed class InspectorPanel : UserControl
             Padding   = new System.Windows.Forms.Padding(4, 2, 4, 2),
         };
 
-        // Id label (Dock=Bottom)
+        // Etiqueta de Id (Dock=Bottom)
         Label idLabel = new Label
         {
             Dock      = DockStyle.Bottom,
@@ -359,7 +359,7 @@ public sealed class InspectorPanel : UserControl
             TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
         };
 
-        // Active checkbox (Dock=Left)
+        // Casilla de verificación activo (Dock=Left)
         CheckBox activeChk = new CheckBox
         {
             Dock    = DockStyle.Left,
@@ -373,7 +373,7 @@ public sealed class InspectorPanel : UserControl
                 "Set Active", obj.Active, activeChk.Checked, v => obj.Active = v));
         };
 
-        // Tags combobox (Dock=Right)
+        // Combobox de etiquetas (Dock=Right)
         ComboBox tagsCombo = new ComboBox
         {
             Dock          = DockStyle.Right,
@@ -397,7 +397,7 @@ public sealed class InspectorPanel : UserControl
             ev.SuppressKeyPress = true;
         };
 
-        // Entity name textbox (Dock=Fill)
+        // Cuadro de texto de nombre de entidad (Dock=Fill)
         TextBox nameBox = new TextBox
         {
             Dock      = DockStyle.Fill,
@@ -448,7 +448,7 @@ public sealed class InspectorPanel : UserControl
         table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
         table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
 
-        // Position
+        // Posición
         table.Controls.Add(MakeLabel("Local Position"), 0, 0);
         table.Controls.Add(BuildTransformVec2Editor(
             obj.LocalPosition.X,
@@ -466,7 +466,7 @@ public sealed class InspectorPanel : UserControl
                     : new EditorVector2(obj.Parent.Position.X + x, obj.Parent.Position.Y + y)));
             }), 1, 0);
 
-        // Rotation
+        // Rotación
         table.Controls.Add(MakeLabel("Local Rotation"), 0, 1);
         table.Controls.Add(BuildTransformFloatEditor(
             obj.LocalRotation,
@@ -479,7 +479,7 @@ public sealed class InspectorPanel : UserControl
                 _context!.Commands.Execute(new RotateEntityCommand(obj, obj.Rotation, obj.Parent is null ? v : obj.Parent.Rotation + v));
             }), 1, 1);
 
-        // Scale
+        // Escala
         table.Controls.Add(MakeLabel("Local Scale"), 0, 2);
         table.Controls.Add(BuildTransformVec2Editor(
             obj.LocalScale.X,
@@ -497,7 +497,7 @@ public sealed class InspectorPanel : UserControl
                     : new EditorVector2(obj.Parent.Scale.X * x, obj.Parent.Scale.Y * y)));
             }), 1, 2);
 
-        // Depth Z (2.5D parallax ordering)
+        // Profundidad Z (ordenamiento por parallax 2.5D)
         table.Controls.Add(MakeLabel("Depth Z"), 0, 3);
         table.Controls.Add(BuildTransformFloatEditor(
             obj.PositionZ,
@@ -605,10 +605,10 @@ public sealed class InspectorPanel : UserControl
         string shortName = ExtractShortName(behaviour.TypeName);
         bool collapsed   = _preferences?.BehaviourSectionCollapsed.GetValueOrDefault(shortName, false) ?? false;
 
-        // Outer panel that stacks header + body
+        // Panel externo que apila encabezado + cuerpo
         Panel outerPanel = new Panel { Padding = new System.Windows.Forms.Padding(0) };
 
-        // --- Header ---
+        // --- Encabezado ---
         Panel header = new Panel
         {
             Dock      = DockStyle.Top,
@@ -670,7 +670,7 @@ public sealed class InspectorPanel : UserControl
         header.Controls.Add(nameLabel);
         header.Controls.Add(chevron);
 
-        // --- Body (properties) ---
+        // --- Cuerpo (propiedades) ---
         List<(string label, Control ctrl)> rows = BuildPropertyRows(behaviour, owner);
         int bodyHeight = rows.Count * StackedRow + 8;
 
@@ -697,12 +697,12 @@ public sealed class InspectorPanel : UserControl
             body.Controls.Add(ctrl);
         }
 
-        // Collapse toggle
+        // Alternar colapso
         string capturedName = shortName;
         chevron.Click += (_, _) => ToggleSectionCollapse(capturedName, chevron, body, outerPanel, bodyHeight);
         header.Click  += (_, _) => ToggleSectionCollapse(capturedName, chevron, body, outerPanel, bodyHeight);
 
-        // Add body first, then header (DockStyle.Top: last-added = topmost)
+        // Agregar cuerpo primero, luego encabezado (DockStyle.Top: el último agregado queda en la parte superior)
         outerPanel.Controls.Add(body);
         outerPanel.Controls.Add(header);
         outerPanel.Height = collapsed ? 28 : 28 + bodyHeight;
@@ -732,7 +732,7 @@ public sealed class InspectorPanel : UserControl
 
         PropertyInfo[] props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-        // Check whether ANY property carries the explicit attribute.
+        // Comprueba si ALGUNA propiedad tiene el atributo explícito.
         bool hasAnyAttribute = false;
         for (int i = 0; i < props.Length; i++)
         {
@@ -748,15 +748,15 @@ public sealed class InspectorPanel : UserControl
             PropertyInfo prop = props[i];
             EditorPropertyAttribute? attr = prop.GetCustomAttribute<EditorPropertyAttribute>();
 
-            // If this type has no [EditorProperty] at all (e.g. Kernel library types),
-            // fall back to showing all public read-write properties of supported types.
+            // Si este tipo no tiene [EditorProperty] en absoluto (p. ej., tipos de la librería Kernel),
+            // muestra como alternativa todas las propiedades públicas de lectura/escritura de los tipos admitidos.
         bool include = attr is not null
                 || (!hasAnyAttribute && prop.CanRead && prop.CanWrite
                     && IsSupportedFallbackType(prop.PropertyType));
 
             if (!include) continue;
 
-            // Hide runtime-local internals and world aliases in TransformBehaviour fallback view.
+            // Oculta los miembros internos locales de tiempo de ejecución y los alias de mundo en la vista de respaldo de TransformBehaviour.
             if (string.Equals(type.Name, "TransformBehaviour", StringComparison.Ordinal)
                 && (prop.Name.StartsWith("Local", StringComparison.Ordinal)
                     || string.Equals(prop.Name, "LocalToWorldMatrix", StringComparison.Ordinal)
@@ -769,7 +769,7 @@ public sealed class InspectorPanel : UserControl
                 continue;
             }
 
-            // Enabled is always shown in the section header as "On" — skip it for all behaviours.
+            // Enabled siempre se muestra en el encabezado de sección como "On"; omitirlo para todos los comportamientos.
             if (string.Equals(prop.Name, "Enabled", StringComparison.Ordinal))
                 continue;
 
@@ -1035,7 +1035,7 @@ public sealed class InspectorPanel : UserControl
             });
         }
 
-        // Fallback: read-only text box
+        // Alternativa: cuadro de texto de solo lectura
         TextBox fallback = new TextBox
         {
             ReadOnly  = true,
@@ -1121,7 +1121,7 @@ public sealed class InspectorPanel : UserControl
         NumericUpDown ny = CreateNumericUpDown((decimal)y, -1_000_000m, 1_000_000m, 3);
         ny.Dock = DockStyle.Fill;
 
-        // All controls added left to right; last added is Fill
+        // Todos los controles se agregan de izquierda a derecha; el último agregado es Fill
         panel.Controls.Add(ny);
         panel.Controls.Add(ly);
         panel.Controls.Add(nx);

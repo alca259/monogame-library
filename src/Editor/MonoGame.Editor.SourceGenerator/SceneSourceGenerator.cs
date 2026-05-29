@@ -8,8 +8,8 @@ using Microsoft.CodeAnalysis.Text;
 namespace MonoGame.Editor.SourceGenerator;
 
 /// <summary>
-/// Reads <c>*.scene.json</c> additional files and emits a static metadata class per scene.
-/// Generated classes are AOT-compatible (no reflection at runtime).
+/// Lee ficheros adicionales <c>*.scene.json</c> y emite una clase de metadatos estática por escena.
+/// Las clases generadas son compatibles con AOT (sin reflexión en tiempo de ejecución).
 /// </summary>
 [Generator]
 public sealed class SceneSourceGenerator : IIncrementalGenerator
@@ -165,7 +165,7 @@ public sealed class SceneSourceGenerator : IIncrementalGenerator
         }
         catch (JsonException)
         {
-            // Return whatever was parsed so far
+            // Devolver lo que se haya analizado hasta ahora
         }
         return scene;
     }

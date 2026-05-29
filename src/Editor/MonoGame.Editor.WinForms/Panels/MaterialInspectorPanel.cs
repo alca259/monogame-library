@@ -9,8 +9,8 @@ using SdPoint = System.Drawing.Point;
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>
-/// Unity-style material inspector. Shows structured PBR sections for the Standard shader
-/// and falls back to a generic property list for custom shaders.
+/// Inspector de materiales estilo Unity. Muestra secciones PBR estructuradas para el shader Standard
+/// y recurre a una lista de propiedades genérica para shaders personalizados.
 /// </summary>
 public sealed class MaterialInspectorPanel : UserControl
 {
@@ -20,8 +20,8 @@ public sealed class MaterialInspectorPanel : UserControl
     private const int LeftPad         = 8;
     private const int LabelWidth      = 100;
     private const int TextureSize     = 40;
-    private const int RowTexture      = TextureSize + 8;  // row height with texture thumbnail
-    private const int RowFlat         = 24;               // row height without texture
+    private const int RowTexture      = TextureSize + 8;  // altura de fila con miniatura de textura
+    private const int RowFlat         = 24;               // altura de fila sin textura
     private const int SectionHeight   = 22;
     private const int PreviewSize     = 256;
     private const string StandardPath = "StandardEffect";
@@ -51,19 +51,19 @@ public sealed class MaterialInspectorPanel : UserControl
     private readonly Panel           _scroll;
     private readonly Label           _noSel;
 
-    // Header controls (always visible when material loaded)
+    // Controles de cabecera (siempre visibles cuando hay material cargado)
     private readonly Panel           _header;
     private readonly Label           _titleLabel;
     private readonly ComboBox        _shaderDropdown;
 
-    // Rendering mode row (always visible)
+    // Fila de modo de renderizado (siempre visible)
     private readonly Panel           _renderModeRow;
     private readonly ComboBox        _renderModeDropdown;
 
-    // Dynamic area — rebuilt per material
+    // Área dinámica — reconstruida por material
     private readonly Panel           _propertiesArea;
 
-    // Preview area
+    // Área de vista previa
     private readonly Panel           _previewArea;
     private readonly PictureBox      _previewBox;
     private readonly Button          _renderPreviewBtn;
@@ -75,13 +75,13 @@ public sealed class MaterialInspectorPanel : UserControl
 
     #region Constructor
 
-    /// <summary>Creates the panel. Call <see cref="Initialize"/> to connect to the editor context.</summary>
+    /// <summary>Crea el panel. Llama a <see cref="Initialize"/> para conectar con el contexto del editor.</summary>
     public MaterialInspectorPanel()
     {
         BackColor = BgColor;
         Width     = PanelWidth;
 
-        // ── Scroll container ─────────────────────────────────────────────────
+        // ── Contenedor con scroll ─────────────────────────────────────────
         _scroll = new Panel
         {
             Dock       = DockStyle.Fill,
@@ -90,7 +90,7 @@ public sealed class MaterialInspectorPanel : UserControl
         };
         Controls.Add(_scroll);
 
-        // ── No-selection label ───────────────────────────────────────────────
+        // ── Etiqueta de ninguna selección ──────────────────────────────────
         _noSel = new Label
         {
             Text      = "Select a .mat.json file to edit it.",
@@ -101,7 +101,7 @@ public sealed class MaterialInspectorPanel : UserControl
         };
         _scroll.Controls.Add(_noSel);
 
-        // ── Header (material name + shader selector) ─────────────────────────
+        // ── Cabecera (nombre del material + selector de shader) ──────────────
         _header = new Panel
         {
             BackColor = BgDark,
@@ -136,7 +136,7 @@ public sealed class MaterialInspectorPanel : UserControl
         _header.Controls.Add(_shaderDropdown);
         _scroll.Controls.Add(_header);
 
-        // ── Rendering mode row ───────────────────────────────────────────────
+        // ── Fila de modo de renderizado ──────────────────────────────────────
         _renderModeRow = new Panel
         {
             BackColor = BgColor,
@@ -155,7 +155,7 @@ public sealed class MaterialInspectorPanel : UserControl
         _renderModeRow.Controls.Add(_renderModeDropdown);
         _scroll.Controls.Add(_renderModeRow);
 
-        // ── Dynamic properties area ──────────────────────────────────────────
+        // ── Área de propiedades dinámicas ──────────────────────────────────
         _propertiesArea = new Panel
         {
             BackColor    = BgColor,
@@ -166,7 +166,7 @@ public sealed class MaterialInspectorPanel : UserControl
         };
         _scroll.Controls.Add(_propertiesArea);
 
-        // ── Preview area ─────────────────────────────────────────────────────
+        // ── Área de vista previa ──────────────────────────────────────────────
         _previewArea = new Panel
         {
             BackColor = BgDark,
@@ -205,7 +205,7 @@ public sealed class MaterialInspectorPanel : UserControl
 
     #region Initialize
 
-    /// <summary>Connects this panel to the editor context.</summary>
+    /// <summary>Conecta este panel con el contexto del editor.</summary>
     public void Initialize(EditorContext context, Action<EditorMaterial>? onRenderRequested = null)
     {
         _context           = context;
@@ -213,7 +213,7 @@ public sealed class MaterialInspectorPanel : UserControl
         _context.EventBus.Subscribe<AssetSelectedEvent>(OnAssetSelected);
     }
 
-    /// <summary>Updates the preview image from the render thread.</summary>
+    /// <summary>Actualiza la imagen de vista previa desde el hilo de renderizado.</summary>
     public void SetPreviewBitmap(System.Drawing.Bitmap bitmap)
     {
         if (InvokeRequired) { BeginInvoke(() => SetPreviewBitmap(bitmap)); return; }
@@ -304,7 +304,7 @@ public sealed class MaterialInspectorPanel : UserControl
 
     private void BuildStandardSections(ref int y)
     {
-        // ── Main Maps ────────────────────────────────────────────────────────
+        // ── Mapas principales ─────────────────────────────────────────────────
         AddSectionHeader("Main Maps", ref y);
         AddTextureRow("Albedo",       "AlbedoTexture",      ref y, colorKey: "AlbedoColor");
         AddTextureRow("Metallic",     "MetallicTexture",    ref y, sliderKey: "Metallic");
@@ -316,7 +316,7 @@ public sealed class MaterialInspectorPanel : UserControl
         AddTextureRow("Detail Mask",  "DetailMaskTexture",  ref y);
         AddTilingOffsetRows("Tiling", "Offset",              ref y);
 
-        // ── Secondary Maps ───────────────────────────────────────────────────
+        // ── Mapas secundarios ─────────────────────────────────────────────────
         y += 4;
         AddSectionHeader("Secondary Maps", ref y);
         AddTextureRow("Detail Albedo x2",  "DetailAlbedoTexture", ref y);
@@ -366,7 +366,7 @@ public sealed class MaterialInspectorPanel : UserControl
 
     #region Row builders
 
-    // ── Section header ──────────────────────────────────────────────────────
+    // ── Encabezado de sección ────────────────────────────────────────────────
 
     private void AddSectionHeader(string title, ref int y)
     {
@@ -391,7 +391,7 @@ public sealed class MaterialInspectorPanel : UserControl
         y += SectionHeight + 1;
     }
 
-    // ── Texture row (thumbnail + optional color swatch / float input) ───────
+    // ── Fila de textura (miniatura + swatch de color / entrada flotante opcionales) ──
 
     private void AddTextureRow(
         string label,
@@ -411,7 +411,7 @@ public sealed class MaterialInspectorPanel : UserControl
             Location  = new SdPoint(0, y),
         };
 
-        // Indicator dot
+        // Punto indicador
         var dot = new Label
         {
             Text      = "◉",
@@ -422,10 +422,10 @@ public sealed class MaterialInspectorPanel : UserControl
             Location  = new SdPoint(LeftPad, (RowTexture - 10) / 2),
         };
 
-        // Property label
+        // Etiqueta de propiedad
         var lbl = MakeLabel(label, LeftPad + 14, (RowTexture - 14) / 2, LabelWidth - 14);
 
-        // Texture thumbnail PictureBox
+        // PictureBox de miniatura de textura
         string? currentPath = GetTexturePath(textureKey);
         var thumb = new PictureBox
         {
@@ -444,7 +444,7 @@ public sealed class MaterialInspectorPanel : UserControl
         int rightX = thumb.Right + 6;
         int rightW = PanelWidth - rightX - LeftPad;
 
-        // Optional color swatch
+        // Swatch de color opcional
         if (colorKey is not null)
         {
             var swatch = MakeColorSwatchBtn(colorKey, rightX, 4 + (TextureSize - 20) / 2, 40, 20);
@@ -453,7 +453,7 @@ public sealed class MaterialInspectorPanel : UserControl
             rightW -= 46;
         }
 
-        // Optional float/slider input
+        // Entrada flotante/deslizante opcional
         if (floatKey is not null)
         {
             var floatBox = MakeSmallFloat(floatKey, rightX, 4 + (TextureSize - 22) / 2, rightW);
@@ -473,7 +473,7 @@ public sealed class MaterialInspectorPanel : UserControl
         y += row.Height;
     }
 
-    // ── Slider-only row (no texture thumbnail, optional indentation) ─────────
+    // ── Fila solo con deslizador (sin miniatura de textura, sangría opcional) ──
 
     private void AddSliderOnlyRow(string label, string key, ref int y, bool indented = false)
     {
@@ -495,7 +495,7 @@ public sealed class MaterialInspectorPanel : UserControl
         y += row.Height;
     }
 
-    // ── Tiling / Offset rows ─────────────────────────────────────────────────
+    // ── Filas de Tiling / Offset ─────────────────────────────────────────────
 
     private void AddTilingOffsetRows(string tilingKey, string offsetKey, ref int y)
     {
@@ -533,7 +533,7 @@ public sealed class MaterialInspectorPanel : UserControl
         y += row.Height;
     }
 
-    // ── UV Set row ────────────────────────────────────────────────────────────
+    // ── Fila UV Set ────────────────────────────────────────────────────────────
 
     private void AddUVSetRow(ref int y)
     {
@@ -624,7 +624,7 @@ public sealed class MaterialInspectorPanel : UserControl
         return n;
     }
 
-    // Float box bound to a property key
+    // Caja de flotante vinculada a una clave de propiedad
     private NumericUpDown MakeFloatBox(EditorMaterialProperty prop)
     {
         float v = prop.Data?[0] ?? 0f;
@@ -636,7 +636,7 @@ public sealed class MaterialInspectorPanel : UserControl
         return n;
     }
 
-    // Small float input bound to a named property key
+    // Entrada flotante pequeña vinculada a una clave de propiedad con nombre
     private NumericUpDown MakeSmallFloat(string key, int x, int y, int width)
     {
         float v = GetFloat(key);
@@ -649,7 +649,7 @@ public sealed class MaterialInspectorPanel : UserControl
         return n;
     }
 
-    // Slider panel (TrackBar + label showing value) bound to a property key [0..1]
+    // Panel deslizante (TrackBar + etiqueta con valor) vinculado a una clave de propiedad [0..1]
     private Panel MakeSliderWithValue(string key, int x, int y, int width)
     {
         float v = Math.Clamp(GetFloat(key), 0f, 1f);
@@ -700,7 +700,7 @@ public sealed class MaterialInspectorPanel : UserControl
         return panel;
     }
 
-    // Color swatch button bound to a property key
+    // Botón de swatch de color vinculado a una clave de propiedad
     private Button MakeColorSwatchBtn(string key, int x, int y, int w, int h)
     {
         float[] rgba = GetColor(key);
@@ -723,7 +723,7 @@ public sealed class MaterialInspectorPanel : UserControl
         return btn;
     }
 
-    // Color swatch for generic property list
+    // Swatch de color para lista de propiedades genérica
     private Button MakeColorSwatch(EditorMaterialProperty prop)
     {
         float r = prop.Data?[0] ?? 1f, g = prop.Data?[1] ?? 1f, b = prop.Data?[2] ?? 1f, a = prop.Data?[3] ?? 1f;
@@ -745,7 +745,7 @@ public sealed class MaterialInspectorPanel : UserControl
         return btn;
     }
 
-    // Texture browse panel for generic property list
+    // Panel de exploración de textura para lista de propiedades genérica
     private Panel MakeTextureBrowse(EditorMaterialProperty prop)
     {
         var panel = new Panel { Width = 160, Height = RowFlat - 2, BackColor = SdColor.Transparent };
@@ -784,7 +784,7 @@ public sealed class MaterialInspectorPanel : UserControl
         return panel;
     }
 
-    // Vector multi-field for generic property list
+    // Campo múltiple de vector para lista de propiedades genérica
     private Panel MakeVectorBox(EditorMaterialProperty prop, int components)
     {
         prop.Data ??= new float[components];
@@ -821,7 +821,7 @@ public sealed class MaterialInspectorPanel : UserControl
         string rel  = Path.GetRelativePath(root, dlg.FileName);
         rel = Path.ChangeExtension(rel, null);
 
-        // Update property
+        // Actualizar propiedad
         if (_current is not null)
         {
             _current.Properties[key] = new EditorMaterialProperty
@@ -830,9 +830,9 @@ public sealed class MaterialInspectorPanel : UserControl
                 Type        = EditorMaterialPropertyType.Texture2D,
                 TexturePath = rel,
             };
-            // Auto-set HasXXXMap flag
+            // Establecer automáticamente la bandera HasXXXMap
             string flagKey = "Has" + key; // e.g. HasNormalTexture — but shader uses e.g. HasNormalMap
-            // Map texture key → HasXXX flag
+            // Correspondencia clave de textura → bandera HasXXX
             string? flagName = TextureKeyToFlag(key);
             if (flagName is not null)
                 SetFloat(flagName, 1f);
@@ -848,7 +848,7 @@ public sealed class MaterialInspectorPanel : UserControl
 
         if (string.IsNullOrEmpty(path)) return;
 
-        // Try loading from absolute path first, then from content-relative path
+        // Intentar cargar desde ruta absoluta primero, luego desde ruta relativa al contenido
         string absPath = File.Exists(path) ? path : string.Empty;
         if (string.IsNullOrEmpty(absPath)) return;
 
@@ -967,7 +967,7 @@ public sealed class MaterialInspectorPanel : UserControl
                 return JsonSerializer.Deserialize<EditorMaterial>(File.ReadAllText(path))
                     ?? EditorMaterial.CreateEmpty();
             }
-            catch { /* fall through */ }
+            catch { /* continuar */ }
         }
         return EditorMaterial.CreateEmpty();
     }

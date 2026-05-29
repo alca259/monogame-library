@@ -1,4 +1,4 @@
 namespace MonoGame.Editor.Core.Logging;
 
-/// <summary>Severity level of a log entry.</summary>
+/// <summary>Nivel de severidad de una entrada de registro.</summary>
 public enum LogLevel { Debug, Info, Warning, Error }

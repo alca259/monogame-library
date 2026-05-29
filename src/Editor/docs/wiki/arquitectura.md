@@ -165,6 +165,37 @@ MonoGame.Editor.Core/
 └── Tilemaps/        ← Importador y modelo de tilemaps
 ```
 
+## Subsistemas adicionales de Core
+
+### ContentWatcher
+
+`ContentWatcher` (`Assets/ContentWatcher.cs`) envuelve un `FileSystemWatcher` que apunta a `src/GameApp/Content/`. Se activa al abrir un proyecto y publica `AssetImportedEvent` cada vez que detecta un archivo nuevo o modificado. El `AssetBrowserPanel` y otros paneles reaccionan a ese evento para refrescar su vista.
+
+### GameObjectRegistry
+
+`GameObjectRegistry` (`Registry/GameObjectRegistry.cs`) mantiene el catálogo de `GameBehaviour` disponibles para añadir a entidades. Tiene dos fuentes:
+
+1. **Assemblies compilados** (`ScanAssemblyAsync`): reflexión sobre el DLL de `GameScripts` para encontrar clases que heredan de `GameBehaviour`.
+2. **Código fuente** (`ScanSourceAsync`): análisis de texto de los `.cs` en `GameScripts/` para mostrar scripts recién creados antes de compilar (aparecen marcados como "pending compile").
+
+Se popula al abrir un proyecto, tras cada build exitoso, y al ejecutar "Rescan Behaviours" manualmente.
+
+---
+
+## Modelo de hilos (threading)
+
+El editor usa tres contextos de ejecución:
+
+| Hilo | Qué ejecuta |
+|------|------------|
+| **UI** (WinForms) | Todos los controles, event handlers del bus, `CommandStack`, publicaciones del `EventBus` |
+| **Render** (MonoGameControl) | `EditModeRenderer`, `GizmoRenderer`, `NavGridPreviewRenderer`, `ResolutionPreviewRenderer` |
+| **Background** (Task/async) | Scan de assemblies y fuente, I/O de escenas, compilación, lectura de stderr del proceso externo |
+
+Cuando un hilo de fondo necesita actualizar la UI usa `Control.Invoke()`. `EditorContext` usa `lock` internamente para toda escritura de estado.
+
+---
+
 ## Organización de carpetas en WinForms
 
 ```

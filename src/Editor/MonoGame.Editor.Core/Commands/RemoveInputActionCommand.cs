@@ -1,14 +1,14 @@
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Removes an action (and its bindings) from an <see cref="InputEditorModel"/>, with full Undo support.</summary>
+/// <summary>Elimina una acción (y sus enlaces) de un <see cref="InputEditorModel"/>, con soporte completo de Deshacer.</summary>
 public sealed class RemoveInputActionCommand : IEditorCommand
 {
     private readonly InputEditorModel _model;
     private readonly string _actionName;
     private List<InputBindingEntry>? _savedBindings;
 
-    /// <param name="model">Target model.</param>
-    /// <param name="actionName">Name of the action to remove.</param>
+    /// <param name="model">Modelo de destino.</param>
+    /// <param name="actionName">Nombre de la acción a eliminar.</param>
     public RemoveInputActionCommand(InputEditorModel model, string actionName)
     {
         _model = model;

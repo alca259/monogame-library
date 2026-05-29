@@ -3,8 +3,8 @@ using MonoGame.Editor.Core.Events;
 namespace MonoGame.Editor.Core.Assets;
 
 /// <summary>
-/// Watches a Content folder for file changes and publishes <see cref="AssetImportedEvent"/>
-/// through the editor event bus.
+/// Vigila una carpeta de Content para detectar cambios en archivos y publica <see cref="AssetImportedEvent"/>
+/// a través del bus de eventos del editor.
 /// </summary>
 public sealed class ContentWatcher : IDisposable
 {
@@ -13,17 +13,17 @@ public sealed class ContentWatcher : IDisposable
     private string _rootPath = string.Empty;
     private bool _disposed;
 
-    /// <param name="eventBus">Bus used to publish <see cref="AssetImportedEvent"/>.</param>
+    /// <param name="eventBus">Bus utilizado para publicar <see cref="AssetImportedEvent"/>.</param>
     public ContentWatcher(IEditorEventBus eventBus)
     {
         ArgumentNullException.ThrowIfNull(eventBus);
         _eventBus = eventBus;
     }
 
-    /// <summary>Gets the path currently being watched, or an empty string if inactive.</summary>
+    /// <summary>Obtiene la ruta que se está vigilando actualmente, o una cadena vacía si está inactivo.</summary>
     public string RootPath => _rootPath;
 
-    /// <summary>Starts watching <paramref name="contentPath"/>. Replaces any previous watch.</summary>
+    /// <summary>Comienza a vigilar <paramref name="contentPath"/>. Reemplaza cualquier vigilancia anterior.</summary>
     public void Watch(string contentPath)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -45,7 +45,7 @@ public sealed class ContentWatcher : IDisposable
         _watcher.Renamed += OnFileRenamed;
     }
 
-    /// <summary>Stops watching without disposing the instance.</summary>
+    /// <summary>Detiene la vigilancia sin desechar la instancia.</summary>
     public void Stop() => StopWatcher();
 
     private void StopWatcher()

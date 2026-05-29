@@ -2,25 +2,25 @@ using System.Diagnostics;
 
 namespace MonoGame.Editor.WinForms.Controls;
 
-/// <summary>Arguments passed to the <see cref="MonoGameControl.RenderFrame"/> event.</summary>
+/// <summary>Argumentos pasados al evento <see cref="MonoGameControl.RenderFrame"/>.</summary>
 public sealed class RenderEventArgs(GraphicsDevice graphicsDevice, TimeSpan elapsed, int width, int height) : EventArgs
 {
-    /// <summary>The active graphics device, usable for drawing operations.</summary>
+    /// <summary>El GraphicsDevice activo, utilizable para operaciones de dibujo.</summary>
     public GraphicsDevice GraphicsDevice { get; } = graphicsDevice;
 
-    /// <summary>Time elapsed since the previous frame.</summary>
+    /// <summary>Tiempo transcurrido desde el fotograma anterior.</summary>
     public TimeSpan Elapsed { get; } = elapsed;
 
-    /// <summary>Current render-target width in pixels (safe to read from render thread).</summary>
+    /// <summary>Anchura actual del destino de renderizado en píxeles (seguro de leer desde el hilo de renderizado).</summary>
     public int Width { get; } = width;
 
-    /// <summary>Current render-target height in pixels (safe to read from render thread).</summary>
+    /// <summary>Altura actual del destino de renderizado en píxeles (seguro de leer desde el hilo de renderizado).</summary>
     public int Height { get; } = height;
 }
 
 /// <summary>
-/// WinForms control that hosts a MonoGame render loop using <see cref="SwapChainRenderTarget"/>.
-/// The render loop runs on a dedicated background thread at ~60 fps.
+/// Control de WinForms que aloja un bucle de renderizado de MonoGame usando <see cref="SwapChainRenderTarget"/>.
+/// El bucle de renderizado se ejecuta en un hilo de fondo dedicado a ~60 fps.
 /// </summary>
 public sealed class MonoGameControl : Control
 {
@@ -35,31 +35,31 @@ public sealed class MonoGameControl : Control
     private int _pendingWidth;
     private int _pendingHeight;
 
-    // Camera input state (written on UI thread, read on render thread — floats are atomic)
+    // Estado de entrada de la cámara (escrito en el hilo de UI, leído en el hilo de renderizado — los floats son atómicos)
     private bool _panActive;
     private bool _handToolActive;
     private System.Drawing.Point _lastPanPos;
 
-    /// <summary>Editor camera used to transform the viewport.</summary>
+    /// <summary>Cámara del editor utilizada para transformar el viewport.</summary>
     public EditorCamera2D Camera { get; } = new();
 
     /// <summary>
-    /// When <c>false</c> the render loop ticks but skips all drawing.
-    /// Set to <c>false</c> for the inactive tab so only the visible viewport renders.
+    /// Cuando es <c>false</c>, el bucle de renderizado avanza pero omite todo el dibujo.
+    /// Establecer a <c>false</c> para la pestaña inactiva para que solo el viewport visible renderice.
     /// </summary>
     public volatile bool IsActive = true;
 
-    /// <summary>Color used to clear the render target at the start of each frame.</summary>
+    /// <summary>Color utilizado para limpiar el destino de renderizado al inicio de cada fotograma.</summary>
     [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
     public Microsoft.Xna.Framework.Color ClearColor { get; set; } = new Microsoft.Xna.Framework.Color(30, 30, 30);
 
     /// <summary>
-    /// Raised from the render thread once per frame, after the device is cleared.
-    /// Subscribers can draw content using the provided <see cref="GraphicsDevice"/>.
+    /// Se lanza desde el hilo de renderizado una vez por fotograma, tras limpiar el dispositivo.
+    /// Los suscriptores pueden dibujar contenido usando el <see cref="GraphicsDevice"/> proporcionado.
     /// </summary>
     public event EventHandler<RenderEventArgs>? RenderFrame;
 
-    /// <summary>When true, left mouse drag pans the scene like a hand tool.</summary>
+    /// <summary>Cuando es true, arrastrar con el botón izquierdo del ratón desplaza la escena como la herramienta de mano.</summary>
     [System.ComponentModel.Browsable(false)]
     [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
     public bool HandToolEnabled
@@ -143,7 +143,7 @@ public sealed class MonoGameControl : Control
         System.Drawing.Point delta = new(e.X - _lastPanPos.X, e.Y - _lastPanPos.Y);
         _lastPanPos = e.Location;
 
-        // Screen delta → world delta: divide by zoom so pan speed is constant in world space
+        // Delta de pantalla → delta de mundo: dividir por el zoom para que la velocidad de paneo sea constante en el espacio mundo
         Camera.Pan(new Vector2(-delta.X, -delta.Y) / Camera.Zoom);
     }
 
@@ -263,7 +263,7 @@ public sealed class MonoGameControl : Control
             _swapChain?.Dispose();
             _swapChain = new SwapChainRenderTarget(_graphicsDevice!, _windowHandle, w, h);
         }
-        catch { /* ignore resize errors */ }
+        catch { /* ignorar errores de redimensionado */ }
     }
 
     private void DoRender(TimeSpan elapsed)
@@ -282,7 +282,7 @@ public sealed class MonoGameControl : Control
             _graphicsDevice.SetRenderTarget(null);
             _swapChain.Present();
         }
-        catch { /* device lost — will recover on next frame */ }
+        catch { /* dispositivo perdido — se recuperará en el siguiente fotograma */ }
     }
 
     #endregion

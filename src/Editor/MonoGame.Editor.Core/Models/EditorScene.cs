@@ -1,20 +1,20 @@
 namespace MonoGame.Editor.Core.Models;
 
-/// <summary>Represents a scene open in the editor.</summary>
+/// <summary>Representa una escena abierta en el editor.</summary>
 public sealed class EditorScene
 {
-    /// <summary>Display name of the scene.</summary>
+    /// <summary>Nombre de visualización de la escena.</summary>
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>Absolute path to the scene's <c>.json</c> file.</summary>
+    /// <summary>Ruta absoluta al archivo <c>.json</c> de la escena.</summary>
     public string ScenePath { get; set; } = string.Empty;
 
-    /// <summary>Optional 2D world bounds in pixels. Zero = unbounded.</summary>
+    /// <summary>Límites opcionales del mundo 2D en píxeles. Cero = sin límites.</summary>
     public EditorVector2 WorldSize { get; set; } = EditorVector2.Zero;
 
-    /// <summary>Optional subsystem configuration for the GameWorld. Null = plain new GameWorld() with no subsystems.</summary>
+    /// <summary>Configuración opcional de subsistemas para el GameWorld. Null = nuevo GameWorld() simple sin subsistemas.</summary>
     public EditorWorldConfig? WorldConfig { get; set; }
 
-    /// <summary>Top-level game objects in this scene (no parent).</summary>
+    /// <summary>Objetos de juego de nivel raíz en esta escena (sin padre).</summary>
     public List<EditorGameObject> RootGameObjects { get; } = [];
 }

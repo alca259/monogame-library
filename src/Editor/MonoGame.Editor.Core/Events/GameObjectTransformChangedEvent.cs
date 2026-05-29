@@ -1,4 +1,4 @@
 namespace MonoGame.Editor.Core.Events;
 
-/// <summary>Published when a game object's transform changes in the editor viewport.</summary>
+/// <summary>Publicado cuando cambia la transformación de un objeto del juego en el viewport del editor.</summary>
 public sealed record GameObjectTransformChangedEvent(EditorGameObject GameObject) : IEditorEvent;

@@ -6,7 +6,7 @@ using MonoGame.Editor.Core.Registry;
 
 namespace MonoGame.Editor.Core.PlayMode;
 
-/// <summary>Manages the runtime <see cref="GameWorld"/> for Play/Pause mode in the editor viewport.</summary>
+/// <summary>Gestiona el <see cref="GameWorld"/> en tiempo de ejecución para el modo Play/Pausa en el viewport del editor.</summary>
 public sealed class PlayModeRunner : IDisposable
 {
     private readonly GameWorld _world;
@@ -14,16 +14,16 @@ public sealed class PlayModeRunner : IDisposable
     private TimeSpan _totalTime;
     private bool _disposed;
 
-    /// <summary>Whether the SpriteBatch has been initialized on the render thread.</summary>
+    /// <summary>Indica si el SpriteBatch ha sido inicializado en el hilo de renderizado.</summary>
     public bool IsInitialized => _spriteBatch is not null;
 
-    /// <summary>Builds the runtime world from the editor scene. Call from the UI thread.</summary>
+    /// <summary>Construye el mundo en tiempo de ejecución a partir de la escena del editor. Llamar desde el hilo de UI.</summary>
     public PlayModeRunner(EditorScene scene, GameObjectRegistry registry)
         => _world = SceneToWorldConverter.Convert(scene, registry);
 
     /// <summary>
-    /// Creates the SpriteBatch using the given GraphicsDevice.
-    /// Must be called from the render thread before the first <see cref="Update"/> or <see cref="Draw"/>.
+    /// Crea el SpriteBatch usando el GraphicsDevice proporcionado.
+    /// Debe llamarse desde el hilo de renderizado antes del primer <see cref="Update"/> o <see cref="Draw"/>.
     /// </summary>
     public void EnsureInitialized(GraphicsDevice gd)
     {
@@ -31,7 +31,7 @@ public sealed class PlayModeRunner : IDisposable
         _spriteBatch = new SpriteBatch(gd);
     }
 
-    /// <summary>Advances game logic by one frame. Skip when Paused.</summary>
+    /// <summary>Avanza la lógica del juego un fotograma. Omitir cuando está en pausa.</summary>
     public void Update(TimeSpan elapsed)
     {
         if (_disposed) return;
@@ -39,7 +39,7 @@ public sealed class PlayModeRunner : IDisposable
         _world.Update(new GameTime(_totalTime, elapsed));
     }
 
-    /// <summary>Renders the world. Called every frame regardless of pause state.</summary>
+    /// <summary>Renderiza el mundo. Se llama cada fotograma independientemente del estado de pausa.</summary>
     public void Draw(TimeSpan elapsed)
     {
         if (_disposed || _spriteBatch is null) return;
@@ -53,14 +53,14 @@ public sealed class PlayModeRunner : IDisposable
             }
             catch
             {
-                // Behaviours that rely on game content (textures, fonts) will fail here;
-                // silently ignored — play mode still runs game logic correctly.
+                // Los GameBehaviour que dependen de contenido del juego (texturas, fuentes) fallarán aquí;
+                // se ignoran silenciosamente — el modo play sigue ejecutando la lógica del juego correctamente.
             }
             _spriteBatch.End();
         }
         catch
         {
-            // Device lost or SpriteBatch in bad state — recover on next frame.
+            // Dispositivo perdido o SpriteBatch en mal estado — recuperar en el siguiente fotograma.
         }
     }
 

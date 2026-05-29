@@ -3,8 +3,8 @@ using MonoGame.Editor.Core.Commands;
 namespace MonoGame.Editor.Core.Prefabs;
 
 /// <summary>
-/// Manages prefab serialization and instantiation. Implements <see cref="IPrefabProvider"/>
-/// so it can be passed directly to <see cref="ApplyPrefabCommand"/> and <see cref="RevertPrefabCommand"/>.
+/// Gestiona la serialización e instanciación de prefabs. Implementa <see cref="IPrefabProvider"/>
+/// para poder pasarse directamente a <see cref="ApplyPrefabCommand"/> y <see cref="RevertPrefabCommand"/>.
 /// </summary>
 public sealed class PrefabManager : IPrefabProvider
 {
@@ -23,12 +23,12 @@ public sealed class PrefabManager : IPrefabProvider
     #region Public API
 
     /// <summary>
-    /// Serializes <paramref name="source"/> (without its <see cref="EditorGameObject.PrefabPath"/>
-    /// tracking property) to <paramref name="prefabPath"/>.
+    /// Serializa <paramref name="source"/> (sin su propiedad de seguimiento <see cref="EditorGameObject.PrefabPath"/>)
+    /// en <paramref name="prefabPath"/>.
     /// </summary>
     public void Save(EditorGameObject source, string prefabPath)
     {
-        // Strip the PrefabPath so the stored definition never references itself.
+        // Elimina el PrefabPath para que la definición almacenada nunca se referencie a sí misma.
         string? savedPrefabPath = source.PrefabPath;
         source.PrefabPath = null;
         try
@@ -42,9 +42,9 @@ public sealed class PrefabManager : IPrefabProvider
     }
 
     /// <summary>
-    /// Loads the prefab at <paramref name="prefabPath"/>, performs a deep copy, assigns
-    /// <see cref="EditorGameObject.PrefabPath"/> on the copy, and returns it.
-    /// Returns <c>null</c> if the prefab file does not exist.
+    /// Carga el prefab en <paramref name="prefabPath"/>, realiza una copia profunda, asigna
+    /// <see cref="EditorGameObject.PrefabPath"/> en la copia y la devuelve.
+    /// Devuelve <c>null</c> si el archivo de prefab no existe.
     /// </summary>
     public EditorGameObject? Instantiate(string prefabPath)
     {

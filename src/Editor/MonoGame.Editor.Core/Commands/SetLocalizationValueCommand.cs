@@ -2,7 +2,7 @@ using MonoGame.Editor.Core.Localization;
 
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Sets a single localization value; supports undo.</summary>
+/// <summary>Establece un único valor de localización; admite deshacer.</summary>
 public sealed class SetLocalizationValueCommand : IEditorCommand
 {
     private readonly LocalizationEditorModel _model;
@@ -11,7 +11,7 @@ public sealed class SetLocalizationValueCommand : IEditorCommand
     private readonly string _oldValue;
     private readonly string _newValue;
 
-    /// <summary>Creates a command to set <paramref name="newValue"/> for the given locale and key.</summary>
+    /// <summary>Crea un comando para establecer <paramref name="newValue"/> para el idioma y la clave dados.</summary>
     public SetLocalizationValueCommand(
         LocalizationEditorModel model,
         string locale,

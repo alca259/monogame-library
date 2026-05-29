@@ -1,30 +1,30 @@
 namespace MonoGame.Editor.Core.Tilemaps;
 
-/// <summary>Represents a tileset referenced by a tilemap asset.</summary>
+/// <summary>Representa un tileset referenciado por un tilemap.</summary>
 public sealed class EditorTileset
 {
-    /// <summary>Gets the global ID of the first tile in this tileset.</summary>
+    /// <summary>Obtiene el ID global del primer tile en este tileset.</summary>
     public int FirstGid { get; init; }
 
-    /// <summary>Gets the display name of the tileset.</summary>
+    /// <summary>Obtiene el nombre de visualización del tileset.</summary>
     public string Name { get; init; } = string.Empty;
 
-    /// <summary>Gets the image path relative to the .tmx file.</summary>
+    /// <summary>Obtiene la ruta de imagen relativa al archivo .tmx.</summary>
     public string ImagePath { get; init; } = string.Empty;
 
-    /// <summary>Gets the width of each tile in pixels.</summary>
+    /// <summary>Obtiene el ancho de cada tile en píxeles.</summary>
     public int TileWidth { get; init; }
 
-    /// <summary>Gets the height of each tile in pixels.</summary>
+    /// <summary>Obtiene el alto de cada tile en píxeles.</summary>
     public int TileHeight { get; init; }
 
-    /// <summary>Gets the number of tile columns in the tileset image.</summary>
+    /// <summary>Obtiene el número de columnas de tiles en la imagen del tileset.</summary>
     public int Columns { get; init; }
 
-    /// <summary>Gets the total number of tiles in this tileset.</summary>
+    /// <summary>Obtiene el número total de tiles en este tileset.</summary>
     public int TileCount { get; init; }
 
-    /// <summary>Returns the pixel bounds of a tile given its local (0-based) ID within this tileset.</summary>
+    /// <summary>Devuelve los límites en píxeles de un tile dado su ID local (base 0) dentro de este tileset.</summary>
     public System.Drawing.Rectangle GetTileSourceRect(int localTileId)
     {
         if (Columns <= 0) return System.Drawing.Rectangle.Empty;

@@ -2,16 +2,16 @@ using System.Diagnostics;
 
 namespace MonoGame.Editor.Core.Assets;
 
-/// <summary>Invokes the MonoGame Content Builder (MGCB) and the dotnet build toolchain.</summary>
+/// <summary>Invoca el MonoGame Content Builder (MGCB) y la cadena de herramientas de compilación de dotnet.</summary>
 public static class MgcbRunner
 {
     /// <summary>
-    /// Runs <c>dotnet mgcb</c> against <paramref name="mgcbFilePath"/> and streams each
-    /// output line to <paramref name="onOutput"/>. Returns the process exit code.
+    /// Ejecuta <c>dotnet mgcb</c> contra <paramref name="mgcbFilePath"/> y transmite cada
+    /// línea de salida a <paramref name="onOutput"/>. Devuelve el código de salida del proceso.
     /// </summary>
-    /// <param name="mgcbFilePath">Absolute path to the <c>.mgcb</c> file.</param>
-    /// <param name="onOutput">Callback invoked for each stdout/stderr line.</param>
-    /// <param name="cancellationToken">Token to cancel the build.</param>
+    /// <param name="mgcbFilePath">Ruta absoluta al archivo <c>.mgcb</c>.</param>
+    /// <param name="onOutput">Callback invocado para cada línea de stdout/stderr.</param>
+    /// <param name="cancellationToken">Token para cancelar la compilación.</param>
     public static async Task<int> RunAsync(
         string mgcbFilePath,
         Action<string> onOutput,
@@ -51,14 +51,14 @@ public static class MgcbRunner
     }
 
     /// <summary>
-    /// Runs <c>dotnet build</c> against <paramref name="csprojPath"/> with the specified
-    /// <paramref name="configuration"/> and streams each output line to <paramref name="onLine"/>.
-    /// Returns the process exit code.
+    /// Ejecuta <c>dotnet build</c> contra <paramref name="csprojPath"/> con la
+    /// <paramref name="configuration"/> especificada y transmite cada línea de salida a <paramref name="onLine"/>.
+    /// Devuelve el código de salida del proceso.
     /// </summary>
-    /// <param name="csprojPath">Absolute path to the game <c>.csproj</c> file.</param>
-    /// <param name="configuration">MSBuild configuration (e.g. "Debug" or "Release").</param>
-    /// <param name="onLine">Callback invoked for each stdout/stderr line.</param>
-    /// <param name="cancellationToken">Token to cancel the build.</param>
+    /// <param name="csprojPath">Ruta absoluta al archivo <c>.csproj</c> del juego.</param>
+    /// <param name="configuration">Configuración de MSBuild (p. ej. "Debug" o "Release").</param>
+    /// <param name="onLine">Callback invocado para cada línea de stdout/stderr.</param>
+    /// <param name="cancellationToken">Token para cancelar la compilación.</param>
     public static async Task<int> RunDotnetBuildAsync(
         string csprojPath,
         string configuration,

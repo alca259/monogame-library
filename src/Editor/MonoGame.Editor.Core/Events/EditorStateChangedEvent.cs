@@ -1,6 +1,6 @@
 namespace MonoGame.Editor.Core.Events;
 
-/// <summary>Published when the editor transitions between Play, Pause, and Editing states.</summary>
-/// <param name="OldState">State before the transition.</param>
-/// <param name="NewState">State after the transition.</param>
+/// <summary>Publicado cuando el editor realiza una transición entre los estados Play, Pause y Editing.</summary>
+/// <param name="OldState">Estado antes de la transición.</param>
+/// <param name="NewState">Estado después de la transición.</param>
 public sealed record EditorStateChangedEvent(EditorState OldState, EditorState NewState) : IEditorEvent;

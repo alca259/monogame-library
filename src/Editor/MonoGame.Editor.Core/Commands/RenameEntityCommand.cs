@@ -1,14 +1,14 @@
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Renames a <see cref="EditorGameObject"/>.</summary>
+/// <summary>Renombra un <see cref="EditorGameObject"/>.</summary>
 public sealed class RenameEntityCommand : IEditorCommand
 {
     private readonly EditorGameObject _target;
     private readonly string _previousName;
     private readonly string _newName;
 
-    /// <param name="target">Object to rename.</param>
-    /// <param name="newName">New display name.</param>
+    /// <param name="target">Objeto a renombrar.</param>
+    /// <param name="newName">Nuevo nombre de visualización.</param>
     public RenameEntityCommand(EditorGameObject target, string newName)
     {
         _target = target;

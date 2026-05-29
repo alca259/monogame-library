@@ -4,9 +4,9 @@ using SDColor = System.Drawing.Color;
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>
-/// Displays the undo/redo history and lets the user navigate to any point
-/// by clicking an entry. Undo entries are shown at the top; redo entries below
-/// a "── redo ──" separator.
+/// Muestra el historial de deshacer/rehacer y permite al usuario navegar a cualquier punto
+/// haciendo clic en una entrada. Las entradas de deshacer se muestran arriba; las de rehacer debajo
+/// de un separador "── redo ──".
 /// </summary>
 public sealed class UndoHistoryPanel : Panel
 {
@@ -16,7 +16,7 @@ public sealed class UndoHistoryPanel : Panel
     private EditorContext?   _context;
     private IEditorEventBus? _eventBus;
 
-    /// <summary>Initializes a new instance of <see cref="UndoHistoryPanel"/>.</summary>
+    /// <summary>Inicializa una nueva instancia de <see cref="UndoHistoryPanel"/>.</summary>
     public UndoHistoryPanel()
     {
         _listBox = new ListBox
@@ -34,7 +34,7 @@ public sealed class UndoHistoryPanel : Panel
         Controls.Add(_listBox);
     }
 
-    /// <summary>Wires the panel to the editor context and event bus.</summary>
+    /// <summary>Conecta el panel con el contexto del editor y el bus de eventos.</summary>
     public void Initialize(EditorContext context, IEditorEventBus eventBus)
     {
         _context  = context;
@@ -43,7 +43,7 @@ public sealed class UndoHistoryPanel : Panel
         eventBus.Subscribe<RedoPerformedEvent>(OnHistoryChanged);
     }
 
-    /// <summary>Rebuilds the list from the current command stack state.</summary>
+    /// <summary>Reconstruye la lista a partir del estado actual de la pila de comandos.</summary>
     public void Refresh(CommandStack commands)
     {
         if (InvokeRequired) { BeginInvoke(() => Refresh(commands)); return; }
@@ -82,7 +82,7 @@ public sealed class UndoHistoryPanel : Panel
         if (_listBox.Items[idx] is not HistoryItem item) return;
         if (item.Kind == ItemKind.Separator) return;
 
-        // Undo N+1 times to reach the clicked history point
+        // Deshacer N+1 veces para alcanzar el punto del historial clicado
         if (item.Kind == ItemKind.Undo)
         {
             int times = item.Index + 1;

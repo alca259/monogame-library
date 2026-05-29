@@ -2,23 +2,23 @@ using System.Text;
 
 namespace MonoGame.Editor.Core.Tilemaps;
 
-/// <summary>An editable tile layer that implements <see cref="ITileLayer"/>.</summary>
+/// <summary>Capa de tiles editable que implementa <see cref="ITileLayer"/>.</summary>
 public sealed class EditorTileLayer : ITileLayer
 {
     private readonly int?[] _tiles;
 
-    /// <summary>Gets the display name of the layer.</summary>
+    /// <summary>Obtiene el nombre de visualización de la capa.</summary>
     public string Name { get; }
 
-    /// <summary>Gets the width of the layer in tiles.</summary>
+    /// <summary>Obtiene el ancho de la capa en tiles.</summary>
     public int Width { get; }
 
-    /// <summary>Gets the height of the layer in tiles.</summary>
+    /// <summary>Obtiene el alto de la capa en tiles.</summary>
     public int Height { get; }
 
-    /// <param name="name">Layer display name.</param>
-    /// <param name="width">Width in tiles.</param>
-    /// <param name="height">Height in tiles.</param>
+    /// <param name="name">Nombre de visualización de la capa.</param>
+    /// <param name="width">Ancho en tiles.</param>
+    /// <param name="height">Alto en tiles.</param>
     public EditorTileLayer(string name, int width, int height)
     {
         Name = name;
@@ -44,8 +44,8 @@ public sealed class EditorTileLayer : ITileLayer
     }
 
     /// <summary>
-    /// Exports the tile data as a CSV-encoded string compatible with the TMX format.
-    /// Empty tiles are written as <c>0</c>; the last tile has no trailing comma.
+    /// Exporta los datos de tiles como cadena codificada en CSV compatible con el formato TMX.
+    /// Los tiles vacíos se escriben como <c>0</c>; el último tile no lleva coma al final.
     /// </summary>
     public string ToCsvData()
     {

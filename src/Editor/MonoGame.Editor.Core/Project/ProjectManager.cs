@@ -1,36 +1,36 @@
 namespace MonoGame.Editor.Core.Project;
 
-/// <summary>Creates and loads editor projects from disk.</summary>
+/// <summary>Crea y carga proyectos del editor desde disco.</summary>
 public static class ProjectManager
 {
-    /// <summary>Name of the editor hidden subfolder inside the project root.</summary>
+    /// <summary>Nombre de la subcarpeta oculta del editor dentro de la raíz del proyecto.</summary>
     public const string EditorFolderName = ".editor";
 
-    /// <summary>Name of the project descriptor file written at the project root.</summary>
+    /// <summary>Nombre del archivo descriptor del proyecto escrito en la raíz del proyecto.</summary>
     public const string ProjectFileName = "project.json";
 
-    /// <summary>Returns the absolute path to the project descriptor file for a given root.</summary>
+    /// <summary>Devuelve la ruta absoluta al archivo descriptor del proyecto para una raíz dada.</summary>
     public static string GetProjectFilePath(string rootPath) =>
         Path.Combine(rootPath, ProjectFileName);
 
     /// <summary>
-    /// Creates or initializes an editor project named <paramref name="name"/> inside <paramref name="parentPath"/>.
-    /// If the target folder already exists (e.g. an existing game project), only the editor
-    /// sub-structure is scaffolded without touching existing source files.
+    /// Crea o inicializa un proyecto del editor llamado <paramref name="name"/> dentro de <paramref name="parentPath"/>.
+    /// Si la carpeta destino ya existe (p. ej. un proyecto de juego existente), solo se genera el
+    /// subarbol del editor sin tocar los archivos fuente existentes.
     /// </summary>
-    /// <param name="name">Project name (used as the subfolder name).</param>
-    /// <param name="parentPath">Parent directory where the project folder lives or will be created.</param>
-    /// <param name="gameCsprojPath">Optional absolute path to the main game .csproj file.</param>
+    /// <param name="name">Nombre del proyecto (se usa como nombre de la subcarpeta).</param>
+    /// <param name="parentPath">Directorio padre donde vive o se creará la carpeta del proyecto.</param>
+    /// <param name="gameCsprojPath">Ruta absoluta opcional al archivo .csproj principal del juego.</param>
     /// <param name="contentRelativePath">
-    /// Relative path to the content folder. When <paramref name="gameCsprojPath"/> is set,
-    /// resolved relative to its directory; otherwise relative to the project root.
+    /// Ruta relativa a la carpeta de contenido. Cuando <paramref name="gameCsprojPath"/> está definido,
+    /// se resuelve relativa a su directorio; de lo contrario, relativa a la raíz del proyecto.
     /// </param>
     /// <param name="localizationRelativePath">
-    /// Relative path to the localization folder. Same resolution rules as content.
+    /// Ruta relativa a la carpeta de localización. Mismas reglas de resolución que el contenido.
     /// </param>
-    /// <exception cref="ArgumentException">Thrown when name or parentPath is empty.</exception>
+    /// <exception cref="ArgumentException">Se lanza cuando name o parentPath están vacíos.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the target folder already contains an editor project (use Load instead).
+    /// Se lanza cuando la carpeta destino ya contiene un proyecto del editor (usar Load en su lugar).
     /// </exception>
     public static EditorProject Create(
         string name,
@@ -65,8 +65,8 @@ public static class ProjectManager
     }
 
     /// <summary>
-    /// Loads an existing project from <paramref name="projectPath"/> by reading <c>project.json</c> in the root.
-    /// Returns <c>null</c> if the folder does not contain a valid editor project file.
+    /// Carga un proyecto existente desde <paramref name="projectPath"/> leyendo <c>project.json</c> en la raíz.
+    /// Devuelve <c>null</c> si la carpeta no contiene un archivo de proyecto del editor válido.
     /// </summary>
     public static EditorProject? Load(string projectPath)
     {
@@ -103,8 +103,8 @@ public static class ProjectManager
     }
 
     /// <summary>
-    /// Looks for a <c>.sln</c> or <c>.slnx</c> file in <paramref name="projectPath"/>.
-    /// Returns the solution name (filename without extension), or <c>null</c> if none is found.
+    /// Busca un archivo <c>.sln</c> o <c>.slnx</c> en <paramref name="projectPath"/>.
+    /// Devuelve el nombre de la solución (nombre de archivo sin extensión), o <c>null</c> si no se encuentra ninguno.
     /// </summary>
     public static string? FindSolutionName(string projectPath)
     {
@@ -117,9 +117,9 @@ public static class ProjectManager
     }
 
     /// <summary>
-    /// Scans <paramref name="rootPath"/> up to 3 levels deep for the first <c>.csproj</c> file
-    /// that contains a MonoGame <c>PackageReference</c>.
-    /// Returns <c>null</c> if none is found.
+    /// Examina <paramref name="rootPath"/> hasta 3 niveles de profundidad buscando el primer archivo <c>.csproj</c>
+    /// que contenga una <c>PackageReference</c> de MonoGame.
+    /// Devuelve <c>null</c> si no se encuentra ninguno.
     /// </summary>
     public static string? FindGameCsproj(string rootPath)
     {
@@ -129,14 +129,14 @@ public static class ProjectManager
     }
 
     /// <summary>
-    /// Initializes an existing MonoGame solution folder as an editor project:
-    /// writes <c>project.json</c> at the root (name inferred from the solution) and creates
-    /// any missing editor folders (<c>.editor/scenes/</c>, <c>.editor/prefabs/</c>) plus
-    /// standard game folders (<c>Content/</c>, <c>Localization/</c>) if absent.
+    /// Inicializa una carpeta de solución MonoGame existente como proyecto del editor:
+    /// escribe <c>project.json</c> en la raíz (nombre inferido a partir de la solución) y crea
+    /// las carpetas del editor que falten (<c>.editor/scenes/</c>, <c>.editor/prefabs/</c>) más
+    /// las carpetas estándar del juego (<c>Content/</c>, <c>Localization/</c>) si no existen.
     /// </summary>
-    /// <param name="projectPath">Path to the existing solution root.</param>
-    /// <param name="gameCsprojPath">Optional explicit path to the game .csproj; auto-detected if empty.</param>
-    /// <exception cref="InvalidOperationException">Thrown when no solution file is found.</exception>
+    /// <param name="projectPath">Ruta a la raíz de la solución existente.</param>
+    /// <param name="gameCsprojPath">Ruta explícita opcional al .csproj del juego; se detecta automáticamente si está vacía.</param>
+    /// <exception cref="InvalidOperationException">Se lanza cuando no se encuentra ningún archivo de solución.</exception>
     public static EditorProject Initialize(string projectPath, string gameCsprojPath = "")
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectPath);
@@ -163,7 +163,7 @@ public static class ProjectManager
         return project;
     }
 
-    /// <summary>Persists the game .csproj path to <c>project.json</c> if it is not already set.</summary>
+    /// <summary>Persiste la ruta al .csproj del juego en <c>project.json</c> si aún no está definida.</summary>
     public static void SaveGameCsprojPath(EditorProject project, string csprojPath)
     {
         ArgumentNullException.ThrowIfNull(project);
@@ -186,11 +186,11 @@ public static class ProjectManager
         }
         catch (Exception ex) when (ex is JsonException or IOException)
         {
-            // non-fatal — skip persisting
+            // no crítico — omitir persistencia
         }
     }
 
-    /// <summary>Persists the last opened scene path to <c>project.json</c>.</summary>
+    /// <summary>Persiste la ruta de la última escena abierta en <c>project.json</c>.</summary>
     public static void SaveLastOpenedScene(EditorProject project, string scenePath)
     {
         ArgumentNullException.ThrowIfNull(project);
@@ -212,7 +212,7 @@ public static class ProjectManager
         }
         catch (Exception ex) when (ex is JsonException or IOException)
         {
-            // non-fatal — skip persisting
+            // no crítico — omitir persistencia
         }
     }
 
@@ -279,7 +279,7 @@ public static class ProjectManager
             }
             catch (IOException)
             {
-                // skip unreadable files
+                // omitir archivos no legibles
             }
         }
 
@@ -310,15 +310,15 @@ public static class ProjectManager
         [JsonPropertyName("lastOpenedScene")]
         public string LastOpenedScene { get; set; } = string.Empty;
 
-        /// <summary>Kept for backward compatibility and optional configuration.</summary>
+        /// <summary>Mantenido por compatibilidad con versiones anteriores y configuración opcional.</summary>
         [JsonPropertyName("gameCsprojPath")]
         public string GameCsprojPath { get; set; } = string.Empty;
 
-        /// <summary>Kept for backward compatibility and optional configuration.</summary>
+        /// <summary>Mantenido por compatibilidad con versiones anteriores y configuración opcional.</summary>
         [JsonPropertyName("contentPath")]
         public string ContentPath { get; set; } = "Content";
 
-        /// <summary>Kept for backward compatibility and optional configuration.</summary>
+        /// <summary>Mantenido por compatibilidad con versiones anteriores y configuración opcional.</summary>
         [JsonPropertyName("localizationPath")]
         public string LocalizationPath { get; set; } = "Localization";
     }

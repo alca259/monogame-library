@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace MonoGame.Editor.WinForms;
 
-/// <summary>Main editor window. Logic and event wiring.</summary>
+/// <summary>Ventana principal del editor. Lógica y conexión de eventos.</summary>
 public sealed partial class EditorForm : Form
 {
     private enum SceneViewMode
@@ -41,15 +41,15 @@ public sealed partial class EditorForm : Form
     private readonly HashSet<Keys> _pressedNavigationKeys = [];
     private bool _tilemapPainting;
 
-    // FPS counter (written/read on render thread; label updated on UI thread via BeginInvoke)
+    // Contador de FPS (escrito/leído en el hilo de renderizado; etiqueta actualizada en el hilo de UI vía BeginInvoke)
     private double _fpsAccumTime;
     private int    _fpsFrameCount;
     private float  _fpsCurrent;
 
-    // Default clear color for the scene viewport
+    // Color de limpieza predeterminado para el viewport de la escena
     private static readonly Microsoft.Xna.Framework.Color DefaultClearColor = new(30, 30, 30);
 
-    /// <summary>Designer-only constructor.</summary>
+    /// <summary>Constructor exclusivo del Designer.</summary>
     public EditorForm() => InitializeComponent();
 
     public EditorForm(EditorContext context)
@@ -101,7 +101,7 @@ public sealed partial class EditorForm : Form
 
     private void CenterPlaybackStrip()
     {
-        // Center relative to full toolbar width (not just the fill cell)
+        // Centrar relativo al ancho completo de la barra de herramientas (no solo la celda de relleno)
         int x = (_toolbarTable.Width - _playbackStrip.Width) / 2 - _playbackCell.Left;
         int y = (_playbackCell.Height - _playbackStrip.Height) / 2;
         _playbackStrip.Location = new System.Drawing.Point(Math.Max(0, x), Math.Max(0, y));
@@ -125,29 +125,29 @@ public sealed partial class EditorForm : Form
         _centerTabControl.SelectedIndexChanged += OnCenterTabChanged;
         _toolbarTable.Resize  += (_, _) => CenterPlaybackStrip();
 
-        // Gizmo mouse interaction
+        // Interacción del ratón con gizmos
         _viewport.MouseDown += OnViewportMouseDown;
         _viewport.MouseMove += OnViewportMouseMove;
         _viewport.MouseUp   += OnViewportMouseUp;
 
-        // Initialize gizmo renderer (GPU resources allocated lazily on first render)
+        // Inicializar el gizmo renderer (recursos de GPU asignados de forma diferida en el primer renderizado)
         _gizmoRenderer = new GizmoRenderer(_gizmoCtrl);
 
-        // Initialize panels
+        // Inicializar paneles
         _consolePanel.Initialize(_context);
         _hierarchyPanel.Initialize(_context, _prefabManager);
         _inspectorPanel.Initialize(_context, _registry, _prefabManager);
         _assetBrowserPanel.Initialize(_context);
         _sceneManagerPanel.Initialize(_context);
 
-        // Asset-specific inspector panels (added as tabs to the bottom panel)
+        // Paneles del inspector específicos por tipo de asset (añadidos como pestañas al panel inferior)
         _spriteInspectorPanel = new SpriteInspectorPanel { Dock = DockStyle.Fill };
         _spriteInspectorPanel.Initialize(_context);
 
         _materialInspectorPanel = new MaterialInspectorPanel { Dock = DockStyle.Fill };
         _materialInspectorPanel.Initialize(_context, mat =>
         {
-            // Called from UI thread when user clicks "Render Preview"
+            // Llamado desde el hilo de UI cuando el usuario hace clic en "Render Preview"
             _pendingMaterialPreview = mat;
         });
 
@@ -162,7 +162,7 @@ public sealed partial class EditorForm : Form
         _uiThemeEditorTab = new TabPage("UI Theme Editor") { Name = "_uiThemeEditorTab" };
         _uiThemeEditorTab.Controls.Add(_uiThemeInspectorPanel);
 
-        // Add asset-specific inspector tabs to the right panel tab control
+        // Añadir las pestañas del inspector específicas por asset al TabControl del panel derecho
         _rightTabControl.TabPages.Add(_materialEditorTab);
         _rightTabControl.TabPages.Add(_uiThemeEditorTab);
         _localizationPanel.Initialize(_context);
@@ -176,7 +176,7 @@ public sealed partial class EditorForm : Form
         _context.EventBus.Subscribe<LocalizationLoadedEvent>(OnLocalizationLoaded);
         _context.EventBus.Subscribe<AssetSelectedEvent>(OnAssetSelectedForInspector);
 
-        // Build menus programmatically (avoids Designer.cs C#-version concerns)
+        // Construir menús de forma programática (evita problemas de versión de C# en Designer.cs)
         BuildFileMenuExtras();
         BuildProjectMenu();
     }
@@ -500,9 +500,9 @@ public sealed partial class EditorForm : Form
         _gizmoCtrl.SnapEnabled = _snapButton.Checked;
     }
 
-    private void OnNavButtonClick(object? sender, EventArgs e) { /* state is read from _navButton.Checked in DrawEditorGizmos */ }
+    private void OnNavButtonClick(object? sender, EventArgs e) { /* el estado se lee de _navButton.Checked en DrawEditorGizmos */ }
 
-    private void OnResButtonClick(object? sender, EventArgs e) { /* state is read from _resButton.Checked in DrawEditorGizmos */ }
+    private void OnResButtonClick(object? sender, EventArgs e) { /* el estado se lee de _resButton.Checked en DrawEditorGizmos */ }
 
     private void OnFormClosing(object? sender, FormClosingEventArgs e)
     {
@@ -528,7 +528,7 @@ public sealed partial class EditorForm : Form
                         SceneSerializer.SaveAsync(scene, scene.ScenePath).GetAwaiter().GetResult();
                         _context.MarkSceneClean();
                     }
-                    catch { /* best-effort on close */ }
+                    catch { /* esfuerzo máximo al cerrar */ }
                 }
             }
         }
@@ -564,7 +564,7 @@ public sealed partial class EditorForm : Form
         if (undoHistoryVisible)    _bottomTabControl.TabPages.Add(_undoHistoryTab);
         if (scriptsVisible)        _bottomTabControl.TabPages.Add(_scriptsTab);
 
-        // Sprite Editor stays in the bottom (context-sensitive asset inspector)
+        // Sprite Editor permanece en la parte inferior (inspector de asset sensible al contexto)
         if (_spriteEditorTab is not null) _bottomTabControl.TabPages.Add(_spriteEditorTab);
 
         _mainSplit.Panel2Collapsed = !assetsVisible && !consoleVisible && !sceneManagerVisible && !localizationVisible && !inputMapVisible && !tilemapPaletteVisible && !undoHistoryVisible && !scriptsVisible;
@@ -1008,7 +1008,7 @@ public sealed partial class EditorForm : Form
     {
         string config = _projectSettings?.BuildConfiguration ?? "Debug";
 
-        // Discover every .csproj under the project root and scan its compiled output
+        // Descubrir cada .csproj bajo la raíz del proyecto y escanear su salida compilada
         string[] csprojFiles;
         try { csprojFiles = Directory.GetFiles(project.RootPath, "*.csproj", SearchOption.AllDirectories); }
         catch { csprojFiles = []; }
@@ -1035,7 +1035,7 @@ public sealed partial class EditorForm : Form
 
         _consolePanel.AppendLine($"[CodeGen] {_registry.RegisteredTypes.Count} compiled type(s) found.", LogLevel.Info);
 
-        // Scan all source under root for uncompiled (pending) types — skips bin/, obj/, etc.
+        // Escanear todo el código fuente bajo la raíz para tipos no compilados (pendientes) — omite bin/, obj/, etc.
         await _registry.ScanSourceAsync(project.RootPath).ConfigureAwait(true);
     }
 
@@ -1130,7 +1130,7 @@ public sealed partial class EditorForm : Form
         };
         _saveSceneAsMenuItem.Click += OnFileSaveSceneAsClick;
 
-        // Target layout: [New Project | New Scene | --- | Open Project | Open Recent | --- | Save Scene | Save Scene As | _fileSeparator | Exit]
+        // Disposición objetivo: [New Project | New Scene | --- | Open Project | Open Recent | --- | Save Scene | Save Scene As | _fileSeparator | Exit]
         int newProjIdx = _fileMenu.DropDownItems.IndexOf(_newProjectItem);
         _fileMenu.DropDownItems.Insert(newProjIdx + 1, _newSceneMenuItem);
         _fileMenu.DropDownItems.Insert(newProjIdx + 2, new ToolStripSeparator());
@@ -1236,7 +1236,7 @@ public sealed partial class EditorForm : Form
                 _consolePanel.AppendLine($"[Save] Scene saved to {scenePath}");
                 _statusLabel.Text = "Saved.";
 
-                // Auto-generate code on save when configured
+                // Generar código automáticamente al guardar si está configurado
                 await TryGenerateCodeOnSaveAsync(scene, project).ConfigureAwait(true);
             }
         }
@@ -1453,7 +1453,7 @@ public sealed partial class EditorForm : Form
     {
         if (InvokeRequired) { BeginInvoke(() => OnAssetSelectedForInspector(evt)); return; }
 
-        // Material / UI Theme → right panel tabs
+        // Material / UI Theme → pestañas del panel derecho
         TabPage? rightTarget = evt.Asset?.Type switch
         {
             AssetType.Material => _materialEditorTab,
@@ -1468,7 +1468,7 @@ public sealed partial class EditorForm : Form
             return;
         }
 
-        // Sprite / Texture → bottom Sprite Editor tab
+        // Sprite / Textura → pestaña del Sprite Editor en la parte inferior
         TabPage? bottomTarget = evt.Asset?.Type switch
         {
             AssetType.Texture or AssetType.Sprite => _spriteEditorTab,
@@ -1606,7 +1606,7 @@ public sealed partial class EditorForm : Form
     {
         ApplyKeyboardNavigation(e.Elapsed);
 
-        // Accumulate FPS counter; update label every 0.5s
+        // Acumular contador de FPS; actualizar etiqueta cada 0,5 s
         _fpsAccumTime  += e.Elapsed.TotalSeconds;
         _fpsFrameCount++;
         if (_fpsAccumTime >= 0.5)
@@ -1617,11 +1617,11 @@ public sealed partial class EditorForm : Form
             BeginInvoke(() => _fpsStatusLabel.Text = $"{_fpsCurrent:F0} fps");
         }
 
-        // Scene tab always renders the edit-mode overlay (grid, gizmos, sprite previews)
-        // regardless of play state — mirrors the Unity Scene view behaviour.
+        // La pestaña de escena siempre renderiza la superposición del modo edición (cuadrícula, gizmos, vistas previas de sprites)
+        // independientemente del estado de reproducción — refleja el comportamiento de la vista de escena de Unity.
         DrawEditorGizmos(e);
 
-        // Material preview sphere (off-screen render to RenderTarget2D, then push to UI)
+        // Esfera de previsualización del material (render fuera de pantalla en RenderTarget2D, luego enviado a la UI)
         RenderMaterialPreviewIfPending(e.GraphicsDevice);
     }
 
@@ -1656,8 +1656,8 @@ public sealed partial class EditorForm : Form
         if (!_gizmoRenderer.IsInitialized)
             _gizmoRenderer.Initialize(e.GraphicsDevice);
 
-        // e.Width/Height come directly from _swapChain.Width/Height in the render thread —
-        // no WinForms cross-thread access, no reliance on GraphicsDevice.Viewport being set.
+        // e.Width/Height provienen directamente de _swapChain.Width/Height en el hilo de renderizado —
+        // sin acceso entre hilos de WinForms, sin depender de que GraphicsDevice.Viewport esté establecido.
         int w = e.Width;
         int h = e.Height;
         if (w <= 0 || h <= 0) return;
@@ -1665,14 +1665,14 @@ public sealed partial class EditorForm : Form
         Viewport vp = new(0, 0, w, h);
         Matrix cameraTransform = _viewport.Camera.GetTransformMatrix(vp);
 
-        // Both 2D and 2.5D use the orthographic edit-mode renderer.
+        // Tanto el modo 2D como el 2.5D usan el renderer ortográfico del modo edición.
         _editRenderer ??= new EditModeRenderer(_context);
         if (!_editRenderer.IsInitialized)
             _editRenderer.Initialize(e.GraphicsDevice);
         if (_context.ActiveScene is not null)
             _editRenderer.DrawScene(_context.ActiveScene, cameraTransform);
 
-        // NavGrid overlay (only when NAV button is checked)
+        // Superposición de NavGrid (solo cuando el botón NAV está marcado)
         if (_navButton.Checked)
         {
             _navGridRenderer ??= new NavGridPreviewRenderer();
@@ -1684,7 +1684,7 @@ public sealed partial class EditorForm : Form
         _gizmoRenderer.Draw(_context.SelectedObject, cameraTransform, w, h, _gizmoCtrl.IsDepthMode,
             _context.ActiveScene?.RootGameObjects);
 
-        // Resolution preview overlay (only when RES button is checked)
+        // Superposición de previsualización de resolución (solo cuando el botón RES está marcado)
         if (_resButton.Checked && _projectSettings is not null)
         {
             _resRenderer ??= new ResolutionPreviewRenderer();
@@ -1708,7 +1708,7 @@ public sealed partial class EditorForm : Form
         if (!_materialPreviewRenderer.IsInitialized)
             _materialPreviewRenderer.Initialize(gd);
 
-        // TODO: load the material's texture and tint from mat.Properties for a richer preview
+        // TODO: cargar la textura y el tinte del material desde mat.Properties para una previsualización más rica
         _materialPreviewRenderer.SetMaterial(null, Microsoft.Xna.Framework.Color.CornflowerBlue);
 
         if (_materialPreviewRenderer.Render())

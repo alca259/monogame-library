@@ -1,8 +1,8 @@
 namespace MonoGame.Editor.Core.Project;
 
 /// <summary>
-/// Generates the <c>src/</c> game project structure for a newly created editor project.
-/// Produces <c>GameApp</c> (executable) and <c>GameScripts</c> (class library) with a shared solution.
+/// Genera la estructura de carpetas <c>src/</c> del proyecto de juego para un proyecto del editor recién creado.
+/// Produce <c>GameApp</c> (ejecutable) y <c>GameScripts</c> (biblioteca de clases) con una solución compartida.
 /// </summary>
 public static class ProjectScaffolder
 {
@@ -11,8 +11,8 @@ public static class ProjectScaffolder
     private const string SrcFolder         = "src";
 
     /// <summary>
-    /// Creates the full <c>src/</c> subfolder structure.
-    /// No-op if the solution file already exists (idempotent).
+    /// Crea la estructura completa de subcarpetas <c>src/</c>.
+    /// No hace nada si el archivo de solución ya existe (idempotente).
     /// </summary>
     public static void Scaffold(EditorProject project)
     {
@@ -38,11 +38,11 @@ public static class ProjectScaffolder
         WriteIfAbsent(slnPath, BuildSlnx());
     }
 
-    /// <summary>Returns the absolute path to the generated solution file for a project.</summary>
+    /// <summary>Devuelve la ruta absoluta al archivo de solución generado para un proyecto.</summary>
     public static string GetSolutionPath(EditorProject project) =>
         Path.Combine(project.RootPath, SrcFolder, $"{project.Name}.slnx");
 
-    /// <summary>Returns the absolute path to the GameApp .csproj.</summary>
+    /// <summary>Devuelve la ruta absoluta al archivo .csproj de GameApp.</summary>
     public static string GetGameAppCsprojPath(EditorProject project) =>
         Path.Combine(project.RootPath, SrcFolder, GameAppFolder, $"{GameAppFolder}.csproj");
 
@@ -80,7 +80,7 @@ public static class ProjectScaffolder
         "    </None>\n" +
         "  </ItemGroup>\n" +
         "\n" +
-        "  <!-- Scene source generator -->\n" +
+        "  <!-- Generador de código fuente de escenas -->\n" +
         "  <ItemGroup>\n" +
         "    <AdditionalFiles Include=\"../../../.editor/scenes/**/*.scene.json\" />\n" +
         "  </ItemGroup>\n" +

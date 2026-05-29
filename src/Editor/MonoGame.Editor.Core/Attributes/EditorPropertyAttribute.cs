@@ -1,21 +1,21 @@
 namespace MonoGame.Editor.Core.Attributes;
 
 /// <summary>
-/// Marks a public property on a <c>GameBehaviour</c> subclass as visible and editable
-/// in the editor Inspector panel.
+/// Marca una propiedad pública de una subclase de <c>GameBehaviour</c> como visible y editable
+/// en el panel Inspector del editor.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class EditorPropertyAttribute : Attribute
 {
-    /// <summary>Custom label shown next to the control. Defaults to the property name.</summary>
+    /// <summary>Etiqueta personalizada que se muestra junto al control. Por defecto usa el nombre de la propiedad.</summary>
     public string? Label { get; init; }
 
-    /// <summary>Minimum allowed value (for numeric types).</summary>
+    /// <summary>Valor mínimo permitido (para tipos numéricos).</summary>
     public float Min { get; init; } = float.MinValue;
 
-    /// <summary>Maximum allowed value (for numeric types).</summary>
+    /// <summary>Valor máximo permitido (para tipos numéricos).</summary>
     public float Max { get; init; } = float.MaxValue;
 
-    /// <summary>Tooltip text displayed on hover.</summary>
+    /// <summary>Texto de información emergente que se muestra al pasar el cursor.</summary>
     public string? Tooltip { get; init; }
 }

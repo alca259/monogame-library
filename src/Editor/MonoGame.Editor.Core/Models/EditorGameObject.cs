@@ -1,31 +1,31 @@
 namespace MonoGame.Editor.Core.Models;
 
-/// <summary>Represents a game object node in the editor scene hierarchy.</summary>
+/// <summary>Representa un nodo de objeto de juego en la jerarquía de escena del editor.</summary>
 public sealed class EditorGameObject
 {
-    /// <summary>Stable unique identifier for this object.</summary>
+    /// <summary>Identificador único estable para este objeto.</summary>
     public Guid Id { get; } = Guid.NewGuid();
 
-    /// <summary>Display name shown in the hierarchy.</summary>
+    /// <summary>Nombre de visualización que aparece en la jerarquía.</summary>
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>Whether this object and its children are active.</summary>
+    /// <summary>Indica si este objeto y sus hijos están activos.</summary>
     public bool Active { get; set; } = true;
 
-    /// <summary>World-space position of this object.</summary>
+    /// <summary>Posición en espacio de mundo de este objeto.</summary>
     public EditorVector2 Position { get; set; } = EditorVector2.Zero;
 
-    /// <summary>Depth in 2.5D mode (parallax ordering). Omitted from JSON when zero.</summary>
+    /// <summary>Profundidad en modo 2.5D (orden de paralaje). Se omite del JSON cuando es cero.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public float PositionZ { get; set; }
 
-    /// <summary>Rotation in degrees.</summary>
+    /// <summary>Rotación en grados.</summary>
     public float Rotation { get; set; }
 
-    /// <summary>Scale applied to this object and its children.</summary>
+    /// <summary>Escala aplicada a este objeto y sus hijos.</summary>
     public EditorVector2 Scale { get; set; } = EditorVector2.One;
 
-    /// <summary>Local-space position relative to <see cref="Parent"/>.</summary>
+    /// <summary>Posición en espacio local relativa a <see cref="Parent"/>.</summary>
     [JsonIgnore]
     public EditorVector2 LocalPosition
     {
@@ -37,7 +37,7 @@ public sealed class EditorGameObject
             : new EditorVector2(Parent.Position.X + value.X, Parent.Position.Y + value.Y);
     }
 
-    /// <summary>Local-space rotation in degrees relative to <see cref="Parent"/>.</summary>
+    /// <summary>Rotación en espacio local en grados relativa a <see cref="Parent"/>.</summary>
     [JsonIgnore]
     public float LocalRotation
     {
@@ -45,7 +45,7 @@ public sealed class EditorGameObject
         set => Rotation = Parent is null ? value : Parent.Rotation + value;
     }
 
-    /// <summary>Local-space scale relative to <see cref="Parent"/>.</summary>
+    /// <summary>Escala en espacio local relativa a <see cref="Parent"/>.</summary>
     [JsonIgnore]
     public EditorVector2 LocalScale
     {
@@ -69,22 +69,22 @@ public sealed class EditorGameObject
         }
     }
 
-    /// <summary>Behaviours attached to this object.</summary>
+    /// <summary>Comportamientos adjuntos a este objeto.</summary>
     public List<EditorBehaviour> Behaviours { get; } = [];
 
-    /// <summary>Child objects in the hierarchy.</summary>
+    /// <summary>Objetos hijos en la jerarquía.</summary>
     public List<EditorGameObject> Children { get; } = [];
 
-    /// <summary>Parent object, or <c>null</c> if this is a root object. Excluded from serialization to avoid circular references.</summary>
+    /// <summary>Objeto padre, o <c>null</c> si este es un objeto raíz. Excluido de la serialización para evitar referencias circulares.</summary>
     [JsonIgnore]
     public EditorGameObject? Parent { get; set; }
 
     /// <summary>
-    /// Path to the source <c>.prefab.json</c> file when this object was instantiated from a prefab,
-    /// or <c>null</c> if this is a plain game object.
+    /// Ruta al archivo fuente <c>.prefab.json</c> cuando este objeto fue instanciado desde un prefab,
+    /// o <c>null</c> si es un objeto de juego simple.
     /// </summary>
     public string? PrefabPath { get; set; }
 
-    /// <summary>User-defined tags. Serialized with the scene.</summary>
+    /// <summary>Etiquetas definidas por el usuario. Se serializan con la escena.</summary>
     public List<string> Tags { get; } = [];
 }

@@ -1,6 +1,6 @@
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Removes a <see cref="EditorGameObject"/> (and all its children) from the scene hierarchy.</summary>
+/// <summary>Elimina un <see cref="EditorGameObject"/> (y todos sus hijos) de la jerarquía de la escena.</summary>
 public sealed class DeleteEntityCommand : IEditorCommand
 {
     private readonly EditorGameObject _target;
@@ -8,8 +8,8 @@ public sealed class DeleteEntityCommand : IEditorCommand
     private EditorGameObject? _previousParent;
     private int _previousIndex;
 
-    /// <param name="target">Object to delete.</param>
-    /// <param name="scene">Scene that owns the object.</param>
+    /// <param name="target">Objeto a eliminar.</param>
+    /// <param name="scene">Escena propietaria del objeto.</param>
     public DeleteEntityCommand(EditorGameObject target, EditorScene scene)
     {
         _target = target;

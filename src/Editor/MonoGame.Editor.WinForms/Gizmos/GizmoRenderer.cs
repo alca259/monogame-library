@@ -4,12 +4,12 @@ using XnaVector2   = Microsoft.Xna.Framework.Vector2;
 namespace MonoGame.Editor.WinForms.Gizmos;
 
 /// <summary>
-/// Renders the grid overlay, bounding-box selection, and gizmo handles into the editor viewport.
-/// Must be initialised from the render thread via <see cref="Initialize"/> before calling <see cref="Draw"/>.
+/// Renderiza la superposición de cuadrícula, la selección por caja delimitadora y los manejadores de gizmos en el viewport del editor.
+/// Debe inicializarse desde el hilo de renderizado mediante <see cref="Initialize"/> antes de llamar a <see cref="Draw"/>.
 /// </summary>
 public sealed class GizmoRenderer : IDisposable
 {
-    // ── Colours ───────────────────────────────────────────────────────────────
+    // ── Colores ───────────────────────────────────────────────────────────────
     private static readonly XnaColor _gridColor        = new(70,  70,  70,  180);
     private static readonly XnaColor _originAxisColor  = new(140, 140, 140, 220);
     private static readonly XnaColor _boundsColor      = new(255, 255, 255, 110);
@@ -23,7 +23,7 @@ public sealed class GizmoRenderer : IDisposable
     private static readonly XnaColor _colliderColor    = new(0,   220, 220, 200);
     private static readonly XnaColor _lightRangeColor  = new(255, 210, 50,  140);
 
-    // ── Drawing constants ────────────────────────────────────────────────────
+    // ── Constantes de dibujo ────────────────────────────────────────────────────
     private const float  LineThickness          = 2.5f;
     private const int    MaxGridLines           = 100;
     private const string SpriteRendererSuffix   = "SpriteRendererBehaviour";
@@ -34,17 +34,17 @@ public sealed class GizmoRenderer : IDisposable
     private const string SpotLightSuffix        = "SpotLight2D";
     private const string DirectionalLightSuffix = "DirectionalLight2D";
 
-    // ── Dependencies ─────────────────────────────────────────────────────────
+    // ── Dependencias ─────────────────────────────────────────────────────────
     private readonly GizmoController _ctrl;
     private Texture2D?    _pixel;
     private SpriteBatch?  _spriteBatch;
 
-    /// <summary>Returns <c>true</c> once <see cref="Initialize"/> has been called.</summary>
+    /// <summary>Devuelve <c>true</c> una vez que se ha llamado a <see cref="Initialize"/>.</summary>
     public bool IsInitialized => _pixel != null;
 
     public GizmoRenderer(GizmoController controller) => _ctrl = controller;
 
-    /// <summary>Creates GPU resources. Must be called from the render thread.</summary>
+    /// <summary>Crea recursos de GPU. Debe llamarse desde el hilo de renderizado.</summary>
     public void Initialize(GraphicsDevice gd)
     {
         _pixel = new Texture2D(gd, 1, 1);
@@ -53,15 +53,15 @@ public sealed class GizmoRenderer : IDisposable
     }
 
     /// <summary>
-    /// Draws grid, bounding box, and gizmo handles for the current frame.
-    /// Must be called from the render thread outside any active SpriteBatch pass.
+    /// Dibuja la cuadrícula, la caja delimitadora y los manejadores de gizmos para el fotograma actual.
+    /// Debe llamarse desde el hilo de renderizado fuera de cualquier pasada activa de SpriteBatch.
     /// </summary>
     public void Draw(EditorGameObject? selected, Matrix cameraTransform, int viewW, int viewH,
                      bool isDepthMode = false, IReadOnlyList<EditorGameObject>? allRoots = null)
     {
         if (_pixel == null || _spriteBatch == null) return;
 
-        // ── Pass 1: world-space grid ─────────────────────────────────────────
+        // ── Pasada 1: cuadrícula en espacio mundo ─────────────────────────────────────────
         if (_ctrl.ShowGrid)
         {
             _spriteBatch.Begin(
@@ -72,20 +72,20 @@ public sealed class GizmoRenderer : IDisposable
             {
                 DrawGrid(cameraTransform, viewW, viewH);
             }
-            catch { /* ignore grid draw errors */ }
+            catch { /* ignorar errores de dibujo de la cuadrícula */ }
             finally
             {
                 _spriteBatch.End();
             }
         }
 
-        // ── Pass 2: screen-space bounding boxes + handles ────────────────────
+        // ── Pasada 2: cajas delimitadoras en espacio pantalla + manejadores ────────────────────
         bool hasDimWork = allRoots is { Count: > 0 };
         if (selected == null && !hasDimWork) return;
 
         float zoom = cameraTransform.M11;
 
-        // ── Pass 1b: world-space collider and light gizmos ───────────────────
+        // ── Pasada 1b: gizmos de colisionador y luz en espacio mundo ───────────────────
         if (selected != null)
         {
             XnaVector2 worldOrigin = new(selected.Position.X, selected.Position.Y);
@@ -100,7 +100,7 @@ public sealed class GizmoRenderer : IDisposable
                 DrawColliderGizmos(selected.Behaviours, worldOrigin, lineW);
                 DrawLightGizmos(selected.Behaviours, worldOrigin, lineW, zoom);
             }
-            catch { /* ignore gizmo errors */ }
+            catch { /* ignorar errores de gizmos */ }
             finally
             {
                 _spriteBatch.End();
@@ -112,7 +112,7 @@ public sealed class GizmoRenderer : IDisposable
             blendState: BlendState.AlphaBlend);
         try
         {
-            // Dim outlines for every unselected object that has no visual representation.
+            // Contornos tenues para cada objeto no seleccionado que no tiene representación visual.
             if (hasDimWork)
                 DrawDimObjectBoxes(allRoots!, selected, cameraTransform, zoom);
 
@@ -134,20 +134,20 @@ public sealed class GizmoRenderer : IDisposable
                 }
             }
         }
-        catch { /* ignore handle draw errors */ }
+        catch { /* ignorar errores de dibujo de manejadores */ }
         finally
         {
             _spriteBatch.End();
         }
     }
 
-    // ── Grid ─────────────────────────────────────────────────────────────────
+    // ── Cuadrícula ─────────────────────────────────────────────────────────────────
 
     private void DrawGrid(Matrix cameraTransform, int viewW, int viewH)
     {
         Matrix inv  = Matrix.Invert(cameraTransform);
         float  zoom = cameraTransform.M11;
-        float  lineW = 1f / zoom;   // 1 screen pixel expressed in world units
+        float  lineW = 1f / zoom;   // 1 píxel de pantalla expresado en unidades de mundo
 
         XnaVector2 topLeft     = XnaVector2.Transform(XnaVector2.Zero,                   inv);
         XnaVector2 bottomRight = XnaVector2.Transform(new XnaVector2(viewW, viewH),      inv);
@@ -171,12 +171,12 @@ public sealed class GizmoRenderer : IDisposable
         for (float y = startY; y <= maxY; y += cell)
             DrawLine(new XnaVector2(minX, y), new XnaVector2(maxX, y), _gridColor, lineW);
 
-        // Origin axes (slightly brighter)
+        // Ejes de origen (ligeramente más brillantes)
         DrawLine(new XnaVector2(0, minY), new XnaVector2(0, maxY), _originAxisColor, lineW * 2);
         DrawLine(new XnaVector2(minX, 0), new XnaVector2(maxX, 0), _originAxisColor, lineW * 2);
     }
 
-    // ── Bounding box ─────────────────────────────────────────────────────────
+    // ── Caja delimitadora ─────────────────────────────────────────────────────────
 
     private void DrawBoundingBox(XnaVector2 centre, float scaleX, float scaleY, float zoom)
     {
@@ -254,7 +254,7 @@ public sealed class GizmoRenderer : IDisposable
         DrawDashedLine(bl, tl, _rectBoundsColor);
     }
 
-    // ── Gizmo handles ────────────────────────────────────────────────────────
+    // ── Manejadores de gizmo ────────────────────────────────────────────────────────
 
     private void DrawGizmoHandles(GizmoMode mode, XnaVector2 origin, float rotationDegrees, bool isDepthMode)
     {
@@ -276,15 +276,15 @@ public sealed class GizmoRenderer : IDisposable
         XnaVector2 xEnd = origin + new XnaVector2(GizmoController.ArrowLength, 0);
         XnaVector2 yEnd = origin + new XnaVector2(0, -GizmoController.ArrowLength);
 
-        // X axis (right, red)
+        // Eje X (derecha, rojo)
         DrawLine(origin, xEnd, _axisXColor, LineThickness);
         FillRect(new XnaRect((int)(xEnd.X - 2), (int)(xEnd.Y - ahHalf), ahInt, ahInt), _axisXColor);
 
-        // Y axis (up, green — screen-Y inverted)
+        // Eje Y (arriba, verde — Y de pantalla invertida)
         DrawLine(origin, yEnd, _axisYColor, LineThickness);
         FillRect(new XnaRect((int)(yEnd.X - ahHalf), (int)(yEnd.Y - 2), ahInt, ahInt), _axisYColor);
 
-        // XY-free square (yellow)
+        // Cuadrado XY-libre (amarillo)
         FillRect(new XnaRect((int)(origin.X + 12), (int)(origin.Y - 28), 16, 16), _axisXYColor);
     }
 
@@ -297,10 +297,10 @@ public sealed class GizmoRenderer : IDisposable
         XnaVector2 basePoint = new(origin.X + offsetX, origin.Y);
         XnaVector2 tipPoint  = new(origin.X + offsetX, origin.Y - len);
 
-        // Vertical stem (blue Z)
+        // Tallo vertical (Z azul)
         DrawLine(basePoint, tipPoint, _axisZColor, LineThickness);
 
-        // Diamond at tip — 4 segments
+        // Rombo en la punta — 4 segmentos
         XnaVector2 dTop   = new(tipPoint.X,       tipPoint.Y - hs);
         XnaVector2 dRight = new(tipPoint.X + hs,  tipPoint.Y);
         XnaVector2 dBot   = new(tipPoint.X,        tipPoint.Y + hs);
@@ -347,11 +347,11 @@ public sealed class GizmoRenderer : IDisposable
 
         FillRect(new XnaRect((int)(xEnd.X - h), (int)(xEnd.Y - h), hInt, hInt), _axisXColor);
         FillRect(new XnaRect((int)(yEnd.X - h), (int)(yEnd.Y - h), hInt, hInt), _axisYColor);
-        // Centre handle (uniform scale)
+        // Manejador central (escala uniforme)
         FillRect(new XnaRect((int)(origin.X - h), (int)(origin.Y - h), hInt, hInt), XnaColor.White);
     }
 
-    // ── Primitive helpers ────────────────────────────────────────────────────
+    // ── Auxiliares de primitivas ────────────────────────────────────────────────────
 
     private void DrawLine(XnaVector2 from, XnaVector2 to, XnaColor color, float thickness = 1.5f)
     {
@@ -398,7 +398,7 @@ public sealed class GizmoRenderer : IDisposable
         _spriteBatch.Draw(_pixel, rect, color);
     }
 
-    // ── Collider gizmos ──────────────────────────────────────────────────────
+    // ── Gizmos de colisionador ──────────────────────────────────────────────────────
 
     private void DrawColliderGizmos(List<EditorBehaviour> behaviours, XnaVector2 worldOrigin, float lineW)
     {
@@ -444,7 +444,7 @@ public sealed class GizmoRenderer : IDisposable
         }
     }
 
-    // ── Light gizmos ─────────────────────────────────────────────────────────
+    // ── Gizmos de luz ─────────────────────────────────────────────────────────
 
     private void DrawLightGizmos(List<EditorBehaviour> behaviours, XnaVector2 worldOrigin, float lineW, float zoom)
     {
@@ -519,7 +519,7 @@ public sealed class GizmoRenderer : IDisposable
         }
     }
 
-    // ── JSON property helpers ─────────────────────────────────────────────────
+    // ── Auxiliares de propiedades JSON ─────────────────────────────────────────────────
 
     private static XnaVector2 ReadVec2(Dictionary<string, JsonElement> props, string key, XnaVector2 def)
     {

@@ -7,8 +7,8 @@ using SDRectangle = System.Drawing.Rectangle;
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>
-/// Panel that shows the tile palette for editing a tilemap.
-/// Provides layer selection and tile picking for use with <see cref="PaintTileCommand"/>.
+/// Panel que muestra la paleta de tiles para editar un tilemap.
+/// Proporciona selección de capa y selección de tile para usar con <see cref="PaintTileCommand"/>.
 /// </summary>
 public sealed class TilemapPalettePanel : Panel
 {
@@ -25,19 +25,19 @@ public sealed class TilemapPalettePanel : Panel
     private SDRectangle _hoverRect;
     private SDRectangle _selectedRect;
 
-    /// <summary>Gets the currently selected global tile ID, or <c>-1</c> when nothing is selected.</summary>
+    /// <summary>Obtiene el ID global del tile seleccionado actualmente, o <c>-1</c> cuando no hay ninguno seleccionado.</summary>
     public int SelectedTileGid => _selectedTileGid;
 
-    /// <summary>Gets the active layer selected in the layer dropdown.</summary>
+    /// <summary>Obtiene la capa activa seleccionada en el menú desplegable de capas.</summary>
     public EditorTileLayer? ActiveLayer =>
         _cboLayer.SelectedIndex >= 0 && _currentTilemap is not null
             ? _currentTilemap.Layers[_cboLayer.SelectedIndex]
             : null;
 
-    /// <summary>Gets the currently loaded tilemap asset, or <c>null</c> when none is loaded.</summary>
+    /// <summary>Obtiene el asset de tilemap cargado actualmente, o <c>null</c> cuando no hay ninguno cargado.</summary>
     public EditorTilemapAsset? CurrentTilemap => _currentTilemap;
 
-    /// <summary>Initializes a new instance of <see cref="TilemapPalettePanel"/>.</summary>
+    /// <summary>Inicializa una nueva instancia de <see cref="TilemapPalettePanel"/>.</summary>
     public TilemapPalettePanel()
     {
         _lblLayer = new Label
@@ -74,7 +74,7 @@ public sealed class TilemapPalettePanel : Panel
         };
         _scrollPanel.Controls.Add(_pbTileset);
 
-        // Fill first so Top panel gets priority
+        // Agregar Fill primero para que el panel Top tenga prioridad
         Controls.Add(_scrollPanel);
         Controls.Add(layerBar);
 
@@ -85,7 +85,7 @@ public sealed class TilemapPalettePanel : Panel
         _pbTileset.Paint += OnTilesetPaint;
     }
 
-    /// <summary>Wires up the panel to the editor event bus and context.</summary>
+    /// <summary>Conecta el panel con el bus de eventos del editor y el contexto.</summary>
     public void Initialize(EditorContext context, IEditorEventBus eventBus)
     {
         _context = context;
@@ -93,7 +93,7 @@ public sealed class TilemapPalettePanel : Panel
         eventBus.Subscribe<GameObjectSelectedEvent>(OnGameObjectSelected);
     }
 
-    /// <summary>Loads a tilemap asset and populates the layer list and tile palette.</summary>
+    /// <summary>Carga un asset de tilemap y rellena la lista de capas y la paleta de tiles.</summary>
     public void LoadTilemap(EditorTilemapAsset tilemap)
     {
         _currentTilemap = tilemap;
@@ -174,7 +174,7 @@ public sealed class TilemapPalettePanel : Panel
             EditorTilemapAsset asset = TilemapImporter.Load(resolvedPath);
             LoadTilemap(asset);
         }
-        catch { /* path invalid or file unreadable — leave panel empty */ }
+        catch { /* ruta inválida o archivo no legible — dejar el panel vacío */ }
     }
 
     private void ClearTilemap()

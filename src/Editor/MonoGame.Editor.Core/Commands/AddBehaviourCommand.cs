@@ -1,13 +1,13 @@
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Attaches a new <see cref="EditorBehaviour"/> to a <see cref="EditorGameObject"/>.</summary>
+/// <summary>Adjunta un nuevo <see cref="EditorBehaviour"/> a un <see cref="EditorGameObject"/>.</summary>
 public sealed class AddBehaviourCommand : IEditorCommand
 {
     private readonly EditorGameObject _target;
     private readonly EditorBehaviour _behaviour;
 
-    /// <param name="target">Object that will receive the behaviour.</param>
-    /// <param name="behaviour">Behaviour to attach.</param>
+    /// <param name="target">Objeto que recibirá el behaviour.</param>
+    /// <param name="behaviour">Behaviour a adjuntar.</param>
     public AddBehaviourCommand(EditorGameObject target, EditorBehaviour behaviour)
     {
         _target = target;

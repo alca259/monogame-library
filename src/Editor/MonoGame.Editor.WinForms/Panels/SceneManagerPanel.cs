@@ -1,6 +1,6 @@
 namespace MonoGame.Editor.WinForms.Panels;
 
-/// <summary>Panel that lists all scenes in the active project and allows loading/creating/deleting them.</summary>
+/// <summary>Panel que lista todas las escenas del proyecto activo y permite cargarlas, crearlas y eliminarlas.</summary>
 public sealed class SceneManagerPanel : UserControl
 {
     private EditorContext? _context;
@@ -15,7 +15,7 @@ public sealed class SceneManagerPanel : UserControl
     private readonly ColumnHeader _modifiedColumn;
     private readonly Label _statusLabel;
 
-    /// <summary>Initializes the panel layout.</summary>
+    /// <summary>Inicializa el diseño del panel.</summary>
     public SceneManagerPanel()
     {
         _toolStrip        = new ToolStrip();
@@ -103,7 +103,7 @@ public sealed class SceneManagerPanel : UserControl
         ResumeLayout(false);
     }
 
-    /// <summary>Wires event-bus subscriptions and injects the editor context.</summary>
+    /// <summary>Conecta las suscripciones al bus de eventos e inyecta el contexto del editor.</summary>
     public void Initialize(EditorContext context)
     {
         _context = context;

@@ -1,6 +1,6 @@
 namespace MonoGame.Editor.Core.Assets;
 
-/// <summary>Maps file extensions to <see cref="AssetType"/> values and creates <see cref="AssetInfo"/> instances.</summary>
+/// <summary>Asigna extensiones de archivo a valores de <see cref="AssetType"/> y crea instancias de <see cref="AssetInfo"/>.</summary>
 public static class AssetClassifier
 {
     private static readonly Dictionary<string, AssetType> ExtensionMap =
@@ -23,7 +23,7 @@ public static class AssetClassifier
             [".cs"]          = AssetType.Script,
         };
 
-    // Compound suffixes resolved before single-extension lookup (longest match first)
+    // Sufijos compuestos resueltos antes de la búsqueda por extensión simple (primero el más largo)
     private static readonly (string Suffix, AssetType Type)[] CompoundSuffixes =
     [
         (".scene.json",     AssetType.Scene),
@@ -36,7 +36,7 @@ public static class AssetClassifier
         (".uitheme.json",   AssetType.UITheme),
     ];
 
-    /// <summary>Returns the <see cref="AssetType"/> for <paramref name="filePath"/> based on its extension(s).</summary>
+    /// <summary>Devuelve el <see cref="AssetType"/> para <paramref name="filePath"/> en función de su(s) extensión(es).</summary>
     public static AssetType Classify(string filePath)
     {
         string fileName = Path.GetFileName(filePath);
@@ -51,7 +51,7 @@ public static class AssetClassifier
         return ExtensionMap.TryGetValue(ext, out AssetType type) ? type : AssetType.Unknown;
     }
 
-    /// <summary>Creates an <see cref="AssetInfo"/> for <paramref name="absolutePath"/> relative to <paramref name="rootPath"/>.</summary>
+    /// <summary>Crea un <see cref="AssetInfo"/> para <paramref name="absolutePath"/> relativo a <paramref name="rootPath"/>.</summary>
     public static AssetInfo CreateInfo(string absolutePath, string rootPath)
     {
         string relative  = Path.GetRelativePath(rootPath, absolutePath);

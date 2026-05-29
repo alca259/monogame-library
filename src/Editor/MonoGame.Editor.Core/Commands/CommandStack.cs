@@ -1,8 +1,8 @@
 namespace MonoGame.Editor.Core.Commands;
 
 /// <summary>
-/// Maintains an undo/redo history of <see cref="IEditorCommand"/> operations.
-/// Publishes <see cref="UndoPerformedEvent"/> and <see cref="RedoPerformedEvent"/> on the optional event bus.
+/// Mantiene un historial de deshacer/rehacer de operaciones <see cref="IEditorCommand"/>.
+/// Publica <see cref="UndoPerformedEvent"/> y <see cref="RedoPerformedEvent"/> en el bus de eventos opcional.
 /// </summary>
 public sealed class CommandStack
 {
@@ -10,16 +10,16 @@ public sealed class CommandStack
     private readonly Stack<IEditorCommand> _redoStack = new();
     private readonly IEditorEventBus? _eventBus;
 
-    /// <summary>Maximum number of operations retained in the undo history.</summary>
+    /// <summary>Número máximo de operaciones conservadas en el historial de deshacer.</summary>
     public int MaxHistory { get; }
 
-    /// <summary>Description of the command that would be undone next, or <c>null</c> if the history is empty.</summary>
+    /// <summary>Descripción del comando que se desharía a continuación, o <c>null</c> si el historial está vacío.</summary>
     public string? UndoDescription => _undoHistory.Count > 0 ? _undoHistory.Last!.Value.Description : null;
 
-    /// <summary>Description of the command that would be redone next, or <c>null</c> if the redo stack is empty.</summary>
+    /// <summary>Descripción del comando que se reharía a continuación, o <c>null</c> si la pila de rehacer está vacía.</summary>
     public string? RedoDescription => _redoStack.TryPeek(out IEditorCommand? cmd) ? cmd.Description : null;
 
-    /// <summary>Returns all undo history descriptions from most-recent to oldest.</summary>
+    /// <summary>Devuelve todas las descripciones del historial de deshacer, de la más reciente a la más antigua.</summary>
     public IReadOnlyList<string> GetUndoDescriptions()
     {
         var result = new List<string>(_undoHistory.Count);
@@ -28,7 +28,7 @@ public sealed class CommandStack
         return result;
     }
 
-    /// <summary>Returns all redo stack descriptions from next-to-redo to furthest.</summary>
+    /// <summary>Devuelve todas las descripciones de la pila de rehacer, desde la próxima a rehacer hasta la más lejana.</summary>
     public IReadOnlyList<string> GetRedoDescriptions()
     {
         var result = new List<string>(_redoStack.Count);
@@ -37,8 +37,8 @@ public sealed class CommandStack
         return result;
     }
 
-    /// <param name="maxHistory">Maximum number of commands to keep. Defaults to 100.</param>
-    /// <param name="eventBus">Optional bus; if provided, publishes undo/redo events.</param>
+    /// <param name="maxHistory">Número máximo de comandos a conservar. El valor predeterminado es 100.</param>
+    /// <param name="eventBus">Bus opcional; si se proporciona, publica eventos de deshacer/rehacer.</param>
     public CommandStack(int maxHistory = 100, IEditorEventBus? eventBus = null)
     {
         MaxHistory = maxHistory;
@@ -46,9 +46,9 @@ public sealed class CommandStack
     }
 
     /// <summary>
-    /// Executes <paramref name="command"/>, pushes it onto the undo history, and clears the redo stack.
-    /// If history exceeds <see cref="MaxHistory"/>, the oldest entry is discarded.
-    /// Marks the active scene dirty when a scene is open.
+    /// Ejecuta <paramref name="command"/>, lo apila en el historial de deshacer y vacía la pila de rehacer.
+    /// Si el historial supera <see cref="MaxHistory"/>, se descarta la entrada más antigua.
+    /// Marca la escena activa como modificada cuando hay una escena abierta.
     /// </summary>
     public void Execute(IEditorCommand command)
     {
@@ -62,7 +62,7 @@ public sealed class CommandStack
             EditorContext.Instance.MarkSceneDirty();
     }
 
-    /// <summary>Undoes the most recent command and pushes it onto the redo stack.</summary>
+    /// <summary>Deshace el comando más reciente y lo apila en la pila de rehacer.</summary>
     public void Undo()
     {
         if (_undoHistory.Count == 0)
@@ -75,7 +75,7 @@ public sealed class CommandStack
         _eventBus?.Publish(new UndoPerformedEvent(command.Description));
     }
 
-    /// <summary>Re-executes the most recently undone command and pushes it back onto the undo history.</summary>
+    /// <summary>Vuelve a ejecutar el comando deshecho más recientemente y lo devuelve al historial de deshacer.</summary>
     public void Redo()
     {
         if (!_redoStack.TryPop(out IEditorCommand? command))
@@ -88,7 +88,7 @@ public sealed class CommandStack
         _eventBus?.Publish(new RedoPerformedEvent(command.Description));
     }
 
-    /// <summary>Clears both the undo history and the redo stack.</summary>
+    /// <summary>Vacía tanto el historial de deshacer como la pila de rehacer.</summary>
     public void Clear()
     {
         _undoHistory.Clear();

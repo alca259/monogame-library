@@ -11,6 +11,7 @@ Documentación técnica del editor visual para proyectos MonoGame. Esta wiki exp
 | [Arquitectura general](arquitectura.md) | Proyectos de la solución, patrones usados, comunicación entre capas |
 | [Paneles de la interfaz](paneles.md) | Todos los paneles de UI, sus controles y comportamiento |
 | [Flujos principales](flujos.md) | Paso a paso de las operaciones más importantes |
+| [Flujos completos (hoja de ruta)](flujos-completos.md) | Mapa de referencia de todos los flujos internos con rutas de archivo |
 | [Sistema de comandos (Undo/Redo)](comandos.md) | Cómo funciona el historial de acciones |
 | [Modelos de datos](modelos.md) | Clases de dominio: escenas, entidades, behaviours, etc. |
 | [Generación de código](codegen.md) | SourceGenerator Roslyn + cómo el editor produce archivos `.cs` del juego |

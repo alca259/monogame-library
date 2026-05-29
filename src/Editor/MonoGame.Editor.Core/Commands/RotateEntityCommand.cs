@@ -1,14 +1,14 @@
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Changes the rotation (in degrees) of a <see cref="EditorGameObject"/>.</summary>
+/// <summary>Cambia la rotación (en grados) de un <see cref="EditorGameObject"/>.</summary>
 public sealed class RotateEntityCommand : IEditorCommand
 {
     private readonly EditorGameObject _target;
     private readonly float _previousRotation;
     private readonly float _newRotation;
 
-    /// <param name="target">Object to rotate.</param>
-    /// <param name="newRotation">Target rotation in degrees.</param>
+    /// <param name="target">Objeto a rotar.</param>
+    /// <param name="newRotation">Rotación de destino en grados.</param>
     public RotateEntityCommand(EditorGameObject target, float newRotation)
     {
         _target = target;
@@ -16,9 +16,9 @@ public sealed class RotateEntityCommand : IEditorCommand
         _newRotation = newRotation;
     }
 
-    /// <param name="target">Object to rotate.</param>
-    /// <param name="previousRotation">Rotation before the change in degrees (explicit, used by gizmo drag).</param>
-    /// <param name="newRotation">Target rotation in degrees.</param>
+    /// <param name="target">Objeto a rotar.</param>
+    /// <param name="previousRotation">Rotación anterior al cambio en grados (explícita, usada por el arrastre del gizmo).</param>
+    /// <param name="newRotation">Rotación de destino en grados.</param>
     public RotateEntityCommand(EditorGameObject target, float previousRotation, float newRotation)
     {
         _target = target;

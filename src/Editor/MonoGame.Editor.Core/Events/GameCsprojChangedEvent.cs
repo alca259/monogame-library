@@ -1,4 +1,4 @@
 namespace MonoGame.Editor.Core.Events;
 
-/// <summary>Published when the game .csproj path changes (new project opened or path updated in settings).</summary>
+/// <summary>Publicado cuando cambia la ruta del .csproj del juego (nuevo proyecto abierto o ruta actualizada en la configuración).</summary>
 public sealed record GameCsprojChangedEvent(EditorProject Project) : IEditorEvent;

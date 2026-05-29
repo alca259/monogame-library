@@ -2,7 +2,7 @@ using System.Text;
 
 namespace MonoGame.Editor.Core.CodeGen;
 
-/// <summary>Generates <c>GameBehaviour</c> subclass skeleton source files.</summary>
+/// <summary>Genera archivos fuente esqueleto de subclases de <c>GameBehaviour</c>.</summary>
 public sealed class BehaviourSkeletonGenerator : ICodeGenService
 {
     private static readonly string[] _allMethods = ["Awake", "Start", "Update", "Draw", "OnDestroy"];

@@ -1,5 +1,5 @@
 namespace MonoGame.Editor.Core.Events;
 
-/// <summary>Published after a redo operation is performed.</summary>
-/// <param name="Description">Human-readable description of the redone command.</param>
+/// <summary>Publicado después de que se ejecuta una operación de rehacer.</summary>
+/// <param name="Description">Descripción legible del comando rehecho.</param>
 public sealed record RedoPerformedEvent(string Description) : IEditorEvent;

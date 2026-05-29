@@ -1,52 +1,52 @@
 namespace MonoGame.Editor.Core.Models;
 
-/// <summary>Configures optional GameWorld subsystems for a scene.</summary>
+/// <summary>Configura los subsistemas opcionales de GameWorld para una escena.</summary>
 public sealed class EditorWorldConfig
 {
-    // ── Physics 2D ────────────────────────────────────────────────────────────
+    // ── Física 2D ────────────────────────────────────────────────────────────
 
-    /// <summary>Gets or sets a value indicating whether Physics2DWorld is enabled for this scene.</summary>
+    /// <summary>Obtiene o establece un valor que indica si Physics2DWorld está habilitado para esta escena.</summary>
     public bool UsePhysics2D  { get; set; }
 
-    /// <summary>Gets or sets the X component of the gravity vector (pixels/s²). Default: 0.</summary>
+    /// <summary>Obtiene o establece el componente X del vector de gravedad (píxeles/s²). Valor predeterminado: 0.</summary>
     public float GravityX     { get; set; } = 0f;
 
-    /// <summary>Gets or sets the Y component of the gravity vector (pixels/s²). Default: -9.8.</summary>
+    /// <summary>Obtiene o establece el componente Y del vector de gravedad (píxeles/s²). Valor predeterminado: -9.8.</summary>
     public float GravityY     { get; set; } = -9.8f;
 
-    // ── Lighting ──────────────────────────────────────────────────────────────
+    // ── Iluminación ───────────────────────────────────────────────────────────
 
-    /// <summary>Gets or sets a value indicating whether LightingWorld is enabled for this scene.</summary>
+    /// <summary>Obtiene o establece un valor que indica si LightingWorld está habilitado para esta escena.</summary>
     public bool UseLighting   { get; set; }
 
     /// <summary>
-    /// Gets or sets the ambient light color as RGBA bytes [R, G, B, A].
-    /// Default: black (0, 0, 0, 255).
+    /// Obtiene o establece el color de luz ambiental como bytes RGBA [R, G, B, A].
+    /// Valor predeterminado: negro (0, 0, 0, 255).
     /// </summary>
     public int[] AmbientColorRgba { get; set; } = [0, 0, 0, 255];
 
-    // ── Navigation ────────────────────────────────────────────────────────────
+    // ── Navegación ────────────────────────────────────────────────────────────
 
-    /// <summary>Gets or sets a value indicating whether NavGrid and Pathfinder are enabled for this scene.</summary>
+    /// <summary>Obtiene o establece un valor que indica si NavGrid y Pathfinder están habilitados para esta escena.</summary>
     public bool UseNavigation { get; set; }
 
-    /// <summary>Gets or sets the width of the navigation grid in cells.</summary>
+    /// <summary>Obtiene o establece el ancho de la cuadrícula de navegación en celdas.</summary>
     public int NavGridWidth   { get; set; } = 32;
 
-    /// <summary>Gets or sets the height of the navigation grid in cells.</summary>
+    /// <summary>Obtiene o establece la altura de la cuadrícula de navegación en celdas.</summary>
     public int NavGridHeight  { get; set; } = 32;
 
-    /// <summary>Gets or sets the size of each navigation cell in pixels.</summary>
+    /// <summary>Obtiene o establece el tamaño de cada celda de navegación en píxeles.</summary>
     public float NavGridCellSize { get; set; } = 32f;
 
-    /// <summary>Gets or sets the X world-space origin of the navigation grid.</summary>
+    /// <summary>Obtiene o establece el origen X en espacio de mundo de la cuadrícula de navegación.</summary>
     public float NavGridOriginX { get; set; }
 
-    /// <summary>Gets or sets the Y world-space origin of the navigation grid.</summary>
+    /// <summary>Obtiene o establece el origen Y en espacio de mundo de la cuadrícula de navegación.</summary>
     public float NavGridOriginY { get; set; }
 
     // ── Audio ─────────────────────────────────────────────────────────────────
 
-    /// <summary>Gets or sets a value indicating whether AudioController is enabled for this scene.</summary>
+    /// <summary>Obtiene o establece un valor que indica si AudioController está habilitado para esta escena.</summary>
     public bool UseAudio      { get; set; }
 }

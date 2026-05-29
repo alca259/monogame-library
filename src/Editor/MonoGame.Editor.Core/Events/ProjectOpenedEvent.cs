@@ -1,5 +1,5 @@
 namespace MonoGame.Editor.Core.Events;
 
-/// <summary>Published when a project is opened or closed.</summary>
-/// <param name="Project">The newly active project, or <c>null</c> when no project is active.</param>
+/// <summary>Publicado cuando se abre o cierra un proyecto.</summary>
+/// <param name="Project">El proyecto recién activado, o <c>null</c> cuando no hay ningún proyecto activo.</param>
 public sealed record ProjectOpenedEvent(EditorProject? Project) : IEditorEvent;

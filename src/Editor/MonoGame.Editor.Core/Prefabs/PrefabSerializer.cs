@@ -1,10 +1,10 @@
 namespace MonoGame.Editor.Core.Prefabs;
 
 /// <summary>
-/// Serializes and deserializes a single <see cref="EditorGameObject"/> to/from JSON
-/// for use as a prefab (<c>.prefab.json</c>).
-/// The <see cref="EditorGameObject.Parent"/> link is excluded from JSON and must be
-/// set by the caller after instantiation.
+/// Serializa y deserializa un único <see cref="EditorGameObject"/> a/desde JSON
+/// para su uso como prefab (<c>.prefab.json</c>).
+/// El enlace <see cref="EditorGameObject.Parent"/> queda excluido del JSON y debe ser
+/// establecido por el llamador tras la instanciación.
 /// </summary>
 public static class PrefabSerializer
 {
@@ -16,13 +16,13 @@ public static class PrefabSerializer
         PreferredObjectCreationHandling = JsonObjectCreationHandling.Populate,
     };
 
-    /// <summary>Serializes <paramref name="obj"/> to an indented JSON string.</summary>
+    /// <summary>Serializa <paramref name="obj"/> en una cadena JSON con sangría.</summary>
     public static string Serialize(EditorGameObject obj)
         => JsonSerializer.Serialize(obj, _options);
 
     /// <summary>
-    /// Deserializes a game object from <paramref name="json"/> and restores child parent links.
-    /// Returns <c>null</c> if the JSON is invalid or empty.
+    /// Deserializa un objeto de juego desde <paramref name="json"/> y restaura los enlaces padre-hijo.
+    /// Devuelve <c>null</c> si el JSON es inválido o está vacío.
     /// </summary>
     public static EditorGameObject? Deserialize(string json)
     {
@@ -33,7 +33,7 @@ public static class PrefabSerializer
         return obj;
     }
 
-    /// <summary>Saves <paramref name="obj"/> to the file at <paramref name="path"/>.</summary>
+    /// <summary>Guarda <paramref name="obj"/> en el archivo en <paramref name="path"/>.</summary>
     public static void Save(EditorGameObject obj, string path)
     {
         string? dir = Path.GetDirectoryName(path);
@@ -42,7 +42,7 @@ public static class PrefabSerializer
         File.WriteAllText(path, Serialize(obj));
     }
 
-    /// <summary>Loads and deserializes a game object from the file at <paramref name="path"/>.</summary>
+    /// <summary>Carga y deserializa un objeto de juego desde el archivo en <paramref name="path"/>.</summary>
     public static EditorGameObject? Load(string path)
     {
         if (!File.Exists(path)) return null;

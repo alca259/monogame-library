@@ -1,13 +1,13 @@
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Changes the Z-depth of a <see cref="EditorGameObject"/> (used in 2.5D mode).</summary>
+/// <summary>Cambia la profundidad Z de un <see cref="EditorGameObject"/> (usado en modo 2.5D).</summary>
 public sealed class MoveEntityZCommand : IEditorCommand
 {
     private readonly EditorGameObject _target;
     private readonly float _previousZ;
     private readonly float _newZ;
 
-    /// <summary>Initializes a new instance of <see cref="MoveEntityZCommand"/>.</summary>
+    /// <summary>Inicializa una nueva instancia de <see cref="MoveEntityZCommand"/>.</summary>
     public MoveEntityZCommand(EditorGameObject target, float previousZ, float newZ)
     {
         _target    = target;

@@ -1,6 +1,6 @@
 namespace MonoGame.Editor.Core.Gizmos;
 
-/// <summary>Which axis handle is currently being dragged.</summary>
+/// <summary>Qué manija de eje se está arrastrando actualmente.</summary>
 internal enum GizmoDragAxis
 {
     None,

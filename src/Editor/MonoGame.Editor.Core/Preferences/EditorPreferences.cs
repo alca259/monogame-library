@@ -1,6 +1,6 @@
 namespace MonoGame.Editor.Core.Preferences;
 
-/// <summary>Editor layout and session preferences, persisted to disk between sessions.</summary>
+/// <summary>Preferencias de diseño y sesión del editor, persistidas en disco entre sesiones.</summary>
 public sealed class EditorPreferences
 {
     private const int MaxRecentProjects = 10;
@@ -12,69 +12,69 @@ public sealed class EditorPreferences
 
     private readonly string _preferencesPath;
 
-    /// <summary>Initializes preferences using the default <c>%APPDATA%/MonoGameEditor/</c> path.</summary>
+    /// <summary>Inicializa las preferencias usando la ruta predeterminada <c>%APPDATA%/MonoGameEditor/</c>.</summary>
     public EditorPreferences() : this(DefaultPath) { }
 
-    /// <summary>Initializes preferences using a custom path (used in tests).</summary>
+    /// <summary>Inicializa las preferencias usando una ruta personalizada (utilizada en pruebas).</summary>
     internal EditorPreferences(string preferencesPath)
     {
         _preferencesPath = preferencesPath;
     }
 
-    /// <summary>Width of the left (hierarchy/asset browser) panel in pixels.</summary>
+    /// <summary>Ancho del panel izquierdo (jerarquía/explorador de assets) en píxeles.</summary>
     public int LeftPanelWidth { get; set; } = 220;
 
-    /// <summary>Width of the right (inspector) panel in pixels.</summary>
+    /// <summary>Ancho del panel derecho (inspector) en píxeles.</summary>
     public int RightPanelWidth { get; set; } = 280;
 
-    /// <summary>Height of the bottom console panel in pixels.</summary>
+    /// <summary>Alto del panel de consola inferior en píxeles.</summary>
     public int ConsolePanelHeight { get; set; } = 150;
 
-    /// <summary>Whether the hierarchy panel is visible.</summary>
+    /// <summary>Indica si el panel de jerarquía está visible.</summary>
     public bool HierarchyVisible { get; set; } = true;
 
-    /// <summary>Whether the inspector panel is visible.</summary>
+    /// <summary>Indica si el panel del inspector está visible.</summary>
     public bool InspectorVisible { get; set; } = true;
 
-    /// <summary>Whether the asset browser panel is visible.</summary>
+    /// <summary>Indica si el panel del explorador de assets está visible.</summary>
     public bool AssetBrowserVisible { get; set; } = true;
 
-    /// <summary>Whether the console panel is visible.</summary>
+    /// <summary>Indica si el panel de consola está visible.</summary>
     public bool ConsoleVisible { get; set; } = true;
 
-    /// <summary>Whether the scene manager panel is visible.</summary>
+    /// <summary>Indica si el panel del gestor de escenas está visible.</summary>
     public bool SceneManagerVisible { get; set; } = true;
 
-    /// <summary>Whether the localization browser panel is visible.</summary>
+    /// <summary>Indica si el panel del explorador de localización está visible.</summary>
     public bool LocalizationBrowserVisible { get; set; } = false;
 
-    /// <summary>Whether the input map editor panel is visible.</summary>
+    /// <summary>Indica si el panel del editor de mapas de entrada está visible.</summary>
     public bool InputMapEditorVisible { get; set; } = false;
 
-    /// <summary>Whether the tilemap palette panel is visible.</summary>
+    /// <summary>Indica si el panel de la paleta de tilemaps está visible.</summary>
     public bool TilemapPaletteVisible { get; set; } = false;
 
-    /// <summary>Whether the undo history panel is visible.</summary>
+    /// <summary>Indica si el panel del historial de deshacer está visible.</summary>
     public bool UndoHistoryVisible { get; set; } = false;
 
-    /// <summary>Whether the scripts browser panel is visible.</summary>
+    /// <summary>Indica si el panel del explorador de scripts está visible.</summary>
     public bool ScriptsBrowserVisible { get; set; } = false;
 
-    /// <summary>Absolute path of the last project opened, or empty if none.</summary>
+    /// <summary>Ruta absoluta del último proyecto abierto, o vacía si no hay ninguno.</summary>
     public string LastProjectPath { get; set; } = string.Empty;
 
-    /// <summary>Ordered list of recently opened project paths (newest first, max 10 entries).</summary>
+    /// <summary>Lista ordenada de rutas de proyectos abiertos recientemente (el más reciente primero, máximo 10 entradas).</summary>
     public List<string> RecentProjects { get; set; } = [];
 
-    /// <summary>Width of the folder tree inside the asset browser panel in pixels.</summary>
+    /// <summary>Ancho del árbol de carpetas dentro del panel del explorador de assets en píxeles.</summary>
     public int AssetBrowserSplitterDistance { get; set; } = 180;
 
-    /// <summary>Persists which behaviour sections in the inspector are collapsed. Key = section name.</summary>
+    /// <summary>Persiste qué secciones de comportamiento en el inspector están contraídas. Clave = nombre de sección.</summary>
     public Dictionary<string, bool> BehaviourSectionCollapsed { get; set; } = [];
 
     /// <summary>
-    /// Adds <paramref name="path"/> to the front of <see cref="RecentProjects"/>, removes any
-    /// duplicate entry, and trims the list to <see cref="MaxRecentProjects"/> items. Persists immediately.
+    /// Agrega <paramref name="path"/> al inicio de <see cref="RecentProjects"/>, elimina cualquier
+    /// entrada duplicada y recorta la lista a <see cref="MaxRecentProjects"/> elementos. Persiste inmediatamente.
     /// </summary>
     public void AddRecentProject(string path)
     {
@@ -86,7 +86,7 @@ public sealed class EditorPreferences
         Save();
     }
 
-    /// <summary>Serializes current preferences to disk.</summary>
+    /// <summary>Serializa las preferencias actuales en disco.</summary>
     public void Save()
     {
         string dir = Path.GetDirectoryName(_preferencesPath)!;
@@ -94,7 +94,7 @@ public sealed class EditorPreferences
         File.WriteAllText(_preferencesPath, JsonSerializer.Serialize(this, EditorPreferencesJsonContext.Default.EditorPreferences));
     }
 
-    /// <summary>Loads preferences from disk into this instance. Does nothing if the file does not exist.</summary>
+    /// <summary>Carga las preferencias desde disco en esta instancia. No hace nada si el archivo no existe.</summary>
     public void Load()
     {
         if (!File.Exists(_preferencesPath))

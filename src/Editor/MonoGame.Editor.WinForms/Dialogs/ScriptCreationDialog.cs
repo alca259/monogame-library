@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 namespace MonoGame.Editor.WinForms.Dialogs;
 
 /// <summary>
-/// Modal dialog that creates a new <c>GameBehaviour</c> stub in <c>src/GameScripts/</c>.
+/// Diálogo modal que crea un stub de <c>GameBehaviour</c> en <c>src/GameScripts/</c>.
 /// </summary>
 public sealed class ScriptCreationDialog : Form
 {
@@ -18,7 +18,7 @@ public sealed class ScriptCreationDialog : Form
 
     private readonly string _scriptsRoot;
 
-    /// <summary>Creates the dialog targeting the given <c>src/GameScripts/</c> path.</summary>
+    /// <summary>Crea el diálogo dirigido a la ruta <c>src/GameScripts/</c> indicada.</summary>
     public ScriptCreationDialog(string scriptsRoot, string defaultNamespace = "")
     {
         _scriptsRoot = scriptsRoot;

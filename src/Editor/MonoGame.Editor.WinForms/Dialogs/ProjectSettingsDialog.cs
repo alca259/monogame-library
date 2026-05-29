@@ -1,15 +1,15 @@
 namespace MonoGame.Editor.WinForms.Dialogs;
 
-/// <summary>Dialog for viewing and editing per-project editor settings.</summary>
+/// <summary>Diálogo para ver y editar la configuración del editor por proyecto.</summary>
 public sealed partial class ProjectSettingsDialog : Form
 {
     private readonly EditorProject _project = null!;
     private readonly ProjectSettings _settings = null!;
 
-    /// <summary>Updated game .csproj path after the user clicks OK. Empty string if unchanged or cleared.</summary>
+    /// <summary>Ruta del .csproj del juego actualizada tras pulsar Aceptar. Cadena vacía si no se modificó o se borró.</summary>
     public string UpdatedGameCsprojPath { get; private set; } = string.Empty;
 
-    /// <summary>Designer-only constructor.</summary>
+    /// <summary>Constructor exclusivo del Designer.</summary>
     public ProjectSettingsDialog() => InitializeComponent();
 
     public ProjectSettingsDialog(EditorProject project, ProjectSettings settings)
@@ -24,7 +24,7 @@ public sealed partial class ProjectSettingsDialog : Form
 
     private void PopulateFromSettings()
     {
-        // General tab
+        // Pestaña General
         _projectNameBox.Text   = _project.Name;
         _versionBox.Text       = "1.0";
         _csprojBox.Text        = _project.GameCsprojPath;
@@ -33,7 +33,7 @@ public sealed partial class ProjectSettingsDialog : Form
         _virtualWidthInput.Value  = Math.Clamp(_settings.VirtualWidth,  (int)_virtualWidthInput.Minimum,  (int)_virtualWidthInput.Maximum);
         _virtualHeightInput.Value = Math.Clamp(_settings.VirtualHeight, (int)_virtualHeightInput.Minimum, (int)_virtualHeightInput.Maximum);
 
-        // Content tab
+        // Pestaña de Contenido
         _contentFolderBox.Text = _project.ContentPath;
 
         string mgcbDefault = Path.Combine(_project.ContentPath, "Content.mgcb");
@@ -44,7 +44,7 @@ public sealed partial class ProjectSettingsDialog : Form
         else
             _buildConfigCombo.SelectedIndex = 0;
 
-        // Localization tab
+        // Pestaña de Localización
         _locFolderBox.Text = _project.LocalizationPath;
 
         RefreshLocaleDropdown();
@@ -54,7 +54,7 @@ public sealed partial class ProjectSettingsDialog : Form
         for (int i = 0; i < _settings.SupportedLocales.Count; i++)
             _supportedLocalesGrid.Rows.Add(_settings.SupportedLocales[i]);
 
-        // Code Generation tab
+        // Pestaña de Generación de Código
         _outputFolderBox.Text           = _settings.GeneratedCodeFolder;
         _generateOnSaveCheckBox.Checked = _settings.GenerateOnSave;
         UpdatePreviewOutputLabel();

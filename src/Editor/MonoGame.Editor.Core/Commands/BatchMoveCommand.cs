@@ -1,13 +1,13 @@
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Applies a position delta to a set of <see cref="EditorGameObject"/> instances in one undo step.</summary>
+/// <summary>Aplica un delta de posición a un conjunto de instancias de <see cref="EditorGameObject"/> en un solo paso de deshacer.</summary>
 public sealed class BatchMoveCommand : IEditorCommand
 {
     private readonly IReadOnlyList<EditorGameObject> _targets;
     private readonly EditorVector2 _delta;
 
-    /// <param name="targets">Objects to move.</param>
-    /// <param name="delta">World-space offset to add to each object's current position.</param>
+    /// <param name="targets">Objetos a mover.</param>
+    /// <param name="delta">Desplazamiento en espacio mundial que se suma a la posición actual de cada objeto.</param>
     public BatchMoveCommand(IReadOnlyList<EditorGameObject> targets, EditorVector2 delta)
     {
         _targets = targets;

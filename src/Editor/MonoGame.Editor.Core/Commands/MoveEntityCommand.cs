@@ -1,14 +1,14 @@
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Changes the world-space position of a <see cref="EditorGameObject"/>.</summary>
+/// <summary>Cambia la posición en espacio mundial de un <see cref="EditorGameObject"/>.</summary>
 public sealed class MoveEntityCommand : IEditorCommand
 {
     private readonly EditorGameObject _target;
     private readonly EditorVector2 _previousPosition;
     private readonly EditorVector2 _newPosition;
 
-    /// <param name="target">Object to move.</param>
-    /// <param name="newPosition">Target position.</param>
+    /// <param name="target">Objeto a mover.</param>
+    /// <param name="newPosition">Posición de destino.</param>
     public MoveEntityCommand(EditorGameObject target, EditorVector2 newPosition)
     {
         _target = target;
@@ -16,9 +16,9 @@ public sealed class MoveEntityCommand : IEditorCommand
         _newPosition = newPosition;
     }
 
-    /// <param name="target">Object to move.</param>
-    /// <param name="previousPosition">Position before the move (explicit, used by gizmo drag).</param>
-    /// <param name="newPosition">Target position.</param>
+    /// <param name="target">Objeto a mover.</param>
+    /// <param name="previousPosition">Posición antes del movimiento (explícita, usada por el arrastre del gizmo).</param>
+    /// <param name="newPosition">Posición de destino.</param>
     public MoveEntityCommand(EditorGameObject target, EditorVector2 previousPosition, EditorVector2 newPosition)
     {
         _target = target;

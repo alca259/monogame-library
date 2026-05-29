@@ -1,22 +1,22 @@
 namespace MonoGame.Editor.WinForms.Dialogs;
 
-/// <summary>Dialog for creating a new MonoGame Editor project.</summary>
+/// <summary>Diálogo para crear un nuevo proyecto de MonoGame Editor.</summary>
 public sealed partial class NewProjectDialog : Form
 {
-    /// <summary>Designer-only constructor.</summary>
+    /// <summary>Constructor exclusivo del Designer.</summary>
     public NewProjectDialog()
     {
         InitializeComponent();
         WireEvents();
     }
 
-    /// <summary>Name entered by the user.</summary>
+    /// <summary>Nombre introducido por el usuario.</summary>
     public string ProjectName => _nameTextBox.Text.Trim();
 
-    /// <summary>Parent folder selected by the user (the project subfolder will be created inside it).</summary>
+    /// <summary>Carpeta padre seleccionada por el usuario (la subcarpeta del proyecto se creará dentro de ella).</summary>
     public string ParentPath => _locationTextBox.Text.Trim();
 
-    /// <summary>Absolute path to the game .csproj file selected by the user. Empty string if not chosen.</summary>
+    /// <summary>Ruta absoluta al archivo .csproj del juego seleccionado por el usuario. Cadena vacía si no se ha seleccionado.</summary>
     public string GameCsprojPath => _csprojTextBox.Text.Trim();
 
     private void WireEvents()
@@ -109,7 +109,7 @@ public sealed partial class NewProjectDialog : Form
         {
             _previewValueLabel.Text      = $"{targetPath}  ⚠ .csproj file not found.";
             _previewValueLabel.ForeColor = System.Drawing.Color.OrangeRed;
-            _okButton.Enabled = true;  // allow creation with a warning
+            _okButton.Enabled = true;  // permite crear con advertencia
         }
         else if (targetExists)
         {

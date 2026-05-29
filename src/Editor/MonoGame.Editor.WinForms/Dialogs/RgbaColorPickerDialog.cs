@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace MonoGame.Editor.WinForms.Dialogs;
 
-/// <summary>Modal dialog for picking an RGBA color with an HSV gradient picker.</summary>
+/// <summary>Diálogo modal para seleccionar un color RGBA con un selector de gradiente HSV.</summary>
 public sealed class RgbaColorPickerDialog : Form
 {
     private float _hue;        // 0–360
@@ -17,7 +17,7 @@ public sealed class RgbaColorPickerDialog : Form
     private readonly TextBox       _hexBox;
     private bool _updating;
 
-    /// <summary>The color selected when the user clicked Choose.</summary>
+    /// <summary>Color seleccionado cuando el usuario hizo clic en Elegir.</summary>
     public Microsoft.Xna.Framework.Color SelectedColor { get; private set; }
 
     public RgbaColorPickerDialog(Microsoft.Xna.Framework.Color initial)
@@ -280,13 +280,13 @@ public sealed class RgbaColorPickerDialog : Form
 
     #region Nested panels
 
-    /// <summary>Panel that displays the saturation/value gradient for the current hue.</summary>
+    /// <summary>Panel que muestra el gradiente de saturación/valor para el tono actual.</summary>
     private sealed class SatValPanel : Control
     {
         private System.Drawing.Bitmap? _cache;
         private float _hue;
-        private float _indicatorX; // 0–1 (saturation)
-        private float _indicatorY; // 0–1 (1 - value)
+        private float _indicatorX; // 0–1 (saturación)
+        private float _indicatorY; // 0–1 (1 - valor)
 
         public event Action<float, float>? PositionChanged;
 
@@ -382,7 +382,7 @@ public sealed class RgbaColorPickerDialog : Form
         }
     }
 
-    /// <summary>Panel that displays the vertical hue rainbow strip.</summary>
+    /// <summary>Panel que muestra la franja de arco iris de tonos vertical.</summary>
     private sealed class HueStripPanel : Control
     {
         private System.Drawing.Bitmap? _cache;

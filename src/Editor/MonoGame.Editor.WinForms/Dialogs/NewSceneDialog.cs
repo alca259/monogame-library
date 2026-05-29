@@ -1,18 +1,18 @@
 namespace MonoGame.Editor.WinForms.Dialogs;
 
-/// <summary>Dialog for creating a new scene.</summary>
+/// <summary>Diálogo para crear una nueva escena.</summary>
 public sealed partial class NewSceneDialog : Form
 {
-    /// <summary>Initializes the dialog.</summary>
+    /// <summary>Inicializa el diálogo.</summary>
     public NewSceneDialog() => InitializeComponent();
 
-    /// <summary>Scene name entered by the user.</summary>
+    /// <summary>Nombre de la escena introducido por el usuario.</summary>
     public string SceneName => _nameBox.Text.Trim();
 
-    /// <summary>Optional world width in pixels (0 = unbounded).</summary>
+    /// <summary>Anchura opcional del mundo en píxeles (0 = sin límite).</summary>
     public float WorldWidth => (float)_widthBox.Value;
 
-    /// <summary>Optional world height in pixels (0 = unbounded).</summary>
+    /// <summary>Altura opcional del mundo en píxeles (0 = sin límite).</summary>
     public float WorldHeight => (float)_heightBox.Value;
 
     private void OnNameBoxTextChanged(object? sender, EventArgs e) => UpdatePreview();

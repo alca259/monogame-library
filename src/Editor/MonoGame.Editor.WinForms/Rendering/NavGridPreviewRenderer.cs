@@ -3,9 +3,9 @@ using XnaColor = Microsoft.Xna.Framework.Color;
 namespace MonoGame.Editor.WinForms.Rendering;
 
 /// <summary>
-/// Draws a wireframe overlay of the scene's navigation grid in the editor viewport.
-/// Reads grid dimensions directly from <see cref="EditorWorldConfig"/> without instantiating
-/// the runtime NavGrid — safe to use in edit mode.
+/// Dibuja una superposición wireframe de la cuadrícula de navegación de la escena en el viewport del editor.
+/// Lee las dimensiones de la cuadrícula directamente desde <see cref="EditorWorldConfig"/> sin instanciar
+/// el NavGrid en tiempo de ejecución — seguro de usar en modo edición.
 /// </summary>
 public sealed class NavGridPreviewRenderer : IDisposable
 {
@@ -15,10 +15,10 @@ public sealed class NavGridPreviewRenderer : IDisposable
     private SpriteBatch?  _spriteBatch;
     private Texture2D?    _pixel;
 
-    /// <summary>Returns <c>true</c> once <see cref="Initialize"/> has been called.</summary>
+    /// <summary>Devuelve <c>true</c> una vez que se ha llamado a <see cref="Initialize"/>.</summary>
     public bool IsInitialized => _spriteBatch != null;
 
-    /// <summary>Allocates GPU resources. Must be called from the render thread.</summary>
+    /// <summary>Reserva recursos de GPU. Debe llamarse desde el hilo de renderizado.</summary>
     public void Initialize(GraphicsDevice gd)
     {
         _spriteBatch = new SpriteBatch(gd);
@@ -27,9 +27,9 @@ public sealed class NavGridPreviewRenderer : IDisposable
     }
 
     /// <summary>
-    /// Draws the navigation grid overlay using world-space coordinates.
-    /// No-op when <see cref="IsInitialized"/> is false or
-    /// <paramref name="config"/> does not enable navigation.
+    /// Dibuja la superposición de la cuadrícula de navegación usando coordenadas en espacio mundo.
+    /// No hace nada cuando <see cref="IsInitialized"/> es false o
+    /// <paramref name="config"/> no tiene la navegación habilitada.
     /// </summary>
     public void Draw(EditorWorldConfig? config, Matrix cameraTransform)
     {
@@ -48,22 +48,22 @@ public sealed class NavGridPreviewRenderer : IDisposable
             samplerState: SamplerState.PointClamp,
             blendState: BlendState.AlphaBlend);
 
-        // ── Interior grid lines ────────────────────────────────────────────────
-        // Vertical
+        // ── Líneas interiores de la cuadrícula ────────────────────────────────────────────────
+        // Verticales
         for (int c = 1; c < cols; c++)
         {
             float x = ox + c * cellSize;
             DrawLineWorld(x, oy, x, oy + totalH, GridLineColor, 1f);
         }
 
-        // Horizontal
+        // Horizontales
         for (int r = 1; r < rows; r++)
         {
             float y = oy + r * cellSize;
             DrawLineWorld(ox, y, ox + totalW, y, GridLineColor, 1f);
         }
 
-        // ── Outer border ───────────────────────────────────────────────────────
+        // ── Borde exterior ───────────────────────────────────────────────────────
         DrawLineWorld(ox,          oy,          ox + totalW, oy,          BorderColor, 2f);
         DrawLineWorld(ox + totalW, oy,          ox + totalW, oy + totalH, BorderColor, 2f);
         DrawLineWorld(ox + totalW, oy + totalH, ox,          oy + totalH, BorderColor, 2f);

@@ -1,11 +1,11 @@
 namespace MonoGame.Editor.WinForms.Rendering;
 
 /// <summary>
-/// Renders a 3D UV-sphere preview of a material to a <see cref="RenderTarget2D"/>.
+/// Renderiza una previsualización de esfera UV-3D de un material en un <see cref="RenderTarget2D"/>.
 /// <para>
-/// All GPU operations must run on the render thread. Call <see cref="Initialize"/> once from the
-/// render thread, then <see cref="Render"/> each time the preview needs updating. Retrieve the
-/// result as a <see cref="System.Drawing.Bitmap"/> via <see cref="GetPreviewBitmap"/>.
+/// Todas las operaciones de GPU deben ejecutarse en el hilo de renderizado. Llamar a <see cref="Initialize"/> una vez desde
+/// el hilo de renderizado y luego <see cref="Render"/> cada vez que la previsualización necesite actualizarse. Obtener el
+/// resultado como <see cref="System.Drawing.Bitmap"/> mediante <see cref="GetPreviewBitmap"/>.
 /// </para>
 /// </summary>
 public sealed class MaterialPreviewRenderer : IDisposable
@@ -33,12 +33,12 @@ public sealed class MaterialPreviewRenderer : IDisposable
 
     #endregion
 
-    /// <summary>Returns <see langword="true"/> after <see cref="Initialize"/> has been called from the render thread.</summary>
+    /// <summary>Devuelve <see langword="true"/> tras llamar a <see cref="Initialize"/> desde el hilo de renderizado.</summary>
     public bool IsInitialized => _graphicsDevice is not null;
 
     #region Initialization (render thread)
 
-    /// <summary>Creates GPU resources. Must be called once from the render thread.</summary>
+    /// <summary>Crea recursos de GPU. Debe llamarse una vez desde el hilo de renderizado.</summary>
     public void Initialize(GraphicsDevice graphicsDevice)
     {
         _graphicsDevice = graphicsDevice;
@@ -61,11 +61,11 @@ public sealed class MaterialPreviewRenderer : IDisposable
     #region Material update (any thread)
 
     /// <summary>
-    /// Updates the material properties used for the next render pass.
-    /// Safe to call from the UI thread; actual GPU upload deferred to the render thread.
+    /// Actualiza las propiedades del material usadas en la siguiente pasada de renderizado.
+    /// Seguro de llamar desde el hilo de UI; la carga real a GPU se difiere al hilo de renderizado.
     /// </summary>
-    /// <param name="texture">Optional diffuse texture to show on the sphere.</param>
-    /// <param name="color">Tint color (defaults to white if no texture is set).</param>
+    /// <param name="texture">Textura difusa opcional para mostrar en la esfera.</param>
+    /// <param name="color">Color de tinte (por defecto blanco si no se establece textura).</param>
     public void SetMaterial(Texture2D? texture, Microsoft.Xna.Framework.Color color)
     {
         _currentTexture = texture;
@@ -78,8 +78,8 @@ public sealed class MaterialPreviewRenderer : IDisposable
     #region Render (render thread)
 
     /// <summary>
-    /// Renders the sphere preview to the internal <see cref="RenderTarget2D"/>.
-    /// Call from the render thread. Returns <see langword="false"/> if not yet initialized.
+    /// Renderiza la previsualización de la esfera en el <see cref="RenderTarget2D"/> interno.
+    /// Llamar desde el hilo de renderizado. Devuelve <see langword="false"/> si aún no está inicializado.
     /// </summary>
     public bool Render()
     {
@@ -92,7 +92,7 @@ public sealed class MaterialPreviewRenderer : IDisposable
         _graphicsDevice.SetRenderTarget(_renderTarget);
         _graphicsDevice.Clear(Microsoft.Xna.Framework.Color.DimGray);
 
-        // Camera positioned at (0, 0, 1.5) looking at origin
+        // Cámara posicionada en (0, 0, 1.5) apuntando al origen
         _effect.View       = Matrix.CreateLookAt(new Vector3(0f, 0.3f, 1.5f), Vector3.Zero, Vector3.Up);
         _effect.Projection = Matrix.CreatePerspectiveFieldOfView(
             MathHelper.ToRadians(40f), 1f, 0.1f, 100f);
@@ -125,8 +125,8 @@ public sealed class MaterialPreviewRenderer : IDisposable
     }
 
     /// <summary>
-    /// Reads back the last rendered frame as a <see cref="System.Drawing.Bitmap"/>.
-    /// Call from the render thread after <see cref="Render"/>, then pass the bitmap to the UI thread.
+    /// Lee el último fotograma renderizado como un <see cref="System.Drawing.Bitmap"/>.
+    /// Llamar desde el hilo de renderizado tras <see cref="Render"/> y luego pasar el bitmap al hilo de UI.
     /// </summary>
     public System.Drawing.Bitmap? GetPreviewBitmap()
     {
@@ -143,7 +143,7 @@ public sealed class MaterialPreviewRenderer : IDisposable
             int x = i % PreviewSize;
             int y = i / PreviewSize;
             Microsoft.Xna.Framework.Color c = pixels[i];
-            // MonoGame Color is RGBA; System.Drawing.Color is ARGB
+            // MonoGame Color es RGBA; System.Drawing.Color es ARGB
             bmp.SetPixel(x, y, System.Drawing.Color.FromArgb(c.A, c.R, c.G, c.B));
         }
 

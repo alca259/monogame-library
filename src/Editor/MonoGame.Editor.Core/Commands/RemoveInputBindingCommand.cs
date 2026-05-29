@@ -2,16 +2,16 @@ using Alca.MonoGame.Kernel.Input;
 
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Removes a binding from an action in an <see cref="InputEditorModel"/>.</summary>
+/// <summary>Elimina un enlace de una acción en un <see cref="InputEditorModel"/>.</summary>
 public sealed class RemoveInputBindingCommand : IEditorCommand
 {
     private readonly InputEditorModel _model;
     private readonly string _actionName;
     private readonly InputBindingEntry _binding;
 
-    /// <param name="model">Target model.</param>
-    /// <param name="actionName">Name of the action.</param>
-    /// <param name="binding">Binding to remove.</param>
+    /// <param name="model">Modelo de destino.</param>
+    /// <param name="actionName">Nombre de la acción.</param>
+    /// <param name="binding">Enlace a eliminar.</param>
     public RemoveInputBindingCommand(InputEditorModel model, string actionName, InputBindingEntry binding)
     {
         _model = model;

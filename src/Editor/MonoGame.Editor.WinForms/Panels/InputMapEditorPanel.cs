@@ -4,8 +4,8 @@ using XnaInput = Microsoft.Xna.Framework.Input;
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>
-/// Panel for creating and editing input action maps (<c>*.input.json</c>). Left side shows actions in a
-/// <see cref="TreeView"/>; right side shows bindings for the selected action in a <see cref="DataGridView"/>.
+/// Panel para crear y editar mapas de acciones de entrada (<c>*.input.json</c>). El lado izquierdo muestra las acciones en un
+/// <see cref="TreeView"/>; el lado derecho muestra los enlaces de la acción seleccionada en un <see cref="DataGridView"/>.
 /// </summary>
 public sealed class InputMapEditorPanel : UserControl
 {
@@ -13,10 +13,10 @@ public sealed class InputMapEditorPanel : UserControl
     private InputEditorModel? _activeModel;
     private InputActionEntry? _selectedAction;
 
-    // ── Split container ──────────────────────────────────────────────────
+    // ── Contenedor dividido ─────────────────────────────────────────────
     private readonly SplitContainer _split;
 
-    // ── Left panel ───────────────────────────────────────────────────────
+    // ── Panel izquierdo ───────────────────────────────────────────────────
     private readonly ToolStrip _leftToolStrip;
     private readonly ToolStripButton _loadFileButton;
     private readonly ToolStripButton _saveFileButton;
@@ -27,7 +27,7 @@ public sealed class InputMapEditorPanel : UserControl
     private readonly TreeView _actionTree;
     private readonly Label _leftStatusLabel;
 
-    // ── Right panel ──────────────────────────────────────────────────────
+    // ── Panel derecho ──────────────────────────────────────────────────────
     private readonly Label _actionNameLabel;
     private readonly ToolStrip _rightToolStrip;
     private readonly ToolStripButton _addBindingButton;
@@ -40,7 +40,7 @@ public sealed class InputMapEditorPanel : UserControl
 
     private static readonly string[] DeviceItems = ["Keyboard", "Gamepad", "Mouse"];
 
-    /// <summary>Initializes the panel layout.</summary>
+    /// <summary>Inicializa el diseño del panel.</summary>
     public InputMapEditorPanel()
     {
         _split            = new SplitContainer();
@@ -120,7 +120,7 @@ public sealed class InputMapEditorPanel : UserControl
         _leftStatusLabel.ForeColor = System.Drawing.SystemColors.GrayText;
         _leftStatusLabel.Text      = "No map loaded";
 
-        // Left panel assembly
+        // Ensamblaje del panel izquierdo
         _split.Panel1.Controls.Add(_actionTree);
         _split.Panel1.Controls.Add(_mapFileSelector);
         _split.Panel1.Controls.Add(_leftToolStrip);
@@ -180,7 +180,7 @@ public sealed class InputMapEditorPanel : UserControl
         _bindingsGrid.EditingControlShowing += OnBindingsEditingControlShowing;
         _bindingsGrid.DataError            += (_, e) => e.ThrowException = false;
 
-        // Right panel assembly
+        // Ensamblaje del panel derecho
         _split.Panel2.Controls.Add(_bindingsGrid);
         _split.Panel2.Controls.Add(_rightToolStrip);
         _split.Panel2.Controls.Add(_actionNameLabel);
@@ -202,7 +202,7 @@ public sealed class InputMapEditorPanel : UserControl
         ResumeLayout(false);
     }
 
-    /// <summary>Connects the panel to the editor context and subscribes to events.</summary>
+    /// <summary>Conecta el panel con el contexto del editor y se suscribe a eventos.</summary>
     public void Initialize(EditorContext context)
     {
         _context = context;
@@ -216,7 +216,7 @@ public sealed class InputMapEditorPanel : UserControl
         base.Dispose(disposing);
     }
 
-    // ── Event handlers ────────────────────────────────────────────────────
+    // ── Manejadores de eventos ────────────────────────────────────────────
 
     private void OnProjectOpened(ProjectOpenedEvent evt)
     {
@@ -278,7 +278,7 @@ public sealed class InputMapEditorPanel : UserControl
 
         _mapFileSelector.SelectedItem = file;
 
-        // If file not yet in selector, load manually
+        // Si el archivo aún no está en el selector, cargarlo manualmente
         if (_mapFileSelector.SelectedItem is null)
         {
             try
@@ -386,7 +386,7 @@ public sealed class InputMapEditorPanel : UserControl
 
         if (newBinding == oldBinding) return;
 
-        // Direct model mutation for cell-level edits (no undo entry)
+        // Mutación directa del modelo para ediciones a nivel de celda (sin entrada de deshacer)
         _selectedAction.Bindings[e.RowIndex] = newBinding;
     }
 
@@ -403,7 +403,7 @@ public sealed class InputMapEditorPanel : UserControl
         PopulateKeyButtonItems(cb, device);
     }
 
-    // ── Refresh helpers ───────────────────────────────────────────────────
+        // ── Auxiliares de actualización ───────────────────────────────────
 
     private void RebuildActionTree()
     {
@@ -469,7 +469,7 @@ public sealed class InputMapEditorPanel : UserControl
         return new InputBindingEntry(device, code);
     }
 
-    // ── Utility ───────────────────────────────────────────────────────────
+        // ── Utilidades ────────────────────────────────────────────────────
 
     private static void PopulateKeyButtonItems(ComboBox cb, DeviceType device)
     {

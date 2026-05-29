@@ -6,9 +6,9 @@ using MonoGame.Editor.Core.Models;
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>
-/// Displays and edits 9-slice border metadata for a selected texture or sprite asset.
-/// Shown automatically when a <see cref="AssetType.Texture"/> or <see cref="AssetType.Sprite"/>
-/// asset is selected in the asset browser.
+/// Muestra y edita los metadatos de bordes 9-slice de un asset de textura o sprite seleccionado.
+/// Se muestra automáticamente cuando se selecciona un asset de tipo <see cref="AssetType.Texture"/> o <see cref="AssetType.Sprite"/>
+/// en el navegador de assets.
 /// </summary>
 public sealed class SpriteInspectorPanel : UserControl
 {
@@ -44,7 +44,7 @@ public sealed class SpriteInspectorPanel : UserControl
 
     #region Constructor
 
-    /// <summary>Creates the panel. Call <see cref="Initialize"/> to connect to the editor context.</summary>
+    /// <summary>Crea el panel. Llama a <see cref="Initialize"/> para conectar con el contexto del editor.</summary>
     public SpriteInspectorPanel()
     {
         _scroll = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
@@ -119,7 +119,7 @@ public sealed class SpriteInspectorPanel : UserControl
 
     #region Initialization
 
-    /// <summary>Connects this panel to the editor context and subscribes to asset selection events.</summary>
+    /// <summary>Conecta este panel con el contexto del editor y se suscribe a eventos de selección de assets.</summary>
     public void Initialize(EditorContext context)
     {
         _context = context;
@@ -180,7 +180,7 @@ public sealed class SpriteInspectorPanel : UserControl
                 return JsonSerializer.Deserialize<EditorSpriteMetadata>(json)
                     ?? new EditorSpriteMetadata { TextureRelativePath = asset.RelativePath };
             }
-            catch { /* fall through */ }
+            catch { /* continuar */ }
         }
 
         return new EditorSpriteMetadata { TextureRelativePath = asset.RelativePath };
@@ -206,7 +206,7 @@ public sealed class SpriteInspectorPanel : UserControl
         if (File.Exists(_currentAsset.AbsolutePath))
         {
             try { _preview.Image = System.Drawing.Image.FromFile(_currentAsset.AbsolutePath); }
-            catch { /* ignore */ }
+            catch { /* ignorar */ }
         }
 
         _borderLeft.Value   = _currentMetadata.BorderLeft;

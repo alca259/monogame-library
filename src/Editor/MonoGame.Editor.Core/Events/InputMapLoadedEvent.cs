@@ -1,4 +1,4 @@
 namespace MonoGame.Editor.Core.Events;
 
-/// <summary>Published when an input map file has been loaded into the editor.</summary>
+/// <summary>Publicado cuando se ha cargado un archivo de mapa de entrada en el editor.</summary>
 public sealed record InputMapLoadedEvent(InputEditorModel Model) : IEditorEvent;

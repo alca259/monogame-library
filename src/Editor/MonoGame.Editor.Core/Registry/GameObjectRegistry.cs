@@ -3,27 +3,28 @@ using System.Reflection;
 namespace MonoGame.Editor.Core.Registry;
 
 /// <summary>
-/// Scans loaded assemblies for concrete types whose base-class chain includes a type
-/// named <c>GameBehaviour</c>. Also tracks "pending" types found in source but not yet compiled.
+/// Analiza los ensamblados cargados en busca de tipos concretos cuya cadena de herencia
+/// incluya un tipo llamado <c>GameBehaviour</c>. También lleva un seguimiento de los tipos
+/// "pendientes" encontrados en el código fuente pero aún no compilados.
 /// </summary>
 public sealed class GameObjectRegistry
 {
     private readonly Dictionary<string, Type> _types = new(StringComparer.Ordinal);
     private readonly HashSet<string> _pendingTypeNames = new(StringComparer.Ordinal);
 
-    /// <summary>All discovered <c>GameBehaviour</c> subclasses keyed by their full type name.</summary>
+    /// <summary>Todas las subclases de <c>GameBehaviour</c> descubiertas, indexadas por su nombre completo de tipo.</summary>
     public IReadOnlyDictionary<string, Type> RegisteredTypes => _types;
 
     /// <summary>
-    /// Short type names found in source files but not yet compiled.
-    /// Shown in the AddBehaviourDialog with grey italic style.
+    /// Nombres cortos de tipos encontrados en archivos de origen pero aún no compilados.
+    /// Se muestran en el AddBehaviourDialog con estilo gris cursivo.
     /// </summary>
     public IReadOnlySet<string> PendingTypeNames => _pendingTypeNames;
 
-    /// <summary>Scans all assemblies currently loaded in <see cref="AppDomain.CurrentDomain"/>.</summary>
+    /// <summary>Analiza todos los ensamblados cargados actualmente en <see cref="AppDomain.CurrentDomain"/>.</summary>
     public void Scan() => Scan(AppDomain.CurrentDomain.GetAssemblies());
 
-    /// <summary>Scans a specific set of <paramref name="assemblies"/> (primarily for unit testing).</summary>
+    /// <summary>Analiza un conjunto específico de <paramref name="assemblies"/> (principalmente para pruebas unitarias).</summary>
     public void Scan(Assembly[] assemblies)
     {
         _types.Clear();
@@ -44,7 +45,7 @@ public sealed class GameObjectRegistry
             catch (NotSupportedException) { }
         }
 
-        // Remove pending names that are now compiled
+        // Eliminar los nombres pendientes que ya están compilados
         _pendingTypeNames.RemoveWhere(name =>
         {
             foreach (string key in _types.Keys)
@@ -57,8 +58,8 @@ public sealed class GameObjectRegistry
     }
 
     /// <summary>
-    /// Loads an external assembly from <paramref name="dllPath"/> and merges its
-    /// <c>GameBehaviour</c> subclasses into <see cref="RegisteredTypes"/>.
+    /// Carga un ensamblado externo desde <paramref name="dllPath"/> y fusiona sus
+    /// subclases de <c>GameBehaviour</c> en <see cref="RegisteredTypes"/>.
     /// </summary>
     public Task ScanFromAssemblyAsync(string dllPath)
         => Task.Run(() => ScanFromAssembly(dllPath));
@@ -79,7 +80,7 @@ public sealed class GameObjectRegistry
                     _types[t.FullName ?? t.Name] = t;
             }
 
-            // Remove pending names now compiled
+            // Eliminar los nombres pendientes ya compilados
             _pendingTypeNames.RemoveWhere(name =>
             {
                 foreach (string key in _types.Keys)
@@ -96,8 +97,8 @@ public sealed class GameObjectRegistry
     }
 
     /// <summary>
-    /// Scans <paramref name="sourcePath"/> for <c>GameBehaviour</c> subclass names
-    /// (text-based parse) and registers them as pending if not already compiled.
+    /// Analiza <paramref name="sourcePath"/> en busca de nombres de subclases de <c>GameBehaviour</c>
+    /// (análisis basado en texto) y los registra como pendientes si no están ya compilados.
     /// </summary>
     public async Task ScanSourceAsync(string sourcePath)
     {
@@ -108,7 +109,7 @@ public sealed class GameObjectRegistry
         for (int i = 0; i < found.Count; i++)
         {
             string shortName = GetShortName(found[i]);
-            // Only add as pending if not already in compiled registry
+            // Solo agregar como pendiente si no está ya en el registro compilado
             bool alreadyCompiled = false;
             foreach (string key in _types.Keys)
             {
@@ -123,7 +124,7 @@ public sealed class GameObjectRegistry
         }
     }
 
-    /// <summary>Walks the inheritance chain and returns <c>true</c> if any base type is named <c>GameBehaviour</c>.</summary>
+    /// <summary>Recorre la cadena de herencia y devuelve <c>true</c> si algún tipo base se llama <c>GameBehaviour</c>.</summary>
     private static bool IsGameBehaviour(Type type)
     {
         Type? current = type.BaseType;

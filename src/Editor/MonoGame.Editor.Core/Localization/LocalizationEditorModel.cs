@@ -1,8 +1,8 @@
 namespace MonoGame.Editor.Core.Localization;
 
 /// <summary>
-/// In-memory model of the localization files under a project's <c>LocalizationPath</c>.
-/// Each locale maps to a <c>{locale}.json</c> file containing a flat key→value dictionary.
+/// Modelo en memoria de los archivos de localización bajo el <c>LocalizationPath</c> de un proyecto.
+/// Cada locale se corresponde con un archivo <c>{locale}.json</c> que contiene un diccionario plano clave→valor.
 /// </summary>
 public sealed class LocalizationEditorModel
 {
@@ -13,16 +13,16 @@ public sealed class LocalizationEditorModel
 
     private LocalizationEditorModel(string localizationPath) => _localizationPath = localizationPath;
 
-    /// <summary>Ordered list of locale identifiers detected (e.g. "en", "es").</summary>
+    /// <summary>Lista ordenada de identificadores de locale detectados (p. ej. "en", "es").</summary>
     public IReadOnlyList<string> Locales => _locales;
 
-    /// <summary>Ordered list of translation keys present across all locales.</summary>
+    /// <summary>Lista ordenada de claves de traducción presentes en todos los locales.</summary>
     public IReadOnlyList<string> Keys => _keys;
 
     /// <summary>
-    /// Loads all <c>*.json</c> files from <paramref name="localizationPath"/> into an in-memory model.
-    /// Missing keys in a locale are represented as empty strings.
-    /// Returns an empty model if the directory does not exist.
+    /// Carga todos los archivos <c>*.json</c> de <paramref name="localizationPath"/> en un modelo en memoria.
+    /// Las claves ausentes en un locale se representan como cadenas vacías.
+    /// Devuelve un modelo vacío si el directorio no existe.
     /// </summary>
     public static async Task<LocalizationEditorModel> LoadAsync(string localizationPath)
     {
@@ -57,7 +57,7 @@ public sealed class LocalizationEditorModel
         return model;
     }
 
-    /// <summary>Returns the translated value for the given <paramref name="locale"/> and <paramref name="key"/>, or empty string if missing.</summary>
+    /// <summary>Devuelve el valor traducido para el <paramref name="locale"/> y la <paramref name="key"/> indicados, o cadena vacía si no existe.</summary>
     public string GetValue(string locale, string key)
     {
         if (_data.TryGetValue(locale, out Dictionary<string, string>? dict) &&
@@ -67,7 +67,7 @@ public sealed class LocalizationEditorModel
         return string.Empty;
     }
 
-    /// <summary>Sets the translated value for the given <paramref name="locale"/> and <paramref name="key"/>. Creates the locale dictionary if needed.</summary>
+    /// <summary>Establece el valor traducido para el <paramref name="locale"/> y la <paramref name="key"/> indicados. Crea el diccionario del locale si es necesario.</summary>
     public void SetValue(string locale, string key, string value)
     {
         if (!_data.TryGetValue(locale, out Dictionary<string, string>? dict))
@@ -79,7 +79,7 @@ public sealed class LocalizationEditorModel
         dict[key] = value;
     }
 
-    /// <summary>Writes all locale dictionaries back to their respective <c>{locale}.json</c> files.</summary>
+    /// <summary>Escribe todos los diccionarios de locale de vuelta a sus respectivos archivos <c>{locale}.json</c>.</summary>
     public async Task SaveAsync()
     {
         if (!Directory.Exists(_localizationPath))
@@ -99,7 +99,7 @@ public sealed class LocalizationEditorModel
         }
     }
 
-    /// <summary>Adds a new translation key to all locales (value defaults to empty string).</summary>
+    /// <summary>Agrega una nueva clave de traducción a todos los locales (el valor por defecto es cadena vacía).</summary>
     public void AddKey(string key)
     {
         if (_keys.Contains(key)) return;
@@ -116,7 +116,7 @@ public sealed class LocalizationEditorModel
         }
     }
 
-    /// <summary>Removes a translation key from all locales.</summary>
+    /// <summary>Elimina una clave de traducción de todos los locales.</summary>
     public void RemoveKey(string key)
     {
         _keys.Remove(key);
@@ -125,7 +125,7 @@ public sealed class LocalizationEditorModel
             _data.GetValueOrDefault(_locales[i])?.Remove(key);
     }
 
-    /// <summary>Adds a new locale column with empty values for all existing keys.</summary>
+    /// <summary>Agrega una nueva columna de locale con valores vacíos para todas las claves existentes.</summary>
     public void AddLocale(string locale)
     {
         if (_locales.Contains(locale)) return;
