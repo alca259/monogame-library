@@ -18,7 +18,7 @@ public sealed class EditModeRenderer : IDisposable
     private readonly Dictionary<string, Texture2D> _textureCache = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Returns <c>true</c> once <see cref="Initialize"/> has been called from the render thread.</summary>
-    public bool IsInitialized => _spriteBatch != null;
+    public bool IsInitialized => _spriteBatch is not null && _placeholder is not null;
 
     /// <summary>Creates the renderer bound to the given editor context.</summary>
     public EditModeRenderer(EditorContext context)
@@ -33,6 +33,9 @@ public sealed class EditModeRenderer : IDisposable
     /// </summary>
     public void Initialize(GraphicsDevice gd)
     {
+        _spriteBatch?.Dispose();
+        _placeholder?.Dispose();
+
         _spriteBatch = new SpriteBatch(gd);
 
         // 16×16 magenta placeholder so objects are visible even without a sprite assigned.
@@ -51,7 +54,10 @@ public sealed class EditModeRenderer : IDisposable
     {
         if (_spriteBatch is null || _placeholder is null) return;
 
-        GraphicsDevice gd = _spriteBatch.GraphicsDevice;
+        GraphicsDevice? gd = _spriteBatch.GraphicsDevice;
+        if (gd is null) return;
+
+        bool began = false;
 
         try
         {
@@ -59,12 +65,17 @@ public sealed class EditModeRenderer : IDisposable
                 transformMatrix: cameraTransform,
                 samplerState: SamplerState.PointClamp,
                 blendState: BlendState.AlphaBlend);
+            began = true;
             DrawObjectList(scene.RootGameObjects, gd);
         }
         catch { /* ignore per-object draw errors */ }
         finally
         {
-            _spriteBatch.End();
+            if (began)
+            {
+                try { _spriteBatch.End(); }
+                catch { /* ignore end-pass errors */ }
+            }
         }
     }
 
@@ -75,6 +86,8 @@ public sealed class EditModeRenderer : IDisposable
         ClearCache();
         _placeholder?.Dispose();
         _spriteBatch?.Dispose();
+        _placeholder = null;
+        _spriteBatch = null;
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────

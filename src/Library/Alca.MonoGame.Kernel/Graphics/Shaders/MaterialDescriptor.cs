@@ -16,6 +16,17 @@ public sealed class MaterialDescriptor
     public string ShaderPath { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the rendering mode that controls transparency blending.
+    /// Stored as a string for human-readable JSON (e.g. <c>"Opaque"</c>, <c>"Cutout"</c>).
+    /// </summary>
+    public string RenderingMode { get; set; } = nameof(Shaders.RenderingMode.Opaque);
+
+    /// <summary>
+    /// Gets or sets the secondary UV set index used for detail maps (0 = UV0, 1 = UV1).
+    /// </summary>
+    public int UVSet { get; set; } = 0;
+
+    /// <summary>
     /// Gets or sets the shader parameter overrides keyed by parameter name.
     /// Parameters not listed here use the shader's compiled defaults.
     /// </summary>
