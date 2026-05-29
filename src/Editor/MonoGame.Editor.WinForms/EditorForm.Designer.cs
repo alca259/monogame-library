@@ -64,6 +64,8 @@ partial class EditorForm
     private TabControl _centerTabControl = null!;
     private TabPage _sceneTab = null!;
     private MonoGameControl _viewport = null!;
+    private TabControl _rightTabControl = null!;
+    private TabPage _inspectorTab = null!;
     private InspectorPanel _inspectorPanel = null!;
 
     // ── Bottom tabs ───────────────────────────────────────────────────────
@@ -153,6 +155,8 @@ partial class EditorForm
         _centerTabControl         = new TabControl();
         _sceneTab                 = new TabPage();
         _viewport                 = new MonoGameControl();
+        _rightTabControl          = new TabControl();
+        _inspectorTab             = new TabPage();
         _inspectorPanel           = new InspectorPanel();
         _bottomTabControl         = new TabControl();
         _assetsTab                = new TabPage();
@@ -193,6 +197,7 @@ partial class EditorForm
         _innerSplit.Panel2.SuspendLayout();
         _innerSplit.SuspendLayout();
         _sceneTab.SuspendLayout();
+        _inspectorTab.SuspendLayout();
         _assetsTab.SuspendLayout();
         _consoleTab.SuspendLayout();
         _sceneManagerTab.SuspendLayout();
@@ -601,8 +606,26 @@ partial class EditorForm
         _inspectorPanel.Dock = DockStyle.Fill;
         _inspectorPanel.Location = new System.Drawing.Point(0, 0);
         _inspectorPanel.Name = "_inspectorPanel";
-        _inspectorPanel.Size = new System.Drawing.Size(276, 527);
+        _inspectorPanel.Size = new System.Drawing.Size(268, 499);
         _inspectorPanel.TabIndex = 0;
+
+        // _inspectorTab
+        _inspectorTab.Controls.Add(_inspectorPanel);
+        _inspectorTab.Location = new System.Drawing.Point(4, 24);
+        _inspectorTab.Name = "_inspectorTab";
+        _inspectorTab.Padding = new System.Windows.Forms.Padding(0);
+        _inspectorTab.Size = new System.Drawing.Size(268, 499);
+        _inspectorTab.TabIndex = 0;
+        _inspectorTab.Text = "Inspector";
+
+        // _rightTabControl
+        _rightTabControl.Controls.Add(_inspectorTab);
+        _rightTabControl.Dock = DockStyle.Fill;
+        _rightTabControl.Location = new System.Drawing.Point(0, 0);
+        _rightTabControl.Name = "_rightTabControl";
+        _rightTabControl.SelectedIndex = 0;
+        _rightTabControl.Size = new System.Drawing.Size(276, 527);
+        _rightTabControl.TabIndex = 0;
 
         // _innerSplit
         _innerSplit.Dock = DockStyle.Fill;
@@ -610,7 +633,7 @@ partial class EditorForm
         _innerSplit.Name = "_innerSplit";
         _innerSplit.Orientation = Orientation.Vertical;
         _innerSplit.Panel1.Controls.Add(_centerTabControl);
-        _innerSplit.Panel2.Controls.Add(_inspectorPanel);
+        _innerSplit.Panel2.Controls.Add(_rightTabControl);
         _innerSplit.Size = new System.Drawing.Size(1056, 527);
         _innerSplit.SplitterDistance = 776;
         _innerSplit.TabIndex = 0;
@@ -813,6 +836,7 @@ partial class EditorForm
         ((System.ComponentModel.ISupportInitialize)_innerSplit).EndInit();
         _innerSplit.ResumeLayout(false);
         _sceneTab.ResumeLayout(false);
+        _inspectorTab.ResumeLayout(false);
         _assetsTab.ResumeLayout(false);
         _consoleTab.ResumeLayout(false);
         _sceneManagerTab.ResumeLayout(false);

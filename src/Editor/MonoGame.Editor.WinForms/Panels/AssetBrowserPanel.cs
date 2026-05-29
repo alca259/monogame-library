@@ -33,30 +33,38 @@ public sealed class AssetBrowserPanel : UserControl
     private const int IconScript    = 10;
     private const int IconFolder    = 11;
     private const int IconGenerated = 12;
+    private const int IconMaterial  = 13;
+    private const int IconSprite    = 14;
+    private const int IconUITheme   = 15;
 
     #endregion
 
     #region Fields
 
     private EditorContext? _context;
-    private string _contentRoot  = string.Empty;
+    private string _contentRoot   = string.Empty;
     private string _currentFolder = string.Empty;
     private bool _largeIconMode;
 
-    private readonly SplitContainer    _outerSplit;
-    private readonly TreeView          _folderTree;
-    private readonly SplitContainer    _rightSplit;
-    private readonly ListView          _contentView;
-    private readonly Panel             _previewPanel;
-    private readonly PictureBox        _previewImage;
-    private readonly Label             _previewInfo;
-    private readonly ImageList         _typeIcons;
-    private readonly ImageList         _largeIcons;
-    private readonly Panel             _topBar;
-    private readonly TextBox           _filterBox;
-    private readonly Button            _viewToggleBtn;
-    private readonly FlowLayoutPanel   _breadcrumb;
-    private readonly ContextMenuStrip  _itemContextMenu;
+    private readonly SplitContainer   _outerSplit;
+    private readonly TreeView         _folderTree;
+    private readonly SplitContainer   _rightSplit;
+    private readonly ListView         _contentView;
+    private readonly Panel            _previewPanel;
+    private readonly PictureBox       _previewImage;
+    private readonly Label            _previewInfo;
+    private readonly ImageList        _typeIcons;
+    private readonly ImageList        _largeIcons;
+    private readonly Panel            _topBar;
+    private readonly TextBox          _filterBox;
+    private readonly Button           _viewToggleBtn;
+    private readonly FlowLayoutPanel  _breadcrumb;
+    private readonly ContextMenuStrip _itemContextMenu;
+    private readonly ContextMenuStrip _folderContextMenu;
+    private readonly ToolStripMenuItem _renameFolderItem;
+    private readonly ToolStripMenuItem _deleteFolderItem;
+    private readonly ToolStripMenuItem _newMaterialItem;
+    private readonly ToolStripMenuItem _newUIThemeItem;
     private readonly System.Windows.Forms.Timer _searchDebounce;
 
     #endregion
@@ -72,18 +80,18 @@ public sealed class AssetBrowserPanel : UserControl
         // ── Breadcrumb ────────────────────────────────────────────────────
         _breadcrumb = new FlowLayoutPanel
         {
-            Dock      = DockStyle.Top,
-            Height    = 22,
-            AutoSize  = false,
-            Padding   = new Padding(2, 0, 2, 0),
+            Dock     = DockStyle.Top,
+            Height   = 22,
+            AutoSize = false,
+            Padding  = new Padding(2, 0, 2, 0),
         };
 
         // ── Top bar (filter + view toggle) ────────────────────────────────
         _filterBox = new TextBox
         {
-            Dock             = DockStyle.Fill,
-            PlaceholderText  = "Filter assets...",
-            BorderStyle      = BorderStyle.FixedSingle,
+            Dock            = DockStyle.Fill,
+            PlaceholderText = "Filter assets...",
+            BorderStyle     = BorderStyle.FixedSingle,
         };
         _viewToggleBtn = new Button
         {
@@ -96,12 +104,12 @@ public sealed class AssetBrowserPanel : UserControl
         _topBar.Controls.Add(_filterBox);
         _topBar.Controls.Add(_viewToggleBtn);
 
-        // ── Context menu ─────────────────────────────────────────────────
-        ToolStripMenuItem openExternalItem    = new("Open with External Editor");
+        // ── File context menu ──────────────────────────────────────────────
+        ToolStripMenuItem openExternalItem     = new("Open with External Editor");
         ToolStripMenuItem revealInExplorerItem = new("Reveal in Explorer");
-        ToolStripMenuItem renameItem          = new("Rename");
-        ToolStripMenuItem deleteItem          = new("Delete");
-        ToolStripMenuItem copyPathItem        = new("Copy Relative Path");
+        ToolStripMenuItem renameItem           = new("Rename");
+        ToolStripMenuItem deleteItem           = new("Delete");
+        ToolStripMenuItem copyPathItem         = new("Copy Relative Path");
 
         _itemContextMenu = new ContextMenuStrip();
         _itemContextMenu.Items.AddRange(new ToolStripItem[]
@@ -121,6 +129,31 @@ public sealed class AssetBrowserPanel : UserControl
         deleteItem.Click           += OnDeleteItem;
         copyPathItem.Click         += OnCopyRelativePath;
 
+        // ── Folder context menu ────────────────────────────────────────────
+        ToolStripMenuItem newFolderItem = new("New Folder");
+        _newMaterialItem                = new("New Material");
+        _newUIThemeItem                 = new("New UI Theme");
+        _renameFolderItem               = new("Rename");
+        _deleteFolderItem               = new("Delete");
+
+        _folderContextMenu = new ContextMenuStrip();
+        _folderContextMenu.Items.AddRange(new ToolStripItem[]
+        {
+            newFolderItem,
+            _newMaterialItem,
+            _newUIThemeItem,
+            new ToolStripSeparator(),
+            _renameFolderItem,
+            _deleteFolderItem,
+        });
+
+        newFolderItem.Click        += OnNewFolder;
+        _newMaterialItem.Click     += OnNewMaterial;
+        _newUIThemeItem.Click      += OnNewUITheme;
+        _renameFolderItem.Click    += OnRenameFolder;
+        _deleteFolderItem.Click    += OnDeleteFolder;
+        _folderContextMenu.Opening += OnFolderContextMenuOpening;
+
         // ── Debounce timer ────────────────────────────────────────────────
         _searchDebounce = new System.Windows.Forms.Timer { Interval = 150 };
         _searchDebounce.Tick += (_, _) =>
@@ -134,12 +167,14 @@ public sealed class AssetBrowserPanel : UserControl
         // ── Folder tree (left) ───────────────────────────────────────────
         _folderTree = new TreeView
         {
-            Dock          = DockStyle.Fill,
-            HideSelection = false,
-            ShowLines     = true,
-            ShowPlusMinus = true,
-            BorderStyle   = BorderStyle.None,
-            ImageList     = _typeIcons,
+            Dock             = DockStyle.Fill,
+            HideSelection    = false,
+            ShowLines        = true,
+            ShowPlusMinus    = true,
+            BorderStyle      = BorderStyle.None,
+            ImageList        = _typeIcons,
+            LabelEdit        = true,
+            ContextMenuStrip = _folderContextMenu,
         };
 
         // ── File list (top-right) ─────────────────────────────────────────
@@ -154,6 +189,7 @@ public sealed class AssetBrowserPanel : UserControl
             SmallImageList   = _typeIcons,
             LargeImageList   = _largeIcons,
             AllowDrop        = true,
+            LabelEdit        = true,
             ContextMenuStrip = _itemContextMenu,
         };
         _contentView.Columns.Add("Name", 200);
@@ -186,7 +222,6 @@ public sealed class AssetBrowserPanel : UserControl
         _previewPanel.Controls.Add(_previewImage);
 
         // ── Right split (list / preview) ──────────────────────────────────
-        // Wrap list+topbar+breadcrumb in a panel
         Panel rightTopPanel = new Panel { Dock = DockStyle.Fill };
         rightTopPanel.Controls.Add(_contentView);
         rightTopPanel.Controls.Add(_topBar);
@@ -203,7 +238,7 @@ public sealed class AssetBrowserPanel : UserControl
         };
         _rightSplit.Panel1.Controls.Add(rightTopPanel);
         _rightSplit.Panel2.Controls.Add(_previewPanel);
-        _rightSplit.Panel2Collapsed = true;   // hidden until an asset is selected
+        _rightSplit.Panel2Collapsed = true;
 
         // ── Outer split (tree / right) ────────────────────────────────────
         _outerSplit = new SplitContainer
@@ -221,15 +256,18 @@ public sealed class AssetBrowserPanel : UserControl
         AllowDrop = true;
 
         // Wire up
-        _folderTree.AfterSelect             += OnFolderSelected;
-        _folderTree.BeforeExpand            += OnBeforeExpand;
-        _contentView.SelectedIndexChanged   += OnContentSelectionChanged;
-        _contentView.ItemDrag               += OnItemDrag;
-        _contentView.DragEnter              += OnDragEnter;
-        _contentView.DragDrop               += OnDragDrop;
-        _viewToggleBtn.Click                += OnViewToggle;
-        DragEnter                           += OnDragEnter;
-        DragDrop                            += OnDragDrop;
+        _folderTree.AfterSelect           += OnFolderSelected;
+        _folderTree.BeforeExpand          += OnBeforeExpand;
+        _folderTree.MouseDown             += OnFolderTreeMouseDown;
+        _folderTree.AfterLabelEdit        += OnFolderAfterLabelEdit;
+        _contentView.SelectedIndexChanged += OnContentSelectionChanged;
+        _contentView.ItemDrag             += OnItemDrag;
+        _contentView.DragEnter            += OnDragEnter;
+        _contentView.DragDrop             += OnDragDrop;
+        _contentView.AfterLabelEdit       += OnFileAfterLabelEdit;
+        _viewToggleBtn.Click              += OnViewToggle;
+        DragEnter                         += OnDragEnter;
+        DragDrop                          += OnDragDrop;
     }
 
     #endregion
@@ -302,7 +340,6 @@ public sealed class AssetBrowserPanel : UserControl
     {
         if (InvokeRequired) { BeginInvoke(() => OnAssetImported(evt)); return; }
 
-        // Only refresh if the changed file is inside the current folder view
         if (_folderTree.SelectedNode?.Tag is string currentFolder)
         {
             string dir = Path.GetDirectoryName(evt.Asset.AbsolutePath) ?? string.Empty;
@@ -319,8 +356,8 @@ public sealed class AssetBrowserPanel : UserControl
     {
         TreeNode node = new(label)
         {
-            Tag          = path,
-            ImageIndex   = IconFolder,
+            Tag                = path,
+            ImageIndex         = IconFolder,
             SelectedImageIndex = IconFolder,
         };
         try
@@ -360,6 +397,178 @@ public sealed class AssetBrowserPanel : UserControl
         ShowFolderContents(path);
     }
 
+    private void OnFolderTreeMouseDown(object? sender, MouseEventArgs e)
+    {
+        if (e.Button != MouseButtons.Right) return;
+        TreeNode? node = _folderTree.GetNodeAt(e.Location);
+        if (node is not null) _folderTree.SelectedNode = node;
+    }
+
+    #endregion
+
+    #region Folder context menu
+
+    private void OnFolderContextMenuOpening(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        TreeNode? node = _folderTree.SelectedNode;
+        if (node is null) { e.Cancel = true; return; }
+
+        bool isRoot = node.Parent is null;
+        _renameFolderItem.Enabled = !isRoot;
+        _deleteFolderItem.Enabled = !isRoot;
+    }
+
+    private void OnNewFolder(object? sender, EventArgs e)
+    {
+        TreeNode? parent = _folderTree.SelectedNode;
+        if (parent?.Tag is not string parentPath) return;
+
+        string baseName = "New Folder";
+        string newPath  = Path.Combine(parentPath, baseName);
+        int count = 1;
+        while (Directory.Exists(newPath))
+            newPath = Path.Combine(parentPath, $"{baseName} ({count++})");
+
+        try
+        {
+            Directory.CreateDirectory(newPath);
+        }
+        catch (IOException ex)
+        {
+            MessageBox.Show(this, ex.Message, "Create Folder Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        // Remove lazy placeholder if present
+        if (parent.Nodes.Count == 1 && parent.Nodes[0].Tag is null)
+            parent.Nodes.Clear();
+
+        string name = Path.GetFileName(newPath);
+        TreeNode newNode = CreateFolderNode(name, newPath);
+        parent.Nodes.Add(newNode);
+
+        if (!parent.IsExpanded)
+            parent.Expand();
+
+        _folderTree.SelectedNode = newNode;
+        newNode.BeginEdit();
+    }
+
+    private void OnNewMaterial(object? sender, EventArgs e) => CreateAssetFile(
+        "NewMaterial", ".mat.json",
+        path => JsonSerializer.Serialize(EditorMaterial.CreateEmpty(Path.GetFileNameWithoutExtension(path)),
+            new JsonSerializerOptions { WriteIndented = true }));
+
+    private void OnNewUITheme(object? sender, EventArgs e) => CreateAssetFile(
+        "NewUITheme", ".uitheme.json",
+        path => JsonSerializer.Serialize(EditorUITheme.CreateEmpty(Path.GetFileNameWithoutExtension(path)),
+            new JsonSerializerOptions { WriteIndented = true }));
+
+    private void CreateAssetFile(string baseName, string extension, Func<string, string> contentFactory)
+    {
+        if (string.IsNullOrEmpty(_currentFolder)) return;
+
+        string newPath = Path.Combine(_currentFolder, baseName + extension);
+        int count = 1;
+        while (File.Exists(newPath))
+            newPath = Path.Combine(_currentFolder, $"{baseName}{count++}{extension}");
+
+        try
+        {
+            File.WriteAllText(newPath, contentFactory(newPath));
+        }
+        catch (IOException ex)
+        {
+            MessageBox.Show(this, ex.Message, "Create File Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        ShowFolderContents(_currentFolder);
+
+        for (int i = 0; i < _contentView.Items.Count; i++)
+        {
+            if (_contentView.Items[i].Tag is AssetInfo info && info.AbsolutePath == newPath)
+            {
+                _contentView.Items[i].Selected = true;
+                _contentView.Items[i].Focused  = true;
+                _contentView.EnsureVisible(i);
+                break;
+            }
+        }
+    }
+
+    private void OnRenameFolder(object? sender, EventArgs e)
+    {
+        TreeNode? node = _folderTree.SelectedNode;
+        if (node is null || node.Parent is null) return;
+        node.BeginEdit();
+    }
+
+    private void OnDeleteFolder(object? sender, EventArgs e)
+    {
+        TreeNode? node = _folderTree.SelectedNode;
+        if (node?.Tag is not string path) return;
+        if (node.Parent is null) return;
+
+        if (MessageBox.Show(this, $"Delete folder '{node.Text}' and all its contents?",
+                "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+
+        try
+        {
+            Directory.Delete(path, recursive: true);
+            TreeNode parentNode = node.Parent;
+            string parentPath   = parentNode.Tag as string ?? _contentRoot;
+            node.Remove();
+            _folderTree.SelectedNode = parentNode;
+            if (_currentFolder.StartsWith(path, StringComparison.OrdinalIgnoreCase))
+                _currentFolder = parentPath;
+            ShowFolderContents(parentPath);
+        }
+        catch (IOException ex)
+        {
+            MessageBox.Show(this, ex.Message, "Delete Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private void OnFolderAfterLabelEdit(object? sender, NodeLabelEditEventArgs e)
+    {
+        if (e.CancelEdit || string.IsNullOrWhiteSpace(e.Label)) { e.CancelEdit = true; return; }
+        if (e.Node?.Tag is not string oldPath) { e.CancelEdit = true; return; }
+        if (e.Node.Parent is null) { e.CancelEdit = true; return; }
+
+        string newName   = e.Label.Trim();
+        string parentDir = Path.GetDirectoryName(oldPath) ?? string.Empty;
+        string newPath   = Path.Combine(parentDir, newName);
+
+        if (string.Equals(oldPath, newPath, StringComparison.OrdinalIgnoreCase)) return;
+
+        if (Directory.Exists(newPath))
+        {
+            e.CancelEdit = true;
+            MessageBox.Show(this, $"A folder named '{newName}' already exists.", "Rename Failed",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        try
+        {
+            Directory.Move(oldPath, newPath);
+            e.Node.Tag = newPath;
+            UpdateChildNodePaths(e.Node, oldPath, newPath);
+
+            if (_currentFolder.StartsWith(oldPath, StringComparison.OrdinalIgnoreCase))
+            {
+                _currentFolder = newPath + _currentFolder[oldPath.Length..];
+                BeginInvoke(() => ShowFolderContents(_currentFolder));
+            }
+        }
+        catch (IOException ex)
+        {
+            e.CancelEdit = true;
+            MessageBox.Show(this, ex.Message, "Rename Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
     #endregion
 
     #region Content list
@@ -387,7 +596,7 @@ public sealed class AssetBrowserPanel : UserControl
 
                 ListViewItem item = new(info.Name)
                 {
-                    Tag        = info,
+                    Tag         = info,
                     ToolTipText = info.RelativePath,
                 };
 
@@ -436,6 +645,37 @@ public sealed class AssetBrowserPanel : UserControl
         _rightSplit.Panel2Collapsed = false;
         ShowPreview(info);
         _context?.EventBus.Publish(new AssetSelectedEvent(info));
+    }
+
+    private void OnFileAfterLabelEdit(object? sender, LabelEditEventArgs e)
+    {
+        if (e.CancelEdit || string.IsNullOrWhiteSpace(e.Label)) { e.CancelEdit = true; return; }
+        if (_contentView.Items[e.Item].Tag is not AssetInfo info) { e.CancelEdit = true; return; }
+
+        string newName = e.Label.Trim();
+        string dir     = Path.GetDirectoryName(info.AbsolutePath) ?? string.Empty;
+        string newPath = Path.Combine(dir, newName);
+
+        if (string.Equals(info.AbsolutePath, newPath, StringComparison.OrdinalIgnoreCase)) return;
+
+        if (File.Exists(newPath))
+        {
+            e.CancelEdit = true;
+            MessageBox.Show(this, $"A file named '{newName}' already exists.", "Rename Failed",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        try
+        {
+            File.Move(info.AbsolutePath, newPath);
+            BeginInvoke(() => ShowFolderContents(_currentFolder));
+        }
+        catch (IOException ex)
+        {
+            e.CancelEdit = true;
+            MessageBox.Show(this, ex.Message, "Rename Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     #endregion
@@ -563,10 +803,10 @@ public sealed class AssetBrowserPanel : UserControl
     {
         LinkLabel lnk = new LinkLabel
         {
-            Text      = text,
-            AutoSize  = true,
-            Tag       = path,
-            TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+            Text             = text,
+            AutoSize         = true,
+            Tag              = path,
+            TextAlign        = System.Drawing.ContentAlignment.MiddleLeft,
             LinkColor        = System.Drawing.Color.FromArgb(180, 180, 180),
             VisitedLinkColor = System.Drawing.Color.FromArgb(140, 140, 140),
             ActiveLinkColor  = System.Drawing.Color.White,
@@ -574,7 +814,6 @@ public sealed class AssetBrowserPanel : UserControl
         lnk.LinkClicked += (_, _) =>
         {
             if (lnk.Tag is not string target) return;
-            // Navigate tree to this path
             TreeNode? node = FindFolderNode(_folderTree.Nodes, target);
             if (node is not null)
             {
@@ -597,10 +836,23 @@ public sealed class AssetBrowserPanel : UserControl
         return null;
     }
 
+    private static void UpdateChildNodePaths(TreeNode node, string oldBase, string newBase)
+    {
+        for (int i = 0; i < node.Nodes.Count; i++)
+        {
+            if (node.Nodes[i].Tag is string childPath)
+            {
+                string newChildPath = newBase + childPath[oldBase.Length..];
+                node.Nodes[i].Tag = newChildPath;
+                UpdateChildNodePaths(node.Nodes[i], childPath, newChildPath);
+            }
+        }
+    }
+
     private void OnViewToggle(object? sender, EventArgs e)
     {
         _largeIconMode = !_largeIconMode;
-        _contentView.View = _largeIconMode ? View.LargeIcon : View.Details;
+        _contentView.View   = _largeIconMode ? View.LargeIcon : View.Details;
         _viewToggleBtn.Text = _largeIconMode ? "☰" : "⊞";
         if (!string.IsNullOrEmpty(_currentFolder))
             ShowFolderContents(_currentFolder);
@@ -613,8 +865,8 @@ public sealed class AssetBrowserPanel : UserControl
         if (!File.Exists(info.AbsolutePath)) return;
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
         {
-            FileName         = info.AbsolutePath,
-            UseShellExecute  = true,
+            FileName        = info.AbsolutePath,
+            UseShellExecute = true,
         });
     }
 
@@ -622,7 +874,12 @@ public sealed class AssetBrowserPanel : UserControl
     {
         if (_contentView.SelectedItems.Count == 0) return;
         if (_contentView.SelectedItems[0].Tag is not AssetInfo info) return;
-        System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{info.AbsolutePath}\"");
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName        = "explorer.exe",
+            Arguments       = $"/select,\"{info.AbsolutePath}\"",
+            UseShellExecute = true,
+        });
     }
 
     private void OnRenameItem(object? sender, EventArgs e)
@@ -640,7 +897,6 @@ public sealed class AssetBrowserPanel : UserControl
         try
         {
             File.Delete(info.AbsolutePath);
-            _context?.EventBus.Publish(new AssetImportedEvent(info));
             ShowFolderContents(_currentFolder);
         }
         catch (IOException ex)
@@ -668,6 +924,9 @@ public sealed class AssetBrowserPanel : UserControl
         AssetType.Animation => IconAnimation,
         AssetType.InputMap  => IconInputMap,
         AssetType.Script    => IconScript,
+        AssetType.Material  => IconMaterial,
+        AssetType.Sprite    => IconSprite,
+        AssetType.UITheme   => IconUITheme,
         _                   => IconUnknown,
     };
 
@@ -713,6 +972,9 @@ public sealed class AssetBrowserPanel : UserControl
         list.Images.Add(MakeColorSquare(System.Drawing.Color.Teal, size));           // 10 Script
         list.Images.Add(MakeColorSquare(System.Drawing.Color.SaddleBrown, size));    // 11 Folder
         list.Images.Add(MakeColorSquare(System.Drawing.Color.Turquoise, size));      // 12 Generated
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.IndianRed, size));       // 13 Material
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.MediumOrchid, size));    // 14 Sprite
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.SteelBlue, size));       // 15 UITheme
         return list;
     }
 
@@ -732,6 +994,9 @@ public sealed class AssetBrowserPanel : UserControl
         list.Images.Add(MakeColorSquare(System.Drawing.Color.Teal, 64));
         list.Images.Add(MakeColorSquare(System.Drawing.Color.SaddleBrown, 64));
         list.Images.Add(MakeColorSquare(System.Drawing.Color.Turquoise, 64));        // 12 Generated
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.IndianRed, 64));        // 13 Material
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.MediumOrchid, 64));     // 14 Sprite
+        list.Images.Add(MakeColorSquare(System.Drawing.Color.SteelBlue, 64));        // 15 UITheme
         return list;
     }
 

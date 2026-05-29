@@ -49,6 +49,12 @@ public sealed class EditorProject
     public string GameSourcePath { get; }
 
     /// <summary>
+    /// Absolute path to the <c>src/GameScripts/</c> folder where user-created scripts live.
+    /// Computed as <c>{RootPath}/src/GameScripts</c>.
+    /// </summary>
+    public string GameScriptsPath { get; }
+
+    /// <summary>
     /// Initializes the project with computed sub-paths derived from <paramref name="rootPath"/>.
     /// </summary>
     /// <param name="name">Project name.</param>
@@ -91,6 +97,7 @@ public sealed class EditorProject
         GameSourcePath = string.IsNullOrWhiteSpace(GameCsprojPath)
                              ? string.Empty
                              : Path.GetDirectoryName(GameCsprojPath) ?? string.Empty;
+        GameScriptsPath = Path.Combine(rootPath, "src", "GameScripts");
 
         string baseForPaths = string.IsNullOrWhiteSpace(GameSourcePath) ? rootPath : GameSourcePath;
         ContentPath      = Path.Combine(baseForPaths, contentRelativePath);

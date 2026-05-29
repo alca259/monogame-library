@@ -13,6 +13,12 @@ public sealed class GameBehaviourScanner
         @"class\s+(\w+)\s*:\s*([\w.]+)",
         RegexOptions.Compiled);
 
+    /// <summary>Directories skipped during recursive source scan.</summary>
+    private static readonly HashSet<string> _excludedDirs = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "bin", "obj", ".git", ".vs", ".idea", ".editor", "node_modules",
+    };
+
     /// <summary>
     /// Scans a compiled DLL for concrete <c>GameBehaviour</c> subclasses.
     /// </summary>
@@ -53,7 +59,7 @@ public sealed class GameBehaviourScanner
     /// <summary>
     /// Scans all <c>.cs</c> files under <paramref name="sourcePath"/> for classes
     /// that directly extend <c>GameBehaviour</c> (simple text analysis, no Roslyn).
-    /// Covers the 95% case of direct single-level inheritance.
+    /// Skips <c>bin/</c>, <c>obj/</c>, <c>.git/</c> and other non-source directories.
     /// </summary>
     public static Task<IReadOnlyList<string>> ScanSourceAsync(string sourcePath)
         => Task.Run<IReadOnlyList<string>>(() => ScanSource(sourcePath));
@@ -61,28 +67,42 @@ public sealed class GameBehaviourScanner
     private static IReadOnlyList<string> ScanSource(string sourcePath)
     {
         List<string> result = [];
-
         if (!Directory.Exists(sourcePath)) return result;
-
-        string[] files = Directory.GetFiles(sourcePath, "*.cs", SearchOption.AllDirectories);
-        for (int i = 0; i < files.Length; i++)
-        {
-            try
-            {
-                string text = File.ReadAllText(files[i]);
-                MatchCollection matches = _classRegex.Matches(text);
-                for (int j = 0; j < matches.Count; j++)
-                {
-                    Match m = matches[j];
-                    string baseType = m.Groups[2].Value;
-                    if (baseType == "GameBehaviour" || baseType.EndsWith(".GameBehaviour", StringComparison.Ordinal))
-                        result.Add(m.Groups[1].Value);
-                }
-            }
-            catch { /* skip unreadable files */ }
-        }
-
+        CollectMatches(sourcePath, result);
         return result;
+    }
+
+    private static void CollectMatches(string dir, List<string> result)
+    {
+        try
+        {
+            string[] files = Directory.GetFiles(dir, "*.cs");
+            for (int i = 0; i < files.Length; i++)
+            {
+                try
+                {
+                    string text = File.ReadAllText(files[i]);
+                    MatchCollection matches = _classRegex.Matches(text);
+                    for (int j = 0; j < matches.Count; j++)
+                    {
+                        Match m = matches[j];
+                        string baseType = m.Groups[2].Value;
+                        if (baseType == "GameBehaviour" || baseType.EndsWith(".GameBehaviour", StringComparison.Ordinal))
+                            result.Add(m.Groups[1].Value);
+                    }
+                }
+                catch { /* skip unreadable files */ }
+            }
+
+            string[] subdirs = Directory.GetDirectories(dir);
+            for (int i = 0; i < subdirs.Length; i++)
+            {
+                string name = Path.GetFileName(subdirs[i]);
+                if (!_excludedDirs.Contains(name))
+                    CollectMatches(subdirs[i], result);
+            }
+        }
+        catch (UnauthorizedAccessException) { }
     }
 
     private static bool IsGameBehaviourSubclass(Type type)

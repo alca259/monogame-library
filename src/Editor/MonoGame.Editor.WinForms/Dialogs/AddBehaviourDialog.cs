@@ -144,9 +144,9 @@ public sealed class AddBehaviourDialog : Form
         using NewBehaviourDialog dlg = new(gameSourcePath, projectRootPath, defaultNs);
         if (dlg.ShowDialog(this) != DialogResult.OK) return;
 
-        // Re-scan source so the new .cs file is picked up as a pending type.
-        if (!string.IsNullOrEmpty(gameSourcePath))
-            await _registry.ScanSourceAsync(gameSourcePath).ConfigureAwait(true);
+        // Re-scan all source under root so the new .cs file is picked up as a pending type.
+        if (!string.IsNullOrEmpty(projectRootPath))
+            await _registry.ScanSourceAsync(projectRootPath).ConfigureAwait(true);
 
         // Rebuild the types list with both compiled and pending types.
         _allTypes.Clear();
@@ -178,9 +178,11 @@ public sealed class AddBehaviourDialog : Form
         try
         {
             _registry.Scan();
-            string gameSourcePath = _project?.GameSourcePath ?? string.Empty;
-            if (!string.IsNullOrEmpty(gameSourcePath))
-                await _registry.ScanSourceAsync(gameSourcePath).ConfigureAwait(true);
+            string rootPath = _project?.RootPath ?? string.Empty;
+
+            // Scan all source under root — covers game projects, libs, GameScripts, etc.
+            if (!string.IsNullOrEmpty(rootPath))
+                await _registry.ScanSourceAsync(rootPath).ConfigureAwait(true);
 
             _allTypes.Clear();
             foreach (KeyValuePair<string, Type> kv in _registry.RegisteredTypes)

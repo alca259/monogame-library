@@ -13,7 +13,7 @@ public sealed class EditModeRenderer : IDisposable
 
     private readonly EditorContext _context;
     private SpriteBatch? _spriteBatch;
-    private Texture2D?   _placeholder;
+    private Texture2D? _placeholder;
 
     private readonly Dictionary<string, Texture2D> _textureCache = new(StringComparer.OrdinalIgnoreCase);
 
@@ -53,12 +53,12 @@ public sealed class EditModeRenderer : IDisposable
 
         GraphicsDevice gd = _spriteBatch.GraphicsDevice;
 
-        _spriteBatch.Begin(
-            transformMatrix: cameraTransform,
-            samplerState: SamplerState.PointClamp,
-            blendState: BlendState.AlphaBlend);
         try
         {
+            _spriteBatch.Begin(
+                transformMatrix: cameraTransform,
+                samplerState: SamplerState.PointClamp,
+                blendState: BlendState.AlphaBlend);
             DrawObjectList(scene.RootGameObjects, gd);
         }
         catch { /* ignore per-object draw errors */ }
@@ -103,9 +103,9 @@ public sealed class EditModeRenderer : IDisposable
             if (tex is null) continue;
 
             Vector2 origin = new Vector2(tex.Width * 0.5f, tex.Height * 0.5f);
-            Vector2 pos    = new Vector2(obj.Position.X, obj.Position.Y);
-            Vector2 scale  = new Vector2(obj.Scale.X, obj.Scale.Y);
-            float   rot    = obj.Rotation * (MathF.PI / 180f);
+            Vector2 pos = new Vector2(obj.Position.X, obj.Position.Y);
+            Vector2 scale = new Vector2(obj.Scale.X, obj.Scale.Y);
+            float rot = obj.Rotation * (MathF.PI / 180f);
 
             _spriteBatch!.Draw(tex, pos, null, XnaColor.White, rot, origin, scale, SpriteEffects.None, 0f);
         }

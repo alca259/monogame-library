@@ -24,6 +24,9 @@ public sealed partial class EditorForm : Form
     private SpriteInspectorPanel?         _spriteInspectorPanel;
     private MaterialInspectorPanel?       _materialInspectorPanel;
     private UIThemeInspectorPanel?        _uiThemeInspectorPanel;
+    private TabPage?                      _spriteEditorTab;
+    private TabPage?                      _materialEditorTab;
+    private TabPage?                      _uiThemeEditorTab;
     private EditorMaterial?               _pendingMaterialPreview;
     private ExternalPlayLauncher?     _playLauncher;
     private readonly ContentWatcher  _contentWatcher  = null!;
@@ -148,20 +151,20 @@ public sealed partial class EditorForm : Form
             _pendingMaterialPreview = mat;
         });
 
-        var spriteTab = new TabPage("Sprite Editor") { Name = "_spriteEditorTab" };
-        spriteTab.Controls.Add(_spriteInspectorPanel);
+        _spriteEditorTab = new TabPage("Sprite Editor") { Name = "_spriteEditorTab" };
+        _spriteEditorTab.Controls.Add(_spriteInspectorPanel);
 
-        var materialTab = new TabPage("Material Editor") { Name = "_materialEditorTab" };
-        materialTab.Controls.Add(_materialInspectorPanel);
+        _materialEditorTab = new TabPage("Material Editor") { Name = "_materialEditorTab" };
+        _materialEditorTab.Controls.Add(_materialInspectorPanel);
 
         _uiThemeInspectorPanel = new UIThemeInspectorPanel { Dock = DockStyle.Fill };
         _uiThemeInspectorPanel.Initialize(_context);
-        var uiThemeTab = new TabPage("UI Theme Editor") { Name = "_uiThemeEditorTab" };
-        uiThemeTab.Controls.Add(_uiThemeInspectorPanel);
+        _uiThemeEditorTab = new TabPage("UI Theme Editor") { Name = "_uiThemeEditorTab" };
+        _uiThemeEditorTab.Controls.Add(_uiThemeInspectorPanel);
 
-        _bottomTabControl.Controls.Add(spriteTab);
-        _bottomTabControl.Controls.Add(materialTab);
-        _bottomTabControl.Controls.Add(uiThemeTab);
+        // Add asset-specific inspector tabs to the right panel tab control
+        _rightTabControl.TabPages.Add(_materialEditorTab);
+        _rightTabControl.TabPages.Add(_uiThemeEditorTab);
         _localizationPanel.Initialize(_context);
         _inputMapEditorPanel.Initialize(_context);
         _tilemapPalettePanel.Initialize(_context, _context.EventBus);
@@ -171,6 +174,7 @@ public sealed partial class EditorForm : Form
         _context.EventBus.Subscribe<BehaviourAddedEvent>(OnBehaviourAdded);
         _context.EventBus.Subscribe<InputMapLoadedEvent>(OnInputMapLoaded);
         _context.EventBus.Subscribe<LocalizationLoadedEvent>(OnLocalizationLoaded);
+        _context.EventBus.Subscribe<AssetSelectedEvent>(OnAssetSelectedForInspector);
 
         // Build menus programmatically (avoids Designer.cs C#-version concerns)
         BuildFileMenuExtras();
@@ -559,6 +563,9 @@ public sealed partial class EditorForm : Form
         if (tilemapPaletteVisible) _bottomTabControl.TabPages.Add(_tilemapPaletteTab);
         if (undoHistoryVisible)    _bottomTabControl.TabPages.Add(_undoHistoryTab);
         if (scriptsVisible)        _bottomTabControl.TabPages.Add(_scriptsTab);
+
+        // Sprite Editor stays in the bottom (context-sensitive asset inspector)
+        if (_spriteEditorTab is not null) _bottomTabControl.TabPages.Add(_spriteEditorTab);
 
         _mainSplit.Panel2Collapsed = !assetsVisible && !consoleVisible && !sceneManagerVisible && !localizationVisible && !inputMapVisible && !tilemapPaletteVisible && !undoHistoryVisible && !scriptsVisible;
     }
@@ -999,34 +1006,37 @@ public sealed partial class EditorForm : Form
 
     private async Task RescanBehavioursFromBuildAsync(EditorProject project)
     {
-        if (string.IsNullOrEmpty(project.GameCsprojPath)) return;
-
         string config = _projectSettings?.BuildConfiguration ?? "Debug";
-        string gameDir = project.GameSourcePath;
-        if (string.IsNullOrEmpty(gameDir)) return;
 
-        string projectName = Path.GetFileNameWithoutExtension(project.GameCsprojPath);
+        // Discover every .csproj under the project root and scan its compiled output
+        string[] csprojFiles;
+        try { csprojFiles = Directory.GetFiles(project.RootPath, "*.csproj", SearchOption.AllDirectories); }
+        catch { csprojFiles = []; }
 
-        // Try common output paths for a SDK-style project
-        string[] candidates =
-        [
-            Path.Combine(gameDir, "bin", config, "net10.0", $"{projectName}.dll"),
-            Path.Combine(gameDir, "bin", config, $"{projectName}.dll"),
-        ];
-
-        for (int i = 0; i < candidates.Length; i++)
+        for (int i = 0; i < csprojFiles.Length; i++)
         {
-            if (File.Exists(candidates[i]))
+            string projectDir  = Path.GetDirectoryName(csprojFiles[i]) ?? string.Empty;
+            string projectName = Path.GetFileNameWithoutExtension(csprojFiles[i]);
+
+            string[] candidates =
+            [
+                Path.Combine(projectDir, "bin", config, "net10.0", $"{projectName}.dll"),
+                Path.Combine(projectDir, "bin", config, $"{projectName}.dll"),
+            ];
+
+            for (int j = 0; j < candidates.Length; j++)
             {
-                await _registry.ScanFromAssemblyAsync(candidates[i]).ConfigureAwait(true);
-                _consolePanel.AppendLine($"[CodeGen] Assembly scanned: {Path.GetFileName(candidates[i])} — {_registry.RegisteredTypes.Count} type(s).", LogLevel.Info);
-                return;
+                if (!File.Exists(candidates[j])) continue;
+                await _registry.ScanFromAssemblyAsync(candidates[j]).ConfigureAwait(true);
+                _consolePanel.AppendLine($"[CodeGen] Assembly scanned: {Path.GetFileName(candidates[j])}", LogLevel.Info);
+                break;
             }
         }
 
-        // Fallback: scan source files
-        if (Directory.Exists(project.GameSourcePath))
-            await _registry.ScanSourceAsync(project.GameSourcePath).ConfigureAwait(true);
+        _consolePanel.AppendLine($"[CodeGen] {_registry.RegisteredTypes.Count} compiled type(s) found.", LogLevel.Info);
+
+        // Scan all source under root for uncompiled (pending) types — skips bin/, obj/, etc.
+        await _registry.ScanSourceAsync(project.RootPath).ConfigureAwait(true);
     }
 
     private async void OnNewBehaviourClick(object? sender, EventArgs e)
@@ -1437,6 +1447,39 @@ public sealed partial class EditorForm : Form
     {
         if (InvokeRequired) { BeginInvoke(() => OnLocalizationLoaded(evt)); return; }
         _consolePanel.AppendLine($"[Localization] Loaded — {evt.Model.Keys.Count} key(s).");
+    }
+
+    private void OnAssetSelectedForInspector(AssetSelectedEvent evt)
+    {
+        if (InvokeRequired) { BeginInvoke(() => OnAssetSelectedForInspector(evt)); return; }
+
+        // Material / UI Theme → right panel tabs
+        TabPage? rightTarget = evt.Asset?.Type switch
+        {
+            AssetType.Material => _materialEditorTab,
+            AssetType.UITheme  => _uiThemeEditorTab,
+            _                  => null,
+        };
+
+        if (rightTarget is not null && _rightTabControl.TabPages.Contains(rightTarget))
+        {
+            _innerSplit.Panel2Collapsed  = false;
+            _rightTabControl.SelectedTab = rightTarget;
+            return;
+        }
+
+        // Sprite / Texture → bottom Sprite Editor tab
+        TabPage? bottomTarget = evt.Asset?.Type switch
+        {
+            AssetType.Texture or AssetType.Sprite => _spriteEditorTab,
+            _                                     => null,
+        };
+
+        if (bottomTarget is not null && _bottomTabControl.TabPages.Contains(bottomTarget))
+        {
+            _mainSplit.Panel2Collapsed    = false;
+            _bottomTabControl.SelectedTab = bottomTarget;
+        }
     }
 
     private void OnProjectOpened(ProjectOpenedEvent evt)

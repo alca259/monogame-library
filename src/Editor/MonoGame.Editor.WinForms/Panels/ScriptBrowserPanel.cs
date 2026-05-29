@@ -22,11 +22,15 @@ public sealed class ScriptBrowserPanel : UserControl
     private string _scriptsRoot   = string.Empty;
     private string _currentFolder = string.Empty;
 
-    private readonly SplitContainer _splitContainer;
-    private readonly TreeView       _folderTree;
-    private readonly ListView       _fileList;
-    private readonly Button         _newScriptButton;
-    private readonly ImageList      _icons;
+    private readonly SplitContainer   _splitContainer;
+    private readonly TreeView         _folderTree;
+    private readonly ListView         _fileList;
+    private readonly Button           _newScriptButton;
+    private readonly ImageList        _icons;
+    private readonly ContextMenuStrip _folderContextMenu;
+    private readonly ContextMenuStrip _fileContextMenu;
+    private readonly ToolStripMenuItem _renameFolderItem;
+    private readonly ToolStripMenuItem _deleteFolderItem;
 
     #endregion
 
@@ -37,26 +41,72 @@ public sealed class ScriptBrowserPanel : UserControl
     {
         _icons = BuildIconList();
 
+        // ── Folder context menu ────────────────────────────────────────────
+        ToolStripMenuItem newFolderItem = new("New Folder");
+        _renameFolderItem               = new("Rename");
+        _deleteFolderItem               = new("Delete");
+
+        _folderContextMenu = new ContextMenuStrip();
+        _folderContextMenu.Items.AddRange(new ToolStripItem[]
+        {
+            newFolderItem,
+            new ToolStripSeparator(),
+            _renameFolderItem,
+            _deleteFolderItem,
+        });
+
+        newFolderItem.Click        += OnNewFolder;
+        _renameFolderItem.Click    += OnRenameFolder;
+        _deleteFolderItem.Click    += OnDeleteFolder;
+        _folderContextMenu.Opening += OnFolderContextMenuOpening;
+
+        // ── File context menu ──────────────────────────────────────────────
+        ToolStripMenuItem openInEditorItem = new("Open in External Editor");
+        ToolStripMenuItem renameFileItem   = new("Rename");
+        ToolStripMenuItem deleteFileItem   = new("Delete");
+        ToolStripMenuItem copyPathItem     = new("Copy Path");
+
+        _fileContextMenu = new ContextMenuStrip();
+        _fileContextMenu.Items.AddRange(new ToolStripItem[]
+        {
+            openInEditorItem,
+            new ToolStripSeparator(),
+            renameFileItem,
+            deleteFileItem,
+            new ToolStripSeparator(),
+            copyPathItem,
+        });
+
+        openInEditorItem.Click   += OnOpenInEditor;
+        renameFileItem.Click     += OnRenameFile;
+        deleteFileItem.Click     += OnDeleteFile;
+        copyPathItem.Click       += OnCopyPath;
+        _fileContextMenu.Opening += OnFileContextMenuOpening;
+
         // ── Folder tree (left) ────────────────────────────────────────────
         _folderTree = new TreeView
         {
-            Dock          = DockStyle.Fill,
-            HideSelection = false,
-            ShowLines     = true,
-            ShowPlusMinus = true,
-            BorderStyle   = BorderStyle.None,
-            ImageList     = _icons,
+            Dock             = DockStyle.Fill,
+            HideSelection    = false,
+            ShowLines        = true,
+            ShowPlusMinus    = true,
+            BorderStyle      = BorderStyle.None,
+            ImageList        = _icons,
+            LabelEdit        = true,
+            ContextMenuStrip = _folderContextMenu,
         };
 
         // ── File list (right) ─────────────────────────────────────────────
         _fileList = new ListView
         {
-            Dock           = DockStyle.Fill,
-            View           = View.Details,
-            FullRowSelect  = true,
-            MultiSelect    = false,
-            BorderStyle    = BorderStyle.None,
-            SmallImageList = _icons,
+            Dock             = DockStyle.Fill,
+            View             = View.Details,
+            FullRowSelect    = true,
+            MultiSelect      = false,
+            BorderStyle      = BorderStyle.None,
+            SmallImageList   = _icons,
+            LabelEdit        = true,
+            ContextMenuStrip = _fileContextMenu,
         };
         _fileList.Columns.Add("Name", 220);
         _fileList.Columns.Add("Size", 70);
@@ -89,9 +139,13 @@ public sealed class ScriptBrowserPanel : UserControl
 
         Controls.Add(_splitContainer);
 
-        _folderTree.AfterSelect  += OnFolderSelected;
-        _folderTree.BeforeExpand += OnBeforeExpand;
-        _newScriptButton.Click   += OnNewScriptClick;
+        _folderTree.AfterSelect    += OnFolderSelected;
+        _folderTree.BeforeExpand   += OnBeforeExpand;
+        _folderTree.MouseDown      += OnFolderTreeMouseDown;
+        _folderTree.AfterLabelEdit += OnFolderAfterLabelEdit;
+        _fileList.ItemActivate     += OnFileActivate;
+        _fileList.AfterLabelEdit   += OnFileAfterLabelEdit;
+        _newScriptButton.Click     += OnNewScriptClick;
     }
 
     #endregion
@@ -124,7 +178,7 @@ public sealed class ScriptBrowserPanel : UserControl
             return;
         }
 
-        _scriptsRoot = Path.Combine(evt.Project.RootPath, "src", "GameScripts");
+        _scriptsRoot = evt.Project.GameScriptsPath;
         LoadFolderTree(_scriptsRoot);
     }
 
@@ -202,6 +256,148 @@ public sealed class ScriptBrowserPanel : UserControl
         ShowFolderContents(path);
     }
 
+    private void OnFolderTreeMouseDown(object? sender, MouseEventArgs e)
+    {
+        if (e.Button != MouseButtons.Right) return;
+        TreeNode? node = _folderTree.GetNodeAt(e.Location);
+        if (node is not null) _folderTree.SelectedNode = node;
+    }
+
+    #endregion
+
+    #region Folder context menu
+
+    private void OnFolderContextMenuOpening(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        TreeNode? node = _folderTree.SelectedNode;
+        if (node is null) { e.Cancel = true; return; }
+
+        bool isRoot = node.Parent is null;
+        _renameFolderItem.Enabled = !isRoot;
+        _deleteFolderItem.Enabled = !isRoot;
+    }
+
+    private void OnNewFolder(object? sender, EventArgs e)
+    {
+        TreeNode? parent = _folderTree.SelectedNode;
+        if (parent?.Tag is not string parentPath) return;
+
+        string baseName = "New Folder";
+        string newPath  = Path.Combine(parentPath, baseName);
+        int count = 1;
+        while (Directory.Exists(newPath))
+            newPath = Path.Combine(parentPath, $"{baseName} ({count++})");
+
+        try
+        {
+            Directory.CreateDirectory(newPath);
+        }
+        catch (IOException ex)
+        {
+            MessageBox.Show(this, ex.Message, "Create Folder Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        // Remove lazy placeholder if present
+        if (parent.Nodes.Count == 1 && parent.Nodes[0].Tag is null)
+            parent.Nodes.Clear();
+
+        string name = Path.GetFileName(newPath);
+        TreeNode newNode = CreateFolderNode(name, newPath);
+        parent.Nodes.Add(newNode);
+
+        if (!parent.IsExpanded)
+            parent.Expand();
+
+        _folderTree.SelectedNode = newNode;
+        newNode.BeginEdit();
+    }
+
+    private void OnRenameFolder(object? sender, EventArgs e)
+    {
+        TreeNode? node = _folderTree.SelectedNode;
+        if (node is null || node.Parent is null) return;
+        node.BeginEdit();
+    }
+
+    private void OnDeleteFolder(object? sender, EventArgs e)
+    {
+        TreeNode? node = _folderTree.SelectedNode;
+        if (node?.Tag is not string path) return;
+        if (node.Parent is null) return;
+
+        if (MessageBox.Show(this, $"Delete folder '{node.Text}' and all its contents?",
+                "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+
+        try
+        {
+            Directory.Delete(path, recursive: true);
+            TreeNode parentNode = node.Parent;
+            string parentPath   = parentNode.Tag as string ?? _scriptsRoot;
+            node.Remove();
+            _folderTree.SelectedNode = parentNode;
+            if (_currentFolder.StartsWith(path, StringComparison.OrdinalIgnoreCase))
+                _currentFolder = parentPath;
+            ShowFolderContents(parentPath);
+        }
+        catch (IOException ex)
+        {
+            MessageBox.Show(this, ex.Message, "Delete Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private void OnFolderAfterLabelEdit(object? sender, NodeLabelEditEventArgs e)
+    {
+        if (e.CancelEdit || string.IsNullOrWhiteSpace(e.Label)) { e.CancelEdit = true; return; }
+        if (e.Node?.Tag is not string oldPath) { e.CancelEdit = true; return; }
+        if (e.Node.Parent is null) { e.CancelEdit = true; return; }
+
+        string newName   = e.Label.Trim();
+        string parentDir = Path.GetDirectoryName(oldPath) ?? string.Empty;
+        string newPath   = Path.Combine(parentDir, newName);
+
+        if (string.Equals(oldPath, newPath, StringComparison.OrdinalIgnoreCase)) return;
+
+        if (Directory.Exists(newPath))
+        {
+            e.CancelEdit = true;
+            MessageBox.Show(this, $"A folder named '{newName}' already exists.", "Rename Failed",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        try
+        {
+            Directory.Move(oldPath, newPath);
+            e.Node.Tag = newPath;
+            UpdateChildNodePaths(e.Node, oldPath, newPath);
+
+            if (_currentFolder.StartsWith(oldPath, StringComparison.OrdinalIgnoreCase))
+            {
+                _currentFolder = newPath + _currentFolder[oldPath.Length..];
+                BeginInvoke(() => ShowFolderContents(_currentFolder));
+            }
+        }
+        catch (IOException ex)
+        {
+            e.CancelEdit = true;
+            MessageBox.Show(this, ex.Message, "Rename Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private static void UpdateChildNodePaths(TreeNode node, string oldBase, string newBase)
+    {
+        for (int i = 0; i < node.Nodes.Count; i++)
+        {
+            if (node.Nodes[i].Tag is string childPath)
+            {
+                string newChildPath = newBase + childPath[oldBase.Length..];
+                node.Nodes[i].Tag = newChildPath;
+                UpdateChildNodePaths(node.Nodes[i], childPath, newChildPath);
+            }
+        }
+    }
+
     #endregion
 
     #region File list
@@ -217,7 +413,7 @@ public sealed class ScriptBrowserPanel : UserControl
             Array.Sort(files, StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < files.Length; i++)
             {
-                FileInfo fi   = new(files[i]);
+                FileInfo fi  = new(files[i]);
                 ListViewItem item = new(fi.Name)
                 {
                     Tag        = files[i],
@@ -230,6 +426,94 @@ public sealed class ScriptBrowserPanel : UserControl
         catch (UnauthorizedAccessException) { }
 
         _fileList.EndUpdate();
+    }
+
+    #endregion
+
+    #region File context menu
+
+    private void OnFileContextMenuOpening(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if (_fileList.SelectedItems.Count == 0) e.Cancel = true;
+    }
+
+    private void OnFileActivate(object? sender, EventArgs e)
+    {
+        if (_fileList.SelectedItems.Count == 0) return;
+        string path = _fileList.SelectedItems[0].Tag as string ?? string.Empty;
+        OpenScriptFile(path);
+    }
+
+    private void OnOpenInEditor(object? sender, EventArgs e)
+    {
+        if (_fileList.SelectedItems.Count == 0) return;
+        string path = _fileList.SelectedItems[0].Tag as string ?? string.Empty;
+        OpenScriptFile(path);
+    }
+
+    private void OnRenameFile(object? sender, EventArgs e)
+    {
+        if (_fileList.SelectedItems.Count > 0)
+            _fileList.SelectedItems[0].BeginEdit();
+    }
+
+    private void OnDeleteFile(object? sender, EventArgs e)
+    {
+        if (_fileList.SelectedItems.Count == 0) return;
+        string path = _fileList.SelectedItems[0].Tag as string ?? string.Empty;
+        string name = Path.GetFileName(path);
+
+        if (MessageBox.Show(this, $"Delete '{name}'?", "Confirm Delete",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+        try
+        {
+            File.Delete(path);
+            ShowFolderContents(_currentFolder);
+        }
+        catch (IOException ex)
+        {
+            MessageBox.Show(this, ex.Message, "Delete Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private void OnCopyPath(object? sender, EventArgs e)
+    {
+        if (_fileList.SelectedItems.Count == 0) return;
+        string path = _fileList.SelectedItems[0].Tag as string ?? string.Empty;
+        if (!string.IsNullOrEmpty(path))
+            Clipboard.SetText(path);
+    }
+
+    private void OnFileAfterLabelEdit(object? sender, LabelEditEventArgs e)
+    {
+        if (e.CancelEdit || string.IsNullOrWhiteSpace(e.Label)) { e.CancelEdit = true; return; }
+        string oldPath = _fileList.Items[e.Item].Tag as string ?? string.Empty;
+        if (string.IsNullOrEmpty(oldPath)) { e.CancelEdit = true; return; }
+
+        string newName = e.Label.Trim();
+        string dir     = Path.GetDirectoryName(oldPath) ?? string.Empty;
+        string newPath = Path.Combine(dir, newName);
+
+        if (string.Equals(oldPath, newPath, StringComparison.OrdinalIgnoreCase)) return;
+
+        if (File.Exists(newPath))
+        {
+            e.CancelEdit = true;
+            MessageBox.Show(this, $"A file named '{newName}' already exists.", "Rename Failed",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        try
+        {
+            File.Move(oldPath, newPath);
+            BeginInvoke(() => ShowFolderContents(_currentFolder));
+        }
+        catch (IOException ex)
+        {
+            e.CancelEdit = true;
+            MessageBox.Show(this, ex.Message, "Rename Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     #endregion
@@ -249,6 +533,72 @@ public sealed class ScriptBrowserPanel : UserControl
     #endregion
 
     #region Helpers
+
+    private static void OpenScriptFile(string filePath)
+    {
+        if (!File.Exists(filePath)) return;
+
+        // Try VS Code (PATH or common install locations) — avoids "Open With" dialog
+        if (TryOpenWithCode(filePath)) return;
+
+        // Use system default handler (Visual Studio, Rider, etc. if registered)
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName        = filePath,
+                UseShellExecute = true,
+            });
+        }
+        catch
+        {
+            System.Diagnostics.Process.Start("notepad.exe", $"\"{filePath}\"");
+        }
+    }
+
+    private static bool TryOpenWithCode(string filePath)
+    {
+        // Try "code" from PATH first
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName        = "code",
+                Arguments       = $"\"{filePath}\"",
+                UseShellExecute = false,
+                CreateNoWindow  = true,
+            });
+            return true;
+        }
+        catch { }
+
+        // Try common VS Code install locations
+        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        string[] candidates =
+        {
+            Path.Combine(localAppData, "Programs", "Microsoft VS Code", "Code.exe"),
+            Path.Combine(programFiles, "Microsoft VS Code", "Code.exe"),
+        };
+
+        foreach (string candidate in candidates)
+        {
+            if (!File.Exists(candidate)) continue;
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName        = candidate,
+                    Arguments       = $"\"{filePath}\"",
+                    UseShellExecute = false,
+                });
+                return true;
+            }
+            catch { }
+        }
+
+        return false;
+    }
 
     private static string FormatSize(long bytes) => bytes switch
     {
