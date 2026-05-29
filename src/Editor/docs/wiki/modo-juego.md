@@ -1,4 +1,4 @@
-# Modo juego (Play / Pause / Stop)
+# Modo juego (Play / Stop)
 
 El modo Play lanza el juego compilado como **proceso externo** (`GameApp.exe`). El editor no embebe ningún `GraphicsDevice` de MonoGame para el juego: el proceso tiene su propia ventana nativa.
 
@@ -18,8 +18,6 @@ El modo Play lanza el juego compilado como **proceso externo** (`GameApp.exe`). 
 |--------|----------------|-----------------|-----------|
 | `Editing` | Activo (gizmos, render) | — | Editable |
 | `Playing` | Solo modo editor en pausa | `GameApp.exe` en ejecución | Solo lectura |
-
-> El estado `Paused` del enum `EditorState` sigue existiendo para posibles extensiones futuras, pero el proceso externo no soporta pausa por defecto.
 
 ---
 

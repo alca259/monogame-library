@@ -113,6 +113,13 @@ public sealed class MainMenuScene : Scene
 | **AsyncContent** | Carga asíncrona de assets con progreso | [12-misc/async-content.md](12-misc/async-content.md) |
 | **Timers** | TimerManager, cooldowns, respawns | [12-misc/timers.md](12-misc/timers.md) |
 | **Weather** | WeatherWorld, perfiles, viento, rayos, audio | [13-weather/overview.md](13-weather/overview.md) |
+| **Trigger Volumes** | Zonas de activación ligeras AABB/Circle sin motor de física | [08-physics/trigger-volumes.md](08-physics/trigger-volumes.md) |
+| **Scene Transitions** | Transiciones enchufables: Fade, Slide, CircleWipe, Dissolve | [03-scenes/transitions.md](03-scenes/transitions.md) |
+| **Procedural Noise** | Ruido Perlin/Simplex, NoiseMap, fBm | [12-misc/procedural-noise.md](12-misc/procedural-noise.md) |
+| **Day/Night Cycle** | Ciclo día/noche con keyframes, TimeScale, eventos | [09-lighting/day-night.md](09-lighting/day-night.md) |
+| **Shader Library 2D** | Outline, Flash, Dissolve, Glow, Silhouette, CRT | [04-graphics/shader-library.md](04-graphics/shader-library.md) |
+| **Soporte 2.5D** | IsometricHelper, YSort, Billboard, NormalMap, IsometricCamera | [04-graphics/twopointfived.md](04-graphics/twopointfived.md) |
+| **Dialogue / Narrative** | Sistema de diálogos y narrativa con TypewriterEffect | [14-dialogue/overview.md](14-dialogue/overview.md) |
 
 ---
 

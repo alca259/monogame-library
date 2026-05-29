@@ -15,8 +15,7 @@ Documento de referencia para comprender todos los flujos internos del editor ant
 5. [Gestión de behaviours y propiedades](#5-gestión-de-behaviours-y-propiedades)
 6. [Transformaciones con gizmos](#6-transformaciones-con-gizmos)
 7. [Sistema de undo/redo](#7-sistema-de-undoredo)
-8. [Modo juego (Play / Stop)](#8-modo-juego-play--stop)
-9. [Flujos de assets y ContentWatcher](#9-flujos-de-assets-y-contentwatcher)
+8. [Modo juego (Play / Stop)](#8-modo-juego-play--stop)9. [Flujos de assets y ContentWatcher](#9-flujos-de-assets-y-contentwatcher)
 10. [Generación de código](#10-generación-de-código)
 11. [Sistema de prefabs](#11-sistema-de-prefabs)
 12. [Tilemaps](#12-tilemaps)
@@ -456,8 +455,6 @@ EditorForm.OnStopClick()
            → Inspector vuelve a ser editable
            → Viewport del editor se reactiva
 ```
-
-> El estado `Paused` existe en el enum `EditorState` pero no está activo en la implementación actual del proceso externo.
 
 ---
 

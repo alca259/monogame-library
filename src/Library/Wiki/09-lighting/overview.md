@@ -64,3 +64,4 @@ spriteBatch.Draw(texture, position, null, lightColor);
 
 - [Tipos de luz →](light-types.md)
 - [Pipeline GPU →](gpu-pipeline.md)
+- [Day/Night Cycle →](day-night.md)

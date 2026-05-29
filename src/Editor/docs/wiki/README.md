@@ -15,7 +15,7 @@ Documentación técnica del editor visual para proyectos MonoGame. Esta wiki exp
 | [Sistema de comandos (Undo/Redo)](comandos.md) | Cómo funciona el historial de acciones |
 | [Modelos de datos](modelos.md) | Clases de dominio: escenas, entidades, behaviours, etc. |
 | [Generación de código](codegen.md) | SourceGenerator Roslyn + cómo el editor produce archivos `.cs` del juego |
-| [Modo juego (Play/Pause/Stop)](modo-juego.md) | Ciclo de vida del modo de ejecución dentro del editor |
+| [Modo juego (Play/Stop)](modo-juego.md) | Ciclo de vida del modo de ejecución dentro del editor |
 | [Atajos de teclado y referencia rápida](atajos.md) | Todos los atajos y accesos directos del editor |
 
 ---

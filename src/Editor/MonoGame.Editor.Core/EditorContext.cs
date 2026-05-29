@@ -59,7 +59,7 @@ public sealed class EditorContext
     /// <summary>El logger centralizado del editor. Publica <see cref="LogEntryAddedEvent"/> a través de <see cref="EventBus"/>.</summary>
     public IEditorLogger Logger => _logger;
 
-    /// <summary>Estado actual del editor (Editing, Playing o Paused).</summary>
+    /// <summary>Estado actual del editor (Editing o Playing).</summary>
     public EditorState State { get { lock (_stateLock) return _state; } }
 
     /// <summary>Escena cargada actualmente, o <c>null</c> si no hay ninguna escena abierta.</summary>

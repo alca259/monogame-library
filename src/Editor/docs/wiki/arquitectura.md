@@ -57,7 +57,7 @@ private void OnGameObjectSelected(GameObjectSelectedEvent e)
 | `ActiveScene` | La escena que está abierta ahora mismo |
 | `ActiveProject` | El proyecto de juego que está cargado |
 | `SelectedObject` | La entidad seleccionada en la jerarquía |
-| `State` | Estado del editor: `Editing`, `Playing` o `Paused` |
+| `State` | Estado del editor: `Editing` o `Playing` |
 | `IsSceneDirty` | Si hay cambios sin guardar en la escena |
 | `EventBus` | El bus de eventos para comunicación entre paneles |
 | `CommandStack` | El historial de comandos para undo/redo |
@@ -73,21 +73,18 @@ EditorContext.Instance.EventBus.Publish(...)
 
 ## Máquina de estados del editor
 
-El editor tiene tres estados distintos que afectan a lo que se puede hacer:
+El editor tiene dos estados distintos que afectan a lo que se puede hacer:
 
 ```
-┌────────────┐  Play  ┌────────────┐  Pause  ┌────────────┐
-│            │───────►│            │────────►│            │
-│  Editing   │        │  Playing   │         │  Paused    │
-│            │◄───────│            │◄────────│            │
-└────────────┘  Stop  └────────────┘ Resume  └────────────┘
-      ▲                                              │
-      └──────────────────── Stop ───────────────────┘
+┌────────────┐  Play  ┌────────────┐
+│            │───────►│            │
+│  Editing   │        │  Playing   │
+│            │◄───────│            │
+└────────────┘  Stop  └────────────┘
 ```
 
 - **Editing**: modo normal. Gizmos visibles, game loop parado, viewport del editor activo.
-- **Playing**: snapshot de escena guardado en memoria, game loop ejecutándose, viewport del juego activo.
-- **Paused**: render activo (se ve el juego), `Update` no ejecuta lógica, inspector editable en caliente.
+- **Playing**: snapshot de escena guardado en memoria, proceso externo `GameApp.exe` en ejecución.
 - **Stop**: se restaura el snapshot, se vuelve a `Editing`. Los cambios hechos durante play se descartan.
 
 Cuando el estado cambia, se publica `EditorStateChangedEvent(oldState, newState)`.
@@ -119,7 +116,7 @@ Cuando el estado cambia, se publica `EditorStateChangedEvent(oldState, newState)
 
 | Evento | Cuándo se publica |
 |--------|-------------------|
-| `EditorStateChangedEvent(old, new)` | Al cambiar entre Editing/Playing/Paused |
+| `EditorStateChangedEvent(old, new)` | Al cambiar entre Editing/Playing |
 | `UndoPerformedEvent(description)` | Al ejecutar Deshacer |
 | `RedoPerformedEvent(description)` | Al ejecutar Rehacer |
 

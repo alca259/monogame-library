@@ -267,7 +267,7 @@ public sealed partial class EditorForm : Form
 
     #endregion
 
-    #region Toolbar — Play / Pause / Stop
+    #region Toolbar — Play / Stop
 
     private async void OnPlayClick(object? sender, EventArgs e)
     {
@@ -277,17 +277,10 @@ public sealed partial class EditorForm : Form
             return;
         }
 
-        EditorState next = _context.State switch
-        {
-            EditorState.Editing => EditorState.Playing,
-            EditorState.Paused  => EditorState.Playing,
-            _                   => EditorState.Playing,
-        };
-
-        if (next == EditorState.Playing && _context.State == EditorState.Editing)
+        if (_context.State == EditorState.Editing)
             await BuildContentIfNeededAsync().ConfigureAwait(true);
 
-        _context.SetState(next);
+        _context.SetState(EditorState.Playing);
     }
 
     private async Task BuildContentIfNeededAsync()
@@ -326,12 +319,6 @@ public sealed partial class EditorForm : Form
         }
     }
 
-    private void OnPauseClick(object? sender, EventArgs e)
-    {
-        if (_context.State == EditorState.Playing)
-            _context.SetState(EditorState.Paused);
-    }
-
     private void OnStopClick(object? sender, EventArgs e)
     {
         if (_context.State != EditorState.Editing)
@@ -347,7 +334,6 @@ public sealed partial class EditorForm : Form
         {
             EditorState.Editing => "Editing",
             EditorState.Playing => "Playing",
-            EditorState.Paused  => "Paused",
             _                   => string.Empty,
         };
 

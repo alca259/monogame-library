@@ -34,6 +34,11 @@
 | `Scene` | Clase base abstracta; hooks PreInitialize→CreateWorld→LoadContent→InitializeUI | [03-scenes/scene.md](03-scenes/scene.md) |
 | `SceneManager` | Transiciones con fade, pila de overlays (máx. 4) | [03-scenes/scene-manager.md](03-scenes/scene-manager.md) |
 | `LoadingScene` | Escena de ejemplo para pantallas de carga | [03-scenes/scene.md](03-scenes/scene.md) |
+| `ISceneTransition` | Interfaz para transiciones enchufables | [03-scenes/transitions.md](03-scenes/transitions.md) |
+| `FadeTransition` | Fundido a color sólido (default retrocompatible) | [03-scenes/transitions.md](03-scenes/transitions.md) |
+| `SlideTransition` | Cortina deslizante en 4 direcciones | [03-scenes/transitions.md](03-scenes/transitions.md) |
+| `CircleWipeTransition` | Iris wipe radial | [03-scenes/transitions.md](03-scenes/transitions.md) |
+| `DissolveTransition` | Dissolve con noise texture | [03-scenes/transitions.md](03-scenes/transitions.md) |
 
 ---
 
@@ -51,6 +56,8 @@
 | `FixedCamera3D` | Cámara estática en posición fija | [04-graphics/camera-3d.md](04-graphics/camera-3d.md) |
 | `CameraEffects` | Efectos de cámara (screen shake, etc.) | [04-graphics/camera-2d.md](04-graphics/camera-2d.md) |
 | `ResolutionManager` | Resolución virtual, letterboxing, `ScaleMatrix` | [04-graphics/resolution.md](04-graphics/resolution.md) |
+| `IsometricCamera` | Cámara ortográfica con proyección isométrica 2:1 | [04-graphics/twopointfived.md](04-graphics/twopointfived.md) |
+| `IsometricHelper` | Conversiones WorldToScreen/ScreenToWorld isométricas | [04-graphics/twopointfived.md](04-graphics/twopointfived.md) |
 
 ### Sprites y Animación
 
@@ -64,6 +71,9 @@
 | `AnimationStateMachine` | FSM de animaciones; transiciones entre estados | [04-graphics/animation.md](04-graphics/animation.md) |
 | `AnimatedSpriteBehaviour` | `GameBehaviour` que controla un `AnimatedSprite` | [04-graphics/animation.md](04-graphics/animation.md) |
 | `AnimationStateMachineBehaviour` | `GameBehaviour` que controla una `AnimationStateMachine` | [04-graphics/animation.md](04-graphics/animation.md) |
+| `YSortRendererBehaviour` | Sprite con profundidad por posición Y (2.5D) | [04-graphics/twopointfived.md](04-graphics/twopointfived.md) |
+| `BillboardSpriteBehaviour` | Sprite orientado hacia la cámara | [04-graphics/twopointfived.md](04-graphics/twopointfived.md) |
+| `NormalMapSpriteMaterial` | Material con mapa de normales para iluminación 2D | [04-graphics/twopointfived.md](04-graphics/twopointfived.md) |
 
 ### Efectos y Shaders
 
@@ -73,6 +83,12 @@
 | `PostProcessEffect` | Clase base para efectos de post-procesado | [04-graphics/post-processing.md](04-graphics/post-processing.md) |
 | `Material` | Envuelve un `Effect` de MonoGame; aplica parámetros al GPU | [04-graphics/shaders.md](04-graphics/shaders.md) |
 | `SpriteMaterial` | `Material` especializado para sprites 2D | [04-graphics/shaders.md](04-graphics/shaders.md) |
+| `OutlineMaterial` | Contorno sólido alrededor del sprite | [04-graphics/shader-library.md](04-graphics/shader-library.md) |
+| `FlashMaterial` | Hit flash de color configurable | [04-graphics/shader-library.md](04-graphics/shader-library.md) |
+| `DissolveMaterial` | Disolución con textura de ruido y borde coloreado | [04-graphics/shader-library.md](04-graphics/shader-library.md) |
+| `GlowMaterial` | Halo brillante alrededor del sprite | [04-graphics/shader-library.md](04-graphics/shader-library.md) |
+| `SilhouetteMaterial` | Silueta sólida | [04-graphics/shader-library.md](04-graphics/shader-library.md) |
+| `CRTPostEffect` | Scanlines + curvatura barril + viñeta estilo CRT | [04-graphics/shader-library.md](04-graphics/shader-library.md) |
 
 ### Partículas, Fuentes y Tiles
 
@@ -196,6 +212,10 @@
 | `CollisionCategory` | Flags enum para máscaras de colisión | [08-physics/colliders.md](08-physics/colliders.md) |
 | `CollisionMatrix` | Matriz que define qué categorías colisionan | [08-physics/colliders.md](08-physics/colliders.md) |
 | `RaycastHit2D` | Resultado de un raycast | [08-physics/queries.md](08-physics/queries.md) |
+| `TriggerWorld` | Servicio de detección de solapamiento sin física | [08-physics/trigger-volumes.md](08-physics/trigger-volumes.md) |
+| `TriggerZone2D` | `GameBehaviour` de zona de activación AABB/Circle | [08-physics/trigger-volumes.md](08-physics/trigger-volumes.md) |
+| `TriggerOverlapInfo` | `readonly struct` con Self y Other zone | [08-physics/trigger-volumes.md](08-physics/trigger-volumes.md) |
+| `TriggerShapeType` | Enum `{ AABB, Circle }` | [08-physics/trigger-volumes.md](08-physics/trigger-volumes.md) |
 
 ---
 
@@ -211,6 +231,10 @@
 | `SpotLight2D` | Luz de foco con ángulo y rango | [09-lighting/light-types.md](09-lighting/light-types.md) |
 | `LightingRenderPipeline` | Pipeline GPU de iluminación | [09-lighting/gpu-pipeline.md](09-lighting/gpu-pipeline.md) |
 | `LightShaderData` | Datos de luz para el shader | [09-lighting/gpu-pipeline.md](09-lighting/gpu-pipeline.md) |
+| `DayNightCycle` | Servicio de ciclo día/noche; actualiza LightingWorld | [09-lighting/day-night.md](09-lighting/day-night.md) |
+| `DayNightProfile` | Perfil con 4 keyframes de iluminación | [09-lighting/day-night.md](09-lighting/day-night.md) |
+| `DayNightKeyframe` | `readonly struct` con TimeOfDay, Color, Intensity, SunAngle | [09-lighting/day-night.md](09-lighting/day-night.md) |
+| `TimeOfDay` | `readonly struct` en [0, 24) con helpers IsDaytime/Lerp | [09-lighting/day-night.md](09-lighting/day-night.md) |
 
 ---
 
@@ -273,6 +297,9 @@
 | `DebugOverlay` | Overlay de información de juego | [12-misc/debug.md](12-misc/debug.md) |
 | `AsyncContentLoader` | Carga de assets en background con progreso y cancelación | [12-misc/async-content.md](12-misc/async-content.md) |
 | `TimerManager` | Scheduler de temporizadores únicos y repetidos; pool zero-alloc | [12-misc/timers.md](12-misc/timers.md) |
+| `PerlinNoise` | Ruido Perlin 1D/2D seeded + fBm | [12-misc/procedural-noise.md](12-misc/procedural-noise.md) |
+| `SimplexNoise` | Ruido Simplex 2D/3D seeded | [12-misc/procedural-noise.md](12-misc/procedural-noise.md) |
+| `NoiseMap` | Generador de mapas de ruido con normalización | [12-misc/procedural-noise.md](12-misc/procedural-noise.md) |
 
 ---
 
@@ -292,3 +319,19 @@
 | `WeatherParticleLayer` | Capa de partículas: lluvia, nieve, granizo, niebla, viento | [13-weather/particles.md](13-weather/particles.md) |
 | `LightningController` | Temporizador de rayos, flash `PointLight2D`, impulso, audio | [13-weather/lightning.md](13-weather/lightning.md) |
 | `WeatherAudioLayer` | Loops ambiente (lluvia/viento/trueno) + pool de truenos espaciales | [13-weather/audio.md](13-weather/audio.md) |
+
+---
+
+## 14 · Dialogue (Sistema de Diálogo)
+
+| Clase | Descripción | Enlace |
+|---|---|---|
+| Visión general | Arquitectura del sistema, quickstart | [14-dialogue/overview.md](14-dialogue/overview.md) |
+| `DialogueLine` | `readonly struct` con speaker, locKey, portrait, choices | [14-dialogue/script.md](14-dialogue/script.md) |
+| `DialogueChoice` | `readonly struct` con locKey, nextLineIndex, condition | [14-dialogue/script.md](14-dialogue/script.md) |
+| `DialogueCondition` | `readonly struct` para filtrar opciones | [14-dialogue/script.md](14-dialogue/script.md) |
+| `DialogueScript` | Colección inmutable de líneas con Builder fluent | [14-dialogue/script.md](14-dialogue/script.md) |
+| `DialogueManager` | Servicio: avanza script, eventos OnStarted/OnEnded | [14-dialogue/manager.md](14-dialogue/manager.md) |
+| `TypewriterEffect` | Revelado carácter a carácter zero-alloc | [14-dialogue/typewriter.md](14-dialogue/typewriter.md) |
+| `DialogueBoxBehaviour` | `GameBehaviour` que dibuja caja + texto del diálogo | [14-dialogue/choices.md](14-dialogue/choices.md) |
+| `ChoicesPanelBehaviour` | `GameBehaviour` que muestra botones de elección | [14-dialogue/choices.md](14-dialogue/choices.md) |

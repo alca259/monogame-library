@@ -173,6 +173,33 @@ public sealed class SplashScene : Scene
 
 ---
 
+## Transiciones enchufables (ISceneTransition)
+
+Además del fade predeterminado, `RequestChange` acepta cualquier implementación de `ISceneTransition`:
+
+```csharp
+using Alca.MonoGame.Kernel.Scenes.Transitions;
+
+// Transición por defecto (fade negro, retrocompatible)
+Core.SceneManager.RequestChange(new GameplayScene());
+
+// Slide hacia la izquierda
+var pixel = Core.Content.Load<Texture2D>("pixel");
+Core.SceneManager.RequestChange(new GameplayScene(),
+    new SlideTransition(pixel, SlideDirection.Left));
+```
+
+| Transición | Clase | Descripción |
+|---|---|---|
+| Fade (default) | `FadeTransition` | Fundido a color sólido |
+| Slide | `SlideTransition` | Cortina deslizante (Left/Right/Up/Down) |
+| Circle Wipe | `CircleWipeTransition` | Iris radial (requiere shader opcional) |
+| Dissolve | `DissolveTransition` | Dissolve con noise (requiere shader opcional) |
+
+Consulta [transitions.md](transitions.md) para la referencia completa.
+
+---
+
 ## Ver también
 
 - [Scene →](scene.md)

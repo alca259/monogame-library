@@ -113,10 +113,9 @@
 | Botón | Acción |
 |-------|--------|
 | ▶ Play | Entra en modo Play |
-| ⏸ Pause | Pausa el modo Play |
 | ⏹ Stop | Sale del modo Play y restaura la escena |
 
-Los botones Play/Pause/Stop cambian de color de acento cuando están activos.
+Los botones Play/Stop cambian de color de acento cuando están activos.
 
 ---
 

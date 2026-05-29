@@ -9,6 +9,4 @@ public enum EditorState
     /// <summary>El bucle de juego está en ejecución con la cámara propia del juego.</summary>
     Playing,
 
-    /// <summary>El bucle de juego está en pausa; el renderizado está activo, Update no se ejecuta.</summary>
-    Paused,
 }

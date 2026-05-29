@@ -63,3 +63,4 @@ Si no hay `RigidBody2D`, el collider crea un cuerpo estático implícitamente.
 - [Colliders →](colliders.md)
 - [Joints →](joints.md)
 - [Queries →](queries.md)
+- [Trigger Volumes (sin física) →](trigger-volumes.md)
