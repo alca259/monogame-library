@@ -62,3 +62,45 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Shaders/Vignette.fx
+
+#begin Shaders/Outline.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Outline.fx
+
+#begin Shaders/Flash.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Flash.fx
+
+#begin Shaders/Dissolve.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Dissolve.fx
+
+#begin Shaders/Glow.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Glow.fx
+
+#begin Shaders/Silhouette.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Silhouette.fx
+
+#begin Shaders/CRT.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/CRT.fx
+
+#begin Shaders/NormalMapSprite.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/NormalMapSprite.fx

@@ -1,3 +1,5 @@
+using Alca.MonoGame.Kernel.Scenes.Transitions;
+
 namespace Alca.MonoGame.Kernel.Scenes;
 
 /// <summary>Manages scene transitions with fade in/out effects and an overlay stack.</summary>
@@ -7,6 +9,12 @@ public sealed class SceneManager
 
     private const int StackCapacity = 4;
     private const float FadeDuration = 0.3f;
+
+    /// <summary>Custom transition currently running. When null the built-in fade logic is used.</summary>
+    private ISceneTransition? _activeTransition;
+
+    /// <summary>Gets or sets the duration in seconds used for built-in fade transitions when no custom transition is supplied.</summary>
+    public float DefaultTransitionDuration { get; set; } = FadeDuration;
 
     // Retained for future lifecycle hooks
 #pragma warning disable IDE0052
@@ -49,17 +57,48 @@ public sealed class SceneManager
         _game = null!;
     }
 
-    /// <summary>Requests a full scene replacement with a fade effect. Disposes all stacked overlays.</summary>
+    /// <summary>
+    /// Requests a full scene replacement with a fade effect. Disposes all stacked overlays.
+    /// Uses the built-in fade logic. See <see cref="RequestChange(Scene, ISceneTransition)"/> for custom transitions.
+    /// </summary>
     public void RequestChange(Scene scene)
+    {
+        RequestChange(scene, null);
+    }
+
+    /// <summary>
+    /// Requests a full scene replacement. Disposes all stacked overlays.
+    /// When <paramref name="transition"/> is provided it is used for the visual effect; otherwise the built-in fade is used.
+    /// </summary>
+    /// <param name="scene">The scene to transition to.</param>
+    /// <param name="transition">
+    /// Optional custom transition. Pass <see langword="null"/> to use the default built-in fade.
+    /// The transition is reset before use.
+    /// </param>
+    public void RequestChange(Scene scene, ISceneTransition? transition)
     {
         while (_sceneStack.Count > 0)
             _sceneStack.Pop().Dispose();
 
         _queuedScene = scene;
-        if (_fadeState == FadeState.None)
+
+        if (transition is not null)
         {
-            _fadeState = FadeState.FadingOut;
-            _fadeTimer = 0f;
+            transition.Reset();
+            _activeTransition = transition;
+            _activeTransition.BeginTransitionOut(DefaultTransitionDuration);
+            // Mirror to built-in state so the existing guard works.
+            if (_fadeState == FadeState.None)
+                _fadeState = FadeState.FadingOut;
+        }
+        else
+        {
+            _activeTransition = null;
+            if (_fadeState == FadeState.None)
+            {
+                _fadeState = FadeState.FadingOut;
+                _fadeTimer = 0f;
+            }
         }
     }
 
@@ -83,6 +122,56 @@ public sealed class SceneManager
     {
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
+        if (_activeTransition is not null)
+            UpdateWithTransition(dt);
+        else
+            UpdateBuiltInFade(dt);
+
+        if (_sceneStack.Count > 0)
+            _sceneStack.Peek().Update(gameTime);
+        else
+            _currentScene?.Update(gameTime);
+    }
+
+    private void UpdateWithTransition(float dt)
+    {
+        _activeTransition!.Update(dt);
+
+        switch (_fadeState)
+        {
+            case FadeState.FadingOut:
+                _fadeAlpha = 1f; // Keep opaque so legacy DrawFadeOverlay fallback does nothing
+                if (_activeTransition.IsTransitionOutComplete)
+                {
+                    ApplyPendingChange();
+                    _fadeState = FadeState.FadingIn;
+                    _activeTransition.BeginTransitionIn(DefaultTransitionDuration);
+                }
+                break;
+
+            case FadeState.FadingIn:
+                _fadeAlpha = 0f;
+                if (_activeTransition.IsTransitionInComplete)
+                {
+                    _fadeAlpha = 0f;
+                    if (_queuedScene != null)
+                    {
+                        _fadeState = FadeState.FadingOut;
+                        _activeTransition.Reset();
+                        _activeTransition.BeginTransitionOut(DefaultTransitionDuration);
+                    }
+                    else
+                    {
+                        _fadeState = FadeState.None;
+                        _activeTransition = null;
+                    }
+                }
+                break;
+        }
+    }
+
+    private void UpdateBuiltInFade(float dt)
+    {
         switch (_fadeState)
         {
             case FadeState.FadingOut:
@@ -115,11 +204,6 @@ public sealed class SceneManager
                 }
                 break;
         }
-
-        if (_sceneStack.Count > 0)
-            _sceneStack.Peek().Update(gameTime);
-        else
-            _currentScene?.Update(gameTime);
     }
 
     /// <summary>Draws the scene hierarchy.
@@ -143,10 +227,20 @@ public sealed class SceneManager
         }
     }
 
-    /// <summary>Draws a full-screen black overlay at the current fade alpha.
-    /// Must be called explicitly by the game after base.Draw().</summary>
+    /// <summary>
+    /// Draws the transition overlay on top of the scene.
+    /// When a custom <see cref="ISceneTransition"/> is active it delegates to <see cref="ISceneTransition.Draw"/>;
+    /// otherwise draws a full-screen black overlay at the current fade alpha.
+    /// Must be called explicitly by the game after base.Draw().
+    /// </summary>
     public void DrawFadeOverlay(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice, Texture2D texture)
     {
+        if (_activeTransition is not null)
+        {
+            _activeTransition.Draw(spriteBatch, graphicsDevice.Viewport);
+            return;
+        }
+
         if (_fadeAlpha <= 0f) return;
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
         spriteBatch.Draw(texture, graphicsDevice.Viewport.Bounds, Color.Black * _fadeAlpha);

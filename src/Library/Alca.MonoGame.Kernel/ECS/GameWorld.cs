@@ -82,6 +82,27 @@ public sealed class GameWorld
     /// </summary>
     public Weather.WeatherWorld? WeatherWorld { get; set; }
 
+    /// <summary>
+    /// Gets or sets the lightweight trigger volume service. When set, <see cref="Update"/> automatically
+    /// runs AABB/Circle overlap detection for all registered <see cref="Physics.Triggers.TriggerZone2D"/>
+    /// components each frame. Optional — omit for projects that do not use trigger volumes.
+    /// </summary>
+    public Physics.Triggers.TriggerWorld? TriggerWorld { get; set; }
+
+    /// <summary>
+    /// Gets or sets the day/night cycle service. When set, <see cref="Update"/> automatically
+    /// advances in-game time and updates the <see cref="Lighting.LightingWorld"/> ambient color.
+    /// Optional — omit for projects that do not use a day/night cycle.
+    /// </summary>
+    public Lighting.DayNight.DayNightCycle? DayNightCycle { get; set; }
+
+    /// <summary>
+    /// Gets or sets the dialogue manager. Drives script playback, choice selection, and
+    /// condition evaluation for <see cref="Dialogue.DialogueBoxBehaviour"/> components.
+    /// Optional — omit for projects that do not use the dialogue system.
+    /// </summary>
+    public Dialogue.DialogueManager? DialogueManager { get; set; }
+
     // ── Lifecycle ──────────────────────────────────────────────────────────────
 
     /// <summary>Flushes pending creation/destruction then updates all active entities.</summary>
@@ -96,6 +117,8 @@ public sealed class GameWorld
             NavPhysicsSync.SyncAll(NavGrid);
 
         WeatherWorld?.Update(gameTime);
+        TriggerWorld?.Update(gameTime);
+        DayNightCycle?.Update(gameTime);
 
         for (int i = 0; i < _entities.Count; i++)
             _entities[i].Update(gameTime);
