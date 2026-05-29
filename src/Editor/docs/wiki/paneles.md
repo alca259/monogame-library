@@ -16,7 +16,7 @@ El editor está compuesto por un formulario principal (`EditorForm`) y varios pa
 │  de escena  │   (MonoGameControl)      │               │
 │             │                          │               │
 ├──────────────┴──────────────────────────┴───────────────┤
-│  Assets │ Consola │ Escenas │ Localización │ Scripts ...│
+│  Assets │ Consola │ Escenas │ Localización │ Scripts │ UI Theme ...│
 │  (panel inferior con pestañas)                          │
 └─────────────────────────────────────────────────────────┘
 │  StatusStrip (estado del editor, info de posición)      │
@@ -128,6 +128,9 @@ Explorador de dos paneles para los assets del proyecto.
 | `.particles.json` | Particles |
 | `.anim.json` | Animation |
 | `.input.json` | InputMap |
+| `.sprite.json` | Sprite |
+| `.mat.json` | Material |
+| `.uitheme.json` | UI Theme |
 | `.cs` | Script |
 
 ### Menú contextual
@@ -248,6 +251,28 @@ Al cambiar la columna Device en una fila, la columna Key/Button actualiza sus op
 
 - Se escanea `GameSourcePath` buscando archivos `*.input.json` al abrir el proyecto.
 - Cada operación (añadir/eliminar action o binding) usa comandos del CommandStack para undo/redo.
+
+---
+
+## Panel: Editor de temas UI (`UIThemeInspectorPanel`)
+
+Inspector para archivos de tema de interfaz (`.uitheme.json`). Se activa automáticamente cuando se selecciona un asset de tipo `UITheme` en el Asset Browser.
+
+### Controles
+
+- **Título**: muestra el nombre del tema en la parte superior.
+- **Secciones por tipo de control** (Panel, Button, Dropdown, ProgressBar, TextBox), cada una con:
+  - **Texture**: campo de texto con la ruta relativa a la textura nine-slice (sin extensión) + botón `...` que abre un `OpenFileDialog` filtrado a imágenes. La ruta se convierte automáticamente en relativa a `Content`.
+  - **Left / Right**: par de `NumericUpDown` con el inset izquierdo y derecho (0–512 px).
+  - **Top / Bottom**: par de `NumericUpDown` con el inset superior e inferior (0–512 px).
+  - **Tile edges / Tile center**: dos checkboxes que controlan si los bordes y el centro se tileán en vez de estirarse.
+- **Botón "Save .uitheme.json"**: serializa todos los valores a JSON y los escribe en el archivo del asset.
+
+### Comportamiento
+
+- Suscribe `AssetSelectedEvent`. Si el asset seleccionado no es `UITheme`, muestra el mensaje *"Select a UI theme asset (.uitheme.json) to edit it."* y oculta todos los controles.
+- Al cargar un asset existente, deserializa el JSON con `System.Text.Json` y rellena los controles. Si el archivo no existe o está malformado, arranca con valores por defecto (`EditorUITheme.CreateEmpty()`).
+- El panel no guarda automáticamente al editar — el usuario debe pulsar **Save** explícitamente.
 
 ---
 

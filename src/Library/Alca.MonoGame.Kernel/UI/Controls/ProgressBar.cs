@@ -1,3 +1,5 @@
+using Alca.MonoGame.Kernel.Graphics;
+
 namespace Alca.MonoGame.Kernel.UI.Controls;
 
 /// <summary>Displays a fill bar representing a normalized value between 0 and 1.</summary>
@@ -43,6 +45,15 @@ public sealed class ProgressBar : UIElement
     /// <summary>High-value color used for gradient interpolation (default Green).</summary>
     public Color HighColor { get; set; } = Color.Green;
 
+    /// <summary>
+    /// Optional nine-slice texture drawn as the bar frame, on top of the fill.
+    /// When set, replaces the solid border drawn by <see cref="DrawHelper.DrawBorder"/>.
+    /// </summary>
+    public Texture2D? NineSliceTexture { get; set; }
+
+    /// <summary>Border insets used to divide <see cref="NineSliceTexture"/> into a 3×3 grid.</summary>
+    public NineSliceBorderData NineSliceBorder { get; set; } = NineSliceBorderData.Uniform(4);
+
     /// <inheritdoc/>
     public override void Measure(Vector2 availableSize)
     {
@@ -80,6 +91,9 @@ public sealed class ProgressBar : UIElement
                 spriteBatch.Draw(Pixel, fillRect, barColor * opacity);
             }
         }
+
+        if (NineSliceTexture is not null)
+            DrawHelper.DrawNineSlice(spriteBatch, NineSliceTexture, Bounds, NineSliceBorder, Color.White * opacity);
     }
 
     private Color ComputeGradientColor(float t)

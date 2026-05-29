@@ -683,6 +683,9 @@ public sealed class AssetBrowserPanel : UserControl
         AssetType.Animation => "Animation",
         AssetType.InputMap  => "Input Map",
         AssetType.Script    => "Script",
+        AssetType.Material  => "Material",
+        AssetType.Sprite    => "Sprite",
+        AssetType.UITheme   => "UI Theme",
         _                   => "Unknown",
     };
 

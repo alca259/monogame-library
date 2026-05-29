@@ -23,6 +23,7 @@ public sealed partial class EditorForm : Form
     private MaterialPreviewRenderer?      _materialPreviewRenderer;
     private SpriteInspectorPanel?         _spriteInspectorPanel;
     private MaterialInspectorPanel?       _materialInspectorPanel;
+    private UIThemeInspectorPanel?        _uiThemeInspectorPanel;
     private EditorMaterial?               _pendingMaterialPreview;
     private ExternalPlayLauncher?     _playLauncher;
     private readonly ContentWatcher  _contentWatcher  = null!;
@@ -153,8 +154,14 @@ public sealed partial class EditorForm : Form
         var materialTab = new TabPage("Material Editor") { Name = "_materialEditorTab" };
         materialTab.Controls.Add(_materialInspectorPanel);
 
+        _uiThemeInspectorPanel = new UIThemeInspectorPanel { Dock = DockStyle.Fill };
+        _uiThemeInspectorPanel.Initialize(_context);
+        var uiThemeTab = new TabPage("UI Theme Editor") { Name = "_uiThemeEditorTab" };
+        uiThemeTab.Controls.Add(_uiThemeInspectorPanel);
+
         _bottomTabControl.Controls.Add(spriteTab);
         _bottomTabControl.Controls.Add(materialTab);
+        _bottomTabControl.Controls.Add(uiThemeTab);
         _localizationPanel.Initialize(_context);
         _inputMapEditorPanel.Initialize(_context);
         _tilemapPalettePanel.Initialize(_context, _context.EventBus);
@@ -206,6 +213,7 @@ public sealed partial class EditorForm : Form
         _navGridRenderer?.Dispose();
         _resRenderer?.Dispose();
         _materialPreviewRenderer?.Dispose();
+        _uiThemeInspectorPanel?.Dispose();
         _playLauncher?.Dispose();
         base.OnFormClosed(e);
     }

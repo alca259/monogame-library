@@ -110,6 +110,12 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
     /// <summary>Border color when focused.</summary>
     public Color FocusBorderColor { get; set; } = new Color(100, 149, 237);
 
+    /// <summary>Optional nine-slice texture drawn as the collapsed header background. When set, replaces the solid <see cref="HeaderColor"/> fill.</summary>
+    public Texture2D? NineSliceTexture { get; set; }
+
+    /// <summary>Border insets used to divide <see cref="NineSliceTexture"/> into a 3×3 grid.</summary>
+    public NineSliceBorderData NineSliceBorder { get; set; } = NineSliceBorderData.Uniform(8);
+
     /// <summary>Index of the currently selected item. -1 means no selection.</summary>
     public int SelectedIndex
     {
@@ -332,8 +338,13 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
         Color border = _isFocused ? FocusBorderColor : BorderColor;
 
         // Header background
-        spriteBatch.Draw(Pixel, Bounds, HeaderColor * opacity);
-        DrawHelper.DrawBorder(Pixel, spriteBatch, Bounds, border * opacity, 1);
+        if (NineSliceTexture is not null)
+            DrawHelper.DrawNineSlice(spriteBatch, NineSliceTexture, Bounds, NineSliceBorder, Color.White * opacity);
+        else
+        {
+            spriteBatch.Draw(Pixel, Bounds, HeaderColor * opacity);
+            DrawHelper.DrawBorder(Pixel, spriteBatch, Bounds, border * opacity, 1);
+        }
 
         // Selected text
         if (Font is not null && SelectedText.Length > 0)

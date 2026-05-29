@@ -110,6 +110,12 @@ public sealed class Button : UIElement, IUIInteractable, IFocusable
     /// <summary>Optional sprite texture drawn on top of the background. When null, only the solid background is used.</summary>
     public Texture2D? Texture { get; set; }
 
+    /// <summary>Optional nine-slice texture drawn as the button background. When set, replaces <see cref="BackgroundPixel"/>.</summary>
+    public Texture2D? NineSliceTexture { get; set; }
+
+    /// <summary>Border insets used to divide <see cref="NineSliceTexture"/> into a 3×3 grid.</summary>
+    public NineSliceBorderData NineSliceBorder { get; set; } = NineSliceBorderData.Uniform(8);
+
     /// <summary>Fired when the button is clicked (pointer up while hovered).</summary>
     public event Action? Clicked;
 
@@ -178,7 +184,14 @@ public sealed class Button : UIElement, IUIInteractable, IFocusable
 
         Vector2 center = Bounds.Center.ToVector2();
 
-        if (BackgroundPixel is not null)
+        if (NineSliceTexture is not null)
+        {
+            int hw = (int)(Bounds.Width  * _currentScale / 2);
+            int hh = (int)(Bounds.Height * _currentScale / 2);
+            Rectangle scaledBounds = new((int)center.X - hw, (int)center.Y - hh, hw * 2, hh * 2);
+            DrawHelper.DrawNineSlice(spriteBatch, NineSliceTexture, scaledBounds, NineSliceBorder, tint);
+        }
+        else if (BackgroundPixel is not null)
         {
             Vector2 bgScale = new Vector2(Bounds.Width * _currentScale, Bounds.Height * _currentScale);
             spriteBatch.Draw(BackgroundPixel, center, null, tint, 0f, new Vector2(0.5f, 0.5f), bgScale, SpriteEffects.None, 0f);

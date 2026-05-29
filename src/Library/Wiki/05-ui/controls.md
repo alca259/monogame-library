@@ -29,7 +29,9 @@ public sealed class Button : UIElement, IUIInteractable, IFocusable
     public Vector2?   FixedSize  { get; set; }
     public HAlign     HAlign     { get; set; }
     public Texture2D? BackgroundPixel { get; set; }
-    public Texture2D? Texture    { get; set; }
+    public Texture2D? Texture         { get; set; }
+    public Texture2D? NineSliceTexture { get; set; }
+    public NineSliceBorderData NineSliceBorder { get; set; }
 
     // Evento
     public event Action? Clicked;
@@ -78,7 +80,7 @@ public sealed class TextBox : TextBoxBase, IUIInteractable, IFocusable
 }
 ```
 
-Hereda las propiedades de `TextBoxBase`: `Text`, `Placeholder`, `MaxLength`, `BorderColor`, `FocusBorderColor`, `CursorColor`, `SelectionColor`.
+Hereda las propiedades de `TextBoxBase`: `Text`, `Placeholder`, `MaxLength`, `BorderColor`, `FocusBorderColor`, `CursorColor`, `SelectionColor`, `NineSliceTexture`, `NineSliceBorder`.
 
 ---
 
@@ -216,6 +218,8 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
     public Color       TextColor        { get; set; }
     public Color       BorderColor      { get; set; }
     public Color       FocusBorderColor { get; set; }
+    public Texture2D?  NineSliceTexture { get; set; }
+    public NineSliceBorderData NineSliceBorder { get; set; }
     public int         SelectedIndex    { get; set; }
     public string      SelectedText     { get; }
     public bool        IsExpanded       { get; }
@@ -252,6 +256,8 @@ public sealed class ProgressBar : UIElement
     public bool        ColorGradient   { get; set; }
     public Color       LowColor        { get; set; }
     public Color       HighColor       { get; set; }
+    public Texture2D?  NineSliceTexture { get; set; }
+    public NineSliceBorderData NineSliceBorder { get; set; }
 }
 ```
 
@@ -271,8 +277,42 @@ public sealed class Panel : UIContainer
     public Color      BorderColor       { get; set; }
     public int        BorderThickness   { get; set; }
     public Texture2D? NineSliceTexture  { get; set; }
-    public Rectangle  NineSliceBorder   { get; set; }
+    public NineSliceBorderData NineSliceBorder   { get; set; }
 }
+```
+
+---
+
+## NineSliceBorderData
+
+`readonly struct` que describe los cuatro insets del nine-patch y los modos de repetición de bordes y centro.
+
+```csharp
+public readonly struct NineSliceBorderData
+{
+    public int  Left       { get; }
+    public int  Right      { get; }
+    public int  Top        { get; }
+    public int  Bottom     { get; }
+    public bool TileEdges  { get; }   // true = bordes tileados; false = estirados
+    public bool TileCenter { get; }   // true = centro tileado; false = estirado
+
+    public static NineSliceBorderData Uniform(int inset);  // Left=Right=Top=Bottom=inset
+}
+```
+
+Los controles que soportan nine-slice son: `Panel`, `Button`, `Dropdown` (cabecera), `ProgressBar` (borde decorativo sobre el fill), `TextBox` / `TextArea` / `NumericBox`.
+
+Cuando `NineSliceTexture` es `null`, el control usa su apariencia sólida habitual. Cuando está definida, el nine-slice sustituye el fondo y borde del control (excepto en `ProgressBar`, donde actúa como overlay encima del relleno).
+
+```csharp
+// Panel con borde de 12 px tileado
+panel.NineSliceTexture = Content.Load<Texture2D>("ui/panel_frame");
+panel.NineSliceBorder  = NineSliceBorderData.Uniform(12);
+
+// Button con insets asimétricos
+btn.NineSliceTexture = Content.Load<Texture2D>("ui/btn_9patch");
+btn.NineSliceBorder  = new NineSliceBorderData(left: 8, right: 8, top: 4, bottom: 4);
 ```
 
 ---

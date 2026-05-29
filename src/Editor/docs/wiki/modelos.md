@@ -153,10 +153,44 @@ Configuración adicional del proyecto. Se guarda en `.editor/config/settings.jso
 
 ```
 Unknown, Texture, Audio, Font, TiledMap,
-Scene, Prefab, Particles, Animation, InputMap, Script
+Scene, Prefab, Particles, Animation, InputMap,
+Sprite, Material, UITheme, Script
 ```
 
 `AssetClassifier.Classify(path)` determina el tipo por extensión, usando comparación de sufijos compuestos (`.scene.json`, `.prefab.json`, etc.) antes de extensiones simples.
+
+---
+
+## Tema de UI: `EditorUITheme` y `EditorUIThemeEntry`
+
+Modelo para archivos de tema de interfaz (`.uitheme.json`). Almacena la configuración nine-slice por tipo de control.
+
+### `EditorUITheme`
+
+| Propiedad | Tipo | Descripción |
+|-----------|------|-------------|
+| `Name` | `string` | Nombre del tema |
+| `Panel` | `EditorUIThemeEntry` | Configuración NineSlice del `Panel` |
+| `Button` | `EditorUIThemeEntry` | Configuración NineSlice del `Button` |
+| `Dropdown` | `EditorUIThemeEntry` | Configuración NineSlice de la cabecera del `Dropdown` |
+| `ProgressBar` | `EditorUIThemeEntry` | Configuración NineSlice del borde decorativo de `ProgressBar` |
+| `TextBox` | `EditorUIThemeEntry` | Configuración NineSlice de `TextBox` / `TextArea` / `NumericBox` |
+
+`EditorUITheme.CreateEmpty(name)` devuelve un tema con valores por defecto (insets de 8 px para Panel/Button/Dropdown, 4 px para ProgressBar/TextBox).
+
+### `EditorUIThemeEntry`
+
+| Propiedad | Tipo | Default | Descripción |
+|-----------|------|---------|-------------|
+| `TexturePath` | `string` | `""` | Ruta relativa a Content sin extensión. Vacía = sin nine-slice. |
+| `BorderLeft` | `int` | `8` | Píxeles desde el borde izquierdo tratados como fijos |
+| `BorderRight` | `int` | `8` | Píxeles desde el borde derecho tratados como fijos |
+| `BorderTop` | `int` | `8` | Píxeles desde el borde superior tratados como fijos |
+| `BorderBottom` | `int` | `8` | Píxeles desde el borde inferior tratados como fijos |
+| `TileEdges` | `bool` | `false` | `true` = bordes tileados; `false` = estirados |
+| `TileCenter` | `bool` | `false` | `true` = centro tileado; `false` = estirado |
+
+**Serialización**: los campos se guardan en `{ContentPath}/**/*.uitheme.json`. El JSON se escribe con sangría para facilitar la lectura y la edición manual.
 
 ---
 

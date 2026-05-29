@@ -41,4 +41,7 @@ public enum AssetType
 
     /// <summary>Material descriptor with shader and property overrides (.mat.json).</summary>
     Material,
+
+    /// <summary>UI theme descriptor with NineSlice texture paths and border insets per control type (.uitheme.json).</summary>
+    UITheme,
 }

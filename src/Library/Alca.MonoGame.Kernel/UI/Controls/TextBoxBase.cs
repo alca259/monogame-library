@@ -68,6 +68,15 @@ public abstract class TextBoxBase : UIElement, IUIInteractable, IFocusable
     /// <summary>Border color when focused.</summary>
     public Color FocusBorderColor { get; set; } = new Color(100, 149, 237);
 
+    /// <summary>
+    /// Optional nine-slice texture drawn as the text field background and border. When set,
+    /// replaces the solid <see cref="BackColor"/> fill and the border drawn by <see cref="DrawHelper.DrawBorder"/>.
+    /// </summary>
+    public Texture2D? NineSliceTexture { get; set; }
+
+    /// <summary>Border insets used to divide <see cref="NineSliceTexture"/> into a 3×3 grid.</summary>
+    public NineSliceBorderData NineSliceBorder { get; set; } = NineSliceBorderData.Uniform(4);
+
     /// <summary>Background tint for the selected text range.</summary>
     public Color SelectionColor { get; set; } = new Color(100, 149, 237, 128);
 
@@ -257,8 +266,13 @@ public abstract class TextBoxBase : UIElement, IUIInteractable, IFocusable
         float opacity = EffectiveOpacity;
         Color border = _isFocused ? FocusBorderColor : BorderColor;
 
-        spriteBatch.Draw(_pixel, Bounds, BackColor * opacity);
-        DrawHelper.DrawBorder(_pixel, spriteBatch, Bounds, border * opacity, 1);
+        if (NineSliceTexture is not null)
+            DrawHelper.DrawNineSlice(spriteBatch, NineSliceTexture, Bounds, NineSliceBorder, Color.White * opacity);
+        else
+        {
+            spriteBatch.Draw(_pixel, Bounds, BackColor * opacity);
+            DrawHelper.DrawBorder(_pixel, spriteBatch, Bounds, border * opacity, 1);
+        }
 
         var textOrigin = new Vector2(Bounds.X + 4, Bounds.Y + (Bounds.Height - _font.LineSpacing) / 2f);
         int textX = (int)textOrigin.X;
