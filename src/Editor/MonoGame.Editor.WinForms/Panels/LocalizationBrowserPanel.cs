@@ -162,8 +162,6 @@ public sealed class LocalizationBrowserPanel : UserControl
         _mainSplit.Dock             = DockStyle.Fill;
         _mainSplit.Orientation      = Orientation.Vertical;
         _mainSplit.SplitterDistance = 180;
-        _mainSplit.Panel1MinSize    = 80;
-        _mainSplit.Panel2MinSize    = 200;
         _mainSplit.Name             = "_mainSplit";
         _mainSplit.Panel1.Controls.Add(_folderTree);
         _mainSplit.Panel2.Controls.Add(_grid);
