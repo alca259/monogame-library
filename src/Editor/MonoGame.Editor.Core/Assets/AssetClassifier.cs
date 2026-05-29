@@ -31,6 +31,8 @@ public static class AssetClassifier
         (".particles.json", AssetType.Particles),
         (".anim.json",      AssetType.Animation),
         (".input.json",     AssetType.InputMap),
+        (".sprite.json",    AssetType.Sprite),
+        (".mat.json",       AssetType.Material),
     ];
 
     /// <summary>Returns the <see cref="AssetType"/> for <paramref name="filePath"/> based on its extension(s).</summary>

@@ -22,10 +22,16 @@ public sealed class PanelTests
     }
 
     [Fact]
-    public void NewPanel_NineSliceBorder_IsEight()
+    public void NewPanel_NineSliceBorder_IsUniformEight()
     {
         var panel = new Panel();
-        Assert.Equal(8, panel.NineSliceBorder);
+        NineSliceBorderData b = panel.NineSliceBorder;
+        Assert.Equal(8, b.Left);
+        Assert.Equal(8, b.Right);
+        Assert.Equal(8, b.Top);
+        Assert.Equal(8, b.Bottom);
+        Assert.False(b.TileEdges);
+        Assert.False(b.TileCenter);
     }
 
     #endregion

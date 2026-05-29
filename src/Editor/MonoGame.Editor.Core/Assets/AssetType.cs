@@ -35,4 +35,10 @@ public enum AssetType
 
     /// <summary>C# source file (.cs).</summary>
     Script,
+
+    /// <summary>Sprite metadata with 9-slice borders and import settings (.sprite.json).</summary>
+    Sprite,
+
+    /// <summary>Material descriptor with shader and property overrides (.mat.json).</summary>
+    Material,
 }

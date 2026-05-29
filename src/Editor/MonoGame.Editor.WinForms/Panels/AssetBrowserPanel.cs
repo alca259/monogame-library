@@ -421,6 +421,7 @@ public sealed class AssetBrowserPanel : UserControl
         {
             _rightSplit.Panel2Collapsed = true;
             ClearPreview();
+            _context?.EventBus.Publish(new AssetSelectedEvent(null));
             return;
         }
 
@@ -428,11 +429,13 @@ public sealed class AssetBrowserPanel : UserControl
         {
             _rightSplit.Panel2Collapsed = true;
             ClearPreview();
+            _context?.EventBus.Publish(new AssetSelectedEvent(null));
             return;
         }
 
         _rightSplit.Panel2Collapsed = false;
         ShowPreview(info);
+        _context?.EventBus.Publish(new AssetSelectedEvent(info));
     }
 
     #endregion

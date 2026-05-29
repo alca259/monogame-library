@@ -24,10 +24,11 @@ public sealed class Panel : UIContainer
     public Texture2D? NineSliceTexture { get; set; }
 
     /// <summary>
-    /// Source border inset used to divide <see cref="NineSliceTexture"/> into a 3×3 grid.
-    /// Defines how many pixels from each edge are treated as corners/edges.
+    /// Border insets used to divide <see cref="NineSliceTexture"/> into a 3×3 grid.
+    /// Each edge can have an independent thickness. Set <see cref="NineSliceBorderData.TileEdges"/>
+    /// or <see cref="NineSliceBorderData.TileCenter"/> to repeat instead of stretch those regions.
     /// </summary>
-    public int NineSliceBorder { get; set; } = 8;
+    public NineSliceBorderData NineSliceBorder { get; set; } = NineSliceBorderData.Uniform(8);
 
     /// <inheritdoc/>
     public override void Draw(SpriteBatch spriteBatch)
@@ -53,54 +54,89 @@ public sealed class Panel : UIContainer
         }
     }
 
-    private static void DrawNineSlice(SpriteBatch sb, Texture2D texture, Rectangle dest, int border, Color color)
+    private static void DrawNineSlice(SpriteBatch sb, Texture2D texture, Rectangle dest, NineSliceBorderData border, Color color)
     {
         int tw = texture.Width;
         int th = texture.Height;
 
-        // Source grid corners
-        int srcB = border;
+        // Clamp destination borders to half the dest size
+        int dL = Math.Min(border.Left,   dest.Width  / 2);
+        int dR = Math.Min(border.Right,  dest.Width  / 2);
+        int dT = Math.Min(border.Top,    dest.Height / 2);
+        int dB = Math.Min(border.Bottom, dest.Height / 2);
 
-        // Destination grid corners
-        int db = border;
+        int sL = border.Left;
+        int sR = border.Right;
+        int sT = border.Top;
+        int sB = border.Bottom;
 
-        // Clamp border to half of dest size so it doesn't flip
-        if (db > dest.Width / 2) db = dest.Width / 2;
-        if (db > dest.Height / 2) db = dest.Height / 2;
+        int centerSrcW = tw - sL - sR;
+        int centerSrcH = th - sT - sB;
+        int centerDstW = dest.Width  - dL - dR;
+        int centerDstH = dest.Height - dT - dB;
 
-        int centerSrcW = tw - srcB * 2;
-        int centerSrcH = th - srcB * 2;
-        int centerDstW = dest.Width - db * 2;
-        int centerDstH = dest.Height - db * 2;
+        // Source rectangles
+        Rectangle srcTL = new(0,          0,          sL, sT);
+        Rectangle srcTC = new(sL,         0,          centerSrcW, sT);
+        Rectangle srcTR = new(tw - sR,    0,          sR, sT);
+        Rectangle srcML = new(0,          sT,         sL, centerSrcH);
+        Rectangle srcMC = new(sL,         sT,         centerSrcW, centerSrcH);
+        Rectangle srcMR = new(tw - sR,    sT,         sR, centerSrcH);
+        Rectangle srcBL = new(0,          th - sB,    sL, sB);
+        Rectangle srcBC = new(sL,         th - sB,    centerSrcW, sB);
+        Rectangle srcBR = new(tw - sR,    th - sB,    sR, sB);
 
-        // Top-left
-        sb.Draw(texture, new Rectangle(dest.X, dest.Y, db, db),
-            new Rectangle(0, 0, srcB, srcB), color);
-        // Top-center
-        sb.Draw(texture, new Rectangle(dest.X + db, dest.Y, centerDstW, db),
-            new Rectangle(srcB, 0, centerSrcW, srcB), color);
-        // Top-right
-        sb.Draw(texture, new Rectangle(dest.Right - db, dest.Y, db, db),
-            new Rectangle(tw - srcB, 0, srcB, srcB), color);
+        // Destination rectangles
+        Rectangle dstTL = new(dest.X,          dest.Y,           dL, dT);
+        Rectangle dstTC = new(dest.X + dL,     dest.Y,           centerDstW, dT);
+        Rectangle dstTR = new(dest.Right - dR, dest.Y,           dR, dT);
+        Rectangle dstML = new(dest.X,          dest.Y + dT,      dL, centerDstH);
+        Rectangle dstMC = new(dest.X + dL,     dest.Y + dT,      centerDstW, centerDstH);
+        Rectangle dstMR = new(dest.Right - dR, dest.Y + dT,      dR, centerDstH);
+        Rectangle dstBL = new(dest.X,          dest.Bottom - dB, dL, dB);
+        Rectangle dstBC = new(dest.X + dL,     dest.Bottom - dB, centerDstW, dB);
+        Rectangle dstBR = new(dest.Right - dR, dest.Bottom - dB, dR, dB);
 
-        // Middle-left
-        sb.Draw(texture, new Rectangle(dest.X, dest.Y + db, db, centerDstH),
-            new Rectangle(0, srcB, srcB, centerSrcH), color);
+        // Corners always stretch
+        sb.Draw(texture, dstTL, srcTL, color);
+        sb.Draw(texture, dstTR, srcTR, color);
+        sb.Draw(texture, dstBL, srcBL, color);
+        sb.Draw(texture, dstBR, srcBR, color);
+
+        // Edges
+        if (border.TileEdges)
+        {
+            DrawTiled(sb, texture, dstTC, srcTC, color);
+            DrawTiled(sb, texture, dstML, srcML, color);
+            DrawTiled(sb, texture, dstMR, srcMR, color);
+            DrawTiled(sb, texture, dstBC, srcBC, color);
+        }
+        else
+        {
+            sb.Draw(texture, dstTC, srcTC, color);
+            sb.Draw(texture, dstML, srcML, color);
+            sb.Draw(texture, dstMR, srcMR, color);
+            sb.Draw(texture, dstBC, srcBC, color);
+        }
+
         // Center
-        sb.Draw(texture, new Rectangle(dest.X + db, dest.Y + db, centerDstW, centerDstH),
-            new Rectangle(srcB, srcB, centerSrcW, centerSrcH), color);
-        // Middle-right
-        sb.Draw(texture, new Rectangle(dest.Right - db, dest.Y + db, db, centerDstH),
-            new Rectangle(tw - srcB, srcB, srcB, centerSrcH), color);
+        if (border.TileCenter)
+            DrawTiled(sb, texture, dstMC, srcMC, color);
+        else
+            sb.Draw(texture, dstMC, srcMC, color);
+    }
 
-        // Bottom-left
-        sb.Draw(texture, new Rectangle(dest.X, dest.Bottom - db, db, db),
-            new Rectangle(0, th - srcB, srcB, srcB), color);
-        // Bottom-center
-        sb.Draw(texture, new Rectangle(dest.X + db, dest.Bottom - db, centerDstW, db),
-            new Rectangle(srcB, th - srcB, centerSrcW, srcB), color);
-        // Bottom-right
-        sb.Draw(texture, new Rectangle(dest.Right - db, dest.Bottom - db, db, db),
-            new Rectangle(tw - srcB, th - srcB, srcB, srcB), color);
+    private static void DrawTiled(SpriteBatch sb, Texture2D texture, Rectangle dest, Rectangle src, Color color)
+    {
+        if (src.Width <= 0 || src.Height <= 0 || dest.Width <= 0 || dest.Height <= 0) return;
+
+        for (int ty = dest.Y; ty < dest.Bottom; ty += src.Height)
+        for (int tx = dest.X; tx < dest.Right;  tx += src.Width)
+        {
+            int w = Math.Min(src.Width,  dest.Right  - tx);
+            int h = Math.Min(src.Height, dest.Bottom - ty);
+            sb.Draw(texture, new Rectangle(tx, ty, w, h),
+                new Rectangle(src.X, src.Y, w, h), color);
+        }
     }
 }

@@ -20,6 +20,10 @@ public sealed partial class EditorForm : Form
     private EditModeRenderer?        _editRenderer;
     private NavGridPreviewRenderer?       _navGridRenderer;
     private ResolutionPreviewRenderer?    _resRenderer;
+    private MaterialPreviewRenderer?      _materialPreviewRenderer;
+    private SpriteInspectorPanel?         _spriteInspectorPanel;
+    private MaterialInspectorPanel?       _materialInspectorPanel;
+    private EditorMaterial?               _pendingMaterialPreview;
     private ExternalPlayLauncher?     _playLauncher;
     private readonly ContentWatcher  _contentWatcher  = null!;
     private ToolStripMenuItem        _saveSceneMenuItem   = null!;
@@ -131,6 +135,26 @@ public sealed partial class EditorForm : Form
         _inspectorPanel.Initialize(_context, _registry, _prefabManager);
         _assetBrowserPanel.Initialize(_context);
         _sceneManagerPanel.Initialize(_context);
+
+        // Asset-specific inspector panels (added as tabs to the bottom panel)
+        _spriteInspectorPanel = new SpriteInspectorPanel { Dock = DockStyle.Fill };
+        _spriteInspectorPanel.Initialize(_context);
+
+        _materialInspectorPanel = new MaterialInspectorPanel { Dock = DockStyle.Fill };
+        _materialInspectorPanel.Initialize(_context, mat =>
+        {
+            // Called from UI thread when user clicks "Render Preview"
+            _pendingMaterialPreview = mat;
+        });
+
+        var spriteTab = new TabPage("Sprite Editor") { Name = "_spriteEditorTab" };
+        spriteTab.Controls.Add(_spriteInspectorPanel);
+
+        var materialTab = new TabPage("Material Editor") { Name = "_materialEditorTab" };
+        materialTab.Controls.Add(_materialInspectorPanel);
+
+        _bottomTabControl.Controls.Add(spriteTab);
+        _bottomTabControl.Controls.Add(materialTab);
         _localizationPanel.Initialize(_context);
         _inputMapEditorPanel.Initialize(_context);
         _tilemapPalettePanel.Initialize(_context, _context.EventBus);
@@ -181,6 +205,7 @@ public sealed partial class EditorForm : Form
         _editRenderer?.Dispose();
         _navGridRenderer?.Dispose();
         _resRenderer?.Dispose();
+        _materialPreviewRenderer?.Dispose();
         _playLauncher?.Dispose();
         base.OnFormClosed(e);
     }
@@ -1534,6 +1559,9 @@ public sealed partial class EditorForm : Form
         // Scene tab always renders the edit-mode overlay (grid, gizmos, sprite previews)
         // regardless of play state — mirrors the Unity Scene view behaviour.
         DrawEditorGizmos(e);
+
+        // Material preview sphere (off-screen render to RenderTarget2D, then push to UI)
+        RenderMaterialPreviewIfPending(e.GraphicsDevice);
     }
 
     private void ApplyKeyboardNavigation(TimeSpan elapsed)
@@ -1608,6 +1636,27 @@ public sealed partial class EditorForm : Form
     #endregion
 
     #region Viewport mouse — gizmo interaction
+
+    private void RenderMaterialPreviewIfPending(GraphicsDevice gd)
+    {
+        EditorMaterial? mat = _pendingMaterialPreview;
+        if (mat is null) return;
+        _pendingMaterialPreview = null;
+
+        _materialPreviewRenderer ??= new MaterialPreviewRenderer();
+        if (!_materialPreviewRenderer.IsInitialized)
+            _materialPreviewRenderer.Initialize(gd);
+
+        // TODO: load the material's texture and tint from mat.Properties for a richer preview
+        _materialPreviewRenderer.SetMaterial(null, Microsoft.Xna.Framework.Color.CornflowerBlue);
+
+        if (_materialPreviewRenderer.Render())
+        {
+            System.Drawing.Bitmap? bmp = _materialPreviewRenderer.GetPreviewBitmap();
+            if (bmp is not null)
+                _materialInspectorPanel?.SetPreviewBitmap(bmp);
+        }
+    }
 
     private void OnViewportMouseDown(object? sender, MouseEventArgs e)
     {
