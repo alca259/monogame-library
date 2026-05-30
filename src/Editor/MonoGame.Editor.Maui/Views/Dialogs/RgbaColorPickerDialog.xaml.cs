@@ -1,32 +1,32 @@
-using XnaColor = Microsoft.Xna.Framework.Color;
+using MauiColor = Microsoft.Maui.Graphics.Color;
 
 namespace MonoGame.Editor.Maui.Views.Dialogs;
 
 public sealed partial class RgbaColorPickerDialog : ContentPage
 {
-    private readonly TaskCompletionSource<XnaColor?> _tcs = new();
+    private readonly TaskCompletionSource<MauiColor?> _tcs = new();
 
     private bool _updating;
 
     private RgbaColorPickerDialog() => InitializeComponent();
 
-    public static async Task<XnaColor?> ShowAsync(INavigation navigation,
-                                                   XnaColor? initial = null)
+    public static async Task<MauiColor?> ShowAsync(INavigation navigation,
+                                                    MauiColor? initial = null)
     {
         var dialog = new RgbaColorPickerDialog();
-        if (initial.HasValue) dialog.LoadColor(initial.Value);
+        if (initial is not null) dialog.LoadColor(initial);
         else dialog.UpdatePreview();
         await navigation.PushModalAsync(dialog);
         return await dialog._tcs.Task;
     }
 
-    private void LoadColor(XnaColor color)
+    private void LoadColor(MauiColor color)
     {
         _updating = true;
-        RedSlider.Value   = color.R;
-        GreenSlider.Value = color.G;
-        BlueSlider.Value  = color.B;
-        AlphaSlider.Value = color.A;
+        RedSlider.Value   = (int)(color.Red   * 255);
+        GreenSlider.Value = (int)(color.Green  * 255);
+        BlueSlider.Value  = (int)(color.Blue  * 255);
+        AlphaSlider.Value = (int)(color.Alpha * 255);
         _updating = false;
         UpdatePreview();
     }
@@ -68,7 +68,7 @@ public sealed partial class RgbaColorPickerDialog : ContentPage
         int g = (int)GreenSlider.Value;
         int b = (int)BlueSlider.Value;
         int a = (int)AlphaSlider.Value;
-        _tcs.TrySetResult(new XnaColor(r, g, b, a));
+        _tcs.TrySetResult(MauiColor.FromRgba(r, g, b, a));
         _ = Navigation.PopModalAsync();
     }
 }

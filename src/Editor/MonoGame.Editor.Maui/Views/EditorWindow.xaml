@@ -2,7 +2,6 @@
 <ContentPage x:Class="MonoGame.Editor.Maui.Views.EditorWindow"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:controls="clr-namespace:MonoGame.Editor.Maui.Controls"
              xmlns:panels="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
              BackgroundColor="{StaticResource BgWindow}"
              Padding="0">
@@ -121,7 +120,14 @@
 
             <BoxView Grid.Column="1" Color="{StaticResource BorderColor}"/>
 
-            <controls:MonoGameView Grid.Column="2"/>
+            <GraphicsView x:Name="Viewport"
+                          Grid.Column="2"
+                          BackgroundColor="{StaticResource BgWindow}">
+                <GraphicsView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnViewportTapped"/>
+                    <PanGestureRecognizer PanUpdated="OnViewportPanned"/>
+                </GraphicsView.GestureRecognizers>
+            </GraphicsView>
 
             <BoxView Grid.Column="3" Color="{StaticResource BorderColor}"/>
 

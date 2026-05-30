@@ -21,4 +21,3 @@ global using MonoGame.Editor.Maui.Views.Dialogs;
 global using MonoGame.Editor.Maui.Rendering;
 global using MonoGame.Editor.Maui.Views;
 global using MonoGame.Editor.Maui.Views.Panels;
-global using Microsoft.Xna.Framework.Graphics;

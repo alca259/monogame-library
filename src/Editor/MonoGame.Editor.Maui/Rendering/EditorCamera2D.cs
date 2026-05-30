@@ -1,10 +1,10 @@
-using Microsoft.Xna.Framework;
+using Microsoft.Maui.Graphics;
 
 namespace MonoGame.Editor.Maui.Rendering;
 
 /// <summary>
-/// Cámara 2D para el viewport del editor. Pan (botón central) y zoom (rueda del ratón)
-/// se aplican desde el handler de plataforma; esta clase solo contiene la matemática.
+/// Cámara 2D para el viewport del editor. Pan y zoom se aplican desde los
+/// gesture recognizers del GraphicsView; esta clase solo contiene la matemática.
 /// </summary>
 public sealed class EditorCamera2D
 {
@@ -12,39 +12,42 @@ public sealed class EditorCamera2D
     private const float MaxZoom = 10f;
 
     /// <summary>Posición en espacio mundo del centro de la cámara.</summary>
-    public Vector2 Position { get; set; } = Vector2.Zero;
+    public PointF Position { get; set; } = PointF.Zero;
 
     /// <summary>Factor de escala del zoom, limitado a [0.1, 10].</summary>
     public float Zoom { get; private set; } = 1f;
 
-    /// <summary>
-    /// Matriz de transformación para <c>SpriteBatch.Begin(transformMatrix: ...)</c>.
-    /// Traslada por -Position, escala por Zoom y centra en el viewport.
-    /// </summary>
-    public Matrix GetTransformMatrix(Viewport viewport) =>
-        Matrix.CreateTranslation(-Position.X, -Position.Y, 0f)
-        * Matrix.CreateScale(Zoom, Zoom, 1f)
-        * Matrix.CreateTranslation(viewport.Width * 0.5f, viewport.Height * 0.5f, 0f);
+    /// <summary>Convierte un punto de espacio mundo a coordenadas de pantalla.</summary>
+    public PointF WorldToScreen(PointF worldPos, SizeF viewportSize)
+    {
+        float x = (worldPos.X - Position.X) * Zoom + viewportSize.Width  * 0.5f;
+        float y = (worldPos.Y - Position.Y) * Zoom + viewportSize.Height * 0.5f;
+        return new PointF(x, y);
+    }
 
     /// <summary>Convierte un punto de pantalla a coordenadas de espacio mundo.</summary>
-    public Vector2 ScreenToWorld(Vector2 screenPos, Viewport viewport)
+    public PointF ScreenToWorld(PointF screenPos, SizeF viewportSize)
     {
-        Matrix inverse = Matrix.Invert(GetTransformMatrix(viewport));
-        return Vector2.Transform(screenPos, inverse);
+        float x = (screenPos.X - viewportSize.Width  * 0.5f) / Zoom + Position.X;
+        float y = (screenPos.Y - viewportSize.Height * 0.5f) / Zoom + Position.Y;
+        return new PointF(x, y);
     }
 
     /// <summary>Desplaza la cámara <paramref name="worldDelta"/> unidades en espacio mundo.</summary>
-    public void Pan(Vector2 worldDelta) => Position += worldDelta;
+    public void Pan(PointF worldDelta) =>
+        Position = new PointF(Position.X + worldDelta.X, Position.Y + worldDelta.Y);
 
     /// <summary>
     /// Aplica zoom por <paramref name="factor"/> manteniendo estacionario
     /// el punto <paramref name="screenFocus"/> en pantalla.
     /// </summary>
-    public void ZoomAt(float factor, Vector2 screenFocus, Viewport viewport)
+    public void ZoomAt(float factor, PointF screenFocus, SizeF viewportSize)
     {
-        Vector2 worldBefore = ScreenToWorld(screenFocus, viewport);
+        PointF worldBefore = ScreenToWorld(screenFocus, viewportSize);
         Zoom = Math.Clamp(Zoom * factor, MinZoom, MaxZoom);
-        Vector2 worldAfter = ScreenToWorld(screenFocus, viewport);
-        Position += worldBefore - worldAfter;
+        PointF worldAfter = ScreenToWorld(screenFocus, viewportSize);
+        Position = new PointF(
+            Position.X + worldBefore.X - worldAfter.X,
+            Position.Y + worldBefore.Y - worldAfter.Y);
     }
 }

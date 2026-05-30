@@ -36,8 +36,9 @@ public sealed partial class EditorWindow : ContentPage
 
     #region Fields
 
-    private readonly IEditorEventBus    _bus      = EditorContext.Instance.EventBus;
-    private readonly GameObjectRegistry _registry = new();
+    private readonly IEditorEventBus    _bus              = EditorContext.Instance.EventBus;
+    private readonly GameObjectRegistry _registry         = new();
+    private readonly ViewportRenderer   _viewportRenderer = new();
 
     private string _activeTool = "Select";
     private bool _is2D   = true;
@@ -47,18 +48,24 @@ public sealed partial class EditorWindow : ContentPage
 
     private string? _openMenuTag;
 
+    private PlayModeRunner? _activeRunner;
+    private double          _panLastX;
+    private double          _panLastY;
+
     private Action<EditorStateChangedEvent>?  _onStateChanged;
     private Action<SceneLoadedEvent>?         _onSceneLoaded;
     private Action<BuildOutputLineEvent>?     _onBuildOutput;
     private Action<FpsUpdatedEvent>?          _onFpsUpdated;
     private Action<SceneDirtyChangedEvent>?   _onSceneDirty;
     private Action<ProjectOpenedEvent>?       _onProjectOpened;
+    private Action<GameObjectSelectedEvent>?  _onGameObjectSelected;
 
     #endregion
 
     public EditorWindow()
     {
         InitializeComponent();
+        Viewport.Drawable = _viewportRenderer;
         Subscribe();
         SetPillStyle(Toggle2DBtn, _is2D);
         SetPillStyle(ToggleSnapBtn, _isSnap);
@@ -86,12 +93,13 @@ public sealed partial class EditorWindow : ContentPage
 
     private void Subscribe()
     {
-        _onStateChanged  = e => MainThread.BeginInvokeOnMainThread(() => OnEditorStateChanged(e));
-        _onSceneLoaded   = e => MainThread.BeginInvokeOnMainThread(() => OnSceneLoaded(e));
-        _onBuildOutput   = e => MainThread.BeginInvokeOnMainThread(() => OnBuildOutputLine(e));
-        _onFpsUpdated    = e => MainThread.BeginInvokeOnMainThread(() => FpsLabel.Text = $"{e.Fps} FPS");
-        _onSceneDirty    = e => MainThread.BeginInvokeOnMainThread(() => OnSceneDirtyChanged(e));
-        _onProjectOpened = e => MainThread.BeginInvokeOnMainThread(() => OnProjectOpened(e));
+        _onStateChanged       = e => MainThread.BeginInvokeOnMainThread(() => OnEditorStateChanged(e));
+        _onSceneLoaded        = e => MainThread.BeginInvokeOnMainThread(() => OnSceneLoaded(e));
+        _onBuildOutput        = e => MainThread.BeginInvokeOnMainThread(() => OnBuildOutputLine(e));
+        _onFpsUpdated         = e => MainThread.BeginInvokeOnMainThread(() => FpsLabel.Text = $"{e.Fps} FPS");
+        _onSceneDirty         = e => MainThread.BeginInvokeOnMainThread(() => OnSceneDirtyChanged(e));
+        _onProjectOpened      = e => MainThread.BeginInvokeOnMainThread(() => OnProjectOpened(e));
+        _onGameObjectSelected = _ => MainThread.BeginInvokeOnMainThread(() => Viewport.Invalidate());
 
         _bus.Subscribe(_onStateChanged);
         _bus.Subscribe(_onSceneLoaded);
@@ -99,6 +107,7 @@ public sealed partial class EditorWindow : ContentPage
         _bus.Subscribe(_onFpsUpdated);
         _bus.Subscribe(_onSceneDirty);
         _bus.Subscribe(_onProjectOpened);
+        _bus.Subscribe(_onGameObjectSelected);
     }
 
     private void OnEditorStateChanged(EditorStateChangedEvent e)
@@ -131,6 +140,7 @@ public sealed partial class EditorWindow : ContentPage
         int count = e.Scene?.RootGameObjects.Count ?? 0;
         ObjectCountLabel.Text = count == 1 ? "1 object in scene" : $"{count} objects in scene";
         UpdateTitleBar();
+        Viewport.Invalidate();
     }
 
     private void OnBuildOutputLine(BuildOutputLineEvent e)
@@ -153,7 +163,10 @@ public sealed partial class EditorWindow : ContentPage
     }
 
     private void OnSceneDirtyChanged(SceneDirtyChangedEvent e)
-        => UpdateTitleBar();
+    {
+        UpdateTitleBar();
+        Viewport.Invalidate();
+    }
 
     private void OnProjectOpened(ProjectOpenedEvent e)
     {
@@ -771,7 +784,6 @@ public sealed partial class EditorWindow : ContentPage
 
         if (state is EditorState.Paused)
         {
-            EditorGameLoop.Current?.Resume();
             EditorContext.Instance.SetState(EditorState.Playing);
             return;
         }
@@ -784,8 +796,8 @@ public sealed partial class EditorWindow : ContentPage
         _registry.Scan();
         EditorContext.Instance.TakePlaySnapshot();
 
-        PlayModeRunner runner = new(scene, _registry);
-        EditorGameLoop.Current?.EnterPlay(runner);
+        _activeRunner = new PlayModeRunner(scene, _registry);
+        // TODO: launch play mode as separate process
 
         EditorContext.Instance.SetState(EditorState.Playing);
         Log("[Play] Play mode started.");
@@ -798,16 +810,12 @@ public sealed partial class EditorWindow : ContentPage
 
         if (state is EditorState.Playing)
         {
-            EditorGameLoop.Current?.Pause();
             EditorContext.Instance.SetState(EditorState.Paused);
             return;
         }
 
         if (state is EditorState.Paused)
-        {
-            EditorGameLoop.Current?.Resume();
             EditorContext.Instance.SetState(EditorState.Playing);
-        }
     }
 
     private void OnStopClicked(object sender, EventArgs e) => OnStopClicked();
@@ -816,8 +824,8 @@ public sealed partial class EditorWindow : ContentPage
         EditorState state = EditorContext.Instance.State;
         if (state is EditorState.Editing) return;
 
-        PlayModeRunner? runner = EditorGameLoop.Current?.ExitPlay();
-        runner?.Dispose();
+        _activeRunner?.Dispose();
+        _activeRunner = null;
 
         EditorScene? restored = EditorContext.Instance.RestoreFromSnapshot();
         EditorContext.Instance.ClearPlaySnapshot();
@@ -827,6 +835,84 @@ public sealed partial class EditorWindow : ContentPage
 
         EditorContext.Instance.SetState(EditorState.Editing);
         Log("[Play] Play mode stopped.");
+    }
+
+    #endregion
+
+    #region Viewport — input
+
+    private void OnViewportTapped(object sender, TappedEventArgs e)
+    {
+        if (EditorContext.Instance.Gizmos.Mode != GizmoMode.Select) return;
+
+        EditorScene? scene = EditorContext.Instance.ActiveScene;
+        if (scene is null) return;
+
+        Point? tapPos = e.GetPosition(Viewport);
+        if (tapPos is null) return;
+
+        Microsoft.Maui.Graphics.SizeF viewSize = new((float)Viewport.Width, (float)Viewport.Height);
+        Microsoft.Maui.Graphics.PointF worldPos = _viewportRenderer.Camera.ScreenToWorld(
+            new Microsoft.Maui.Graphics.PointF((float)tapPos.Value.X, (float)tapPos.Value.Y),
+            viewSize);
+
+        EditorGameObject? hit = HitTest(scene.RootGameObjects, worldPos);
+        EditorContext.Instance.SetSelection(hit);
+    }
+
+    private void OnViewportPanned(object sender, PanUpdatedEventArgs e)
+    {
+        switch (e.StatusType)
+        {
+            case GestureStatus.Started:
+                _panLastX = 0;
+                _panLastY = 0;
+                break;
+
+            case GestureStatus.Running:
+            {
+                double dx = e.TotalX - _panLastX;
+                double dy = e.TotalY - _panLastY;
+                _panLastX = e.TotalX;
+                _panLastY = e.TotalY;
+                float zoom = _viewportRenderer.Camera.Zoom;
+                _viewportRenderer.Camera.Pan(
+                    new Microsoft.Maui.Graphics.PointF((float)(-dx / zoom), (float)(-dy / zoom)));
+                Viewport.Invalidate();
+                break;
+            }
+
+            case GestureStatus.Completed:
+            case GestureStatus.Canceled:
+                _panLastX = 0;
+                _panLastY = 0;
+                break;
+        }
+    }
+
+    private static EditorGameObject? HitTest(List<EditorGameObject> objects, Microsoft.Maui.Graphics.PointF worldPos)
+    {
+        for (int i = objects.Count - 1; i >= 0; i--)
+        {
+            EditorGameObject obj = objects[i];
+            if (!obj.Active) continue;
+
+            if (obj.Children.Count > 0)
+            {
+                EditorGameObject? child = HitTest(obj.Children, worldPos);
+                if (child is not null) return child;
+            }
+
+            const float defaultHalfSize = 16f;
+            float halfW = defaultHalfSize * obj.Scale.X;
+            float halfH = defaultHalfSize * obj.Scale.Y;
+
+            if (worldPos.X >= obj.Position.X - halfW && worldPos.X <= obj.Position.X + halfW &&
+                worldPos.Y >= obj.Position.Y - halfH && worldPos.Y <= obj.Position.Y + halfH)
+                return obj;
+        }
+
+        return null;
     }
 
     #endregion
