@@ -120,7 +120,8 @@ public sealed partial class SceneHierarchyView : ContentView
         if (selected is null)
         {
             HierarchyList.SelectedItem = null;
-            RenameBtn.IsEnabled = false;
+            RenameBtn.IsEnabled   = false;
+            ReparentBtn.IsEnabled = false;
             return;
         }
 
@@ -135,7 +136,8 @@ public sealed partial class SceneHierarchyView : ContentView
         }
 
         HierarchyList.SelectedItem = match;
-        RenameBtn.IsEnabled = match is not null;
+        RenameBtn.IsEnabled   = match is not null;
+        ReparentBtn.IsEnabled = match is not null;
     }
 
     // ── CollectionView selection ──────────────────────────────────────────────
@@ -212,6 +214,62 @@ public sealed partial class SceneHierarchyView : ContentView
     {
         _searchFilter = e.NewTextValue ?? string.Empty;
         RebuildList();
+    }
+
+    // ── Reparent ──────────────────────────────────────────────────────────────
+
+    private async void OnReparentClicked(object sender, EventArgs e)
+    {
+        EditorScene? scene = EditorContext.Instance.ActiveScene;
+        EditorGameObject? selected = EditorContext.Instance.SelectedObject;
+        if (scene is null || selected is null) return;
+
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        // Collect valid parent candidates (all except the selected object and its descendants)
+        List<EditorGameObject> candidates = CollectReparentCandidates(scene, selected);
+        string[] options = new string[candidates.Count + 1];
+        options[0] = "(Root — no parent)";
+        for (int i = 0; i < candidates.Count; i++)
+            options[i + 1] = candidates[i].Name;
+
+        string? choice = await page.DisplayActionSheetAsync(
+            "Reparent to:",
+            "Cancel",
+            null,
+            options);
+
+        if (choice is null or "Cancel") return;
+
+        EditorGameObject? newParent = null;
+        if (choice != options[0])
+        {
+            for (int i = 0; i < candidates.Count; i++)
+                if (candidates[i].Name == choice) { newParent = candidates[i]; break; }
+        }
+
+        EditorContext.Instance.Commands.Execute(
+            new ReparentEntityCommand(selected, scene, newParent));
+        RebuildList(scene);
+    }
+
+    private static List<EditorGameObject> CollectReparentCandidates(
+        EditorScene scene, EditorGameObject excluded)
+    {
+        List<EditorGameObject> result = [];
+        foreach (EditorGameObject root in scene.RootGameObjects)
+            CollectDescendants(root, excluded, result);
+        return result;
+    }
+
+    private static void CollectDescendants(
+        EditorGameObject obj, EditorGameObject excluded, List<EditorGameObject> result)
+    {
+        if (obj == excluded) return;
+        result.Add(obj);
+        foreach (EditorGameObject child in obj.Children)
+            CollectDescendants(child, excluded, result);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

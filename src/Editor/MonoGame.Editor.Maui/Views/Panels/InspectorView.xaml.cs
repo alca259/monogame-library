@@ -376,8 +376,20 @@ public sealed partial class InspectorView : ContentView
             new SetPropertyCommand<bool>("Set Active", prev, next, v => _selected.Active = v));
     }
 
-    private void OnAddBehaviourClicked(object sender, EventArgs e)
+    private async void OnAddBehaviourClicked(object sender, EventArgs e)
     {
-        // TODO Fase 8: abrir AddBehaviourDialog
+        if (_selected is null) return;
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        GameObjectRegistry registry = new();
+        registry.Scan();
+
+        string? typeName = await AddBehaviourDialog.ShowAsync(page.Navigation, registry);
+        if (string.IsNullOrEmpty(typeName)) return;
+
+        EditorContext.Instance.Commands.Execute(
+            new AddBehaviourCommand(_selected, new EditorBehaviour { TypeName = typeName }));
+        BuildBehaviourCards();
     }
 }

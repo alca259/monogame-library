@@ -11,15 +11,35 @@
         <Border Grid.Row="0"
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4" Padding="4,2">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="4" Padding="4,2">
 
-                <Entry Grid.Column="0"
+                <Button Grid.Column="0"
+                        Text="⬆"
+                        ToolTipProperties.Text="Import asset"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnImportAssetClicked"/>
+                <Button Grid.Column="1"
+                        x:Name="AssetRenameBtn"
+                        Text="✎"
+                        ToolTipProperties.Text="Rename asset"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnRenameAssetClicked"/>
+                <Button Grid.Column="2"
+                        x:Name="AssetDeleteBtn"
+                        Text="🗑"
+                        ToolTipProperties.Text="Delete asset"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnDeleteAssetClicked"/>
+
+                <Entry Grid.Column="3"
                        x:Name="AssetSearchEntry"
                        Placeholder="Filter assets…"
                        Style="{StaticResource InputEntry}"
                        TextChanged="OnFilterChanged"/>
 
-                <Label Grid.Column="1"
+                <Label Grid.Column="4"
                        x:Name="AssetCountLabel"
                        Text="0 assets"
                        Style="{StaticResource DimLabel}"

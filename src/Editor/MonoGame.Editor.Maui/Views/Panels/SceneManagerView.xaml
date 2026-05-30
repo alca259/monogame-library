@@ -11,7 +11,7 @@
         <Border Grid.Row="0"
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0">
-            <Grid ColumnDefinitions="Auto,Auto,1,*" ColumnSpacing="2" Padding="4,2">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,1,*" ColumnSpacing="2" Padding="4,2">
 
                 <Button Grid.Column="0"
                         Text="+"
@@ -19,17 +19,24 @@
                         Style="{StaticResource SmallIconButton}"
                         Clicked="OnNewSceneClicked"/>
                 <Button Grid.Column="1"
+                        x:Name="SceneRenameBtn"
+                        Text="✎"
+                        ToolTipProperties.Text="Rename scene"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnRenameSceneClicked"/>
+                <Button Grid.Column="2"
                         Text="🗑"
                         ToolTipProperties.Text="Delete scene"
                         Style="{StaticResource SmallIconButton}"
                         Clicked="OnDeleteSceneClicked"/>
 
-                <BoxView Grid.Column="2"
+                <BoxView Grid.Column="3"
                          Color="{StaticResource BorderColor}"
                          VerticalOptions="Fill"
                          Margin="2,2"/>
 
-                <Label Grid.Column="3"
+                <Label Grid.Column="4"
                        x:Name="SceneCountLabel"
                        Text="0 scenes"
                        Style="{StaticResource DimLabel}"

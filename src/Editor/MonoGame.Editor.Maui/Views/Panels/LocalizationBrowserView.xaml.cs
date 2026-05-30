@@ -167,6 +167,31 @@ public sealed partial class LocalizationBrowserView : ContentView
         RebuildKeyList();
     }
 
+    private async void OnRemoveLocaleClicked(object sender, EventArgs e)
+    {
+        if (_model is null || _model.Locales.Count == 0) return;
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        string[] localeOptions = [.. _model.Locales];
+        string? choice = await page.DisplayActionSheetAsync(
+            "Remove locale:", "Cancel", null, localeOptions);
+
+        if (choice is null or "Cancel") return;
+
+        bool confirmed = await page.DisplayAlertAsync(
+            "Remove Locale",
+            $"Remove locale '{choice}' and delete its file? This cannot be undone.",
+            "Remove", "Cancel");
+
+        if (!confirmed) return;
+
+        _model.RemoveLocale(choice);
+        RebuildKeyList();
+        if (!string.IsNullOrEmpty(_selectedKey))
+            BuildTranslationEntries(_selectedKey);
+    }
+
     private async void OnSaveClicked(object sender, EventArgs e)
     {
         if (_model is null) return;

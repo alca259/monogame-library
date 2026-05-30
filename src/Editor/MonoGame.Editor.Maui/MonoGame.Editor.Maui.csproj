@@ -14,9 +14,15 @@
     <ApplicationId>com.alca259.monogame.editor</ApplicationId>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
+    <!-- Unpackaged WinUI app — no AppxManifest needed -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <!-- Suppress MA002: explicit package refs listed below -->
+    <SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
+    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.20" />
     <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.*" />
     <PackageReference Include="Serilog" Version="4.*" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.*" />

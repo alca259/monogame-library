@@ -10,7 +10,7 @@
         <Border Grid.Row="0"
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0">
-            <Grid ColumnDefinitions="Auto,Auto,Auto,1,*,Auto" ColumnSpacing="2" Padding="4,2">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,1,*,Auto" ColumnSpacing="2" Padding="4,2">
                 <Button Grid.Column="0"
                         Text="+ Key"
                         Style="{StaticResource SmallIconButton}"
@@ -23,17 +23,21 @@
                         Text="🗑 Key"
                         Style="{StaticResource SmallIconButton}"
                         Clicked="OnRemoveKeyClicked"/>
-                <BoxView Grid.Column="3"
+                <Button Grid.Column="3"
+                        Text="🗑 Locale"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnRemoveLocaleClicked"/>
+                <BoxView Grid.Column="4"
                          Color="{StaticResource BorderColor}"
                          VerticalOptions="Fill"
                          Margin="2,2"/>
-                <Label Grid.Column="4"
+                <Label Grid.Column="5"
                        x:Name="LocaleCountLabel"
                        Text="0 locales"
                        Style="{StaticResource DimLabel}"
                        VerticalOptions="Center"
                        Margin="4,0"/>
-                <Button Grid.Column="5"
+                <Button Grid.Column="6"
                         Text="Save"
                         Style="{StaticResource SmallIconButton}"
                         x:Name="LocaleSaveButton"

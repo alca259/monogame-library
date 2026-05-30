@@ -58,8 +58,10 @@ public sealed partial class AssetBrowserView : ContentView
         _assetItems.Clear();
         _expandedFolders.Clear();
         BreadcrumbLayout.Children.Clear();
-        AssetPathLabel.Text  = string.Empty;
-        AssetCountLabel.Text = "0 assets";
+        AssetPathLabel.Text      = string.Empty;
+        AssetCountLabel.Text     = "0 assets";
+        AssetRenameBtn.IsEnabled = false;
+        AssetDeleteBtn.IsEnabled = false;
 
         if (e.Project is null)
         {
@@ -237,8 +239,79 @@ public sealed partial class AssetBrowserView : ContentView
 
     private void OnAssetSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (e.CurrentSelection.FirstOrDefault() is not AssetItem item) return;
-        AssetPathLabel.Text = item.Info.RelativePath;
+        if (e.CurrentSelection.FirstOrDefault() is not AssetItem item)
+        {
+            AssetPathLabel.Text    = string.Empty;
+            AssetRenameBtn.IsEnabled = false;
+            AssetDeleteBtn.IsEnabled = false;
+            return;
+        }
+
+        AssetPathLabel.Text      = item.Info.RelativePath;
+        AssetRenameBtn.IsEnabled = true;
+        AssetDeleteBtn.IsEnabled = true;
         EditorContext.Instance.EventBus.Publish(new AssetSelectedEvent(item.Info));
+    }
+
+    private async void OnImportAssetClicked(object sender, EventArgs e)
+    {
+        if (string.IsNullOrEmpty(_currentFolderPath)) return;
+
+        FileResult? picked = await FilePicker.PickAsync().ConfigureAwait(true);
+        if (picked is null) return;
+
+        string dest = Path.Combine(_currentFolderPath, picked.FileName);
+        try
+        {
+            File.Copy(picked.FullPath, dest, overwrite: false);
+        }
+        catch { return; }
+
+        AssetInfo info = AssetClassifier.CreateInfo(dest, _contentRoot);
+        _bus.Publish(new AssetImportedEvent(info));
+        LoadAssetsFromFolder();
+    }
+
+    private async void OnRenameAssetClicked(object sender, EventArgs e)
+    {
+        if (AssetList.SelectedItem is not AssetItem item) return;
+
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        string? newName = await page.DisplayPromptAsync(
+            "Rename asset",
+            "Enter new file name:",
+            initialValue: item.Info.Name,
+            maxLength: 256,
+            keyboard: Keyboard.Text);
+
+        if (string.IsNullOrWhiteSpace(newName) || newName == item.Info.Name) return;
+
+        string newPath = Path.Combine(_currentFolderPath, newName);
+        try { File.Move(item.Info.AbsolutePath, newPath); }
+        catch { return; }
+
+        LoadAssetsFromFolder();
+    }
+
+    private async void OnDeleteAssetClicked(object sender, EventArgs e)
+    {
+        if (AssetList.SelectedItem is not AssetItem item) return;
+
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        bool confirmed = await page.DisplayAlertAsync(
+            "Delete asset",
+            $"Delete '{item.Info.Name}'? This cannot be undone.",
+            "Delete", "Cancel");
+
+        if (!confirmed) return;
+
+        try { File.Delete(item.Info.AbsolutePath); }
+        catch { return; }
+
+        LoadAssetsFromFolder();
     }
 }

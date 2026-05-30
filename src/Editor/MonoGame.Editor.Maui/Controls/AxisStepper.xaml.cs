@@ -118,3 +118,4 @@ public sealed partial class AxisStepper : ContentView
         Value -= Step;
         ValueCommitted?.Invoke(this, Value);
     }
+}

@@ -23,6 +23,8 @@ public sealed partial class SceneManagerView : ContentView
     {
         InitializeComponent();
         SceneList.ItemsSource = _items;
+        SceneList.SelectionChanged += (_, _) =>
+            SceneRenameBtn.IsEnabled = SceneList.SelectedItem is not null;
     }
 
     protected override void OnHandlerChanged()
@@ -145,9 +147,54 @@ public sealed partial class SceneManagerView : ContentView
 
     // ── Toolbar buttons ───────────────────────────────────────────────────────
 
-    private void OnNewSceneClicked(object sender, EventArgs e)
+    private async void OnNewSceneClicked(object sender, EventArgs e)
     {
-        // TODO Fase 8: abrir NewSceneDialog
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        NewSceneResult? result = await NewSceneDialog.ShowAsync(page.Navigation);
+        if (result is null) return;
+
+        if (string.IsNullOrEmpty(_scenesPath)) return;
+
+        EditorScene scene = new()
+        {
+            Name      = result.SceneName,
+            WorldSize = new EditorVector2(result.WorldWidth, result.WorldHeight),
+        };
+
+        string filePath = Path.Combine(_scenesPath, $"{result.SceneName}.scene.json");
+        await SceneSerializer.SaveAsync(scene, filePath).ConfigureAwait(true);
+
+        _bus.Publish(new SceneCreatedEvent(scene));
+    }
+
+    private async void OnRenameSceneClicked(object sender, EventArgs e)
+    {
+        if (SceneList.SelectedItem is not SceneItem item) return;
+
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        string? newName = await page.DisplayPromptAsync(
+            "Rename scene",
+            "Enter new name:",
+            initialValue: item.Name,
+            maxLength: 128,
+            keyboard: Keyboard.Text);
+
+        if (string.IsNullOrWhiteSpace(newName) || newName == item.Name) return;
+
+        string newPath = Path.Combine(_scenesPath, $"{newName}.scene.json");
+        try { File.Move(item.FilePath, newPath); }
+        catch { return; }
+
+        int idx = -1;
+        for (int i = 0; i < _items.Count; i++)
+            if (_items[i].FilePath == item.FilePath) { idx = i; break; }
+
+        if (idx >= 0)
+            _items[idx] = new SceneItem(newPath, LoadSceneAsync);
     }
 
     private async void OnDeleteSceneClicked(object sender, EventArgs e)

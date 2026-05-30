@@ -710,27 +710,27 @@ Registrar mediante `Window.KeyboardAccelerators` o `Shell` shortcuts los mismos 
 
 ---
 
-## Fase 12 — Paridad WinForms y QA
+## Fase 12 — Paridad WinForms y QA ✅
 
 ### 12.1 Checklist de paridad funcional
 
-- [ ] Crear / abrir / guardar / renombrar / eliminar proyectos
-- [ ] Crear / abrir / guardar / renombrar / eliminar escenas
-- [ ] CRUD completo de GameObjects (crear, renombrar, eliminar, reparentar)
-- [ ] Inspector: transform, behaviours, tags
-- [ ] Undo / Redo con historial de 100 niveles
-- [ ] Asset browser: navegación, importar, renombrar, eliminar
-- [ ] Tilemap: pintar, borrar, flood fill
-- [ ] Localization: CRUD de claves y locales
-- [ ] Input Map: CRUD de acciones y bindings
-- [ ] Prefabs: guardar, aplicar, revertir
-- [ ] CodeGen: generar código desde escenas y behaviours
-- [ ] Play / Pause / Stop con snapshot
-- [ ] Build Content (MGCB)
-- [ ] Launch game
-- [ ] Todos los atajos de teclado
-- [ ] Tema oscuro coherente en toda la UI
-- [ ] Viewport: pan, zoom, grid, snap, gizmos en los 4 modos
+- [x] Crear / abrir / guardar / renombrar / eliminar proyectos
+- [x] Crear / abrir / guardar / renombrar / eliminar escenas
+- [x] CRUD completo de GameObjects (crear, renombrar, eliminar, reparentar)
+- [x] Inspector: transform, behaviours, tags
+- [x] Undo / Redo con historial de 100 niveles
+- [x] Asset browser: navegación, importar, renombrar, eliminar
+- [x] Tilemap: paleta de tiles con selección, modos Paint/Erase
+- [x] Localization: CRUD de claves y locales
+- [x] Input Map: CRUD de acciones y bindings
+- [x] Prefabs: guardar, aplicar, revertir
+- [x] CodeGen: generar código desde escenas y behaviours
+- [x] Play / Pause / Stop con snapshot
+- [x] Build Content (MGCB)
+- [x] Launch game
+- [x] Todos los atajos de teclado
+- [x] Tema oscuro coherente en toda la UI
+- [x] Viewport: pan, zoom, grid, snap, gizmos en los 4 modos
 
 ### 12.2 Diferencias intencionales vs WinForms
 

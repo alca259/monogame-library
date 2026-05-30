@@ -11,7 +11,7 @@
         <Border Grid.Row="0"
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0">
-            <Grid ColumnDefinitions="Auto,Auto,Auto,1,*,Auto" ColumnSpacing="2" Padding="4,2">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,1,*,Auto" ColumnSpacing="2" Padding="4,2">
 
                 <Button Grid.Column="0"
                         Text="+"
@@ -33,18 +33,26 @@
                         IsEnabled="False"
                         Clicked="OnRenameClicked"/>
 
-                <BoxView Grid.Column="3"
+                <Button Grid.Column="3"
+                        x:Name="ReparentBtn"
+                        Text="↑"
+                        ToolTipProperties.Text="Reparent selected entity"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnReparentClicked"/>
+
+                <BoxView Grid.Column="4"
                          Color="{StaticResource BorderColor}"
                          VerticalOptions="Fill"
                          Margin="2,2"/>
 
-                <Entry Grid.Column="4"
+                <Entry Grid.Column="5"
                        x:Name="SearchEntry"
                        Placeholder="Search…"
                        Style="{StaticResource InputEntry}"
                        TextChanged="OnSearchTextChanged"/>
 
-                <Label Grid.Column="5"
+                <Label Grid.Column="6"
                        x:Name="CountLabel"
                        Text="0 entities"
                        Style="{StaticResource DimLabel}"
