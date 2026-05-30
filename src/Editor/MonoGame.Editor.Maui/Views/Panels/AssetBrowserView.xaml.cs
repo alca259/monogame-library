@@ -16,6 +16,7 @@ public sealed partial class AssetBrowserView : ContentView
     private string _contentRoot      = string.Empty;
     private string _currentFolderPath = string.Empty;
     private string _filterText        = string.Empty;
+    private string _selectedFolderPath = string.Empty;
 
     private Action<ProjectOpenedEvent>? _onProjectOpened;
     private Action<AssetImportedEvent>? _onAssetImported;
@@ -67,12 +68,14 @@ public sealed partial class AssetBrowserView : ContentView
         {
             _contentRoot       = string.Empty;
             _currentFolderPath = string.Empty;
+            NewFolderBtn.IsEnabled = false;
             return;
         }
 
         _contentRoot       = e.Project.ContentPath;
         _currentFolderPath = _contentRoot;
         _expandedFolders.Add(_contentRoot);
+        NewFolderBtn.IsEnabled = true;
 
         BuildFolderTree();
         BuildBreadcrumb(_currentFolderPath);
@@ -312,6 +315,116 @@ public sealed partial class AssetBrowserView : ContentView
         try { File.Delete(item.Info.AbsolutePath); }
         catch { return; }
 
+        LoadAssetsFromFolder();
+    }
+
+    // ── Folder selection ──────────────────────────────────────────────────────
+
+    private void OnFolderSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (e.CurrentSelection.FirstOrDefault() is not FolderItem item)
+        {
+            _selectedFolderPath      = string.Empty;
+            FolderRenameBtn.IsEnabled = false;
+            FolderDeleteBtn.IsEnabled = false;
+            return;
+        }
+
+        _selectedFolderPath = item.FullPath;
+        bool isRoot = string.Equals(_selectedFolderPath, _contentRoot, StringComparison.OrdinalIgnoreCase);
+        FolderRenameBtn.IsEnabled = !isRoot;
+        FolderDeleteBtn.IsEnabled = !isRoot;
+    }
+
+    // ── Folder management ─────────────────────────────────────────────────────
+
+    private async void OnNewFolderClicked(object sender, EventArgs e)
+    {
+        if (string.IsNullOrEmpty(_currentFolderPath)) return;
+
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        string? name = await page.DisplayPromptAsync(
+            "New folder",
+            "Enter folder name:",
+            maxLength: 128,
+            keyboard: Keyboard.Text);
+
+        if (string.IsNullOrWhiteSpace(name)) return;
+
+        string newPath = Path.Combine(_currentFolderPath, name);
+        try { Directory.CreateDirectory(newPath); }
+        catch { return; }
+
+        _expandedFolders.Add(_currentFolderPath);
+        BuildFolderTree();
+        LoadAssetsFromFolder();
+    }
+
+    private async void OnFolderRenameClicked(object sender, EventArgs e)
+    {
+        if (string.IsNullOrEmpty(_selectedFolderPath)) return;
+
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        string? newName = await page.DisplayPromptAsync(
+            "Rename folder",
+            "Enter new folder name:",
+            initialValue: Path.GetFileName(_selectedFolderPath),
+            maxLength: 128,
+            keyboard: Keyboard.Text);
+
+        if (string.IsNullOrWhiteSpace(newName) || newName == Path.GetFileName(_selectedFolderPath)) return;
+
+        string parent  = Path.GetDirectoryName(_selectedFolderPath) ?? _contentRoot;
+        string newPath = Path.Combine(parent, newName);
+        try { Directory.Move(_selectedFolderPath, newPath); }
+        catch { return; }
+
+        if (_currentFolderPath.StartsWith(_selectedFolderPath, StringComparison.OrdinalIgnoreCase))
+            _currentFolderPath = _currentFolderPath.Replace(_selectedFolderPath, newPath, StringComparison.OrdinalIgnoreCase);
+
+        _expandedFolders.Remove(_selectedFolderPath);
+        _expandedFolders.Add(newPath);
+        _selectedFolderPath = string.Empty;
+        FolderRenameBtn.IsEnabled = false;
+        FolderDeleteBtn.IsEnabled = false;
+
+        BuildFolderTree();
+        BuildBreadcrumb(_currentFolderPath);
+        LoadAssetsFromFolder();
+    }
+
+    private async void OnFolderDeleteClicked(object sender, EventArgs e)
+    {
+        if (string.IsNullOrEmpty(_selectedFolderPath)) return;
+
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        string folderName = Path.GetFileName(_selectedFolderPath);
+        bool confirmed = await page.DisplayAlertAsync(
+            "Delete folder",
+            $"Delete '{folderName}' and all its contents? This cannot be undone.",
+            "Delete", "Cancel");
+
+        if (!confirmed) return;
+
+        try { Directory.Delete(_selectedFolderPath, recursive: true); }
+        catch { return; }
+
+        if (_currentFolderPath.StartsWith(_selectedFolderPath, StringComparison.OrdinalIgnoreCase))
+            _currentFolderPath = _contentRoot;
+
+        _expandedFolders.Remove(_selectedFolderPath);
+        _selectedFolderPath = string.Empty;
+        FolderRenameBtn.IsEnabled = false;
+        FolderDeleteBtn.IsEnabled = false;
+
+        BuildFolderTree();
+        BuildBreadcrumb(_currentFolderPath);
         LoadAssetsFromFolder();
     }
 }

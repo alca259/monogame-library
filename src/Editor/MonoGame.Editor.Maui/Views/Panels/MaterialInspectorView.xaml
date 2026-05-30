@@ -35,9 +35,9 @@
                            Text="Shader"
                            Style="{StaticResource LabelSecondary}"
                            VerticalOptions="Center"/>
-                    <Entry Grid.Row="1" Grid.Column="1"
-                           x:Name="ShaderPathEntry"
-                           Placeholder="Shaders/MyEffect"/>
+                    <Picker Grid.Row="1" Grid.Column="1"
+                            x:Name="ShaderPicker"
+                            SelectedIndexChanged="OnShaderPickerChanged"/>
 
                     <Label Grid.Row="2" Grid.Column="0"
                            Text="Mode"

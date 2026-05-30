@@ -14,7 +14,8 @@
           Row 3 — Dock      (266px)
           Row 4 — StatusBar (24px)
     -->
-    <Grid RowDefinitions="28,42,*,266,24"
+    <Grid x:Name="MainGrid"
+          RowDefinitions="28,42,*,266,24"
           RowSpacing="0">
 
         <!-- ── Row 0: Menu bar ──────────────────────────────────── -->
@@ -28,6 +29,7 @@
                 <Button x:Name="EditMenuBtn"    Text="Edit"    Style="{StaticResource MenuButton}" Clicked="OnEditMenuClicked"/>
                 <Button x:Name="ProjectMenuBtn" Text="Project" Style="{StaticResource MenuButton}" Clicked="OnProjectMenuClicked"/>
                 <Button x:Name="DebugMenuBtn"   Text="Debug"   Style="{StaticResource MenuButton}" Clicked="OnDebugMenuClicked"/>
+                <Button x:Name="ViewMenuBtn"    Text="View"    Style="{StaticResource MenuButton}" Clicked="OnViewMenuClicked"/>
             </HorizontalStackLayout>
         </Border>
         <!-- MenuBar bottom separator -->
@@ -90,11 +92,6 @@
                         Style="{StaticResource PlayButton}"
                         IsEnabled="False"
                         Clicked="OnPlayClicked"/>
-                <Button x:Name="PauseBtn" Text="⏸"
-                        ToolTipProperties.Text="Pause (F6)"
-                        Style="{StaticResource StopButton}"
-                        IsEnabled="False"
-                        Clicked="OnPauseClicked"/>
                 <Button x:Name="StopBtn" Text="■"
                         ToolTipProperties.Text="Stop (Shift+F5)"
                         Style="{StaticResource StopButton}"
@@ -113,13 +110,14 @@
                Col 2 (*)   — Viewport
                Col 3 (1)   — separator
                Col 4 (362) — Inspector   -->
-        <Grid Grid.Row="2"
+        <Grid x:Name="BodyGrid"
+              Grid.Row="2"
               ColumnDefinitions="268,1,*,1,362"
               ColumnSpacing="0">
 
             <panels:SceneHierarchyView Grid.Column="0"/>
 
-            <BoxView Grid.Column="1" Color="{StaticResource BorderColor}"/>
+            <BoxView x:Name="HierarchySep" Grid.Column="1" Color="{StaticResource BorderColor}"/>
 
             <GraphicsView x:Name="Viewport"
                           Grid.Column="2"
@@ -127,10 +125,12 @@
                 <GraphicsView.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnViewportTapped"/>
                     <PanGestureRecognizer PanUpdated="OnViewportPanned"/>
+                    <PinchGestureRecognizer PinchUpdated="OnViewportPinched"/>
+                    <PointerGestureRecognizer PointerMoved="OnViewportPointerMoved"/>
                 </GraphicsView.GestureRecognizers>
             </GraphicsView>
 
-            <BoxView Grid.Column="3" Color="{StaticResource BorderColor}"/>
+            <BoxView x:Name="InspectorSep" Grid.Column="3" Color="{StaticResource BorderColor}"/>
 
             <panels:InspectorView Grid.Column="4"/>
         </Grid>
@@ -138,7 +138,7 @@
         <!-- Body top separator (between toolbar and body) handled by toolbar's BoxView -->
 
         <!-- ── Row 3: Dock bar ───────────────────────────────────── -->
-        <Grid Grid.Row="3" RowDefinitions="1,*" RowSpacing="0">
+        <Grid x:Name="DockRow" Grid.Row="3" RowDefinitions="1,*" RowSpacing="0">
             <BoxView Grid.Row="0" Color="{StaticResource BorderColor}"/>
             <panels:DockBarView Grid.Row="1"/>
         </Grid>

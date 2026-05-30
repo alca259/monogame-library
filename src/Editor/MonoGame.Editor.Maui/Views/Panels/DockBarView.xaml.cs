@@ -30,7 +30,7 @@ public sealed partial class DockBarView : ContentView
         foreach (Button btn in new[]
         {
             AssetsTabBtn, ConsoleTabBtn, ScenesTabBtn, LocalizationTabBtn,
-            InputMapsTabBtn, TilemapTabBtn, HistoryTabBtn, ScriptsTabBtn, SpriteEditorTabBtn
+            InputMapsTabBtn, TilemapTabBtn, HistoryTabBtn, ScriptsTabBtn
         })
             btn.TextColor = btn == active ? ActiveTabFg : InactiveTabFg;
     }
@@ -45,6 +45,5 @@ public sealed partial class DockBarView : ContentView
         TilemapContent.IsVisible      = _activeTab == "Tilemap";
         HistoryContent.IsVisible      = _activeTab == "History";
         ScriptsContent.IsVisible      = _activeTab == "Scripts";
-        SpriteEditorContent.IsVisible = _activeTab == "SpriteEditor";
     }
 }

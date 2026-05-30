@@ -337,30 +337,42 @@ public sealed partial class InspectorView : ContentView
     private void OnInspectorTabClicked(object sender, EventArgs e)
     {
         SetActiveInspectorTab(InspectorTabBtn);
-        InspectorContent.IsVisible = true;
-        MaterialContent.IsVisible  = false;
-        UIThemeContent.IsVisible   = false;
+        InspectorContent.IsVisible    = true;
+        MaterialContent.IsVisible     = false;
+        UIThemeContent.IsVisible      = false;
+        SpriteEditorContent.IsVisible = false;
     }
 
     private void OnMaterialTabClicked(object sender, EventArgs e)
     {
         SetActiveInspectorTab(MaterialTabBtn);
-        InspectorContent.IsVisible = false;
-        MaterialContent.IsVisible  = true;
-        UIThemeContent.IsVisible   = false;
+        InspectorContent.IsVisible    = false;
+        MaterialContent.IsVisible     = true;
+        UIThemeContent.IsVisible      = false;
+        SpriteEditorContent.IsVisible = false;
     }
 
     private void OnUIThemeTabClicked(object sender, EventArgs e)
     {
         SetActiveInspectorTab(UIThemeTabBtn);
-        InspectorContent.IsVisible = false;
-        MaterialContent.IsVisible  = false;
-        UIThemeContent.IsVisible   = true;
+        InspectorContent.IsVisible    = false;
+        MaterialContent.IsVisible     = false;
+        UIThemeContent.IsVisible      = true;
+        SpriteEditorContent.IsVisible = false;
+    }
+
+    private void OnSpriteEditorTabClicked(object sender, EventArgs e)
+    {
+        SetActiveInspectorTab(SpriteEditorTabBtn);
+        InspectorContent.IsVisible    = false;
+        MaterialContent.IsVisible     = false;
+        UIThemeContent.IsVisible      = false;
+        SpriteEditorContent.IsVisible = true;
     }
 
     private void SetActiveInspectorTab(Button active)
     {
-        foreach (Button btn in new[] { InspectorTabBtn, MaterialTabBtn, UIThemeTabBtn })
+        foreach (Button btn in new[] { InspectorTabBtn, MaterialTabBtn, UIThemeTabBtn, SpriteEditorTabBtn })
             btn.TextColor = btn == active ? ActiveTabFg : InactiveTabFg;
     }
 

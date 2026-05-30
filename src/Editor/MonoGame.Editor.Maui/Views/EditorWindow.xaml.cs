@@ -44,11 +44,23 @@ public sealed partial class EditorWindow : ContentPage
     private bool _isNav  = false;
     private bool _isRes  = false;
 
+    private bool _hierarchyVisible = true;
+    private bool _inspectorVisible = true;
+    private bool _dockVisible      = true;
+    private const double HierarchyWidth = 268;
+    private const double InspectorWidth = 362;
+    private const double DockHeight     = 266;
+
     private string? _openMenuTag;
 
     private PlayModeRunner? _activeRunner;
     private double          _panLastX;
     private double          _panLastY;
+    private float           _lastPointerScreenX;
+    private float           _lastPointerScreenY;
+    private float           _panStartScreenX;
+    private float           _panStartScreenY;
+    private bool            _gizmoDragging;
 
     private Action<EditorStateChangedEvent>?  _onStateChanged;
     private Action<SceneLoadedEvent>?         _onSceneLoaded;
@@ -111,13 +123,11 @@ public sealed partial class EditorWindow : ContentPage
 
     private void OnEditorStateChanged(EditorStateChangedEvent e)
     {
-        bool playing = e.NewState is EditorState.Playing or EditorState.Paused;
-        bool paused  = e.NewState is EditorState.Paused;
+        bool playing  = e.NewState is EditorState.Playing;
         bool hasScene = EditorContext.Instance.ActiveScene is not null;
 
-        PlayBtn.IsEnabled  = !playing && hasScene;
-        PauseBtn.IsEnabled = playing;
-        StopBtn.IsEnabled  = playing;
+        PlayBtn.IsEnabled = !playing && hasScene;
+        StopBtn.IsEnabled = playing;
 
         bool canEdit = !playing;
         SelectBtn.IsEnabled  = canEdit;
@@ -133,17 +143,13 @@ public sealed partial class EditorWindow : ContentPage
 
         if (playing)
         {
-            StopBtn.BackgroundColor  = Color.FromArgb("#E5484D");
-            StopBtn.TextColor        = Colors.White;
-            PauseBtn.BackgroundColor = paused ? Color.FromArgb("#E8A050") : Color.FromArgb("#252528");
-            PauseBtn.TextColor       = paused ? Colors.White : Color.FromArgb("#9A9AA2");
+            StopBtn.BackgroundColor = Color.FromArgb("#E5484D");
+            StopBtn.TextColor       = Colors.White;
         }
         else
         {
-            StopBtn.BackgroundColor  = Color.FromArgb("#252528");
-            StopBtn.TextColor        = Color.FromArgb("#6A6A72");
-            PauseBtn.BackgroundColor = Color.FromArgb("#252528");
-            PauseBtn.TextColor       = Color.FromArgb("#6A6A72");
+            StopBtn.BackgroundColor = Color.FromArgb("#252528");
+            StopBtn.TextColor       = Color.FromArgb("#6A6A72");
         }
     }
 
@@ -155,7 +161,7 @@ public sealed partial class EditorWindow : ContentPage
         Viewport.Invalidate();
 
         bool hasScene  = e.Scene is not null;
-        bool isPlaying = EditorContext.Instance.State is EditorState.Playing or EditorState.Paused;
+        bool isPlaying = EditorContext.Instance.State is EditorState.Playing;
         PlayBtn.IsEnabled = hasScene && !isPlaying;
     }
 
@@ -232,6 +238,13 @@ public sealed partial class EditorWindow : ContentPage
         if (_openMenuTag == "Debug") { HideDropdown(); return; }
         int offsetX = (int)(FileMenuBtn.Width + EditMenuBtn.Width + ProjectMenuBtn.Width + 4);
         ShowDropdown("Debug", offsetX, BuildDebugMenuItems());
+    }
+
+    private void OnViewMenuClicked(object sender, EventArgs e)
+    {
+        if (_openMenuTag == "View") { HideDropdown(); return; }
+        int offsetX = (int)(FileMenuBtn.Width + EditMenuBtn.Width + ProjectMenuBtn.Width + DebugMenuBtn.Width + 4);
+        ShowDropdown("View", offsetX, BuildViewMenuItems());
     }
 
     private void OnMenuOverlayTapped(object? sender, TappedEventArgs e) => HideDropdown();
@@ -353,12 +366,57 @@ public sealed partial class EditorWindow : ContentPage
     private IEnumerable<(string, bool, Action?)> BuildDebugMenuItems()
     {
         bool hasScene  = EditorContext.Instance.ActiveScene is not null;
-        bool isPlaying = EditorContext.Instance.State is EditorState.Playing or EditorState.Paused;
-        bool isPaused  = EditorContext.Instance.State is EditorState.Paused;
+        bool isPlaying = EditorContext.Instance.State is EditorState.Playing;
 
-        yield return ("Play",  false, hasScene && !isPlaying ? OnPlayClicked  : null);
-        yield return ("Pause", false, isPlaying              ? OnPauseClicked : null);
-        yield return ("Stop",  false, isPlaying              ? OnStopClicked  : null);
+        yield return ("Play", false, hasScene && !isPlaying ? OnPlayClicked : null);
+        yield return ("Stop", false, isPlaying              ? OnStopClicked : null);
+    }
+
+    private IEnumerable<(string, bool, Action?)> BuildViewMenuItems()
+    {
+        string hPfx = _hierarchyVisible ? "✓ " : "  ";
+        string iPfx = _inspectorVisible ? "✓ " : "  ";
+        string dPfx = _dockVisible      ? "✓ " : "  ";
+
+        yield return ($"{hPfx}Hierarchy",   false, ToggleHierarchy);
+        yield return ($"{iPfx}Inspector",   false, ToggleInspector);
+        yield return ($"{dPfx}Bottom Dock", false, ToggleDock);
+        yield return ("---",                true,  null);
+        yield return ("Reset Layout",       false, ResetLayout);
+    }
+
+    private void ToggleHierarchy()
+    {
+        _hierarchyVisible = !_hierarchyVisible;
+        BodyGrid.ColumnDefinitions[0].Width = new GridLength(_hierarchyVisible ? HierarchyWidth : 0);
+        HierarchySep.IsVisible = _hierarchyVisible;
+    }
+
+    private void ToggleInspector()
+    {
+        _inspectorVisible = !_inspectorVisible;
+        BodyGrid.ColumnDefinitions[4].Width = new GridLength(_inspectorVisible ? InspectorWidth : 0);
+        InspectorSep.IsVisible = _inspectorVisible;
+    }
+
+    private void ToggleDock()
+    {
+        _dockVisible = !_dockVisible;
+        MainGrid.RowDefinitions[3].Height = new GridLength(_dockVisible ? DockHeight : 0);
+        DockRow.IsVisible = _dockVisible;
+    }
+
+    private void ResetLayout()
+    {
+        _hierarchyVisible = true;
+        _inspectorVisible = true;
+        _dockVisible      = true;
+        BodyGrid.ColumnDefinitions[0].Width = new GridLength(HierarchyWidth);
+        BodyGrid.ColumnDefinitions[4].Width = new GridLength(InspectorWidth);
+        MainGrid.RowDefinitions[3].Height   = new GridLength(DockHeight);
+        HierarchySep.IsVisible = true;
+        InspectorSep.IsVisible = true;
+        DockRow.IsVisible      = true;
     }
 
     #endregion
@@ -822,15 +880,7 @@ public sealed partial class EditorWindow : ContentPage
     private void OnPlayClicked(object sender, EventArgs e) => OnPlayClicked();
     private void OnPlayClicked()
     {
-        EditorState state = EditorContext.Instance.State;
-
-        if (state is EditorState.Paused)
-        {
-            EditorContext.Instance.SetState(EditorState.Playing);
-            return;
-        }
-
-        if (state is EditorState.Playing) return;
+        if (EditorContext.Instance.State is EditorState.Playing) return;
 
         EditorScene? scene = EditorContext.Instance.ActiveScene;
         if (scene is null) return;
@@ -843,21 +893,6 @@ public sealed partial class EditorWindow : ContentPage
 
         EditorContext.Instance.SetState(EditorState.Playing);
         Log("[Play] Play mode started.");
-    }
-
-    private void OnPauseClicked(object sender, EventArgs e) => OnPauseClicked();
-    private void OnPauseClicked()
-    {
-        EditorState state = EditorContext.Instance.State;
-
-        if (state is EditorState.Playing)
-        {
-            EditorContext.Instance.SetState(EditorState.Paused);
-            return;
-        }
-
-        if (state is EditorState.Paused)
-            EditorContext.Instance.SetState(EditorState.Playing);
     }
 
     private void OnStopClicked(object sender, EventArgs e) => OnStopClicked();
@@ -902,14 +937,43 @@ public sealed partial class EditorWindow : ContentPage
         EditorContext.Instance.SetSelection(hit);
     }
 
+    private void OnViewportPointerMoved(object sender, PointerEventArgs e)
+    {
+        Point? pos = e.GetPosition(Viewport);
+        if (pos is null) return;
+        _lastPointerScreenX = (float)pos.Value.X;
+        _lastPointerScreenY = (float)pos.Value.Y;
+    }
+
     private void OnViewportPanned(object sender, PanUpdatedEventArgs e)
     {
         switch (e.StatusType)
         {
             case GestureStatus.Started:
-                _panLastX = 0;
-                _panLastY = 0;
+            {
+                _panLastX        = 0;
+                _panLastY        = 0;
+                _panStartScreenX = _lastPointerScreenX;
+                _panStartScreenY = _lastPointerScreenY;
+                _gizmoDragging   = false;
+
+                EditorGameObject? sel = EditorContext.Instance.SelectedObject;
+                if (sel is not null && _activeTool is not "Select" and not "Pan")
+                {
+                    SizeF vs = new((float)Viewport.Width, (float)Viewport.Height);
+                    Microsoft.Maui.Graphics.PointF clickWorld = _viewportRenderer.Camera.ScreenToWorld(
+                        new Microsoft.Maui.Graphics.PointF(_panStartScreenX, _panStartScreenY), vs);
+                    Microsoft.Maui.Graphics.PointF objScreen = _viewportRenderer.Camera.WorldToScreen(
+                        new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y), vs);
+
+                    _gizmoDragging = EditorContext.Instance.Gizmos.BeginDrag(
+                        _panStartScreenX, _panStartScreenY,
+                        objScreen.X,     objScreen.Y,
+                        clickWorld.X,    clickWorld.Y,
+                        sel);
+                }
                 break;
+            }
 
             case GestureStatus.Running:
             {
@@ -917,19 +981,60 @@ public sealed partial class EditorWindow : ContentPage
                 double dy = e.TotalY - _panLastY;
                 _panLastX = e.TotalX;
                 _panLastY = e.TotalY;
-                float zoom = _viewportRenderer.Camera.Zoom;
-                _viewportRenderer.Camera.Pan(
-                    new Microsoft.Maui.Graphics.PointF((float)(-dx / zoom), (float)(-dy / zoom)));
-                Viewport.Invalidate();
+
+                if (_gizmoDragging)
+                {
+                    EditorGameObject? sel = EditorContext.Instance.SelectedObject;
+                    if (sel is not null)
+                    {
+                        SizeF vs      = new((float)Viewport.Width, (float)Viewport.Height);
+                        float screenX = _panStartScreenX + (float)e.TotalX;
+                        float screenY = _panStartScreenY + (float)e.TotalY;
+                        Microsoft.Maui.Graphics.PointF world  = _viewportRenderer.Camera.ScreenToWorld(
+                            new Microsoft.Maui.Graphics.PointF(screenX, screenY), vs);
+                        Microsoft.Maui.Graphics.PointF objSc = _viewportRenderer.Camera.WorldToScreen(
+                            new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y), vs);
+                        EditorContext.Instance.Gizmos.UpdateDrag(
+                            world.X, world.Y, screenX, screenY, objSc.X, objSc.Y, sel);
+                        Viewport.Invalidate();
+                    }
+                }
+                else if (_activeTool == "Pan")
+                {
+                    float zoom = _viewportRenderer.Camera.Zoom;
+                    _viewportRenderer.Camera.Pan(
+                        new Microsoft.Maui.Graphics.PointF((float)(-dx / zoom), (float)(-dy / zoom)));
+                    Viewport.Invalidate();
+                }
                 break;
             }
 
             case GestureStatus.Completed:
             case GestureStatus.Canceled:
-                _panLastX = 0;
-                _panLastY = 0;
+            {
+                if (_gizmoDragging)
+                {
+                    IEditorCommand? cmd = EditorContext.Instance.Gizmos.EndDrag(
+                        EditorContext.Instance.SelectedObject, ctrlHeld: false);
+                    if (cmd is not null)
+                        EditorContext.Instance.Commands.Execute(cmd);
+                    Viewport.Invalidate();
+                }
+                _gizmoDragging = false;
+                _panLastX      = 0;
+                _panLastY      = 0;
                 break;
+            }
         }
+    }
+
+    private void OnViewportPinched(object sender, PinchGestureUpdatedEventArgs e)
+    {
+        if (e.Status != GestureStatus.Running) return;
+        SizeF vs = new((float)Viewport.Width, (float)Viewport.Height);
+        Microsoft.Maui.Graphics.PointF focus = new(_lastPointerScreenX, _lastPointerScreenY);
+        _viewportRenderer.Camera.ZoomAt((float)e.Scale, focus, vs);
+        Viewport.Invalidate();
     }
 
     private static EditorGameObject? HitTest(List<EditorGameObject> objects, Microsoft.Maui.Graphics.PointF worldPos)

@@ -11,16 +11,37 @@
         <Border Grid.Row="0"
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0">
-            <Grid ColumnDefinitions="Auto,1,*" ColumnSpacing="4" Padding="4,2">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,1,*" ColumnSpacing="4" Padding="4,2">
                 <Button Grid.Column="0"
                         Text="⟳ Rescan"
                         Style="{StaticResource SmallIconButton}"
                         Clicked="OnRescanClicked"/>
-                <BoxView Grid.Column="1"
+                <Button Grid.Column="1"
+                        x:Name="NewFolderBtn"
+                        Text="📁"
+                        ToolTipProperties.Text="New folder"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnNewFolderClicked"/>
+                <Button Grid.Column="2"
+                        x:Name="FolderRenameBtn"
+                        Text="✎"
+                        ToolTipProperties.Text="Rename folder"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnFolderRenameClicked"/>
+                <Button Grid.Column="3"
+                        x:Name="FolderDeleteBtn"
+                        Text="🗑"
+                        ToolTipProperties.Text="Delete folder"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnFolderDeleteClicked"/>
+                <BoxView Grid.Column="4"
                          Color="{StaticResource BorderColor}"
                          VerticalOptions="Fill"
                          Margin="2,2"/>
-                <Label Grid.Column="2"
+                <Label Grid.Column="5"
                        x:Name="ScriptCountLabel"
                        Text="0 scripts"
                        Style="{StaticResource DimLabel}"
@@ -36,7 +57,8 @@
             <!-- Folder tree -->
             <CollectionView Grid.Column="0"
                             x:Name="FolderTree"
-                            SelectionMode="None"
+                            SelectionMode="Single"
+                            SelectionChanged="OnFolderSelectionChanged"
                             BackgroundColor="{StaticResource BgPanel}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="local:FolderItem">

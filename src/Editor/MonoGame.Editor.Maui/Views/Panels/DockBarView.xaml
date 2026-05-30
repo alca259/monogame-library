@@ -53,11 +53,6 @@
                             CommandParameter="Scripts"
                             Style="{StaticResource TabButton}"
                             Clicked="OnDockTabClicked"/>
-                    <Button x:Name="SpriteEditorTabBtn"
-                            Text="Sprite Editor"
-                            CommandParameter="SpriteEditor"
-                            Style="{StaticResource TabButton}"
-                            Clicked="OnDockTabClicked"/>
                 </HorizontalStackLayout>
             </ScrollView>
         </Border>
@@ -83,7 +78,6 @@
             <panels:TilemapPaletteView      x:Name="TilemapContent"      IsVisible="False"/>
             <panels:UndoHistoryView         x:Name="HistoryContent"      IsVisible="False"/>
             <panels:ScriptBrowserView       x:Name="ScriptsContent"      IsVisible="False"/>
-            <panels:SpriteInspectorView     x:Name="SpriteEditorContent" IsVisible="False"/>
 
         </Grid>
     </Grid>

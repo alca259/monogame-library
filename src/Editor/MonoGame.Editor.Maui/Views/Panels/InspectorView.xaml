@@ -25,6 +25,10 @@
                         Text="UI Theme Editor"
                         Style="{StaticResource InspectorTabButton}"
                         Clicked="OnUIThemeTabClicked"/>
+                <Button x:Name="SpriteEditorTabBtn"
+                        Text="Sprite Editor"
+                        Style="{StaticResource InspectorTabButton}"
+                        Clicked="OnSpriteEditorTabClicked"/>
             </HorizontalStackLayout>
         </Border>
         <BoxView Grid.Row="0" VerticalOptions="End"
@@ -164,6 +168,9 @@
 
             <!-- ── UI Theme Editor tab content ───────────────────────── -->
             <panels:UIThemeInspectorView x:Name="UIThemeContent" IsVisible="False"/>
+
+            <!-- ── Sprite Editor tab content ─────────────────────────── -->
+            <panels:SpriteInspectorView x:Name="SpriteEditorContent" IsVisible="False"/>
 
         </Grid>
     </Grid>

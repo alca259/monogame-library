@@ -15,8 +15,12 @@ public sealed partial class MaterialInspectorView : ContentView
     private readonly Dictionary<string, List<Entry>> _propEntries = new(StringComparer.Ordinal);
 
     private EditorMaterial? _material;
-    private Action<AssetSelectedEvent>? _onAssetSelected;
-    private string _currentFilePath = string.Empty;
+    private Action<AssetSelectedEvent>?   _onAssetSelected;
+    private Action<ProjectOpenedEvent>?   _onProjectOpened;
+    private string _currentFilePath  = string.Empty;
+    private string _projectContentRoot = string.Empty;
+
+    private static readonly string[] BuiltInShaders = ["(Default)", "SpriteEffect", "AlphaTest"];
 
     public MaterialInspectorView()
     {
@@ -32,13 +36,49 @@ public sealed partial class MaterialInspectorView : ContentView
 
     private void Subscribe()
     {
-        _onAssetSelected = e => MainThread.BeginInvokeOnMainThread(() => OnAssetSelected(e));
+        _onAssetSelected  = e => MainThread.BeginInvokeOnMainThread(() => OnAssetSelected(e));
+        _onProjectOpened  = e => MainThread.BeginInvokeOnMainThread(() => OnProjectOpened(e));
         _bus.Subscribe(_onAssetSelected);
+        _bus.Subscribe(_onProjectOpened);
     }
 
     private void Unsubscribe()
     {
         if (_onAssetSelected is not null) _bus.Unsubscribe(_onAssetSelected);
+        if (_onProjectOpened is not null) _bus.Unsubscribe(_onProjectOpened);
+    }
+
+    // ── Project opened ────────────────────────────────────────────────────────
+
+    private void OnProjectOpened(ProjectOpenedEvent e)
+    {
+        _projectContentRoot = e.Project?.ContentPath ?? string.Empty;
+        PopulateShaderPicker();
+    }
+
+    private void PopulateShaderPicker()
+    {
+        string? current = ShaderPicker.SelectedItem as string;
+        ShaderPicker.Items.Clear();
+
+        foreach (string s in BuiltInShaders)
+            ShaderPicker.Items.Add(s);
+
+        if (!string.IsNullOrEmpty(_projectContentRoot) && Directory.Exists(_projectContentRoot))
+        {
+            foreach (string fx in Directory.GetFiles(_projectContentRoot, "*.fx", SearchOption.AllDirectories)
+                                           .OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
+            {
+                string rel = Path.GetRelativePath(_projectContentRoot, fx);
+                ShaderPicker.Items.Add(rel);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(current))
+        {
+            int idx = ShaderPicker.Items.IndexOf(current);
+            ShaderPicker.SelectedIndex = idx >= 0 ? idx : -1;
+        }
     }
 
     // ── Event handlers ────────────────────────────────────────────────────────
@@ -74,7 +114,16 @@ public sealed partial class MaterialInspectorView : ContentView
     private void PopulateForm(EditorMaterial mat)
     {
         MaterialNameEntry.Text = mat.Name;
-        ShaderPathEntry.Text   = mat.ShaderPath;
+
+        string shader = mat.ShaderPath ?? string.Empty;
+        int shaderIdx = ShaderPicker.Items.IndexOf(shader);
+        if (shaderIdx < 0 && !string.IsNullOrEmpty(shader))
+        {
+            ShaderPicker.Items.Add(shader);
+            shaderIdx = ShaderPicker.Items.Count - 1;
+        }
+        ShaderPicker.SelectedIndex = shaderIdx;
+
         RenderingModePicker.SelectedIndex = mat.RenderingMode switch
         {
             "Cutout"      => 1,
@@ -159,8 +208,8 @@ public sealed partial class MaterialInspectorView : ContentView
     {
         _currentFilePath = string.Empty;
         _material        = null;
-        MaterialNameEntry.Text = string.Empty;
-        ShaderPathEntry.Text   = string.Empty;
+        MaterialNameEntry.Text    = string.Empty;
+        ShaderPicker.SelectedIndex = -1;
         RenderingModePicker.SelectedIndex = 0;
         UVSetEntry.Text = "0";
         PropsStack.Children.Clear();
@@ -174,7 +223,7 @@ public sealed partial class MaterialInspectorView : ContentView
         if (string.IsNullOrEmpty(_currentFilePath) || _material is null) return;
 
         _material.Name          = MaterialNameEntry.Text ?? string.Empty;
-        _material.ShaderPath    = ShaderPathEntry.Text ?? string.Empty;
+        _material.ShaderPath    = ShaderPicker.SelectedItem as string ?? string.Empty;
         _material.RenderingMode = RenderingModePicker.SelectedIndex switch
         {
             1 => "Cutout",
@@ -218,4 +267,10 @@ public sealed partial class MaterialInspectorView : ContentView
     private static float ParseFloat(string? text) =>
         float.TryParse(text, System.Globalization.NumberStyles.Float,
             System.Globalization.CultureInfo.InvariantCulture, out float v) ? v : 0f;
+
+    private void OnShaderPickerChanged(object sender, EventArgs e)
+    {
+        if (_material is null) return;
+        _material.ShaderPath = ShaderPicker.SelectedItem as string ?? string.Empty;
+    }
 }

@@ -21,6 +21,7 @@ public sealed class ViewportRenderer : IDrawable
             SelectionInfo? sel = BuildSelectionInfo(selected, rect);
             if (sel is not null)
                 DrawSelection(canvas, sel);
+            DrawGizmoHandles(canvas, rect, selected);
         }
 
         DrawGizmo(canvas, rect);
@@ -148,6 +149,87 @@ public sealed class ViewportRenderer : IDrawable
         canvas.FillCircle(midX, rotY, 4f);
         canvas.StrokeColor = ResolveColor("AccentBlue");
         canvas.DrawCircle(midX, rotY, 4f);
+    }
+
+    // ── Gizmo transform handles ───────────────────────────────────────────────
+
+    private void DrawGizmoHandles(ICanvas canvas, RectF rect, EditorGameObject selected)
+    {
+        GizmoMode mode = EditorContext.Instance.Gizmos.Mode;
+        if (mode is GizmoMode.Select or GizmoMode.Rect) return;
+
+        SizeF  viewSize = new(rect.Width, rect.Height);
+        PointF o  = Camera.WorldToScreen(new PointF(selected.Position.X, selected.Position.Y), viewSize);
+        float  ox = o.X, oy = o.Y;
+        float  len = GizmoController.ArrowLength;
+
+        Color axisX  = ResolveColor("AxisRed");
+        Color axisY  = ResolveColor("AxisGreen");
+        Color accent = ResolveColor("AccentBlue");
+
+        switch (mode)
+        {
+            case GizmoMode.Move:
+            {
+                // X axis arrow (red)
+                canvas.StrokeColor = axisX;
+                canvas.StrokeSize  = 2;
+                canvas.DrawLine(ox, oy, ox + len, oy);
+                canvas.FillColor = axisX;
+                canvas.FillRectangle(ox + len, oy - 6, 12, 12);
+
+                // Y axis arrow (green, screen-Y up)
+                canvas.StrokeColor = axisY;
+                canvas.DrawLine(ox, oy, ox, oy - len);
+                canvas.FillColor = axisY;
+                canvas.FillRectangle(ox - 6, oy - len - 12, 12, 12);
+
+                // XY free-move square (yellow)
+                Color yellow = Color.FromArgb("#FFEE44");
+                canvas.FillColor   = yellow.WithAlpha(0.55f);
+                canvas.FillRectangle(ox + 12, oy - 28, 16, 16);
+                canvas.StrokeColor = yellow;
+                canvas.StrokeSize  = 1;
+                canvas.DrawRectangle(ox + 12, oy - 28, 16, 16);
+                break;
+            }
+
+            case GizmoMode.Rotate:
+            {
+                float r = GizmoController.RotateRadius;
+                canvas.StrokeColor = accent;
+                canvas.StrokeSize  = 2;
+                canvas.DrawCircle(ox, oy, r);
+                break;
+            }
+
+            case GizmoMode.Scale:
+            {
+                float sh  = GizmoController.ScaleHandleSize;
+                float hsh = sh / 2f;
+
+                // X arm + end handle (red)
+                canvas.StrokeColor = axisX;
+                canvas.StrokeSize  = 2;
+                canvas.DrawLine(ox, oy, ox + len, oy);
+                canvas.FillColor = axisX;
+                canvas.FillRectangle(ox + len - hsh, oy - hsh, sh, sh);
+
+                // Y arm + end handle (green)
+                canvas.StrokeColor = axisY;
+                canvas.DrawLine(ox, oy, ox, oy - len);
+                canvas.FillColor = axisY;
+                canvas.FillRectangle(ox - hsh, oy - len - hsh, sh, sh);
+
+                // Center handle (white — uniform scale)
+                canvas.FillColor   = Colors.White;
+                canvas.StrokeColor = Colors.Gray;
+                canvas.StrokeSize  = 1;
+                canvas.FillRectangle(ox - hsh, oy - hsh, sh, sh);
+                canvas.DrawRectangle(ox - hsh, oy - hsh, sh, sh);
+                break;
+            }
+        }
     }
 
     // ── Axis gizmo, bottom-left ───────────────────────────────────────────────
