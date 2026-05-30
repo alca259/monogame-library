@@ -1,5 +1,3 @@
-using MonoGame.Editor.Core.Assets;
-
 namespace MonoGame.Editor.Core.Events;
 
 /// <summary>Publicado cuando el <see cref="ContentWatcher"/> detecta un asset nuevo o modificado.</summary>

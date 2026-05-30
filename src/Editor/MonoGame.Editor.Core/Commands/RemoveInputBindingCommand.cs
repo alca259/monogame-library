@@ -1,5 +1,3 @@
-using Alca.MonoGame.Kernel.Input;
-
 namespace MonoGame.Editor.Core.Commands;
 
 /// <summary>Elimina un enlace de una acción en un <see cref="InputEditorModel"/>.</summary>

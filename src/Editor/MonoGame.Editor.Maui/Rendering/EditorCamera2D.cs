@@ -1,5 +1,3 @@
-using Microsoft.Maui.Graphics;
-
 namespace MonoGame.Editor.Maui.Rendering;
 
 /// <summary>

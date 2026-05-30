@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using MonoGame.Editor.Core.Registry;
 
 namespace MonoGame.Editor.Maui.Views.Dialogs;
 

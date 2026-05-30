@@ -1,5 +1,3 @@
-using MonoGame.Editor.Core.Events;
-
 namespace MonoGame.Editor.Core.Assets;
 
 /// <summary>

@@ -1,8 +1,6 @@
 using Alca.MonoGame.Kernel.ECS;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Editor.Core.Models;
-using MonoGame.Editor.Core.Registry;
 
 namespace MonoGame.Editor.Core.PlayMode;
 

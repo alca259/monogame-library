@@ -1,5 +1,3 @@
-using MonoGame.Editor.Core.Localization;
-
 namespace MonoGame.Editor.Core.Commands;
 
 /// <summary>Establece un único valor de localización; admite deshacer.</summary>

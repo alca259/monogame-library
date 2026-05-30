@@ -1,5 +1,3 @@
-using MonoGame.Editor.Core.Models;
-
 namespace MonoGame.Editor.WinForms.Dialogs;
 
 /// <summary>Diálogo para configurar los subsistemas opcionales de GameWorld de una escena.</summary>

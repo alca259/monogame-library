@@ -1,8 +1,3 @@
-using System.Text.Json;
-using MonoGame.Editor.Core.Assets;
-using MonoGame.Editor.Core.Events;
-using MonoGame.Editor.Core.Models;
-using MonoGame.Editor.WinForms.Rendering;
 using SdColor = System.Drawing.Color;
 using SdPoint = System.Drawing.Point;
 

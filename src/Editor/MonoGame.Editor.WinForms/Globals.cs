@@ -1,6 +1,5 @@
 global using System.Reflection;
 global using System.Text.Json;
-global using System.Text.Json.Serialization;
 global using Microsoft.Xna.Framework;
 global using Microsoft.Xna.Framework.Graphics;
 global using MonoGame.Editor.Core;

@@ -1,4 +1,3 @@
-using System.Windows.Forms;
 using SDColor = System.Drawing.Color;
 
 namespace MonoGame.Editor.WinForms.Panels;

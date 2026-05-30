@@ -1,8 +1,3 @@
-using System.Text.Json;
-using MonoGame.Editor.Core.Assets;
-using MonoGame.Editor.Core.Events;
-using MonoGame.Editor.Core.Models;
-
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>

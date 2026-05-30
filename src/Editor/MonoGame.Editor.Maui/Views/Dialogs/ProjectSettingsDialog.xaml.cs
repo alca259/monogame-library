@@ -1,5 +1,3 @@
-using MonoGame.Editor.Core.Project;
-
 namespace MonoGame.Editor.Maui.Views.Dialogs;
 
 public sealed partial class ProjectSettingsDialog : ContentPage

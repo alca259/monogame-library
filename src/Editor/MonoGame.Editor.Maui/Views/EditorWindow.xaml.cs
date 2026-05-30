@@ -1,5 +1,3 @@
-using MonoGame.Editor.Core.Assets;
-
 namespace MonoGame.Editor.Maui.Views;
 
 /// <summary>

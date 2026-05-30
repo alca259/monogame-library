@@ -1,5 +1,3 @@
-using Alca.MonoGame.Kernel.Input;
-
 namespace MonoGame.Editor.Core.Commands;
 
 /// <summary>Añade un enlace a una acción en un <see cref="InputEditorModel"/>.</summary>

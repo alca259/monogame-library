@@ -1,6 +1,3 @@
-using MonoGame.Editor.Core.Events;
-using MonoGame.Editor.Core.Project;
-
 namespace MonoGame.Editor.WinForms.Panels;
 
 /// <summary>
