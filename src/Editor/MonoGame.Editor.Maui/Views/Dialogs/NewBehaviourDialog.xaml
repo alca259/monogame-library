@@ -83,7 +83,7 @@
                         <Label Text="Override methods"
                                Style="{StaticResource DimLabel}"
                                FontSize="11"/>
-                        <HorizontalStackLayout Spacing="16" Wrap="Wrap">
+                        <HorizontalStackLayout Spacing="16">
                             <HorizontalStackLayout Spacing="6">
                                 <CheckBox x:Name="AwakeCheck" Color="{StaticResource AccentBlue}"/>
                                 <Label Text="Awake" Style="{StaticResource DimLabel}" VerticalOptions="Center"/>
