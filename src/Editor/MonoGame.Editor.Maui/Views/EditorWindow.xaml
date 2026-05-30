@@ -43,27 +43,27 @@
                                    Padding="8,0">
 
                 <!-- Gizmo tools -->
-                <Button x:Name="SelectBtn" Text="Q"
+                <Button x:Name="SelectBtn" Text="↖"
                         ToolTipProperties.Text="Select (Q)"
                         Style="{StaticResource ActiveToolButton}"
                         Clicked="OnToolClicked" CommandParameter="Select"/>
-                <Button x:Name="MoveBtn" Text="W"
+                <Button x:Name="MoveBtn" Text="✥"
                         ToolTipProperties.Text="Move (W)"
                         Style="{StaticResource ToolButton}"
                         Clicked="OnToolClicked" CommandParameter="Move"/>
-                <Button x:Name="RotateBtn" Text="E"
+                <Button x:Name="RotateBtn" Text="↺"
                         ToolTipProperties.Text="Rotate (E)"
                         Style="{StaticResource ToolButton}"
                         Clicked="OnToolClicked" CommandParameter="Rotate"/>
-                <Button x:Name="ScaleBtn" Text="R"
+                <Button x:Name="ScaleBtn" Text="⤡"
                         ToolTipProperties.Text="Scale (R)"
                         Style="{StaticResource ToolButton}"
                         Clicked="OnToolClicked" CommandParameter="Scale"/>
-                <Button x:Name="RectBtn" Text="T"
+                <Button x:Name="RectBtn" Text="▭"
                         ToolTipProperties.Text="Rect Transform (T)"
                         Style="{StaticResource ToolButton}"
                         Clicked="OnToolClicked" CommandParameter="Rect"/>
-                <Button x:Name="PanBtn" Text="H"
+                <Button x:Name="PanBtn" Text="✋"
                         ToolTipProperties.Text="Pan (H)"
                         Style="{StaticResource ToolButton}"
                         Clicked="OnToolClicked" CommandParameter="Pan"/>
@@ -88,6 +88,7 @@
                 <Button x:Name="PlayBtn" Text="▶"
                         ToolTipProperties.Text="Play (F5)"
                         Style="{StaticResource PlayButton}"
+                        IsEnabled="False"
                         Clicked="OnPlayClicked"/>
                 <Button x:Name="PauseBtn" Text="⏸"
                         ToolTipProperties.Text="Pause (F6)"

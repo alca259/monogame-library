@@ -70,6 +70,7 @@ public sealed partial class EditorWindow : ContentPage
         SetPillStyle(ToggleNavBtn, _isNav);
         SetPillStyle(ToggleResBtn, _isRes);
         UpdateToolButtons();
+        PlayBtn.IsEnabled = false;
     }
 
     #region Lifecycle — keyboard shortcuts
@@ -112,10 +113,23 @@ public sealed partial class EditorWindow : ContentPage
     {
         bool playing = e.NewState is EditorState.Playing or EditorState.Paused;
         bool paused  = e.NewState is EditorState.Paused;
+        bool hasScene = EditorContext.Instance.ActiveScene is not null;
 
-        PlayBtn.IsEnabled  = !playing;
+        PlayBtn.IsEnabled  = !playing && hasScene;
         PauseBtn.IsEnabled = playing;
         StopBtn.IsEnabled  = playing;
+
+        bool canEdit = !playing;
+        SelectBtn.IsEnabled  = canEdit;
+        MoveBtn.IsEnabled    = canEdit;
+        RotateBtn.IsEnabled  = canEdit;
+        ScaleBtn.IsEnabled   = canEdit;
+        RectBtn.IsEnabled    = canEdit;
+        PanBtn.IsEnabled     = canEdit;
+        Toggle2DBtn.IsEnabled   = canEdit;
+        ToggleSnapBtn.IsEnabled = canEdit;
+        ToggleNavBtn.IsEnabled  = canEdit;
+        ToggleResBtn.IsEnabled  = canEdit;
 
         if (playing)
         {
@@ -139,6 +153,10 @@ public sealed partial class EditorWindow : ContentPage
         ObjectCountLabel.Text = count == 1 ? "1 object in scene" : $"{count} objects in scene";
         UpdateTitleBar();
         Viewport.Invalidate();
+
+        bool hasScene  = e.Scene is not null;
+        bool isPlaying = EditorContext.Instance.State is EditorState.Playing or EditorState.Paused;
+        PlayBtn.IsEnabled = hasScene && !isPlaying;
     }
 
     private void OnBuildOutputLine(BuildOutputLineEvent e)
@@ -238,25 +256,38 @@ public sealed partial class EditorWindow : ContentPage
             }
 
             bool isDisabled = action is null;
-            var btn = new Button
+
+            var row = new Grid
             {
-                Text              = label,
-                BackgroundColor   = DropdownItemBg,
-                TextColor         = isDisabled ? Color.FromArgb("#6A6A72") : DropdownItemFg,
-                FontSize          = 13,
-                HorizontalOptions = LayoutOptions.Fill,
-                Padding           = new Thickness(16, 6),
-                BorderWidth       = 0,
-                IsEnabled         = !isDisabled,
+                BackgroundColor = DropdownItemBg,
+                Padding         = new Thickness(16, 6),
+                MinimumHeightRequest = 32,
             };
 
-            if (action is not null)
+            row.Add(new Label
             {
-                var captured = action;
-                btn.Clicked += (_, _) => { HideDropdown(); captured(); };
+                Text                    = label,
+                TextColor               = isDisabled ? Color.FromArgb("#6A6A72") : DropdownItemFg,
+                FontSize                = 13,
+                VerticalTextAlignment   = TextAlignment.Center,
+                HorizontalTextAlignment = TextAlignment.Start,
+                VerticalOptions         = LayoutOptions.Fill,
+            });
+
+            if (!isDisabled)
+            {
+                var captured = action!;
+                var tap = new TapGestureRecognizer();
+                tap.Tapped += (_, _) => { HideDropdown(); captured(); };
+                row.GestureRecognizers.Add(tap);
+
+                var pointer = new PointerGestureRecognizer();
+                pointer.PointerEntered += (_, _) => row.BackgroundColor = DropdownItemHoverBg;
+                pointer.PointerExited  += (_, _) => row.BackgroundColor = DropdownItemBg;
+                row.GestureRecognizers.Add(pointer);
             }
 
-            DropdownStack.Children.Add(btn);
+            DropdownStack.Children.Add(row);
         }
 
         DropdownPanel.Margin = new Thickness(offsetX, 28, 0, 0);
@@ -275,46 +306,59 @@ public sealed partial class EditorWindow : ContentPage
 
     private IEnumerable<(string, bool, Action?)> BuildFileMenuItems()
     {
+        bool hasProject = EditorContext.Instance.ActiveProject is not null;
+        bool hasScene   = EditorContext.Instance.ActiveScene is not null;
+
         yield return ("New Project…",   false, () => _ = NewProjectAsync());
         yield return ("Open Project…",  false, () => _ = OpenProjectAsync());
         yield return ("---",            true,  null);
-        yield return ("New Scene",      false, () => _ = NewSceneAsync());
-        yield return ("Save Scene",     false, () => _ = SaveSceneAsync());
-        yield return ("Save Scene As…", false, () => _ = SaveSceneAsAsync());
+        yield return ("New Scene",      false, hasProject ? () => _ = NewSceneAsync()    : null);
+        yield return ("Save Scene",     false, hasScene   ? () => _ = SaveSceneAsync()   : null);
+        yield return ("Save Scene As…", false, hasScene   ? () => _ = SaveSceneAsAsync() : null);
         yield return ("---",            true,  null);
         yield return ("Exit",           false, OnExitClicked);
     }
 
     private IEnumerable<(string, bool, Action?)> BuildEditMenuItems()
     {
-        yield return ("Undo",       false, OnUndoClicked);
-        yield return ("Redo",       false, OnRedoClicked);
+        bool hasScene     = EditorContext.Instance.ActiveScene is not null;
+        bool hasSelection = EditorContext.Instance.SelectedObject is not null;
+
+        yield return ("Undo",       false, hasScene     ? OnUndoClicked       : null);
+        yield return ("Redo",       false, hasScene     ? OnRedoClicked       : null);
         yield return ("---",        true,  null);
         yield return ("Cut",        false, null);
         yield return ("Copy",       false, null);
         yield return ("Paste",      false, null);
-        yield return ("Duplicate",  false, OnDuplicateSelected);
-        yield return ("Delete",     false, OnDeleteSelected);
+        yield return ("Duplicate",  false, hasSelection ? OnDuplicateSelected : null);
+        yield return ("Delete",     false, hasSelection ? OnDeleteSelected    : null);
         yield return ("---",        true,  null);
-        yield return ("Select All", false, OnSelectAll);
+        yield return ("Select All", false, hasScene     ? OnSelectAll         : null);
     }
 
     private IEnumerable<(string, bool, Action?)> BuildProjectMenuItems()
     {
-        yield return ("Project Settings…", false, () => _ = OpenProjectSettingsAsync());
+        bool hasProject = EditorContext.Instance.ActiveProject is not null;
+        bool hasScene   = EditorContext.Instance.ActiveScene is not null;
+
+        yield return ("Project Settings…", false, hasProject             ? () => _ = OpenProjectSettingsAsync() : null);
         yield return ("---",               true,  null);
-        yield return ("Build Content",     false, () => _ = BuildContentAsync());
-        yield return ("Build Solution",    false, () => _ = BuildSolutionAsync());
-        yield return ("Generate Code",     false, () => _ = GenerateCodeAsync());
+        yield return ("Build Content",     false, hasProject             ? () => _ = BuildContentAsync()        : null);
+        yield return ("Build Solution",    false, hasProject             ? () => _ = BuildSolutionAsync()       : null);
+        yield return ("Generate Code",     false, hasProject && hasScene ? () => _ = GenerateCodeAsync()        : null);
         yield return ("---",               true,  null);
-        yield return ("Run",               false, OnRunGame);
+        yield return ("Run",               false, hasProject             ? OnRunGame                            : null);
     }
 
     private IEnumerable<(string, bool, Action?)> BuildDebugMenuItems()
     {
-        yield return ("Play",  false, OnPlayClicked);
-        yield return ("Pause", false, OnPauseClicked);
-        yield return ("Stop",  false, OnStopClicked);
+        bool hasScene  = EditorContext.Instance.ActiveScene is not null;
+        bool isPlaying = EditorContext.Instance.State is EditorState.Playing or EditorState.Paused;
+        bool isPaused  = EditorContext.Instance.State is EditorState.Paused;
+
+        yield return ("Play",  false, hasScene && !isPlaying ? OnPlayClicked  : null);
+        yield return ("Pause", false, isPlaying              ? OnPauseClicked : null);
+        yield return ("Stop",  false, isPlaying              ? OnStopClicked  : null);
     }
 
     #endregion

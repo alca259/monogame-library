@@ -14,9 +14,11 @@
             <Grid ColumnDefinitions="Auto,Auto,Auto,1,*" ColumnSpacing="2" Padding="4,2">
 
                 <Button Grid.Column="0"
+                        x:Name="NewSceneBtn"
                         Text="+"
                         ToolTipProperties.Text="New scene"
                         Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
                         Clicked="OnNewSceneClicked"/>
                 <Button Grid.Column="1"
                         x:Name="SceneRenameBtn"
@@ -26,9 +28,11 @@
                         IsEnabled="False"
                         Clicked="OnRenameSceneClicked"/>
                 <Button Grid.Column="2"
+                        x:Name="DeleteSceneBtn"
                         Text="🗑"
                         ToolTipProperties.Text="Delete scene"
                         Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
                         Clicked="OnDeleteSceneClicked"/>
 
                 <BoxView Grid.Column="3"

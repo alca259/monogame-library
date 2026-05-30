@@ -23,8 +23,7 @@ public sealed partial class SceneManagerView : ContentView
     {
         InitializeComponent();
         SceneList.ItemsSource = _items;
-        SceneList.SelectionChanged += (_, _) =>
-            SceneRenameBtn.IsEnabled = SceneList.SelectedItem is not null;
+        SceneList.SelectionChanged += (_, _) => UpdateSelectionButtonStates();
     }
 
     protected override void OnHandlerChanged()
@@ -63,6 +62,10 @@ public sealed partial class SceneManagerView : ContentView
         _items.Clear();
         _activeScenePath  = string.Empty;
         ActiveSceneLabel.Text = "No active scene";
+
+        bool hasProject = e.Project is not null;
+        NewSceneBtn.IsEnabled = hasProject;
+        UpdateSelectionButtonStates();
 
         if (e.Project is null)
         {
@@ -227,6 +230,14 @@ public sealed partial class SceneManagerView : ContentView
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private void UpdateSelectionButtonStates()
+    {
+        bool hasProject   = EditorContext.Instance.ActiveProject is not null;
+        bool hasSelection = SceneList.SelectedItem is not null;
+        SceneRenameBtn.IsEnabled = hasProject && hasSelection;
+        DeleteSceneBtn.IsEnabled = hasProject && hasSelection;
+    }
 
     private void UpdateSceneCount()
     {

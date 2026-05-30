@@ -14,15 +14,19 @@
             <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,1,*,Auto" ColumnSpacing="2" Padding="4,2">
 
                 <Button Grid.Column="0"
+                        x:Name="AddEntityBtn"
                         Text="+"
                         ToolTipProperties.Text="Create empty entity"
                         Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
                         Clicked="OnAddClicked"/>
 
                 <Button Grid.Column="1"
+                        x:Name="DeleteEntityBtn"
                         Text="🗑"
                         ToolTipProperties.Text="Delete selected entity"
                         Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
                         Clicked="OnDeleteClicked"/>
 
                 <Button Grid.Column="2"

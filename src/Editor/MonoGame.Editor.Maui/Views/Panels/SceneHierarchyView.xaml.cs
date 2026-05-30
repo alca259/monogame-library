@@ -64,10 +64,14 @@ public sealed partial class SceneHierarchyView : ContentView
 
         _items.Clear();
 
+        bool hasScene = scene is not null;
+        AddEntityBtn.IsEnabled = hasScene;
+
         if (scene is null)
         {
             CountLabel.Text  = "0 entities";
             StatusLabel.Text = "0 objects in scene";
+            DeleteEntityBtn.IsEnabled = false;
             return;
         }
 
@@ -118,11 +122,14 @@ public sealed partial class SceneHierarchyView : ContentView
 
     private void SyncSelection(EditorGameObject? selected)
     {
+        bool hasScene = EditorContext.Instance.ActiveScene is not null;
+
         if (selected is null)
         {
             HierarchyList.SelectedItem = null;
-            RenameBtn.IsEnabled   = false;
-            ReparentBtn.IsEnabled = false;
+            RenameBtn.IsEnabled        = false;
+            ReparentBtn.IsEnabled      = false;
+            DeleteEntityBtn.IsEnabled  = false;
             return;
         }
 
@@ -137,8 +144,10 @@ public sealed partial class SceneHierarchyView : ContentView
         }
 
         HierarchyList.SelectedItem = match;
-        RenameBtn.IsEnabled   = match is not null;
-        ReparentBtn.IsEnabled = match is not null;
+        bool hasMatch = match is not null;
+        RenameBtn.IsEnabled       = hasMatch;
+        ReparentBtn.IsEnabled     = hasMatch;
+        DeleteEntityBtn.IsEnabled = hasMatch && hasScene;
     }
 
     // ── CollectionView selection ──────────────────────────────────────────────
