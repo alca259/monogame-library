@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.DockBarView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:panels="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
+             BackgroundColor="{StaticResource BgPanel}">
+
+    <Grid RowDefinitions="26,*" RowSpacing="0">
+
+        <!-- ── Dock tabs ─────────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0">
+            <ScrollView Orientation="Horizontal">
+                <HorizontalStackLayout Spacing="0" x:Name="TabBar">
+                    <Button x:Name="AssetsTabBtn"
+                            Text="Assets"
+                            CommandParameter="Assets"
+                            Style="{StaticResource TabButton}"
+                            Clicked="OnDockTabClicked"/>
+                    <Button x:Name="ConsoleTabBtn"
+                            Text="Console"
+                            CommandParameter="Console"
+                            Style="{StaticResource TabButton}"
+                            Clicked="OnDockTabClicked"/>
+                    <Button x:Name="ScenesTabBtn"
+                            Text="Scenes"
+                            CommandParameter="Scenes"
+                            Style="{StaticResource TabButton}"
+                            Clicked="OnDockTabClicked"/>
+                    <Button x:Name="LocalizationTabBtn"
+                            Text="Localization"
+                            CommandParameter="Localization"
+                            Style="{StaticResource TabButton}"
+                            Clicked="OnDockTabClicked"/>
+                    <Button x:Name="InputMapsTabBtn"
+                            Text="Input Maps"
+                            CommandParameter="InputMaps"
+                            Style="{StaticResource TabButton}"
+                            Clicked="OnDockTabClicked"/>
+                    <Button x:Name="TilemapTabBtn"
+                            Text="Tilemap"
+                            CommandParameter="Tilemap"
+                            Style="{StaticResource TabButton}"
+                            Clicked="OnDockTabClicked"/>
+                    <Button x:Name="HistoryTabBtn"
+                            Text="History"
+                            CommandParameter="History"
+                            Style="{StaticResource TabButton}"
+                            Clicked="OnDockTabClicked"/>
+                    <Button x:Name="ScriptsTabBtn"
+                            Text="Scripts"
+                            CommandParameter="Scripts"
+                            Style="{StaticResource TabButton}"
+                            Clicked="OnDockTabClicked"/>
+                    <Button x:Name="SpriteEditorTabBtn"
+                            Text="Sprite Editor"
+                            CommandParameter="SpriteEditor"
+                            Style="{StaticResource TabButton}"
+                            Clicked="OnDockTabClicked"/>
+                </HorizontalStackLayout>
+            </ScrollView>
+        </Border>
+        <!-- Tabs top separator -->
+        <BoxView Grid.Row="0" VerticalOptions="Start"
+                 HeightRequest="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Tab content area ─────────────────────────────────── -->
+        <Grid Grid.Row="1">
+
+            <!-- Assets tab -->
+            <panels:AssetBrowserView x:Name="AssetsContent"/>
+
+            <!-- Console tab -->
+            <panels:ConsolePanelView x:Name="ConsoleContent" IsVisible="False"/>
+
+            <!-- Scenes tab -->
+            <panels:SceneManagerView x:Name="ScenesContent" IsVisible="False"/>
+
+            <!-- Placeholder tabs -->
+            <Label x:Name="LocalizationContent"
+                   Text="Localization — Fase 7"
+                   Style="{StaticResource PlaceholderLabel}"
+                   IsVisible="False"/>
+
+            <Label x:Name="InputMapsContent"
+                   Text="Input Maps — Fase 7"
+                   Style="{StaticResource PlaceholderLabel}"
+                   IsVisible="False"/>
+
+            <Label x:Name="TilemapContent"
+                   Text="Tilemap — Fase 7"
+                   Style="{StaticResource PlaceholderLabel}"
+                   IsVisible="False"/>
+
+            <Label x:Name="HistoryContent"
+                   Text="Undo History — Fase 7"
+                   Style="{StaticResource PlaceholderLabel}"
+                   IsVisible="False"/>
+
+            <Label x:Name="ScriptsContent"
+                   Text="Scripts — Fase 7"
+                   Style="{StaticResource PlaceholderLabel}"
+                   IsVisible="False"/>
+
+            <Label x:Name="SpriteEditorContent"
+                   Text="Sprite Editor — Fase 7"
+                   Style="{StaticResource PlaceholderLabel}"
+                   IsVisible="False"/>
+
+        </Grid>
+    </Grid>
+</ContentView>

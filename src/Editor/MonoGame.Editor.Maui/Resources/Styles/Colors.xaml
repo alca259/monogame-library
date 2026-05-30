@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- ── Backgrounds ────────────────────────────────────────────── -->
+    <Color x:Key="BgWindow">#1b1b1c</Color>
+    <Color x:Key="BgChrome">#2a2a2c</Color>
+    <Color x:Key="BgPanel">#212123</Color>
+    <Color x:Key="BgRaised">#2d2d30</Color>
+    <Color x:Key="BgInput">#19191a</Color>
+    <Color x:Key="BgViewport">#1d1d1e</Color>
+
+    <!-- ── Text ───────────────────────────────────────────────────── -->
+    <Color x:Key="TextPrimary">#d6d6d8</Color>
+    <Color x:Key="TextSecondary">#a7a7ab</Color>
+    <Color x:Key="TextDim">#86868b</Color>
+    <Color x:Key="TextFaint">#646468</Color>
+
+    <!-- ── Accents ────────────────────────────────────────────────── -->
+    <Color x:Key="AccentBlue">#2f81f7</Color>
+    <Color x:Key="AccentGreen">#3fb950</Color>
+    <Color x:Key="AccentRed">#f0524f</Color>
+    <Color x:Key="AccentAmber">#e3a33b</Color>
+
+    <!-- ── Separators ────────────────────────────────────────────── -->
+    <Color x:Key="BorderColor">#3a3a3d</Color>
+
+    <!-- ── Transform axes (NumericSpinner + gizmos) ──────────────── -->
+    <Color x:Key="AxisX">#e06c6c</Color>
+    <Color x:Key="AxisY">#7cc47c</Color>
+    <Color x:Key="AxisZ">#6f9ff0</Color>
+
+</ResourceDictionary>

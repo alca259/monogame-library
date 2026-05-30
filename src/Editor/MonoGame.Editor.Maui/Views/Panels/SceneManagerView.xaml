@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.SceneManagerView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             BackgroundColor="{StaticResource BgPanel}">
+
+    <Grid RowDefinitions="28,1,*,1,24" RowSpacing="0">
+
+        <!-- ── Toolbar ──────────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0">
+            <Grid ColumnDefinitions="Auto,Auto,1,*" ColumnSpacing="2" Padding="4,2">
+
+                <Button Grid.Column="0"
+                        Text="+"
+                        ToolTipProperties.Text="New scene"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnNewSceneClicked"/>
+                <Button Grid.Column="1"
+                        Text="🗑"
+                        ToolTipProperties.Text="Delete scene"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnDeleteSceneClicked"/>
+
+                <BoxView Grid.Column="2"
+                         Color="{StaticResource BorderColor}"
+                         VerticalOptions="Fill"
+                         Margin="2,2"/>
+
+                <Label Grid.Column="3"
+                       x:Name="SceneCountLabel"
+                       Text="0 scenes"
+                       Style="{StaticResource DimLabel}"
+                       VerticalOptions="Center"
+                       Margin="4,0"/>
+            </Grid>
+        </Border>
+        <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Scene list ────────────────────────────────────────── -->
+        <CollectionView Grid.Row="2"
+                        x:Name="SceneList"
+                        SelectionMode="Single"
+                        SelectionChanged="OnSceneSelectionChanged"
+                        BackgroundColor="{StaticResource BgPanel}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <Grid Padding="10,4">
+                        <Label Text="{Binding .}"
+                               Style="{StaticResource PrimaryLabel}"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.EmptyView>
+                <Label Text="No scenes in project"
+                       Style="{StaticResource PlaceholderLabel}"
+                       Margin="0,24"/>
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <BoxView Grid.Row="3" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Status footer ─────────────────────────────────────── -->
+        <Border Grid.Row="4"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0"
+                Padding="8,0">
+            <Label x:Name="ActiveSceneLabel"
+                   Text="No active scene"
+                   Style="{StaticResource DimLabel}"
+                   VerticalOptions="Center"/>
+        </Border>
+
+    </Grid>
+</ContentView>

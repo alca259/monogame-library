@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- ── Labels ────────────────────────────────────────────────── -->
+
+    <Style x:Key="PrimaryLabel" TargetType="Label">
+        <Setter Property="TextColor"  Value="{StaticResource TextPrimary}"/>
+        <Setter Property="FontSize"   Value="12"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+    </Style>
+
+    <Style x:Key="SecondaryLabel" TargetType="Label">
+        <Setter Property="TextColor"  Value="{StaticResource TextSecondary}"/>
+        <Setter Property="FontSize"   Value="12"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+    </Style>
+
+    <Style x:Key="DimLabel" TargetType="Label">
+        <Setter Property="TextColor"  Value="{StaticResource TextDim}"/>
+        <Setter Property="FontSize"   Value="11"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+    </Style>
+
+    <Style x:Key="MonoLabel" TargetType="Label">
+        <Setter Property="TextColor"  Value="{StaticResource TextSecondary}"/>
+        <Setter Property="FontSize"   Value="11"/>
+        <Setter Property="FontFamily" Value="Consolas"/>
+    </Style>
+
+    <Style x:Key="PanelTitleLabel" TargetType="Label">
+        <Setter Property="TextColor"     Value="{StaticResource TextSecondary}"/>
+        <Setter Property="FontSize"      Value="11"/>
+        <Setter Property="FontAttributes" Value="Bold"/>
+        <Setter Property="FontFamily"    Value="Segoe UI"/>
+    </Style>
+
+    <!-- ── Entries ───────────────────────────────────────────────── -->
+
+    <Style x:Key="InputEntry" TargetType="Entry">
+        <Setter Property="BackgroundColor"  Value="{StaticResource BgInput}"/>
+        <Setter Property="TextColor"        Value="{StaticResource TextPrimary}"/>
+        <Setter Property="PlaceholderColor" Value="{StaticResource TextFaint}"/>
+        <Setter Property="FontSize"         Value="12"/>
+        <Setter Property="HeightRequest"    Value="26"/>
+    </Style>
+
+    <!-- ── Toolbar gizmo buttons ─────────────────────────────────── -->
+
+    <Style x:Key="ToolButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent"/>
+        <Setter Property="TextColor"       Value="{StaticResource TextPrimary}"/>
+        <Setter Property="BorderColor"     Value="Transparent"/>
+        <Setter Property="BorderWidth"     Value="0"/>
+        <Setter Property="CornerRadius"    Value="5"/>
+        <Setter Property="Padding"         Value="0"/>
+        <Setter Property="HeightRequest"   Value="30"/>
+        <Setter Property="WidthRequest"    Value="30"/>
+        <Setter Property="FontSize"        Value="13"/>
+    </Style>
+
+    <Style x:Key="ActiveToolButton" TargetType="Button" BasedOn="{StaticResource ToolButton}">
+        <Setter Property="BackgroundColor" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="TextColor"       Value="White"/>
+    </Style>
+
+    <!-- ── Mode toggle pills (2D / SNAP / NAV / RES) ────────────── -->
+
+    <Style x:Key="PillButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource BgRaised}"/>
+        <Setter Property="TextColor"       Value="{StaticResource TextSecondary}"/>
+        <Setter Property="BorderColor"     Value="{StaticResource BorderColor}"/>
+        <Setter Property="BorderWidth"     Value="1"/>
+        <Setter Property="CornerRadius"    Value="12"/>
+        <Setter Property="Padding"         Value="10,4"/>
+        <Setter Property="HeightRequest"   Value="26"/>
+        <Setter Property="FontSize"        Value="11"/>
+    </Style>
+
+    <Style x:Key="ActivePillButton" TargetType="Button" BasedOn="{StaticResource PillButton}">
+        <Setter Property="BackgroundColor" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="TextColor"       Value="White"/>
+        <Setter Property="BorderColor"     Value="{StaticResource AccentBlue}"/>
+    </Style>
+
+    <!-- ── Transport buttons ─────────────────────────────────────── -->
+
+    <Style x:Key="PlayButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource AccentGreen}"/>
+        <Setter Property="TextColor"       Value="White"/>
+        <Setter Property="BorderColor"     Value="Transparent"/>
+        <Setter Property="BorderWidth"     Value="0"/>
+        <Setter Property="CornerRadius"    Value="5"/>
+        <Setter Property="Padding"         Value="8,4"/>
+        <Setter Property="HeightRequest"   Value="28"/>
+        <Setter Property="WidthRequest"    Value="36"/>
+        <Setter Property="FontSize"        Value="14"/>
+    </Style>
+
+    <Style x:Key="StopButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource BgRaised}"/>
+        <Setter Property="TextColor"       Value="{StaticResource TextDim}"/>
+        <Setter Property="BorderColor"     Value="Transparent"/>
+        <Setter Property="BorderWidth"     Value="0"/>
+        <Setter Property="CornerRadius"    Value="5"/>
+        <Setter Property="Padding"         Value="8,4"/>
+        <Setter Property="HeightRequest"   Value="28"/>
+        <Setter Property="WidthRequest"    Value="36"/>
+        <Setter Property="FontSize"        Value="12"/>
+    </Style>
+
+    <Style x:Key="ActiveStopButton" TargetType="Button" BasedOn="{StaticResource StopButton}">
+        <Setter Property="BackgroundColor" Value="{StaticResource AccentRed}"/>
+        <Setter Property="TextColor"       Value="White"/>
+    </Style>
+
+    <!-- ── Menu bar buttons ──────────────────────────────────────── -->
+
+    <Style x:Key="MenuButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent"/>
+        <Setter Property="TextColor"       Value="{StaticResource TextPrimary}"/>
+        <Setter Property="BorderColor"     Value="Transparent"/>
+        <Setter Property="BorderWidth"     Value="0"/>
+        <Setter Property="CornerRadius"    Value="4"/>
+        <Setter Property="Padding"         Value="8,4"/>
+        <Setter Property="FontSize"        Value="12"/>
+        <Setter Property="HeightRequest"   Value="28"/>
+    </Style>
+
+    <!-- ── Dock tab buttons ──────────────────────────────────────── -->
+
+    <Style x:Key="TabButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent"/>
+        <Setter Property="TextColor"       Value="{StaticResource TextSecondary}"/>
+        <Setter Property="BorderColor"     Value="Transparent"/>
+        <Setter Property="BorderWidth"     Value="0"/>
+        <Setter Property="CornerRadius"    Value="0"/>
+        <Setter Property="Padding"         Value="12,6"/>
+        <Setter Property="FontSize"        Value="12"/>
+        <Setter Property="HeightRequest"   Value="30"/>
+    </Style>
+
+    <!-- ── Inspector tab buttons ─────────────────────────────────── -->
+
+    <Style x:Key="InspectorTabButton" TargetType="Button" BasedOn="{StaticResource TabButton}">
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <!-- ── Panel header bar (toolbar inside a panel) ─────────────── -->
+
+    <Style x:Key="PanelToolbarContainer" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource BgChrome}"/>
+        <Setter Property="StrokeThickness" Value="0"/>
+        <Setter Property="Padding"         Value="4,2"/>
+        <Setter Property="HeightRequest"   Value="28"/>
+    </Style>
+
+    <!-- ── Small icon button inside panels ───────────────────────── -->
+
+    <Style x:Key="SmallIconButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent"/>
+        <Setter Property="TextColor"       Value="{StaticResource TextPrimary}"/>
+        <Setter Property="BorderColor"     Value="Transparent"/>
+        <Setter Property="BorderWidth"     Value="0"/>
+        <Setter Property="CornerRadius"    Value="4"/>
+        <Setter Property="Padding"         Value="0"/>
+        <Setter Property="HeightRequest"   Value="24"/>
+        <Setter Property="WidthRequest"    Value="24"/>
+        <Setter Property="FontSize"        Value="13"/>
+    </Style>
+
+    <!-- ── Placeholder label for unimplemented panels ────────────── -->
+
+    <Style x:Key="PlaceholderLabel" TargetType="Label">
+        <Setter Property="TextColor"          Value="{StaticResource TextFaint}"/>
+        <Setter Property="FontSize"           Value="13"/>
+        <Setter Property="HorizontalOptions"  Value="Center"/>
+        <Setter Property="VerticalOptions"    Value="Center"/>
+    </Style>
+
+</ResourceDictionary>
