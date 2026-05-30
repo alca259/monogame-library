@@ -18,4 +18,10 @@ public sealed class EditorPropertyAttribute : Attribute
 
     /// <summary>Texto de información emergente que se muestra al pasar el cursor.</summary>
     public string? Tooltip { get; init; }
+
+    /// <summary>
+    /// Agrupa propiedades en una fila de dos columnas. Las propiedades con el mismo valor no nulo
+    /// se renderizan una junto a la otra. Valor 0 (por defecto) significa apilado normal.
+    /// </summary>
+    public int SideBySideGroup { get; init; } = 0;
 }

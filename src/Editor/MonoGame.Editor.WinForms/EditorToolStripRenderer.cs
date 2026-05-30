@@ -87,6 +87,19 @@ internal sealed class EditorToolStripRenderer : ToolStripProfessionalRenderer
         e.Graphics.FillRectangle(b, e.AffectedBounds);
     }
 
+    protected override void OnRenderStatusStripSizingGrip(ToolStripRenderEventArgs e) { }
+
+    protected override void OnRenderToolStripStatusLabelBackground(ToolStripItemRenderEventArgs e)
+    {
+        if (e.Item.BackColor != BgColor && e.Item.BackColor != System.Drawing.Color.Empty)
+        {
+            using System.Drawing.SolidBrush b = new(e.Item.BackColor);
+            e.Graphics.FillRectangle(b, new System.Drawing.Rectangle(0, 0, e.Item.Width, e.Item.Height));
+            return;
+        }
+        base.OnRenderToolStripStatusLabelBackground(e);
+    }
+
     private sealed class EditorColorTable : ProfessionalColorTable
     {
         public override System.Drawing.Color MenuBorder                => BorderColor;

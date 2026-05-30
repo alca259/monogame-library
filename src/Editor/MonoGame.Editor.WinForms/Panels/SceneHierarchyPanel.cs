@@ -224,8 +224,8 @@ public sealed class SceneHierarchyPanel : UserControl
         }
 
         int visibleCount = CountTreeNodes(_tree.Nodes);
-        _counterLabel.Text = $"{visibleCount} entities";
-        _statusLabel.Text  = $"{totalCount} objects in scene";
+        _counterLabel.Text = visibleCount == 1 ? "1 entity" : $"{visibleCount} entities";
+        _statusLabel.Text  = totalCount == 1 ? "1 object in scene" : $"{totalCount} objects in scene";
 
         _tree.EndUpdate();
     }

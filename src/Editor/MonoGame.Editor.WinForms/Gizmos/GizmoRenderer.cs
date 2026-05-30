@@ -81,7 +81,6 @@ public sealed class GizmoRenderer : IDisposable
 
         // ── Pasada 2: cajas delimitadoras en espacio pantalla + manejadores ────────────────────
         bool hasDimWork = allRoots is { Count: > 0 };
-        if (selected == null && !hasDimWork) return;
 
         float zoom = cameraTransform.M11;
 
@@ -133,6 +132,8 @@ public sealed class GizmoRenderer : IDisposable
                         DrawGizmoHandles(_ctrl.Mode, objScreen, selected.Rotation, isDepthMode);
                 }
             }
+
+            DrawOrientationGizmo(viewW, viewH);
         }
         catch { /* ignorar errores de dibujo de manejadores */ }
         finally
@@ -192,6 +193,36 @@ public sealed class GizmoRenderer : IDisposable
         DrawLine(tr, br, _boundsColor);
         DrawLine(br, bl, _boundsColor);
         DrawLine(bl, tl, _boundsColor);
+
+        DrawSelectionHandles(centre, halfW, halfH);
+    }
+
+    private void DrawSelectionHandles(XnaVector2 centre, float halfW, float halfH)
+    {
+        const int size     = 6;
+        const int halfSize = size / 2;
+        const int rotOffset = 22;
+
+        XnaVector2[] handles =
+        [
+            new(centre.X - halfW, centre.Y - halfH), // TL
+            new(centre.X,         centre.Y - halfH), // TC
+            new(centre.X + halfW, centre.Y - halfH), // TR
+            new(centre.X + halfW, centre.Y),          // MR
+            new(centre.X + halfW, centre.Y + halfH), // BR
+            new(centre.X,         centre.Y + halfH), // BC
+            new(centre.X - halfW, centre.Y + halfH), // BL
+            new(centre.X - halfW, centre.Y),          // ML
+        ];
+
+        for (int i = 0; i < handles.Length; i++)
+            FillRect(new XnaRect((int)(handles[i].X - halfSize), (int)(handles[i].Y - halfSize), size, size), XnaColor.White);
+
+        // Rotation handle above top-center
+        XnaVector2 topCenter = new(centre.X, centre.Y - halfH);
+        XnaVector2 rotHandle = new(centre.X, centre.Y - halfH - rotOffset);
+        DrawLine(topCenter, rotHandle, _boundsColor, 1.5f);
+        FillRect(new XnaRect((int)(rotHandle.X - halfSize), (int)(rotHandle.Y - halfSize), size, size), XnaColor.White);
     }
 
     private void DrawDimBoundingBox(XnaVector2 centre, float scaleX, float scaleY, float zoom)
@@ -352,6 +383,17 @@ public sealed class GizmoRenderer : IDisposable
     }
 
     // ── Auxiliares de primitivas ────────────────────────────────────────────────────
+
+    private void DrawOrientationGizmo(int vpW, int vpH)
+    {
+        const int margin  = 20;
+        const int axisLen = 30;
+        XnaVector2 origin = new(margin + axisLen, vpH - margin - axisLen);
+
+        DrawLine(origin, origin + new XnaVector2(axisLen, 0),       _axisXColor, 2f);
+        DrawLine(origin, origin + new XnaVector2(0, -axisLen),      _axisYColor, 2f);
+        FillRect(new XnaRect((int)origin.X - 3, (int)origin.Y - 3, 6, 6), XnaColor.White);
+    }
 
     private void DrawLine(XnaVector2 from, XnaVector2 to, XnaColor color, float thickness = 1.5f)
     {

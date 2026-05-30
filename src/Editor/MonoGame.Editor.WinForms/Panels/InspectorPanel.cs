@@ -356,11 +356,13 @@ public sealed class InspectorPanel : UserControl
         Label idLabel = new Label
         {
             Dock      = DockStyle.Bottom,
-            Height    = 16,
-            Text      = obj.Id.ToString()[..8],
-            Font      = new System.Drawing.Font("Consolas", 7f),
-            ForeColor = System.Drawing.SystemColors.GrayText,
+            Height    = 18,
+            Text      = $"ID  {obj.Id.ToString()[..8]}",
+            Font      = new System.Drawing.Font("Consolas", 7.5f),
+            ForeColor = System.Drawing.Color.FromArgb(120, 120, 120),
+            BackColor = System.Drawing.Color.FromArgb(50, 50, 52),
             TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+            Padding   = new System.Windows.Forms.Padding(4, 0, 0, 0),
         };
 
         // Casilla de verificación activo (Dock=Left)
@@ -383,6 +385,9 @@ public sealed class InspectorPanel : UserControl
             Dock          = DockStyle.Right,
             Width         = 90,
             DropDownStyle = ComboBoxStyle.DropDown,
+            BackColor     = System.Drawing.Color.FromArgb(45, 45, 48),
+            ForeColor     = System.Drawing.Color.FromArgb(180, 180, 180),
+            FlatStyle     = FlatStyle.Flat,
         };
         tagsCombo.Text = "Add tag...";
         for (int i = 0; i < obj.Tags.Count; i++)
@@ -580,14 +585,8 @@ public sealed class InspectorPanel : UserControl
         Action<float> onChange)
     {
         Panel panel = new Panel { Height = RowHeight };
-        Label lz = new Label
-        {
-            Text      = "Z",
-            Width     = 14,
-            Dock      = DockStyle.Left,
-            TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
-            ForeColor = AxisZ,
-        };
+        Label lz = CreateAxisBadge("Z", AxisZ);
+        lz.Dock = DockStyle.Left;
         NumericUpDown num = CreateNumericUpDown((decimal)value,
             (decimal)Math.Max(min, (float)decimal.MinValue),
             (decimal)Math.Min(max, (float)decimal.MaxValue), 3);
@@ -607,12 +606,14 @@ public sealed class InspectorPanel : UserControl
     {
         Panel panel = new Panel { Height = RowHeight };
 
-        Label lx = new Label { Text = "X", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft, ForeColor = AxisX };
+        Label lx = CreateAxisBadge("X", AxisX);
+        lx.Dock = DockStyle.Left;
         NumericUpDown nx = CreateNumericUpDown((decimal)x, -1_000_000m, 1_000_000m, 3);
         nx.Width = NumericWidth;
         nx.Dock  = DockStyle.Left;
 
-        Label ly = new Label { Text = "Y", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft, ForeColor = AxisY };
+        Label ly = CreateAxisBadge("Y", AxisY);
+        ly.Dock = DockStyle.Left;
         NumericUpDown ny = CreateNumericUpDown((decimal)y, -1_000_000m, 1_000_000m, 3);
         ny.Dock = DockStyle.Fill;
 
@@ -661,6 +662,22 @@ public sealed class InspectorPanel : UserControl
         decimal next = Math.Clamp((decimal)value, input.Minimum, input.Maximum);
         if (input.Value != next)
             input.Value = next;
+    }
+
+    private static Label CreateAxisBadge(string text, System.Drawing.Color bgColor)
+    {
+        return new Label
+        {
+            Text        = text,
+            Width       = 18,
+            Height      = 18,
+            BackColor   = bgColor,
+            ForeColor   = System.Drawing.Color.White,
+            Font        = new System.Drawing.Font("Segoe UI", 7.5f, System.Drawing.FontStyle.Bold),
+            TextAlign   = System.Drawing.ContentAlignment.MiddleCenter,
+            Margin      = new System.Windows.Forms.Padding(0, 0, 2, 0),
+            BorderStyle = BorderStyle.None,
+        };
     }
 
     #endregion
@@ -738,8 +755,26 @@ public sealed class InspectorPanel : UserControl
         header.Controls.Add(chevron);
 
         // --- Cuerpo (propiedades) ---
-        List<(string label, Control ctrl)> rows = BuildPropertyRows(behaviour, owner);
-        int bodyHeight = rows.Count * StackedRow + 8;
+        List<(string label, Control ctrl, int sideBySideGroup)> rows = BuildPropertyRows(behaviour, owner);
+
+        // Compute rendered row count: side-by-side pairs count as 1 row each
+        int renderedRowCount = 0;
+        for (int i = 0; i < rows.Count; )
+        {
+            int grp = rows[i].sideBySideGroup;
+            if (grp != 0 && i + 1 < rows.Count && rows[i + 1].sideBySideGroup == grp)
+            {
+                renderedRowCount++;
+                i += 2;
+            }
+            else
+            {
+                renderedRowCount++;
+                i++;
+            }
+        }
+
+        int bodyHeight = renderedRowCount * StackedRow + 8;
 
         Panel body = new Panel
         {
@@ -749,19 +784,55 @@ public sealed class InspectorPanel : UserControl
             Visible   = !collapsed,
         };
 
-        for (int i = 0; i < rows.Count; i++)
+        int rowCursor = 0;
+        for (int i = 0; i < rows.Count; )
         {
-            int rowY = i * StackedRow + 2;
+            int rowY = rowCursor * StackedRow + 2;
+            int grp  = rows[i].sideBySideGroup;
 
-            Label lbl = MakeStackedLabel(rows[i].label);
-            lbl.Location = new System.Drawing.Point(4, rowY);
-            lbl.Width    = body.Width - 8;
-            body.Controls.Add(lbl);
+            if (grp != 0 && i + 1 < rows.Count && rows[i + 1].sideBySideGroup == grp)
+            {
+                // Two-column side-by-side row
+                (string lblA, Control ctrlA, _) = rows[i];
+                (string lblB, Control ctrlB, _) = rows[i + 1];
 
-            Control ctrl = rows[i].ctrl;
-            ctrl.Location = new System.Drawing.Point(4, rowY + LabelHeight);
-            ctrl.Width    = body.Width - 8;
-            body.Controls.Add(ctrl);
+                TableLayoutPanel tbl = new TableLayoutPanel
+                {
+                    Location    = new System.Drawing.Point(4, rowY),
+                    Height      = StackedRow,
+                    ColumnCount = 2,
+                    RowCount    = 1,
+                    AutoSize    = false,
+                };
+                tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+                tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+
+                Panel colA = BuildSideBySideCell(lblA, ctrlA);
+                Panel colB = BuildSideBySideCell(lblB, ctrlB);
+                tbl.Controls.Add(colA, 0, 0);
+                tbl.Controls.Add(colB, 1, 0);
+
+                tbl.Width = body.Width - 8;
+                body.Controls.Add(tbl);
+
+                i += 2;
+            }
+            else
+            {
+                Label lbl = MakeStackedLabel(rows[i].label);
+                lbl.Location = new System.Drawing.Point(4, rowY);
+                lbl.Width    = body.Width - 8;
+                body.Controls.Add(lbl);
+
+                Control ctrl = rows[i].ctrl;
+                ctrl.Location = new System.Drawing.Point(4, rowY + LabelHeight);
+                ctrl.Width    = body.Width - 8;
+                body.Controls.Add(ctrl);
+
+                i++;
+            }
+
+            rowCursor++;
         }
 
         // Alternar colapso
@@ -790,9 +861,9 @@ public sealed class InspectorPanel : UserControl
         }
     }
 
-    private List<(string, Control)> BuildPropertyRows(EditorBehaviour behaviour, EditorGameObject owner)
+    private List<(string label, Control ctrl, int sideBySideGroup)> BuildPropertyRows(EditorBehaviour behaviour, EditorGameObject owner)
     {
-        List<(string, Control)> rows = [];
+        List<(string label, Control ctrl, int sideBySideGroup)> rows = [];
 
         if (_registry is null || string.IsNullOrEmpty(behaviour.TypeName)) return rows;
         if (!_registry.RegisteredTypes.TryGetValue(behaviour.TypeName, out Type? type)) return rows;
@@ -844,7 +915,7 @@ public sealed class InspectorPanel : UserControl
             Control ctrl = CreateControlForProperty(prop, attr, behaviour, owner);
             if (attr?.Tooltip is { Length: > 0 } tip)
                 _toolTip.SetToolTip(ctrl, tip);
-            rows.Add((label, ctrl));
+            rows.Add((label, ctrl, attr?.SideBySideGroup ?? 0));
         }
         return rows;
     }
@@ -1149,6 +1220,23 @@ public sealed class InspectorPanel : UserControl
         Height    = LabelHeight,
     };
 
+    private static Panel BuildSideBySideCell(string labelText, Control ctrl)
+    {
+        Panel cell = new Panel { Dock = DockStyle.Fill, Height = StackedRow };
+        Label lbl  = new Label
+        {
+            Text      = labelText,
+            TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+            AutoSize  = false,
+            Dock      = DockStyle.Top,
+            Height    = LabelHeight,
+        };
+        ctrl.Dock = DockStyle.Top;
+        cell.Controls.Add(ctrl);
+        cell.Controls.Add(lbl);
+        return cell;
+    }
+
     private Panel MakeFloatControl(float value, float min, float max, Action<float> onChange, EditorPropertyAttribute? attr = null)
     {
         Panel panel = new Panel { Height = RowHeight };
@@ -1179,12 +1267,14 @@ public sealed class InspectorPanel : UserControl
     {
         Panel panel = new Panel { Height = RowHeight };
 
-        Label lx = new Label { Text = "X", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft, ForeColor = AxisX };
+        Label lx = CreateAxisBadge("X", AxisX);
+        lx.Dock = DockStyle.Left;
         NumericUpDown nx = CreateNumericUpDown((decimal)x, -1_000_000m, 1_000_000m, 3);
         nx.Width = NumericWidth;
         nx.Dock  = DockStyle.Left;
 
-        Label ly = new Label { Text = "Y", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft, ForeColor = AxisY };
+        Label ly = CreateAxisBadge("Y", AxisY);
+        ly.Dock = DockStyle.Left;
         NumericUpDown ny = CreateNumericUpDown((decimal)y, -1_000_000m, 1_000_000m, 3);
         ny.Dock = DockStyle.Fill;
 

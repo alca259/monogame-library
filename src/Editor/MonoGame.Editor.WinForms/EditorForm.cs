@@ -115,21 +115,37 @@ public sealed partial class EditorForm : Form
         // Dark background/foreground for menu and status
         System.Drawing.Color darkBg   = System.Drawing.Color.FromArgb(30, 30, 30);
         System.Drawing.Color lightFg  = System.Drawing.Color.FromArgb(204, 204, 204);
+        System.Drawing.Color grayFg   = System.Drawing.Color.FromArgb(156, 163, 175);
         _mainMenuStrip.BackColor = darkBg;
         _mainMenuStrip.ForeColor = lightFg;
         _statusStrip.BackColor   = darkBg;
         _statusStrip.ForeColor   = lightFg;
-        _statusLabel.ForeColor   = lightFg;
-        _fpsStatusLabel.ForeColor = lightFg;
+        _buildStatusLabel.ForeColor   = lightFg;
+        _sceneObjectsLabel.ForeColor  = grayFg;
+        _platformLabel.ForeColor      = grayFg;
+        _fpsStatusLabel.ForeColor     = lightFg;
         _defaultStatusBackColor  = darkBg;
     }
 
     private void SetStatus(string text, bool isError = false)
     {
-        _statusLabel.Text = text;
-        _statusStrip.BackColor = isError
-            ? System.Drawing.Color.FromArgb(179, 64, 61)
-            : _defaultStatusBackColor;
+        System.Drawing.Color darkBg  = System.Drawing.Color.FromArgb(30, 30, 30);
+        System.Drawing.Color redBg   = System.Drawing.Color.FromArgb(176, 48, 48);
+        System.Drawing.Color whiteFg = System.Drawing.Color.White;
+        System.Drawing.Color lightFg = System.Drawing.Color.FromArgb(204, 204, 204);
+
+        if (isError)
+        {
+            _buildStatusLabel.Text      = $"⚠ {text}";
+            _buildStatusLabel.BackColor = redBg;
+            _buildStatusLabel.ForeColor = whiteFg;
+        }
+        else
+        {
+            _buildStatusLabel.Text      = text;
+            _buildStatusLabel.BackColor = darkBg;
+            _buildStatusLabel.ForeColor = lightFg;
+        }
     }
 
     private void ApplyPreferences()
@@ -175,17 +191,17 @@ public sealed partial class EditorForm : Form
 
     private void WireEvents()
     {
-        // Barra de información del viewport (anclada abajo en la pestaña de escena)
+        // Barra de información del viewport (anclada arriba en la pestaña de escena)
         StatusStrip viewportInfoBar = new StatusStrip
         {
-            Dock       = DockStyle.Bottom,
+            Dock       = DockStyle.Top,
             Height     = 22,
             SizingGrip = false,
         };
-        _cameraInfoLabel = new ToolStripStatusLabel("Camera: Editor");
-        _zoomInfoLabel   = new ToolStripStatusLabel("Zoom: 100%");
-        _gridInfoLabel   = new ToolStripStatusLabel($"Grid: {_gizmoCtrl.GridCellSize:F0}px");
-        _cursorInfoLabel = new ToolStripStatusLabel("Cursor: 0, 0");
+        _cameraInfoLabel = new ToolStripStatusLabel("Camera  Editor");
+        _zoomInfoLabel   = new ToolStripStatusLabel("Zoom  100%");
+        _gridInfoLabel   = new ToolStripStatusLabel($"Grid  {_gizmoCtrl.GridCellSize:F0}px");
+        _cursorInfoLabel = new ToolStripStatusLabel("Cursor  0, 0");
         viewportInfoBar.Items.Add(_cameraInfoLabel);
         viewportInfoBar.Items.Add(new ToolStripSeparator());
         viewportInfoBar.Items.Add(_zoomInfoLabel);
@@ -1620,6 +1636,26 @@ public sealed partial class EditorForm : Form
         if (InvokeRequired) { BeginInvoke(() => OnSceneLoaded(evt)); return; }
         UpdateFormTitle();
         UpdateViewportClearColor(evt.Scene);
+        UpdateSceneObjectsLabel(evt.Scene);
+    }
+
+    private void UpdateSceneObjectsLabel(EditorScene? scene)
+    {
+        int count = 0;
+        if (scene is not null)
+        {
+            for (int i = 0; i < scene.RootGameObjects.Count; i++)
+                count += CountSceneObjects(scene.RootGameObjects[i]);
+        }
+        _sceneObjectsLabel.Text = count == 1 ? "1 object in scene" : $"{count} objects in scene";
+    }
+
+    private static int CountSceneObjects(EditorGameObject obj)
+    {
+        int count = 1;
+        for (int i = 0; i < obj.Children.Count; i++)
+            count += CountSceneObjects(obj.Children[i]);
+        return count;
     }
 
     private void OnSceneDirtyChanged(SceneDirtyChangedEvent evt)
@@ -1646,7 +1682,7 @@ public sealed partial class EditorForm : Form
             return;
         }
 
-        string dirtyMarker = dirty ? " *" : string.Empty;
+        string dirtyMarker = dirty ? " ●" : string.Empty;
         Text = $"MonoGame Editor — {project.Name} — {scene.Name}{dirtyMarker}";
     }
 
@@ -1692,9 +1728,9 @@ public sealed partial class EditorForm : Form
             {
                 _fpsStatusLabel.Text = $"{_fpsCurrent:F0} fps";
                 if (_zoomInfoLabel is not null)
-                    _zoomInfoLabel.Text = $"Zoom: {zoom * 100:F0}%";
+                    _zoomInfoLabel.Text = $"Zoom  {zoom * 100:F0}%";
                 if (_gridInfoLabel is not null)
-                    _gridInfoLabel.Text = $"Grid: {gridSize:F0}px";
+                    _gridInfoLabel.Text = $"Grid  {gridSize:F0}px";
             });
         }
 
@@ -1848,7 +1884,7 @@ public sealed partial class EditorForm : Form
                 Vector2 cursorWorld = Vector2.Transform(
                     new Vector2(e.X, e.Y),
                     Matrix.Invert(_viewport.Camera.GetTransformMatrix(cvp)));
-                _cursorInfoLabel.Text = $"Cursor: {cursorWorld.X:F0}, {cursorWorld.Y:F0}";
+                _cursorInfoLabel.Text = $"Cursor  {cursorWorld.X:F0}, {cursorWorld.Y:F0}";
             }
         }
 
