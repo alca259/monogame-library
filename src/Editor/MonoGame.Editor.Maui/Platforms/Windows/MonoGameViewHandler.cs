@@ -14,6 +14,11 @@ namespace MonoGame.Editor.Maui.Platforms.Windows;
 /// </summary>
 internal sealed class MonoGameViewHandler : ViewHandler<MonoGameView, MauiCanvas>
 {
+    public static readonly PropertyMapper<MonoGameView, MonoGameViewHandler> Mapper =
+        new(ViewHandler.ViewMapper);
+
+    public MonoGameViewHandler() : base(Mapper) { }
+
     // ── Win32 window styles ───────────────────────────────────────────────────
 
     private const uint WS_CHILD         = 0x40000000;
@@ -293,8 +298,8 @@ internal sealed class MonoGameViewHandler : ViewHandler<MonoGameView, MauiCanvas
             Microsoft.UI.Xaml.Media.GeneralTransform transform =
                 PlatformView.TransformToVisual(null);
 
-            Microsoft.UI.Xaml.Point origin =
-                transform.TransformPoint(new Microsoft.UI.Xaml.Point(0, 0));
+            global::Windows.Foundation.Point origin =
+                transform.TransformPoint(new global::Windows.Foundation.Point(0, 0));
 
             x = (int)(origin.X * scale);
             y = (int)(origin.Y * scale);

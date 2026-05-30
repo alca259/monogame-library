@@ -72,43 +72,17 @@ public sealed partial class EditorWindow : ContentPage
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
-        if (Handler is null) return;
-        RegisterKeyboardShortcuts();
     }
 
-    private void RegisterKeyboardShortcuts()
-    {
-        AddAccelerator("S", KeyboardAcceleratorModifiers.Ctrl,        () => _ = SaveSceneAsync());
-        AddAccelerator("S", KeyboardAcceleratorModifiers.Ctrl | KeyboardAcceleratorModifiers.Shift,
-                                                                       () => _ = SaveSceneAsAsync());
-        AddAccelerator("Z", KeyboardAcceleratorModifiers.Ctrl,        OnUndoClicked);
-        AddAccelerator("Y", KeyboardAcceleratorModifiers.Ctrl,        OnRedoClicked);
-        AddAccelerator("B", KeyboardAcceleratorModifiers.Ctrl,        () => _ = BuildContentAsync());
-        AddAccelerator("D", KeyboardAcceleratorModifiers.Ctrl,        OnDuplicateSelected);
-        AddAccelerator("A", KeyboardAcceleratorModifiers.Ctrl,        OnSelectAll);
-        AddAccelerator("Delete",      KeyboardAcceleratorModifiers.None, OnDeleteSelected);
-        AddAccelerator("Q",           KeyboardAcceleratorModifiers.None, () => ActivateTool("Select"));
-        AddAccelerator("W",           KeyboardAcceleratorModifiers.None, () => ActivateTool("Move"));
-        AddAccelerator("E",           KeyboardAcceleratorModifiers.None, () => ActivateTool("Rotate"));
-        AddAccelerator("R",           KeyboardAcceleratorModifiers.None, () => ActivateTool("Scale"));
-        AddAccelerator("T",           KeyboardAcceleratorModifiers.None, () => ActivateTool("Rect"));
-        AddAccelerator("H",           KeyboardAcceleratorModifiers.None, () => ActivateTool("Pan"));
-        AddAccelerator("G",           KeyboardAcceleratorModifiers.None, OnToggleSnap);
-        AddAccelerator("F5",          KeyboardAcceleratorModifiers.None, OnPlayClicked);
-        AddAccelerator("F6",          KeyboardAcceleratorModifiers.None, OnPauseClicked);
-        AddAccelerator("F5",          KeyboardAcceleratorModifiers.Shift, OnStopClicked);
-    }
-
-    private void AddAccelerator(string key, KeyboardAcceleratorModifiers mods, Action action)
-    {
-        var acc = new KeyboardAccelerator { Key = key, Modifiers = mods };
-        acc.Invoked += (_, _) => action();
-        this.KeyboardAccelerators.Add(acc);
-    }
+    // TODO: keyboard shortcuts require platform-specific WinUI implementation.
+    // Wire up via native Microsoft.UI.Xaml.Input.KeyboardAccelerator when needed.
 
     #endregion
 
     #region EventBus subscriptions
+
+    private void Log(string message, LogLevel level = LogLevel.Info)
+        => _bus.Publish(new LogEntryAddedEvent(new LogEntry(DateTime.UtcNow, level, message)));
 
     private void Subscribe()
     {
@@ -260,7 +234,6 @@ public sealed partial class EditorWindow : ContentPage
                 TextColor         = isDisabled ? Color.FromArgb("#6A6A72") : DropdownItemFg,
                 FontSize          = 13,
                 HorizontalOptions = LayoutOptions.Fill,
-                HorizontalTextAlignment = TextAlignment.Start,
                 Padding           = new Thickness(16, 6),
                 BorderWidth       = 0,
                 IsEnabled         = !isDisabled,
@@ -349,11 +322,11 @@ public sealed partial class EditorWindow : ContentPage
                 .ConfigureAwait(true);
 
             EditorContext.Instance.SetActiveProject(project);
-            _bus.Publish(new LogEntryAddedEvent($"[Editor] Project '{project.Name}' created.", LogLevel.Info));
+            Log($"[Editor] Project '{project.Name}' created.");
         }
         catch (Exception ex)
         {
-            _bus.Publish(new LogEntryAddedEvent($"[Editor] Failed to create project: {ex.Message}", LogLevel.Error));
+            Log($"[Editor] Failed to create project: {ex.Message}", LogLevel.Error);
         }
     }
 
@@ -361,24 +334,44 @@ public sealed partial class EditorWindow : ContentPage
     {
         try
         {
-            FolderPickerResult picked = await FolderPicker.Default.PickAsync(CancellationToken.None);
-            if (!picked.IsSuccessful) return;
-
-            string path = picked.Folder.Path;
+            string? path = await PickFolderAsync();
+            if (path is null) return;
 
             EditorProject? project = await Task.Run(() => ProjectManager.Load(path)).ConfigureAwait(true);
             if (project is null)
             {
-                _bus.Publish(new LogEntryAddedEvent($"[Editor] No valid project found at: {path}", LogLevel.Warning));
+                Log($"[Editor] No valid project found at: {path}", LogLevel.Warning);
                 return;
             }
 
             EditorContext.Instance.SetActiveProject(project);
-            _bus.Publish(new LogEntryAddedEvent($"[Editor] Project '{project.Name}' opened.", LogLevel.Info));
+            Log($"[Editor] Project '{project.Name}' opened.");
         }
         catch (Exception ex)
         {
-            _bus.Publish(new LogEntryAddedEvent($"[Editor] Open project error: {ex.Message}", LogLevel.Error));
+            Log($"[Editor] Open project error: {ex.Message}", LogLevel.Error);
+        }
+    }
+
+    private static async Task<string?> PickFolderAsync()
+    {
+        try
+        {
+            Microsoft.UI.Xaml.Window? win = Application.Current?.Windows.FirstOrDefault()
+                ?.Handler?.PlatformView as Microsoft.UI.Xaml.Window;
+            if (win is null) return null;
+
+            IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(win);
+            var picker = new Windows.Storage.Pickers.FolderPicker();
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            picker.FileTypeFilter.Add("*");
+            Windows.Storage.StorageFolder? folder = await picker.PickSingleFolderAsync();
+            return folder?.Path;
+        }
+        catch
+        {
+            return null;
         }
     }
 
@@ -407,13 +400,13 @@ public sealed partial class EditorWindow : ContentPage
             }
             catch (Exception ex)
             {
-                _bus.Publish(new LogEntryAddedEvent($"[Editor] Failed to save scene: {ex.Message}", LogLevel.Error));
+                Log($"[Editor] Failed to save scene: {ex.Message}", LogLevel.Error);
             }
         }
 
         EditorContext.Instance.SetActiveScene(scene);
         _bus.Publish(new SceneCreatedEvent(scene));
-        _bus.Publish(new LogEntryAddedEvent($"[Editor] New scene '{scene.Name}' created.", LogLevel.Info));
+        Log($"[Editor] New scene '{scene.Name}' created.");
     }
 
     private async Task SaveSceneAsync()
@@ -437,14 +430,14 @@ public sealed partial class EditorWindow : ContentPage
             EditorContext.Instance.MarkSceneClean();
             BuildStatusLabel.Text      = "Saved";
             BuildStatusLabel.TextColor = BuildSuccessColor;
-            _bus.Publish(new LogEntryAddedEvent($"[Save] Scene saved to {scenePath}", LogLevel.Info));
+            Log($"[Save] Scene saved to {scenePath}");
 
             if (project is not null)
                 await TryGenerateCodeOnSaveAsync(scene, project).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
-            _bus.Publish(new LogEntryAddedEvent($"[Save] Error: {ex.Message}", LogLevel.Error));
+            Log($"[Save] Error: {ex.Message}", LogLevel.Error);
         }
     }
 
@@ -481,11 +474,11 @@ public sealed partial class EditorWindow : ContentPage
 
             await SceneSerializer.SaveAsync(scene, path).ConfigureAwait(true);
             EditorContext.Instance.MarkSceneClean();
-            _bus.Publish(new LogEntryAddedEvent($"[Save] Scene saved to {path}", LogLevel.Info));
+            Log($"[Save] Scene saved to {path}");
         }
         catch (Exception ex)
         {
-            _bus.Publish(new LogEntryAddedEvent($"[Save] Error: {ex.Message}", LogLevel.Error));
+            Log($"[Save] Error: {ex.Message}", LogLevel.Error);
         }
     }
 
@@ -503,9 +496,9 @@ public sealed partial class EditorWindow : ContentPage
                                             .ConfigureAwait(true);
 
         _bus.Publish(new CodeGenCompletedEvent(result));
-        _bus.Publish(new LogEntryAddedEvent(
+        Log(
             result.Success ? $"[CodeGen] {result.OutputPath}" : $"[CodeGen] Error: {result.ErrorMessage}",
-            result.Success ? LogLevel.Info : LogLevel.Error));
+            result.Success ? LogLevel.Info : LogLevel.Error);
     }
 
     private void OnExitClicked()
@@ -523,9 +516,10 @@ public sealed partial class EditorWindow : ContentPage
 
     private void OnDeleteSelected()
     {
-        EditorGameObject? obj = EditorContext.Instance.SelectedObject;
-        if (obj is null) return;
-        EditorContext.Instance.Commands.Execute(new DeleteEntityCommand(obj));
+        EditorGameObject? obj   = EditorContext.Instance.SelectedObject;
+        EditorScene?      scene = EditorContext.Instance.ActiveScene;
+        if (obj is null || scene is null) return;
+        EditorContext.Instance.Commands.Execute(new DeleteEntityCommand(obj, scene));
     }
 
     private void OnDuplicateSelected()
@@ -560,7 +554,7 @@ public sealed partial class EditorWindow : ContentPage
         string mgcbFile = Path.Combine(project.ContentPath, "Content.mgcb");
         if (!File.Exists(mgcbFile))
         {
-            _bus.Publish(new LogEntryAddedEvent($"[Build] Content.mgcb not found at: {mgcbFile}", LogLevel.Warning));
+            Log($"[Build] Content.mgcb not found at: {mgcbFile}", LogLevel.Warning);
             BuildStatusLabel.Text      = "Content.mgcb not found";
             BuildStatusLabel.TextColor = Color.FromArgb("#E8A050");
             return;
@@ -594,7 +588,7 @@ public sealed partial class EditorWindow : ContentPage
         string csproj = project.GameCsprojPath;
         if (string.IsNullOrEmpty(csproj) || !File.Exists(csproj))
         {
-            _bus.Publish(new LogEntryAddedEvent("[Build] Game .csproj path not configured.", LogLevel.Warning));
+            Log("[Build] Game .csproj path not configured.", LogLevel.Warning);
             return;
         }
 
@@ -622,7 +616,7 @@ public sealed partial class EditorWindow : ContentPage
         ProjectSettings settings = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
         if (string.IsNullOrWhiteSpace(settings.RootNamespace))
         {
-            _bus.Publish(new LogEntryAddedEvent("[CodeGen] RootNamespace not set in Project Settings.", LogLevel.Warning));
+            Log("[CodeGen] RootNamespace not set in Project Settings.", LogLevel.Warning);
             return;
         }
 
@@ -794,7 +788,7 @@ public sealed partial class EditorWindow : ContentPage
         EditorGameLoop.Current?.EnterPlay(runner);
 
         EditorContext.Instance.SetState(EditorState.Playing);
-        _bus.Publish(new LogEntryAddedEvent("[Play] Play mode started.", LogLevel.Info));
+        Log("[Play] Play mode started.");
     }
 
     private void OnPauseClicked(object sender, EventArgs e) => OnPauseClicked();
@@ -832,7 +826,7 @@ public sealed partial class EditorWindow : ContentPage
             EditorContext.Instance.SetActiveScene(restored);
 
         EditorContext.Instance.SetState(EditorState.Editing);
-        _bus.Publish(new LogEntryAddedEvent("[Play] Play mode stopped.", LogLevel.Info));
+        Log("[Play] Play mode stopped.");
     }
 
     #endregion

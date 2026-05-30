@@ -88,10 +88,11 @@ public sealed partial class SceneHierarchyView : ContentView
         if (filtering && !MatchesFilter(obj, _searchFilter)) return;
 
         bool expanded = filtering || _expandedIds.Contains(obj.Id);
-        HierarchyItem item = new(obj, depth, expanded,
+        HierarchyItem? item = null;
+        item = new(obj, depth, expanded,
             onToggleExpand: () =>
             {
-                if (item.IsExpanded) _expandedIds.Add(obj.Id);
+                if (item!.IsExpanded) _expandedIds.Add(obj.Id);
                 else _expandedIds.Remove(obj.Id);
                 RebuildList();
             },

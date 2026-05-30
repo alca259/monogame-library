@@ -78,8 +78,17 @@ public sealed partial class NewProjectDialog : ContentPage
     {
         try
         {
-            FolderPickerResult result = await FolderPicker.Default.PickAsync(CancellationToken.None);
-            return result.IsSuccessful ? result.Folder.Path : null;
+            Microsoft.UI.Xaml.Window? win = Application.Current?.Windows.FirstOrDefault()
+                ?.Handler?.PlatformView as Microsoft.UI.Xaml.Window;
+            if (win is null) return null;
+
+            IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(win);
+            var picker = new Windows.Storage.Pickers.FolderPicker();
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            picker.FileTypeFilter.Add("*");
+            Windows.Storage.StorageFolder? folder = await picker.PickSingleFolderAsync();
+            return folder?.Path;
         }
         catch
         {

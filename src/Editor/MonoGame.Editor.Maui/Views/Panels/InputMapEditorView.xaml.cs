@@ -148,7 +148,7 @@ public sealed partial class InputMapEditorView : ContentView
             "Device type (Keyboard / Mouse / Gamepad):");
         if (string.IsNullOrWhiteSpace(deviceStr)) return;
 
-        if (!Enum.TryParse<DeviceType>(deviceStr, true, out DeviceType device)) return;
+        if (!Enum.TryParse<Alca.MonoGame.Kernel.Input.DeviceType>(deviceStr, true, out Alca.MonoGame.Kernel.Input.DeviceType device)) return;
 
         string? codeStr = await page.DisplayPromptAsync(
             "Add Binding",

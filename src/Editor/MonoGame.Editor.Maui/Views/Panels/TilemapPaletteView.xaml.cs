@@ -10,7 +10,9 @@ public sealed partial class TilemapPaletteView : ContentView
 
     private EditorTileset? _tileset;
     private int _selectedTileId = -1;
+#pragma warning disable CS0414
     private bool _eraseMode;
+#pragma warning restore CS0414
 
     private Action<ProjectOpenedEvent>?        _onProjectOpened;
     private Action<TilemapLayerSelectedEvent>? _onLayerSelected;
@@ -67,7 +69,7 @@ public sealed partial class TilemapPaletteView : ContentView
         bool hasLayer = e.Layer is not null && _tileset is not null;
 
         TilemapInfoLabel.Text = hasLayer
-            ? $"{e.Tilemap.Name} › {e.Layer!.Name}"
+            ? $"{Path.GetFileNameWithoutExtension(e.Tilemap.FilePath)} › {e.Layer!.Name}"
             : "No tilemap layer selected";
 
         int count = _tileset?.TileCount ?? 0;
@@ -106,8 +108,8 @@ public sealed partial class TilemapPaletteView : ContentView
         Point? pos = e.GetPosition(PaletteCanvas);
         if (pos is null) return;
 
-        int col = (int)(pos.Value.X / TilePaletteDrawable.CellSize);
-        int row = (int)(pos.Value.Y / TilePaletteDrawable.CellSize);
+        int col = (int)(pos.Value.X / CellSize);
+        int row = (int)(pos.Value.Y / CellSize);
 
         if (col < 0 || col >= _tileset.Columns) return;
 
@@ -129,7 +131,7 @@ public sealed partial class TilemapPaletteView : ContentView
         }
 
         int rows = (int)Math.Ceiling((double)_tileset.TileCount / _tileset.Columns);
-        PaletteCanvas.HeightRequest = rows * TilePaletteDrawable.CellSize;
+        PaletteCanvas.HeightRequest = rows * CellSize;
     }
 
     // ── Drawable ──────────────────────────────────────────────────────────────
