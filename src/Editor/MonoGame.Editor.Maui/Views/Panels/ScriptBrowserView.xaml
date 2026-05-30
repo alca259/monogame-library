@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.ScriptBrowserView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
+             BackgroundColor="{StaticResource BgPanel}">
+
+    <Grid RowDefinitions="28,1,*" RowSpacing="0">
+
+        <!-- ── Toolbar ──────────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0">
+            <Grid ColumnDefinitions="Auto,1,*" ColumnSpacing="4" Padding="4,2">
+                <Button Grid.Column="0"
+                        Text="⟳ Rescan"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnRescanClicked"/>
+                <BoxView Grid.Column="1"
+                         Color="{StaticResource BorderColor}"
+                         VerticalOptions="Fill"
+                         Margin="2,2"/>
+                <Label Grid.Column="2"
+                       x:Name="ScriptCountLabel"
+                       Text="0 scripts"
+                       Style="{StaticResource DimLabel}"
+                       VerticalOptions="Center"
+                       Margin="4,0"/>
+            </Grid>
+        </Border>
+        <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Body ─────────────────────────────────────────────── -->
+        <Grid Grid.Row="2" ColumnDefinitions="180,1,*" ColumnSpacing="0">
+
+            <!-- Folder tree -->
+            <CollectionView Grid.Column="0"
+                            x:Name="FolderTree"
+                            SelectionMode="None"
+                            BackgroundColor="{StaticResource BgPanel}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="local:FolderItem">
+                        <Grid Padding="{Binding LeftPadding}" ColumnDefinitions="14,*" ColumnSpacing="2">
+                            <Label Grid.Column="0"
+                                   Text="{Binding ExpandIcon}"
+                                   TextColor="{StaticResource TextMuted}"
+                                   FontSize="10"
+                                   VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ToggleExpandCommand}"/>
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <Label Grid.Column="1"
+                                   Text="{Binding Name}"
+                                   Style="{StaticResource PrimaryLabel}"
+                                   VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ToggleExpandCommand}"/>
+                                </Label.GestureRecognizers>
+                            </Label>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <BoxView Grid.Column="1" Color="{StaticResource BorderColor}"/>
+
+            <!-- Script file list -->
+            <CollectionView Grid.Column="2"
+                            x:Name="ScriptList"
+                            SelectionMode="Single"
+                            BackgroundColor="{StaticResource BgPanel}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <Label Text="{Binding .}"
+                               Style="{StaticResource PrimaryLabel}"
+                               Padding="10,5"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <Label Text="No scripts in folder"
+                           Style="{StaticResource PlaceholderLabel}"
+                           Margin="0,16"/>
+                </CollectionView.EmptyView>
+            </CollectionView>
+
+        </Grid>
+    </Grid>
+</ContentView>

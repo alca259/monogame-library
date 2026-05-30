@@ -2,6 +2,7 @@
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.SceneHierarchyView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,*,24" RowSpacing="0">
@@ -10,7 +11,7 @@
         <Border Grid.Row="0"
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0">
-            <Grid ColumnDefinitions="Auto,Auto,1,*,Auto" ColumnSpacing="2" Padding="4,2">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,1,*,Auto" ColumnSpacing="2" Padding="4,2">
 
                 <Button Grid.Column="0"
                         Text="+"
@@ -24,18 +25,26 @@
                         Style="{StaticResource SmallIconButton}"
                         Clicked="OnDeleteClicked"/>
 
-                <BoxView Grid.Column="2"
+                <Button Grid.Column="2"
+                        x:Name="RenameBtn"
+                        Text="✎"
+                        ToolTipProperties.Text="Rename selected entity"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnRenameClicked"/>
+
+                <BoxView Grid.Column="3"
                          Color="{StaticResource BorderColor}"
                          VerticalOptions="Fill"
                          Margin="2,2"/>
 
-                <Entry Grid.Column="3"
+                <Entry Grid.Column="4"
                        x:Name="SearchEntry"
                        Placeholder="Search…"
                        Style="{StaticResource InputEntry}"
                        TextChanged="OnSearchTextChanged"/>
 
-                <Label Grid.Column="4"
+                <Label Grid.Column="5"
                        x:Name="CountLabel"
                        Text="0 entities"
                        Style="{StaticResource DimLabel}"
@@ -54,18 +63,37 @@
                         SelectionChanged="OnSelectionChanged"
                         BackgroundColor="{StaticResource BgPanel}">
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="x:String">
-                    <Grid ColumnDefinitions="20,*"
-                          Padding="8,3">
+                <DataTemplate x:DataType="local:HierarchyItem">
+                    <Grid ColumnDefinitions="Auto,*"
+                          Padding="{Binding LeftPadding}">
+
+                        <!-- Expand / collapse icon (tap = toggle, also selects row) -->
                         <Label Grid.Column="0"
-                               Text="▶"
+                               Text="{Binding ExpandIcon}"
                                TextColor="{StaticResource TextDim}"
                                FontSize="10"
-                               VerticalOptions="Center"/>
+                               WidthRequest="16"
+                               HorizontalTextAlignment="Center"
+                               VerticalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ToggleExpandCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+
+                        <!-- Name label: single tap → selection (via CollectionView),
+                                         double tap → inline rename -->
                         <Label Grid.Column="1"
-                               Text="{Binding .}"
-                               Style="{StaticResource PrimaryLabel}"
-                               VerticalOptions="Center"/>
+                               Text="{Binding DisplayName}"
+                               TextColor="{Binding NameColor}"
+                               FontSize="12"
+                               VerticalOptions="Center"
+                               Margin="2,0">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer NumberOfTapsRequired="2"
+                                                      Command="{Binding RenameCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

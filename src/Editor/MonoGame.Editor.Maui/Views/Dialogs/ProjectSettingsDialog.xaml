@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage x:Class="MonoGame.Editor.Maui.Views.Dialogs.ProjectSettingsDialog"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             BackgroundColor="#80000000"
+             Title="Project Settings">
+
+    <Grid>
+        <Border BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0"
+                WidthRequest="560"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+            <VerticalStackLayout Spacing="0">
+
+                <!-- Header -->
+                <Border BackgroundColor="{StaticResource BgPanel}"
+                        StrokeThickness="0"
+                        Padding="20,14">
+                    <Label Text="Project Settings"
+                           Style="{StaticResource PrimaryLabel}"
+                           FontSize="15"/>
+                </Border>
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- Tab bar -->
+                <Border BackgroundColor="{StaticResource BgPanel}"
+                        StrokeThickness="0">
+                    <HorizontalStackLayout Spacing="0">
+                        <Button x:Name="GeneralTabBtn"
+                                Text="General"
+                                Style="{StaticResource TabButton}"
+                                Clicked="OnTabClicked"
+                                CommandParameter="General"/>
+                        <Button x:Name="ContentTabBtn"
+                                Text="Content"
+                                Style="{StaticResource TabButton}"
+                                Clicked="OnTabClicked"
+                                CommandParameter="Content"/>
+                        <Button x:Name="LocalizationTabBtn"
+                                Text="Localization"
+                                Style="{StaticResource TabButton}"
+                                Clicked="OnTabClicked"
+                                CommandParameter="Localization"/>
+                        <Button x:Name="CodeGenTabBtn"
+                                Text="Code Gen"
+                                Style="{StaticResource TabButton}"
+                                Clicked="OnTabClicked"
+                                CommandParameter="CodeGen"/>
+                    </HorizontalStackLayout>
+                </Border>
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- ── General tab ── -->
+                <ScrollView x:Name="GeneralPanel" HeightRequest="320">
+                    <Grid Padding="20,16"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                          ColumnDefinitions="140,*"
+                          RowSpacing="10"
+                          ColumnSpacing="8">
+
+                        <Label Grid.Row="0" Grid.Column="0"
+                               Text="Build configuration"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <Picker Grid.Row="0" Grid.Column="1"
+                                x:Name="BuildConfigPicker"
+                                BackgroundColor="{StaticResource BgPanel}"
+                                TextColor="{StaticResource PrimaryLabel}"/>
+
+                        <Label Grid.Row="1" Grid.Column="0"
+                               Text="Virtual width"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <Entry Grid.Row="1" Grid.Column="1"
+                               x:Name="VirtualWidthEntry"
+                               Keyboard="Numeric"
+                               BackgroundColor="{StaticResource BgPanel}"
+                               TextColor="{StaticResource PrimaryLabel}"/>
+
+                        <Label Grid.Row="2" Grid.Column="0"
+                               Text="Virtual height"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <Entry Grid.Row="2" Grid.Column="1"
+                               x:Name="VirtualHeightEntry"
+                               Keyboard="Numeric"
+                               BackgroundColor="{StaticResource BgPanel}"
+                               TextColor="{StaticResource PrimaryLabel}"/>
+
+                        <Label Grid.Row="3" Grid.Column="0"
+                               Text="Game .csproj (rel)"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <Entry Grid.Row="3" Grid.Column="1"
+                               x:Name="GameAppCsprojEntry"
+                               BackgroundColor="{StaticResource BgPanel}"
+                               TextColor="{StaticResource PrimaryLabel}"/>
+
+                        <Label Grid.Row="4" Grid.Column="0"
+                               Text="Scripts .csproj (rel)"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <Entry Grid.Row="4" Grid.Column="1"
+                               x:Name="GameScriptsCsprojEntry"
+                               BackgroundColor="{StaticResource BgPanel}"
+                               TextColor="{StaticResource PrimaryLabel}"/>
+
+                    </Grid>
+                </ScrollView>
+
+                <!-- ── Content tab ── -->
+                <ScrollView x:Name="ContentPanel" HeightRequest="320" IsVisible="False">
+                    <Grid Padding="20,16"
+                          RowDefinitions="Auto,Auto"
+                          ColumnDefinitions="140,*"
+                          RowSpacing="10"
+                          ColumnSpacing="8">
+
+                        <Label Grid.Row="0" Grid.Column="0"
+                               Text="Content path (rel)"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <Entry Grid.Row="0" Grid.Column="1"
+                               x:Name="ContentRelPathEntry"
+                               BackgroundColor="{StaticResource BgPanel}"
+                               TextColor="{StaticResource PrimaryLabel}"/>
+
+                        <Label Grid.Row="1" Grid.Column="0"
+                               Text="Localization path (rel)"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <Entry Grid.Row="1" Grid.Column="1"
+                               x:Name="LocalizationRelPathEntry"
+                               BackgroundColor="{StaticResource BgPanel}"
+                               TextColor="{StaticResource PrimaryLabel}"/>
+
+                    </Grid>
+                </ScrollView>
+
+                <!-- ── Localization tab ── -->
+                <ScrollView x:Name="LocalizationPanel" HeightRequest="320" IsVisible="False">
+                    <Grid Padding="20,16"
+                          RowDefinitions="Auto,Auto"
+                          ColumnDefinitions="140,*"
+                          RowSpacing="10"
+                          ColumnSpacing="8">
+
+                        <Label Grid.Row="0" Grid.Column="0"
+                               Text="Default locale"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <Entry Grid.Row="0" Grid.Column="1"
+                               x:Name="DefaultLocaleEntry"
+                               Placeholder="en-US"
+                               BackgroundColor="{StaticResource BgPanel}"
+                               TextColor="{StaticResource PrimaryLabel}"
+                               PlaceholderColor="{StaticResource DimLabel}"/>
+
+                        <Label Grid.Row="1" Grid.Column="0"
+                               Text="Supported locales"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Start"
+                               Margin="0,6,0,0"/>
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4">
+                            <Entry x:Name="SupportedLocalesEntry"
+                                   Placeholder="en-US, es-ES, fr-FR (comma-separated)"
+                                   BackgroundColor="{StaticResource BgPanel}"
+                                   TextColor="{StaticResource PrimaryLabel}"
+                                   PlaceholderColor="{StaticResource DimLabel}"/>
+                            <Label Text="Comma-separated locale codes."
+                                   Style="{StaticResource DimLabel}"
+                                   FontSize="10"/>
+                        </VerticalStackLayout>
+
+                    </Grid>
+                </ScrollView>
+
+                <!-- ── Code Gen tab ── -->
+                <ScrollView x:Name="CodeGenPanel" HeightRequest="320" IsVisible="False">
+                    <Grid Padding="20,16"
+                          RowDefinitions="Auto,Auto,Auto"
+                          ColumnDefinitions="160,*"
+                          RowSpacing="10"
+                          ColumnSpacing="8">
+
+                        <Label Grid.Row="0" Grid.Column="0"
+                               Text="Root namespace"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <Entry Grid.Row="0" Grid.Column="1"
+                               x:Name="RootNamespaceEntry"
+                               BackgroundColor="{StaticResource BgPanel}"
+                               TextColor="{StaticResource PrimaryLabel}"/>
+
+                        <Label Grid.Row="1" Grid.Column="0"
+                               Text="Generated code folder"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <Entry Grid.Row="1" Grid.Column="1"
+                               x:Name="GeneratedCodeFolderEntry"
+                               BackgroundColor="{StaticResource BgPanel}"
+                               TextColor="{StaticResource PrimaryLabel}"/>
+
+                        <Label Grid.Row="2" Grid.Column="0"
+                               Text="Generate on save"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <CheckBox Grid.Row="2" Grid.Column="1"
+                                  x:Name="GenerateOnSaveCheck"
+                                  Color="{StaticResource AccentBlue}"
+                                  HorizontalOptions="Start"/>
+
+                    </Grid>
+                </ScrollView>
+
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- Footer -->
+                <HorizontalStackLayout HorizontalOptions="End"
+                                       Spacing="8"
+                                       Padding="20,12">
+                    <Button Text="Cancel"
+                            Style="{StaticResource SmallIconButton}"
+                            Clicked="OnCancel"/>
+                    <Button Text="Save"
+                            Style="{StaticResource SmallIconButton}"
+                            Clicked="OnSubmit"/>
+                </HorizontalStackLayout>
+
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+
+</ContentPage>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.TilemapPaletteView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             BackgroundColor="{StaticResource BgPanel}">
+
+    <Grid RowDefinitions="28,1,*" RowSpacing="0">
+
+        <!-- ── Toolbar ──────────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0"
+                Padding="8,0">
+            <Label x:Name="TilemapInfoLabel"
+                   Text="No tilemap layer selected"
+                   Style="{StaticResource DimLabel}"
+                   VerticalOptions="Center"/>
+        </Border>
+        <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Palette canvas ───────────────────────────────────── -->
+        <Grid Grid.Row="2">
+            <GraphicsView x:Name="PaletteCanvas"
+                          BackgroundColor="{StaticResource BgPanel}"/>
+            <Label x:Name="PalettePlaceholderLabel"
+                   Text="Open a project and select a tilemap layer"
+                   Style="{StaticResource PlaceholderLabel}"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center"/>
+        </Grid>
+
+    </Grid>
+</ContentView>

@@ -8,6 +8,8 @@ namespace MonoGame.Editor.Maui.Views.Panels;
 /// </summary>
 public sealed partial class ConsolePanelView : ContentView
 {
+    private const int MaxLogEntries = 1000;
+
     private readonly IEditorEventBus _bus = EditorContext.Instance.EventBus;
     private readonly ObservableCollection<string> _allEntries  = [];
     private readonly ObservableCollection<string> _visible = [];
@@ -19,8 +21,8 @@ public sealed partial class ConsolePanelView : ContentView
     private Action<LogEntryAddedEvent>?  _onLogEntry;
     private Action<BuildOutputLineEvent>? _onBuildOutput;
 
-    private static readonly Color ActiveFilterFg   = Color.FromArgb("#d6d6d8");
-    private static readonly Color InactiveFilterFg = Color.FromArgb("#646468");
+    private static readonly Color ActiveFilterFg   = Color.FromArgb("#E6E6E8");
+    private static readonly Color InactiveFilterFg = Color.FromArgb("#6A6A72");
 
     public ConsolePanelView()
     {
@@ -60,6 +62,7 @@ public sealed partial class ConsolePanelView : ContentView
         };
 
         string line = $"{e.Entry.Timestamp:HH:mm:ss} {prefix}{e.Entry.Message}";
+        if (_allEntries.Count >= MaxLogEntries) _allEntries.RemoveAt(0);
         _allEntries.Add(line);
 
         bool show = e.Entry.Level switch
@@ -76,6 +79,7 @@ public sealed partial class ConsolePanelView : ContentView
     {
         string prefix = e.IsError ? "[ERR]  " : "[BLD]  ";
         string line = $"{DateTime.Now:HH:mm:ss} {prefix}{e.Line}";
+        if (_allEntries.Count >= MaxLogEntries) _allEntries.RemoveAt(0);
         _allEntries.Add(line);
         if (_showInfo) _visible.Add(line);
     }

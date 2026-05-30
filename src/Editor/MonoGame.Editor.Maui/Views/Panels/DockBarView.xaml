@@ -77,36 +77,13 @@
             <!-- Scenes tab -->
             <panels:SceneManagerView x:Name="ScenesContent" IsVisible="False"/>
 
-            <!-- Placeholder tabs -->
-            <Label x:Name="LocalizationContent"
-                   Text="Localization — Fase 7"
-                   Style="{StaticResource PlaceholderLabel}"
-                   IsVisible="False"/>
-
-            <Label x:Name="InputMapsContent"
-                   Text="Input Maps — Fase 7"
-                   Style="{StaticResource PlaceholderLabel}"
-                   IsVisible="False"/>
-
-            <Label x:Name="TilemapContent"
-                   Text="Tilemap — Fase 7"
-                   Style="{StaticResource PlaceholderLabel}"
-                   IsVisible="False"/>
-
-            <Label x:Name="HistoryContent"
-                   Text="Undo History — Fase 7"
-                   Style="{StaticResource PlaceholderLabel}"
-                   IsVisible="False"/>
-
-            <Label x:Name="ScriptsContent"
-                   Text="Scripts — Fase 7"
-                   Style="{StaticResource PlaceholderLabel}"
-                   IsVisible="False"/>
-
-            <Label x:Name="SpriteEditorContent"
-                   Text="Sprite Editor — Fase 7"
-                   Style="{StaticResource PlaceholderLabel}"
-                   IsVisible="False"/>
+            <!-- Phase 7 tabs -->
+            <panels:LocalizationBrowserView x:Name="LocalizationContent" IsVisible="False"/>
+            <panels:InputMapEditorView      x:Name="InputMapsContent"    IsVisible="False"/>
+            <panels:TilemapPaletteView      x:Name="TilemapContent"      IsVisible="False"/>
+            <panels:UndoHistoryView         x:Name="HistoryContent"      IsVisible="False"/>
+            <panels:ScriptBrowserView       x:Name="ScriptsContent"      IsVisible="False"/>
+            <panels:SpriteInspectorView     x:Name="SpriteEditorContent" IsVisible="False"/>
 
         </Grid>
     </Grid>

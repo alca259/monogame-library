@@ -1,3 +1,4 @@
+using MonoGame.Editor.Maui.Platforms.Windows;
 using Serilog;
 
 namespace MonoGame.Editor.Maui;
@@ -27,6 +28,10 @@ static class MauiProgram
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+            })
+            .ConfigureMauiHandlers(h =>
+            {
+                h.AddHandler<MonoGameView, MonoGameViewHandler>();
             });
 
         return builder.Build();

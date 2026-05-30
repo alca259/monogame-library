@@ -2,6 +2,7 @@
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.AssetBrowserView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,1,*,1,24" RowSpacing="0">
@@ -28,27 +29,120 @@
         </Border>
         <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
 
-        <!-- ── Asset list ────────────────────────────────────────── -->
-        <CollectionView Grid.Row="2"
-                        x:Name="AssetList"
-                        SelectionMode="Single"
-                        SelectionChanged="OnAssetSelectionChanged"
-                        BackgroundColor="{StaticResource BgPanel}">
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="x:String">
-                    <Grid Padding="10,3">
-                        <Label Text="{Binding .}"
-                               Style="{StaticResource PrimaryLabel}"
-                               VerticalOptions="Center"/>
-                    </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-            <CollectionView.EmptyView>
-                <Label Text="No project open"
-                       Style="{StaticResource PlaceholderLabel}"
-                       Margin="0,24"/>
-            </CollectionView.EmptyView>
-        </CollectionView>
+        <!-- ── Body: folder tree | asset panel ──────────────────── -->
+        <Grid Grid.Row="2"
+              ColumnDefinitions="200,1,*"
+              ColumnSpacing="0">
+
+            <!-- Folder tree -->
+            <CollectionView Grid.Column="0"
+                            x:Name="FolderTree"
+                            SelectionMode="None"
+                            BackgroundColor="{StaticResource BgPanel}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="local:FolderItem">
+                        <Grid ColumnDefinitions="14,*"
+                              Padding="{Binding LeftPadding}"
+                              ColumnSpacing="2">
+                            <Label Grid.Column="0"
+                                   Text="{Binding ExpandIcon}"
+                                   Style="{StaticResource DimLabel}"
+                                   FontSize="10"
+                                   VerticalOptions="Center"
+                                   HorizontalTextAlignment="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ToggleExpandCommand}"/>
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <Label Grid.Column="1"
+                                   Text="{Binding Name}"
+                                   Style="{StaticResource PrimaryLabel}"
+                                   VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ToggleExpandCommand}"/>
+                                </Label.GestureRecognizers>
+                            </Label>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <Label Text="No project open"
+                           Style="{StaticResource PlaceholderLabel}"
+                           Margin="8,12"/>
+                </CollectionView.EmptyView>
+            </CollectionView>
+
+            <BoxView Grid.Column="1" Color="{StaticResource BorderColor}"/>
+
+            <!-- Right panel: breadcrumb + column headers + asset list -->
+            <Grid Grid.Column="2"
+                  RowDefinitions="Auto,1,24,1,*"
+                  RowSpacing="0">
+
+                <!-- Breadcrumb -->
+                <ScrollView Grid.Row="0"
+                            Orientation="Horizontal"
+                            HeightRequest="26"
+                            BackgroundColor="{StaticResource BgChrome}">
+                    <HorizontalStackLayout x:Name="BreadcrumbLayout"
+                                           Spacing="0"
+                                           VerticalOptions="Center"
+                                           Padding="4,0"/>
+                </ScrollView>
+                <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
+
+                <!-- Column headers -->
+                <Grid Grid.Row="2"
+                      ColumnDefinitions="24,*,80,60"
+                      BackgroundColor="{StaticResource BgChrome}"
+                      Padding="8,0"
+                      ColumnSpacing="4">
+                    <Label Grid.Column="1" Text="Name" Style="{StaticResource DimLabel}" VerticalOptions="Center"/>
+                    <Label Grid.Column="2" Text="Type" Style="{StaticResource DimLabel}" VerticalOptions="Center"/>
+                    <Label Grid.Column="3" Text="Size" Style="{StaticResource DimLabel}" VerticalOptions="Center"/>
+                </Grid>
+                <BoxView Grid.Row="3" Color="{StaticResource BorderColor}"/>
+
+                <!-- Asset list -->
+                <CollectionView Grid.Row="4"
+                                x:Name="AssetList"
+                                SelectionMode="Single"
+                                SelectionChanged="OnAssetSelectionChanged"
+                                BackgroundColor="{StaticResource BgPanel}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="local:AssetItem">
+                            <Grid ColumnDefinitions="24,*,80,60"
+                                  Padding="8,2"
+                                  ColumnSpacing="4">
+                                <Label Grid.Column="0"
+                                       Text="{Binding Icon}"
+                                       FontSize="13"
+                                       VerticalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                                <Label Grid.Column="1"
+                                       Text="{Binding Info.Name}"
+                                       Style="{StaticResource PrimaryLabel}"
+                                       VerticalOptions="Center"/>
+                                <Label Grid.Column="2"
+                                       Text="{Binding TypeLabel}"
+                                       Style="{StaticResource DimLabel}"
+                                       VerticalOptions="Center"/>
+                                <Label Grid.Column="3"
+                                       Text="{Binding SizeLabel}"
+                                       Style="{StaticResource DimLabel}"
+                                       VerticalOptions="Center"/>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                    <CollectionView.EmptyView>
+                        <Label Text="Empty folder"
+                               Style="{StaticResource PlaceholderLabel}"
+                               Margin="0,24"/>
+                    </CollectionView.EmptyView>
+                </CollectionView>
+
+            </Grid>
+        </Grid>
 
         <BoxView Grid.Row="3" Color="{StaticResource BorderColor}"/>
 

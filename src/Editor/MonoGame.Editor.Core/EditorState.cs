@@ -9,4 +9,7 @@ public enum EditorState
     /// <summary>El bucle de juego está en ejecución con la cámara propia del juego.</summary>
     Playing,
 
+    /// <summary>El bucle de juego está detenido temporalmente; la escena permanece congelada en el último fotograma.</summary>
+    Paused,
+
 }

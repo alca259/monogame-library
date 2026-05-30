@@ -2,6 +2,7 @@
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.SceneManagerView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,1,*,1,24" RowSpacing="0">
@@ -42,14 +43,17 @@
         <CollectionView Grid.Row="2"
                         x:Name="SceneList"
                         SelectionMode="Single"
-                        SelectionChanged="OnSceneSelectionChanged"
                         BackgroundColor="{StaticResource BgPanel}">
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="x:String">
+                <DataTemplate x:DataType="local:SceneItem">
                     <Grid Padding="10,4">
-                        <Label Text="{Binding .}"
+                        <Label Text="{Binding DisplayName}"
                                Style="{StaticResource PrimaryLabel}"
                                VerticalOptions="Center"/>
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer NumberOfTapsRequired="2"
+                                                  Command="{Binding LoadCommand}"/>
+                        </Grid.GestureRecognizers>
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

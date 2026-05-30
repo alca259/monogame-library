@@ -12,9 +12,9 @@ public sealed partial class App : Application
     {
         return new Window(new EditorWindow())
         {
-            Title = "MonoGame Editor",
             MinimumWidth = 1280,
             MinimumHeight = 720,
+            TitleBar = new TitleBarView(),
         };
     }
 }

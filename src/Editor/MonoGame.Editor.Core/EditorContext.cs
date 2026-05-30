@@ -1,3 +1,5 @@
+using MonoGame.Editor.Core.Gizmos;
+
 namespace MonoGame.Editor.Core;
 
 /// <summary>
@@ -58,6 +60,9 @@ public sealed class EditorContext
 
     /// <summary>El logger centralizado del editor. Publica <see cref="LogEntryAddedEvent"/> a través de <see cref="EventBus"/>.</summary>
     public IEditorLogger Logger => _logger;
+
+    /// <summary>Controlador de gizmos y snapping compartido por viewport y toolbar.</summary>
+    public GizmoController Gizmos { get; } = new GizmoController();
 
     /// <summary>Estado actual del editor (Editing o Playing).</summary>
     public EditorState State { get { lock (_stateLock) return _state; } }

@@ -163,11 +163,11 @@ El editor tiene **5 zonas horizontales fijas**:
 
 ---
 
-## Fase 0 — Proyecto MAUI y shell básico
+## Fase 0 — Proyecto MAUI y shell básico ✅
 
 **Clases clave:** `App`, `EditorWindow`, `MauiProgram`, recursos de estilos.
 
-### 0.1 Crear proyecto
+### 0.1 Crear proyecto ✅
 
 - Tipo: `dotnet new maui` orientado a Windows (target `net10.0-windows10.0.19041.0`).
 - Agregar al `MonoGame.Editor.slnx`.
@@ -182,12 +182,12 @@ El editor tiene **5 zonas horizontales fijas**:
 
 - Referencia de proyecto: `MonoGame.Editor.Core`.
 
-### 0.2 Configurar Serilog
+### 0.2 Configurar Serilog ✅
 
 Igual que en WinForms: inicializar en `MauiProgram.cs`, mismo `LogsPath` de `EditorPreferences`.  
 Capturar excepciones no controladas con `Application.UnhandledException` y mostrar `DisplayAlert`.
 
-### 0.3 Layout de la ventana principal
+### 0.3 Layout de la ventana principal ✅
 
 `EditorWindow.xaml` usa un `Grid` con 5 filas (alturas fijas para chrome, menú, toolbar, estado; flex para el cuerpo y dock):
 
@@ -206,14 +206,14 @@ Capturar excepciones no controladas con `Application.UnhandledException` y mostr
 </Grid>
 ```
 
-### 0.4 Tema oscuro
+### 0.4 Tema oscuro ✅
 
 - `Colors.xaml` define todas las variables de color de la sección **Estilo visual**.
 - `ControlStyles.xaml` aplica estilos implícitos a `Button`, `Entry`, `Label`, `Border`.
 - Forzar tema oscuro: `Application.Current.UserAppTheme = AppTheme.Dark`.
 - Sin modo claro ni selector.
 
-### 0.5 TitleBar personalizado
+### 0.5 TitleBar personalizado ✅
 
 Reemplazar el chrome por defecto (Windows) con un `TitleBar` MAUI personalizado:
 - Icono de la app (logo "M" azul).
@@ -223,11 +223,11 @@ Reemplazar el chrome por defecto (Windows) con un `TitleBar` MAUI personalizado:
 
 ---
 
-## Fase 1 — Control MonoGame embebido (`MonoGameView`)
+## Fase 1 — Control MonoGame embebido (`MonoGameView`) ✅
 
 **Clases clave:** `MonoGameView`, `MonoGameViewHandler` (Windows), `EditorGameLoop`.
 
-### 1.1 Arquitectura del control
+### 1.1 Arquitectura del control ✅
 
 `MonoGameView` es un `View` abstracto MAUI. En Windows se implementa mediante un handler personalizado que inyecta un `SwapChainPanel` de WinUI 3 como vista nativa, replicando el patrón de `MonoGame.Editor.WinForms/Controls/MonoGameControl.cs`.
 
@@ -239,7 +239,7 @@ MonoGameView (MAUI View)
             └── Thread de render dedicado  ← game loop a 60 fps
 ```
 
-### 1.2 Handler Windows
+### 1.2 Handler Windows ✅
 
 ```csharp
 // Platforms/Windows/MonoGameViewHandler.Windows.cs
@@ -259,7 +259,7 @@ internal sealed class MonoGameViewHandler : ViewHandler<MonoGameView, SwapChainP
 }
 ```
 
-### 1.3 Integración con EditModeRenderer
+### 1.3 Integración con EditModeRenderer ✅
 
 `EditorGameLoop` expone los mismos métodos que en WinForms:
 - `Initialize(GraphicsDevice)` — conecta `EditModeRenderer`, `GizmoRenderer`, `EditorCamera2D`.
@@ -271,7 +271,7 @@ Reutilizar directamente:
 - `MonoGame.Editor.WinForms/Rendering/EditModeRenderer.cs` (copiar a Core o al nuevo proyecto)
 - `MonoGame.Editor.WinForms/Controls/EditorCamera2D.cs` (ídem)
 
-### 1.4 Barra de info del viewport
+### 1.4 Barra de info del viewport ⏳ (Phase 2 — deferred, requires SpriteFont overlay)
 
 Franja superior superpuesta al viewport (overlay `AbsoluteLayout`):
 ```
@@ -281,11 +281,11 @@ Actualizada frame a frame por el thread de render vía `MainThread.BeginInvokeOn
 
 ---
 
-## Fase 2 — Viewport completo (cámara, grid, gizmos, snapping)
+## Fase 2 — Viewport completo (cámara, grid, gizmos, snapping) ✅
 
 **Clases clave:** `EditorCamera2D`, `EditModeRenderer`, `GizmoRenderer`, `GizmoController`.
 
-### 2.1 Input del viewport
+### 2.1 Input del viewport ✅
 
 Capturar eventos de puntero/teclado sobre el `MonoGameView` usando handlers nativos Windows:
 - **Pan**: botón medio o `H` + arrastrar.
@@ -293,12 +293,12 @@ Capturar eventos de puntero/teclado sobre el `MonoGameView` usando handlers nati
 - **Selección**: click izquierdo → publicar `GameObjectSelectedEvent`.
 - **Arrastrar gizmo**: detectar handle más cercano, publicar comandos `MoveCommand`, `RotateCommand`, `ScaleCommand`.
 
-### 2.2 Grid y snapping
+### 2.2 Grid y snapping ✅
 
 Replicar los toggles del toolbar: `SNAP` activa snap-to-grid. La tecla `Ctrl` alterna snap temporalmente.  
 Tamaño de grid configurable desde `EditorPreferences`. Mostrado en la barra de info del viewport.
 
-### 2.3 Modos de gizmo
+### 2.3 Modos de gizmo ✅
 
 | Tecla | Modo |
 |-------|------|
@@ -310,18 +310,18 @@ Tamaño de grid configurable desde `EditorPreferences`. Mostrado en la barra de 
 
 El toolbar indica el modo activo con fondo azul (`--accent-blue`).
 
-### 2.4 Toggles de viewport
+### 2.4 Toggles de viewport ✅
 
 Píldoras en el toolbar: **2D** · **SNAP** · **NAV** · **RES**.  
 Cada toggle actualiza flags en `EditorContext` o `EditorPreferences` y dispara el re-render correspondiente.
 
 ---
 
-## Fase 3 — Panel Hierarchy
+## Fase 3 — Panel Hierarchy ✅
 
 **Referencia WinForms:** `MonoGame.Editor.WinForms/Panels/SceneHierarchyPanel.cs`
 
-### 3.1 Estructura visual
+### 3.1 Estructura visual ✅
 
 ```
 ┌─ SceneHierarchyView ──────────────────────┐
@@ -334,13 +334,13 @@ Cada toggle actualiza flags en `EditorContext` o `EditorPreferences` y dispara e
 └────────────────────────────────────────────┘
 ```
 
-### 3.2 Control de árbol
+### 3.2 Control de árbol ✅
 
 MAUI no tiene un `TreeView` nativo en v1. Opciones:
 - **Opción A (recomendada):** `CollectionView` con items recursivos y padding de indentación (`Margin.Left = depth * 16`). Cada fila es un `HierarchyItemView` con checkbox de visibilidad, icono de tipo, nombre editable inline y twirl de expansión.
 - **Opción B:** Usar CommunityToolkit o una librería de terceros con TreeView MAUI.
 
-### 3.3 Comportamientos
+### 3.3 Comportamientos ✅
 
 - **Crear entidad**: botón `+` → inline name entry → publicar `CreateGameObjectCommand`.
 - **Eliminar**: botón `🗑` (o `Delete`) → publicar `DeleteGameObjectCommand`.
@@ -350,7 +350,7 @@ MAUI no tiene un `TreeView` nativo en v1. Opciones:
 - **Reparentar**: drag-and-drop entre nodos → publicar `ReparentGameObjectCommand`.
 - **Menú contextual**: Create Child / Duplicate / Delete / Save as Prefab / Apply Prefab / Revert Prefab.
 
-### 3.4 Eventos suscritos
+### 3.4 Eventos suscritos ✅
 
 | Evento | Acción en la vista |
 |--------|--------------------|
@@ -360,9 +360,11 @@ MAUI no tiene un `TreeView` nativo en v1. Opciones:
 
 ---
 
-## Fase 4 — Panel Inspector
+## Fase 4 — Panel Inspector ✅
 
 **Referencia WinForms:** `MonoGame.Editor.WinForms/Panels/InspectorPanel.cs`
+
+**Estado:** Completado. `AxisStepper` con `ValueCommitted`, secciones Transform con comandos undo/redo, tarjetas de behaviour dinámicas (colapso, toggle enabled, remove, filas por tipo de `JsonElement`), toggle Active con `SetPropertyCommand<bool>`, suscripciones a `UndoPerformedEvent` / `RedoPerformedEvent`.
 
 ### 4.1 Estructura visual
 
@@ -430,7 +432,7 @@ Replicar la reflexión de `InspectorPanel.cs` (WinForms):
 
 ---
 
-## Fase 5 — Dock Assets
+## Fase 5 — Dock Assets ✅
 
 **Referencia WinForms:** `MonoGame.Editor.WinForms/Panels/AssetBrowserPanel.cs`
 
@@ -472,7 +474,7 @@ Open in Explorer / Rename / Delete / Copy Path / Import to Content.
 
 ---
 
-## Fase 6 — Dock Console y Dock Scenes
+## Fase 6 — Dock Console y Dock Scenes ✅
 
 ### 6.1 Console (`ConsolePanelView`)
 
@@ -501,7 +503,7 @@ Open in Explorer / Rename / Delete / Copy Path / Import to Content.
 
 ---
 
-## Fase 7 — Dock paneles restantes
+## Fase 7 — Dock paneles restantes ✅
 
 **Referencia WinForms:** carpeta `MonoGame.Editor.WinForms/Panels/`
 
@@ -557,7 +559,7 @@ Open in Explorer / Rename / Delete / Copy Path / Import to Content.
 
 ---
 
-## Fase 8 — Diálogos
+## Fase 8 — Diálogos ✅
 
 **Referencia WinForms:** carpeta `MonoGame.Editor.WinForms/Dialogs/`
 
@@ -580,7 +582,7 @@ En MAUI los diálogos son `ContentPage` presentadas como `Shell.Current.GoToAsyn
 
 ---
 
-## Fase 9 — Menú y atajos de teclado
+## Fase 9 — Menú y atajos de teclado ✅
 
 **Referencia WinForms:** `MonoGame.Editor.WinForms/EditorForm.cs` (MenuStrip + ToolStrip)
 
@@ -643,7 +645,7 @@ Registrar mediante `Window.KeyboardAccelerators` o `Shell` shortcuts los mismos 
 
 ---
 
-## Fase 10 — Play / Stop / Pause
+## Fase 10 — Play / Stop / Pause ✅
 
 **Referencia WinForms:** `MonoGame.Editor.WinForms/EditorForm.cs` (botones Play/Stop), `MonoGame.Editor.Core/PlayMode/`
 
@@ -675,7 +677,7 @@ Registrar mediante `Window.KeyboardAccelerators` o `Shell` shortcuts los mismos 
 
 ---
 
-## Fase 11 — Build pipeline
+## Fase 11 — Build pipeline ✅
 
 **Referencia WinForms:** `MonoGame.Editor.WinForms/EditorForm.cs` (Build menu), `MonoGame.Editor.Core/Assets/MgcbRunner.cs`
 

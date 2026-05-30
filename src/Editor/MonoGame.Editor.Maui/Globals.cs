@@ -16,5 +16,7 @@ global using MonoGame.Editor.Core.Input;
 global using MonoGame.Editor.Core.CodeGen;
 global using MonoGame.Editor.Core.PlayMode;
 global using MonoGame.Editor.Maui.Controls;
+global using MonoGame.Editor.Maui.Rendering;
 global using MonoGame.Editor.Maui.Views;
 global using MonoGame.Editor.Maui.Views.Panels;
+global using Microsoft.Xna.Framework.Graphics;

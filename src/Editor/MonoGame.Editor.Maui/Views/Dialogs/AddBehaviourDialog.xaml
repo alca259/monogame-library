@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage x:Class="MonoGame.Editor.Maui.Views.Dialogs.AddBehaviourDialog"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             BackgroundColor="#80000000"
+             Title="Add Behaviour">
+
+    <Grid>
+        <Border BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0"
+                WidthRequest="440"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+            <VerticalStackLayout Spacing="0">
+
+                <!-- Header -->
+                <Border BackgroundColor="{StaticResource BgPanel}"
+                        StrokeThickness="0"
+                        Padding="20,14">
+                    <Label Text="Add Behaviour"
+                           Style="{StaticResource PrimaryLabel}"
+                           FontSize="15"/>
+                </Border>
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- Search -->
+                <Border BackgroundColor="{StaticResource BgPanel}"
+                        StrokeThickness="0"
+                        Padding="12,8">
+                    <Entry x:Name="SearchEntry"
+                           Placeholder="Search behaviours…"
+                           BackgroundColor="{StaticResource BgChrome}"
+                           TextColor="{StaticResource PrimaryLabel}"
+                           PlaceholderColor="{StaticResource DimLabel}"
+                           TextChanged="OnSearchChanged"/>
+                </Border>
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- List -->
+                <CollectionView x:Name="TypeList"
+                                HeightRequest="300"
+                                SelectionMode="Single"
+                                SelectionChanged="OnTypeSelected">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Border Padding="12,7"
+                                    BackgroundColor="Transparent"
+                                    StrokeThickness="0">
+                                <Label Text="{Binding .}"
+                                       Style="{StaticResource PrimaryLabel}"
+                                       FontSize="13"/>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- Footer -->
+                <HorizontalStackLayout HorizontalOptions="End"
+                                       Spacing="8"
+                                       Padding="20,12">
+                    <Button Text="Cancel"
+                            Style="{StaticResource SmallIconButton}"
+                            Clicked="OnCancel"/>
+                    <Button x:Name="AddButton"
+                            Text="Add"
+                            Style="{StaticResource SmallIconButton}"
+                            IsEnabled="False"
+                            Clicked="OnSubmit"/>
+                </HorizontalStackLayout>
+
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+
+</ContentPage>

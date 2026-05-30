@@ -1,3 +1,5 @@
+using MonoGame.Editor.Core.Assets;
+
 namespace MonoGame.Editor.Maui.Views;
 
 /// <summary>
@@ -6,21 +8,36 @@ namespace MonoGame.Editor.Maui.Views;
 /// </summary>
 public sealed partial class EditorWindow : ContentPage
 {
-    #region Fields
+    #region Constants / colors
 
-    private static readonly Color ActiveToolBg   = Color.FromArgb("#2f81f7");
+    private static readonly Color ActiveToolBg   = Color.FromArgb("#4A9EFF");
     private static readonly Color ActiveToolFg   = Colors.White;
     private static readonly Color InactiveToolBg = Colors.Transparent;
-    private static readonly Color InactiveToolFg = Color.FromArgb("#d6d6d8");
+    private static readonly Color InactiveToolFg = Color.FromArgb("#9A9AA2");
 
-    private static readonly Color ActivePillBg   = Color.FromArgb("#2f81f7");
-    private static readonly Color InactivePillBg = Color.FromArgb("#2d2d30");
-    private static readonly Color ActivePillFg   = Colors.White;
-    private static readonly Color InactivePillFg = Color.FromArgb("#a7a7ab");
-    private static readonly Color PillBorderActive   = Color.FromArgb("#2f81f7");
-    private static readonly Color PillBorderInactive = Color.FromArgb("#3a3a3d");
+    private static readonly Color ActivePillBg       = Color.FromArgb("#4A9EFF");
+    private static readonly Color InactivePillBg     = Color.FromArgb("#252528");
+    private static readonly Color ActivePillFg       = Colors.White;
+    private static readonly Color InactivePillFg     = Color.FromArgb("#9A9AA2");
+    private static readonly Color PillBorderActive   = Color.FromArgb("#4A9EFF");
+    private static readonly Color PillBorderInactive = Color.FromArgb("#34343A");
 
-    private readonly IEditorEventBus _bus = EditorContext.Instance.EventBus;
+    private static readonly Color BuildSuccessColor = Color.FromArgb("#46C66A");
+    private static readonly Color BuildErrorColor   = Colors.White;
+    private static readonly Color BuildErrorBg      = Color.FromArgb("#C73E3E");
+    private static readonly Color BuildNormalBg     = Color.FromArgb("#252528");
+
+    private static readonly Color DropdownItemFg     = Color.FromArgb("#E6E6E8");
+    private static readonly Color DropdownItemBg     = Colors.Transparent;
+    private static readonly Color DropdownItemHoverBg = Color.FromArgb("#2E2E34");
+    private static readonly Color DropdownSeparatorColor = Color.FromArgb("#34343A");
+
+    #endregion
+
+    #region Fields
+
+    private readonly IEditorEventBus    _bus      = EditorContext.Instance.EventBus;
+    private readonly GameObjectRegistry _registry = new();
 
     private string _activeTool = "Select";
     private bool _is2D   = true;
@@ -28,11 +45,14 @@ public sealed partial class EditorWindow : ContentPage
     private bool _isNav  = false;
     private bool _isRes  = false;
 
-    private Action<EditorStateChangedEvent>? _onStateChanged;
-    private Action<SceneDirtyChangedEvent>?  _onDirtyChanged;
-    private Action<ProjectOpenedEvent>?      _onProjectOpened;
-    private Action<SceneLoadedEvent>?        _onSceneLoaded;
-    private Action<BuildOutputLineEvent>?    _onBuildOutput;
+    private string? _openMenuTag;
+
+    private Action<EditorStateChangedEvent>?  _onStateChanged;
+    private Action<SceneLoadedEvent>?         _onSceneLoaded;
+    private Action<BuildOutputLineEvent>?     _onBuildOutput;
+    private Action<FpsUpdatedEvent>?          _onFpsUpdated;
+    private Action<SceneDirtyChangedEvent>?   _onSceneDirty;
+    private Action<ProjectOpenedEvent>?       _onProjectOpened;
 
     #endregion
 
@@ -40,60 +60,103 @@ public sealed partial class EditorWindow : ContentPage
     {
         InitializeComponent();
         Subscribe();
+        SetPillStyle(Toggle2DBtn, _is2D);
+        SetPillStyle(ToggleSnapBtn, _isSnap);
+        SetPillStyle(ToggleNavBtn, _isNav);
+        SetPillStyle(ToggleResBtn, _isRes);
+        UpdateToolButtons();
     }
+
+    #region Lifecycle — keyboard shortcuts
+
+    protected override void OnHandlerChanged()
+    {
+        base.OnHandlerChanged();
+        if (Handler is null) return;
+        RegisterKeyboardShortcuts();
+    }
+
+    private void RegisterKeyboardShortcuts()
+    {
+        AddAccelerator("S", KeyboardAcceleratorModifiers.Ctrl,        () => _ = SaveSceneAsync());
+        AddAccelerator("S", KeyboardAcceleratorModifiers.Ctrl | KeyboardAcceleratorModifiers.Shift,
+                                                                       () => _ = SaveSceneAsAsync());
+        AddAccelerator("Z", KeyboardAcceleratorModifiers.Ctrl,        OnUndoClicked);
+        AddAccelerator("Y", KeyboardAcceleratorModifiers.Ctrl,        OnRedoClicked);
+        AddAccelerator("B", KeyboardAcceleratorModifiers.Ctrl,        () => _ = BuildContentAsync());
+        AddAccelerator("D", KeyboardAcceleratorModifiers.Ctrl,        OnDuplicateSelected);
+        AddAccelerator("A", KeyboardAcceleratorModifiers.Ctrl,        OnSelectAll);
+        AddAccelerator("Delete",      KeyboardAcceleratorModifiers.None, OnDeleteSelected);
+        AddAccelerator("Q",           KeyboardAcceleratorModifiers.None, () => ActivateTool("Select"));
+        AddAccelerator("W",           KeyboardAcceleratorModifiers.None, () => ActivateTool("Move"));
+        AddAccelerator("E",           KeyboardAcceleratorModifiers.None, () => ActivateTool("Rotate"));
+        AddAccelerator("R",           KeyboardAcceleratorModifiers.None, () => ActivateTool("Scale"));
+        AddAccelerator("T",           KeyboardAcceleratorModifiers.None, () => ActivateTool("Rect"));
+        AddAccelerator("H",           KeyboardAcceleratorModifiers.None, () => ActivateTool("Pan"));
+        AddAccelerator("G",           KeyboardAcceleratorModifiers.None, OnToggleSnap);
+        AddAccelerator("F5",          KeyboardAcceleratorModifiers.None, OnPlayClicked);
+        AddAccelerator("F6",          KeyboardAcceleratorModifiers.None, OnPauseClicked);
+        AddAccelerator("F5",          KeyboardAcceleratorModifiers.Shift, OnStopClicked);
+    }
+
+    private void AddAccelerator(string key, KeyboardAcceleratorModifiers mods, Action action)
+    {
+        var acc = new KeyboardAccelerator { Key = key, Modifiers = mods };
+        acc.Invoked += (_, _) => action();
+        this.KeyboardAccelerators.Add(acc);
+    }
+
+    #endregion
 
     #region EventBus subscriptions
 
     private void Subscribe()
     {
         _onStateChanged  = e => MainThread.BeginInvokeOnMainThread(() => OnEditorStateChanged(e));
-        _onDirtyChanged  = e => MainThread.BeginInvokeOnMainThread(() => OnDirtyChanged(e));
-        _onProjectOpened = e => MainThread.BeginInvokeOnMainThread(() => OnProjectOpened(e));
         _onSceneLoaded   = e => MainThread.BeginInvokeOnMainThread(() => OnSceneLoaded(e));
         _onBuildOutput   = e => MainThread.BeginInvokeOnMainThread(() => OnBuildOutputLine(e));
+        _onFpsUpdated    = e => MainThread.BeginInvokeOnMainThread(() => FpsLabel.Text = $"{e.Fps} FPS");
+        _onSceneDirty    = e => MainThread.BeginInvokeOnMainThread(() => OnSceneDirtyChanged(e));
+        _onProjectOpened = e => MainThread.BeginInvokeOnMainThread(() => OnProjectOpened(e));
 
         _bus.Subscribe(_onStateChanged);
-        _bus.Subscribe(_onDirtyChanged);
-        _bus.Subscribe(_onProjectOpened);
         _bus.Subscribe(_onSceneLoaded);
         _bus.Subscribe(_onBuildOutput);
+        _bus.Subscribe(_onFpsUpdated);
+        _bus.Subscribe(_onSceneDirty);
+        _bus.Subscribe(_onProjectOpened);
     }
 
     private void OnEditorStateChanged(EditorStateChangedEvent e)
     {
         bool playing = e.NewState is EditorState.Playing or EditorState.Paused;
-        StopBtn.IsEnabled = playing;
+        bool paused  = e.NewState is EditorState.Paused;
+
+        PlayBtn.IsEnabled  = !playing;
+        PauseBtn.IsEnabled = playing;
+        StopBtn.IsEnabled  = playing;
 
         if (playing)
         {
-            StopBtn.BackgroundColor = Color.FromArgb("#f0524f");
-            StopBtn.TextColor = Colors.White;
+            StopBtn.BackgroundColor  = Color.FromArgb("#E5484D");
+            StopBtn.TextColor        = Colors.White;
+            PauseBtn.BackgroundColor = paused ? Color.FromArgb("#E8A050") : Color.FromArgb("#252528");
+            PauseBtn.TextColor       = paused ? Colors.White : Color.FromArgb("#9A9AA2");
         }
         else
         {
-            StopBtn.BackgroundColor = Color.FromArgb("#2d2d30");
-            StopBtn.TextColor = Color.FromArgb("#86868b");
+            StopBtn.BackgroundColor  = Color.FromArgb("#252528");
+            StopBtn.TextColor        = Color.FromArgb("#6A6A72");
+            PauseBtn.BackgroundColor = Color.FromArgb("#252528");
+            PauseBtn.TextColor       = Color.FromArgb("#6A6A72");
         }
-    }
-
-    private void OnDirtyChanged(SceneDirtyChangedEvent e)
-    {
-        var ctx = EditorContext.Instance;
-        UpdateWindowTitle(ctx.ActiveProject?.Name, ctx.ActiveScene?.Name, e.IsDirty);
-    }
-
-    private void OnProjectOpened(ProjectOpenedEvent e)
-    {
-        UpdateWindowTitle(e.Project?.Name, null, false);
     }
 
     private void OnSceneLoaded(SceneLoadedEvent e)
     {
-        var ctx = EditorContext.Instance;
-        UpdateWindowTitle(ctx.ActiveProject?.Name, e.Scene?.Name, false);
-
         int count = e.Scene?.RootGameObjects.Count ?? 0;
         ObjectCountLabel.Text = count == 1 ? "1 object in scene" : $"{count} objects in scene";
+        UpdateTitleBar();
     }
 
     private void OnBuildOutputLine(BuildOutputLineEvent e)
@@ -102,56 +165,527 @@ public sealed partial class EditorWindow : ContentPage
 
         if (line.Contains("Build succeeded", StringComparison.OrdinalIgnoreCase))
         {
-            BuildStatusLabel.Text = "Build succeeded";
-            BuildStatusLabel.TextColor = Color.FromArgb("#3fb950");
-            BuildStatusSegment.BackgroundColor = Color.FromArgb("#2a2a2c");
+            BuildStatusLabel.Text                  = "Build succeeded";
+            BuildStatusLabel.TextColor             = BuildSuccessColor;
+            BuildStatusSegment.BackgroundColor     = BuildNormalBg;
         }
         else if (line.Contains("Build FAILED", StringComparison.OrdinalIgnoreCase)
               || (e.IsError && line.Contains("error", StringComparison.OrdinalIgnoreCase)))
         {
-            BuildStatusLabel.Text = "Build failed";
-            BuildStatusLabel.TextColor = Colors.White;
-            BuildStatusSegment.BackgroundColor = Color.FromArgb("#f0524f");
+            BuildStatusLabel.Text                  = "Build failed";
+            BuildStatusLabel.TextColor             = BuildErrorColor;
+            BuildStatusSegment.BackgroundColor     = BuildErrorBg;
         }
     }
 
-    private void UpdateWindowTitle(string? projectName, string? sceneName, bool dirty)
-    {
-        string title = "MonoGame Editor";
-        if (projectName is not null)
-            title = $"MonoGame Editor — {projectName}";
-        if (sceneName is not null)
-            title = $"{title} — {sceneName}";
-        if (dirty)
-            title = $"● {title}";
+    private void OnSceneDirtyChanged(SceneDirtyChangedEvent e)
+        => UpdateTitleBar();
 
-        if (Window is not null)
-            Window.Title = title;
+    private void OnProjectOpened(ProjectOpenedEvent e)
+    {
+        UpdateTitleBar();
+        _registry.Scan();
+    }
+
+    private void UpdateTitleBar()
+    {
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+        EditorScene?   scene   = EditorContext.Instance.ActiveScene;
+        bool           dirty   = EditorContext.Instance.IsSceneDirty;
+
+        string projectPart = project?.Name ?? "No Project";
+        string scenePart   = scene?.Name   ?? "No Scene";
+        string dirtyMark   = dirty ? " ●" : string.Empty;
+
+        Title = $"MonoGame Editor — {projectPart} — {scenePart}{dirtyMark}";
     }
 
     #endregion
 
-    #region Menu bar
+    #region Menu bar — dropdown management
 
     private void OnFileMenuClicked(object sender, EventArgs e)
     {
-        // TODO Fase 9: abrir menú contextual File
+        if (_openMenuTag == "File") { HideDropdown(); return; }
+        ShowDropdown("File", 4, BuildFileMenuItems());
     }
 
     private void OnEditMenuClicked(object sender, EventArgs e)
     {
-        // TODO Fase 9: abrir menú contextual Edit
+        if (_openMenuTag == "Edit") { HideDropdown(); return; }
+        int offsetX = (int)(FileMenuBtn.Width + 4);
+        ShowDropdown("Edit", offsetX, BuildEditMenuItems());
     }
 
     private void OnProjectMenuClicked(object sender, EventArgs e)
     {
-        // TODO Fase 9: abrir menú contextual Project
+        if (_openMenuTag == "Project") { HideDropdown(); return; }
+        int offsetX = (int)(FileMenuBtn.Width + EditMenuBtn.Width + 4);
+        ShowDropdown("Project", offsetX, BuildProjectMenuItems());
     }
 
     private void OnDebugMenuClicked(object sender, EventArgs e)
     {
-        // TODO Fase 9: abrir menú contextual Debug
+        if (_openMenuTag == "Debug") { HideDropdown(); return; }
+        int offsetX = (int)(FileMenuBtn.Width + EditMenuBtn.Width + ProjectMenuBtn.Width + 4);
+        ShowDropdown("Debug", offsetX, BuildDebugMenuItems());
     }
+
+    private void OnMenuOverlayTapped(object? sender, TappedEventArgs e) => HideDropdown();
+
+    private void ShowDropdown(string tag, int offsetX,
+                              IEnumerable<(string Label, bool IsSeparator, Action? Action)> items)
+    {
+        _openMenuTag = tag;
+        DropdownStack.Children.Clear();
+
+        foreach (var (label, isSep, action) in items)
+        {
+            if (isSep)
+            {
+                DropdownStack.Children.Add(new BoxView
+                {
+                    HeightRequest   = 1,
+                    Color           = DropdownSeparatorColor,
+                    Margin          = new Thickness(8, 2),
+                });
+                continue;
+            }
+
+            bool isDisabled = action is null;
+            var btn = new Button
+            {
+                Text              = label,
+                BackgroundColor   = DropdownItemBg,
+                TextColor         = isDisabled ? Color.FromArgb("#6A6A72") : DropdownItemFg,
+                FontSize          = 13,
+                HorizontalOptions = LayoutOptions.Fill,
+                HorizontalTextAlignment = TextAlignment.Start,
+                Padding           = new Thickness(16, 6),
+                BorderWidth       = 0,
+                IsEnabled         = !isDisabled,
+            };
+
+            if (action is not null)
+            {
+                var captured = action;
+                btn.Clicked += (_, _) => { HideDropdown(); captured(); };
+            }
+
+            DropdownStack.Children.Add(btn);
+        }
+
+        DropdownPanel.Margin = new Thickness(offsetX, 28, 0, 0);
+        MenuOverlay.IsVisible = true;
+    }
+
+    private void HideDropdown()
+    {
+        MenuOverlay.IsVisible = false;
+        _openMenuTag = null;
+    }
+
+    #endregion
+
+    #region Menu item builders
+
+    private IEnumerable<(string, bool, Action?)> BuildFileMenuItems()
+    {
+        yield return ("New Project…",   false, () => _ = NewProjectAsync());
+        yield return ("Open Project…",  false, () => _ = OpenProjectAsync());
+        yield return ("---",            true,  null);
+        yield return ("New Scene",      false, () => _ = NewSceneAsync());
+        yield return ("Save Scene",     false, () => _ = SaveSceneAsync());
+        yield return ("Save Scene As…", false, () => _ = SaveSceneAsAsync());
+        yield return ("---",            true,  null);
+        yield return ("Exit",           false, OnExitClicked);
+    }
+
+    private IEnumerable<(string, bool, Action?)> BuildEditMenuItems()
+    {
+        yield return ("Undo",       false, OnUndoClicked);
+        yield return ("Redo",       false, OnRedoClicked);
+        yield return ("---",        true,  null);
+        yield return ("Cut",        false, null);
+        yield return ("Copy",       false, null);
+        yield return ("Paste",      false, null);
+        yield return ("Duplicate",  false, OnDuplicateSelected);
+        yield return ("Delete",     false, OnDeleteSelected);
+        yield return ("---",        true,  null);
+        yield return ("Select All", false, OnSelectAll);
+    }
+
+    private IEnumerable<(string, bool, Action?)> BuildProjectMenuItems()
+    {
+        yield return ("Project Settings…", false, () => _ = OpenProjectSettingsAsync());
+        yield return ("---",               true,  null);
+        yield return ("Build Content",     false, () => _ = BuildContentAsync());
+        yield return ("Build Solution",    false, () => _ = BuildSolutionAsync());
+        yield return ("Generate Code",     false, () => _ = GenerateCodeAsync());
+        yield return ("---",               true,  null);
+        yield return ("Run",               false, OnRunGame);
+    }
+
+    private IEnumerable<(string, bool, Action?)> BuildDebugMenuItems()
+    {
+        yield return ("Play",  false, OnPlayClicked);
+        yield return ("Pause", false, OnPauseClicked);
+        yield return ("Stop",  false, OnStopClicked);
+    }
+
+    #endregion
+
+    #region Menu actions — File
+
+    private async Task NewProjectAsync()
+    {
+        var result = await Views.Dialogs.NewProjectDialog.ShowAsync(Navigation);
+        if (result is null) return;
+
+        try
+        {
+            EditorProject project = await Task.Run(() =>
+                ProjectManager.Create(result.ProjectName, result.ParentPath, result.GameCsprojPath))
+                .ConfigureAwait(true);
+
+            EditorContext.Instance.SetActiveProject(project);
+            _bus.Publish(new LogEntryAddedEvent($"[Editor] Project '{project.Name}' created.", LogLevel.Info));
+        }
+        catch (Exception ex)
+        {
+            _bus.Publish(new LogEntryAddedEvent($"[Editor] Failed to create project: {ex.Message}", LogLevel.Error));
+        }
+    }
+
+    private async Task OpenProjectAsync()
+    {
+        try
+        {
+            FolderPickerResult picked = await FolderPicker.Default.PickAsync(CancellationToken.None);
+            if (!picked.IsSuccessful) return;
+
+            string path = picked.Folder.Path;
+
+            EditorProject? project = await Task.Run(() => ProjectManager.Load(path)).ConfigureAwait(true);
+            if (project is null)
+            {
+                _bus.Publish(new LogEntryAddedEvent($"[Editor] No valid project found at: {path}", LogLevel.Warning));
+                return;
+            }
+
+            EditorContext.Instance.SetActiveProject(project);
+            _bus.Publish(new LogEntryAddedEvent($"[Editor] Project '{project.Name}' opened.", LogLevel.Info));
+        }
+        catch (Exception ex)
+        {
+            _bus.Publish(new LogEntryAddedEvent($"[Editor] Open project error: {ex.Message}", LogLevel.Error));
+        }
+    }
+
+    private async Task NewSceneAsync()
+    {
+        var result = await Views.Dialogs.NewSceneDialog.ShowAsync(Navigation);
+        if (result is null) return;
+
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+
+        EditorScene scene = new()
+        {
+            Name      = result.SceneName,
+            WorldSize = new EditorVector2(result.WorldWidth, result.WorldHeight),
+        };
+
+        if (project is not null && !string.IsNullOrEmpty(project.ScenesPath))
+        {
+            Directory.CreateDirectory(project.ScenesPath);
+            string safeName = string.Concat(scene.Name.Split(Path.GetInvalidFileNameChars()));
+            string scenePath = Path.Combine(project.ScenesPath, safeName + ".scene.json");
+            scene.ScenePath  = scenePath;
+            try
+            {
+                await SceneSerializer.SaveAsync(scene, scenePath).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                _bus.Publish(new LogEntryAddedEvent($"[Editor] Failed to save scene: {ex.Message}", LogLevel.Error));
+            }
+        }
+
+        EditorContext.Instance.SetActiveScene(scene);
+        _bus.Publish(new SceneCreatedEvent(scene));
+        _bus.Publish(new LogEntryAddedEvent($"[Editor] New scene '{scene.Name}' created.", LogLevel.Info));
+    }
+
+    private async Task SaveSceneAsync()
+    {
+        EditorScene?   scene   = EditorContext.Instance.ActiveScene;
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+
+        if (scene is null) return;
+
+        string scenePath = scene.ScenePath;
+
+        if (string.IsNullOrEmpty(scenePath))
+        {
+            await SaveSceneAsAsync().ConfigureAwait(true);
+            return;
+        }
+
+        try
+        {
+            await SceneSerializer.SaveAsync(scene, scenePath).ConfigureAwait(true);
+            EditorContext.Instance.MarkSceneClean();
+            BuildStatusLabel.Text      = "Saved";
+            BuildStatusLabel.TextColor = BuildSuccessColor;
+            _bus.Publish(new LogEntryAddedEvent($"[Save] Scene saved to {scenePath}", LogLevel.Info));
+
+            if (project is not null)
+                await TryGenerateCodeOnSaveAsync(scene, project).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            _bus.Publish(new LogEntryAddedEvent($"[Save] Error: {ex.Message}", LogLevel.Error));
+        }
+    }
+
+    private async Task SaveSceneAsAsync()
+    {
+        EditorScene?   scene   = EditorContext.Instance.ActiveScene;
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+
+        if (scene is null) return;
+
+        try
+        {
+            string initialDir = project is not null && Directory.Exists(project.ScenesPath)
+                ? project.ScenesPath
+                : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            string suggestedName = string.IsNullOrEmpty(scene.Name)
+                ? "NewScene.scene.json"
+                : $"{scene.Name}.scene.json";
+
+            FileResult? picked = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Save Scene As",
+            }).ConfigureAwait(true);
+
+            if (picked is null) return;
+            string path = picked.FullPath;
+            if (!path.EndsWith(".scene.json", StringComparison.OrdinalIgnoreCase))
+                path += ".scene.json";
+
+            scene.ScenePath = path;
+            scene.Name      = Path.GetFileNameWithoutExtension(
+                Path.GetFileNameWithoutExtension(path));
+
+            await SceneSerializer.SaveAsync(scene, path).ConfigureAwait(true);
+            EditorContext.Instance.MarkSceneClean();
+            _bus.Publish(new LogEntryAddedEvent($"[Save] Scene saved to {path}", LogLevel.Info));
+        }
+        catch (Exception ex)
+        {
+            _bus.Publish(new LogEntryAddedEvent($"[Save] Error: {ex.Message}", LogLevel.Error));
+        }
+    }
+
+    private async Task TryGenerateCodeOnSaveAsync(EditorScene scene, EditorProject project)
+    {
+        ProjectSettings settings = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
+        if (!settings.GenerateOnSave) return;
+        if (string.IsNullOrEmpty(project.GameCsprojPath)) return;
+        if (string.IsNullOrWhiteSpace(settings.RootNamespace)) return;
+
+        _bus.Publish(new CodeGenStartedEvent(scene.Name));
+
+        ICodeGenService codeGen = new SceneCodeGenerator();
+        CodeGenResult result = await codeGen.GenerateSceneAsync(scene, project, settings)
+                                            .ConfigureAwait(true);
+
+        _bus.Publish(new CodeGenCompletedEvent(result));
+        _bus.Publish(new LogEntryAddedEvent(
+            result.Success ? $"[CodeGen] {result.OutputPath}" : $"[CodeGen] Error: {result.ErrorMessage}",
+            result.Success ? LogLevel.Info : LogLevel.Error));
+    }
+
+    private void OnExitClicked()
+        => Application.Current?.CloseWindow(Application.Current.Windows.First());
+
+    #endregion
+
+    #region Menu actions — Edit
+
+    private void OnUndoClicked()
+        => EditorContext.Instance.Commands.Undo();
+
+    private void OnRedoClicked()
+        => EditorContext.Instance.Commands.Redo();
+
+    private void OnDeleteSelected()
+    {
+        EditorGameObject? obj = EditorContext.Instance.SelectedObject;
+        if (obj is null) return;
+        EditorContext.Instance.Commands.Execute(new DeleteEntityCommand(obj));
+    }
+
+    private void OnDuplicateSelected()
+    {
+        // Duplication via CreateEntityCommand from a clone; stubbed for Phase 12
+    }
+
+    private void OnSelectAll()
+    {
+        // Multi-selection across all root objects; stubbed for Phase 12
+    }
+
+    #endregion
+
+    #region Menu actions — Project
+
+    private async Task OpenProjectSettingsAsync()
+    {
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+        if (project is null) return;
+
+        ProjectSettings settings = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
+        await Views.Dialogs.ProjectSettingsDialog.ShowAsync(Navigation, project, settings)
+                                                 .ConfigureAwait(true);
+    }
+
+    private async Task BuildContentAsync()
+    {
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+        if (project is null) return;
+
+        string mgcbFile = Path.Combine(project.ContentPath, "Content.mgcb");
+        if (!File.Exists(mgcbFile))
+        {
+            _bus.Publish(new LogEntryAddedEvent($"[Build] Content.mgcb not found at: {mgcbFile}", LogLevel.Warning));
+            BuildStatusLabel.Text      = "Content.mgcb not found";
+            BuildStatusLabel.TextColor = Color.FromArgb("#E8A050");
+            return;
+        }
+
+        BuildStatusLabel.Text      = "Building content…";
+        BuildStatusLabel.TextColor = Color.FromArgb("#9A9AA2");
+        BuildStatusSegment.BackgroundColor = BuildNormalBg;
+
+        int exit = await MgcbRunner.RunAsync(mgcbFile, line =>
+            _bus.Publish(new BuildOutputLineEvent(line, IsErrorLine(line))))
+            .ConfigureAwait(true);
+
+        if (exit == 0)
+        {
+            _bus.Publish(new BuildOutputLineEvent("Build succeeded", false));
+        }
+        else
+        {
+            _bus.Publish(new BuildOutputLineEvent($"Build FAILED (exit {exit})", true));
+        }
+
+        _bus.Publish(new BuildFinishedEvent(exit, "Content"));
+    }
+
+    private async Task BuildSolutionAsync()
+    {
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+        if (project is null) return;
+
+        string csproj = project.GameCsprojPath;
+        if (string.IsNullOrEmpty(csproj) || !File.Exists(csproj))
+        {
+            _bus.Publish(new LogEntryAddedEvent("[Build] Game .csproj path not configured.", LogLevel.Warning));
+            return;
+        }
+
+        BuildStatusLabel.Text      = "Building solution…";
+        BuildStatusLabel.TextColor = Color.FromArgb("#9A9AA2");
+
+        ProjectSettings settings = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
+        int exit = await MgcbRunner.RunDotnetBuildAsync(csproj, settings.BuildConfiguration, line =>
+            _bus.Publish(new BuildOutputLineEvent(line, IsErrorLine(line))))
+            .ConfigureAwait(true);
+
+        _bus.Publish(new BuildOutputLineEvent(
+            exit == 0 ? "Build succeeded" : $"Build FAILED (exit {exit})",
+            exit != 0));
+
+        _bus.Publish(new BuildFinishedEvent(exit, "Solution"));
+    }
+
+    private async Task GenerateCodeAsync()
+    {
+        EditorScene?   scene   = EditorContext.Instance.ActiveScene;
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+        if (scene is null || project is null) return;
+
+        ProjectSettings settings = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
+        if (string.IsNullOrWhiteSpace(settings.RootNamespace))
+        {
+            _bus.Publish(new LogEntryAddedEvent("[CodeGen] RootNamespace not set in Project Settings.", LogLevel.Warning));
+            return;
+        }
+
+        var progressDlg = new Views.Dialogs.CodeGenProgressDialog();
+        _ = Navigation.PushModalAsync(progressDlg);
+
+        _bus.Publish(new CodeGenStartedEvent(scene.Name));
+        ICodeGenService codeGen = new SceneCodeGenerator();
+
+        CodeGenResult result = await codeGen.GenerateSceneAsync(scene, project, settings)
+                                            .ConfigureAwait(true);
+
+        progressDlg.AddFileResult(result.OutputPath ?? string.Empty, result.Success);
+        progressDlg.MarkComplete(result.Success ? 1 : 0, result.Success ? 0 : 1);
+        _bus.Publish(new CodeGenCompletedEvent(result));
+        _bus.Publish(new BuildFinishedEvent(result.Success ? 0 : 1, "CodeGen"));
+    }
+
+    private void OnRunGame()
+        => _ = RunGameAsync();
+
+    private async Task RunGameAsync()
+    {
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+        if (project is null || string.IsNullOrEmpty(project.GameCsprojPath)) return;
+
+        string dir = Path.GetDirectoryName(project.GameCsprojPath) ?? string.Empty;
+        string exeName = Path.GetFileNameWithoutExtension(project.GameCsprojPath) + ".exe";
+
+        ProjectSettings settings = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
+        string[] searchDirs =
+        [
+            Path.Combine(dir, "bin", settings.BuildConfiguration, "net10.0-windows"),
+            Path.Combine(dir, "bin", settings.BuildConfiguration, "net10.0-windows10.0.19041.0"),
+        ];
+
+        foreach (string candidate in searchDirs)
+        {
+            string exePath = Path.Combine(candidate, exeName);
+            if (!File.Exists(exePath)) continue;
+
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName         = exePath,
+                WorkingDirectory = dir,
+                UseShellExecute  = true,
+            });
+            return;
+        }
+
+        bool buildNow = await this.DisplayAlertAsync(
+            "Executable not found",
+            $"'{exeName}' was not found in the output directories. Build the solution first?",
+            "Build Now",
+            "Cancel").ConfigureAwait(true);
+
+        if (buildNow)
+            await BuildSolutionAsync().ConfigureAwait(true);
+    }
+
+    private static bool IsErrorLine(string line)
+        => line.Contains(": error ", StringComparison.OrdinalIgnoreCase)
+        || line.Contains("Build FAILED", StringComparison.OrdinalIgnoreCase);
 
     #endregion
 
@@ -160,9 +694,22 @@ public sealed partial class EditorWindow : ContentPage
     private void OnToolClicked(object sender, EventArgs e)
     {
         if (sender is not Button btn) return;
-        _activeTool = btn.CommandParameter as string ?? "Select";
+        string tool = btn.CommandParameter as string ?? "Select";
+        ActivateTool(tool);
+    }
+
+    private void ActivateTool(string tool)
+    {
+        _activeTool = tool;
         UpdateToolButtons();
-        // TODO Fase 2: EditorContext.Instance.Gizmos.SetMode(...)
+        EditorContext.Instance.Gizmos.Mode = _activeTool switch
+        {
+            "Move"   => GizmoMode.Move,
+            "Rotate" => GizmoMode.Rotate,
+            "Scale"  => GizmoMode.Scale,
+            "Rect"   => GizmoMode.Rect,
+            _        => GizmoMode.Select,
+        };
     }
 
     private void UpdateToolButtons()
@@ -189,14 +736,15 @@ public sealed partial class EditorWindow : ContentPage
     {
         _is2D = !_is2D;
         SetPillStyle(Toggle2DBtn, _is2D);
-        // TODO Fase 2: actualizar modo cámara en viewport
+        EditorContext.Instance.Gizmos.IsDepthMode = !_is2D;
     }
 
-    private void OnToggleSnap(object sender, EventArgs e)
+    private void OnToggleSnap(object sender, EventArgs e) => OnToggleSnap();
+    private void OnToggleSnap()
     {
         _isSnap = !_isSnap;
         SetPillStyle(ToggleSnapBtn, _isSnap);
-        // TODO Fase 2: actualizar snap en EditModeRenderer
+        EditorContext.Instance.Gizmos.SnapEnabled = _isSnap;
     }
 
     private void OnToggleNav(object sender, EventArgs e)
@@ -220,16 +768,71 @@ public sealed partial class EditorWindow : ContentPage
 
     #endregion
 
-    #region Toolbar — transport
+    #region Toolbar — transport (Phase 10)
 
-    private void OnPlayClicked(object sender, EventArgs e)
+    private void OnPlayClicked(object sender, EventArgs e) => OnPlayClicked();
+    private void OnPlayClicked()
     {
-        // TODO Fase 10: PlayModeManager.EnterPlay()
+        EditorState state = EditorContext.Instance.State;
+
+        if (state is EditorState.Paused)
+        {
+            EditorGameLoop.Current?.Resume();
+            EditorContext.Instance.SetState(EditorState.Playing);
+            return;
+        }
+
+        if (state is EditorState.Playing) return;
+
+        EditorScene? scene = EditorContext.Instance.ActiveScene;
+        if (scene is null) return;
+
+        _registry.Scan();
+        EditorContext.Instance.TakePlaySnapshot();
+
+        PlayModeRunner runner = new(scene, _registry);
+        EditorGameLoop.Current?.EnterPlay(runner);
+
+        EditorContext.Instance.SetState(EditorState.Playing);
+        _bus.Publish(new LogEntryAddedEvent("[Play] Play mode started.", LogLevel.Info));
     }
 
-    private void OnStopClicked(object sender, EventArgs e)
+    private void OnPauseClicked(object sender, EventArgs e) => OnPauseClicked();
+    private void OnPauseClicked()
     {
-        // TODO Fase 10: PlayModeManager.ExitPlay()
+        EditorState state = EditorContext.Instance.State;
+
+        if (state is EditorState.Playing)
+        {
+            EditorGameLoop.Current?.Pause();
+            EditorContext.Instance.SetState(EditorState.Paused);
+            return;
+        }
+
+        if (state is EditorState.Paused)
+        {
+            EditorGameLoop.Current?.Resume();
+            EditorContext.Instance.SetState(EditorState.Playing);
+        }
+    }
+
+    private void OnStopClicked(object sender, EventArgs e) => OnStopClicked();
+    private void OnStopClicked()
+    {
+        EditorState state = EditorContext.Instance.State;
+        if (state is EditorState.Editing) return;
+
+        PlayModeRunner? runner = EditorGameLoop.Current?.ExitPlay();
+        runner?.Dispose();
+
+        EditorScene? restored = EditorContext.Instance.RestoreFromSnapshot();
+        EditorContext.Instance.ClearPlaySnapshot();
+
+        if (restored is not null)
+            EditorContext.Instance.SetActiveScene(restored);
+
+        EditorContext.Instance.SetState(EditorState.Editing);
+        _bus.Publish(new LogEntryAddedEvent("[Play] Play mode stopped.", LogLevel.Info));
     }
 
     #endregion

@@ -90,6 +90,11 @@
                         ToolTipProperties.Text="Play (F5)"
                         Style="{StaticResource PlayButton}"
                         Clicked="OnPlayClicked"/>
+                <Button x:Name="PauseBtn" Text="⏸"
+                        ToolTipProperties.Text="Pause (F6)"
+                        Style="{StaticResource StopButton}"
+                        IsEnabled="False"
+                        Clicked="OnPauseClicked"/>
                 <Button x:Name="StopBtn" Text="■"
                         ToolTipProperties.Text="Stop (Shift+F5)"
                         Style="{StaticResource StopButton}"
@@ -180,6 +185,27 @@
         <!-- StatusBar top separator -->
         <BoxView Grid.Row="4" VerticalOptions="Start"
                  HeightRequest="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Dropdown menu overlay ─────────────────────────────────── -->
+        <!--   Spans all rows; rendered on top. Tap outside dropdown to close. -->
+        <Grid x:Name="MenuOverlay"
+              Grid.RowSpan="5"
+              IsVisible="False">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnMenuOverlayTapped"/>
+            </Grid.GestureRecognizers>
+
+            <Border x:Name="DropdownPanel"
+                    BackgroundColor="{StaticResource BgChrome}"
+                    Stroke="{StaticResource BorderColor}"
+                    StrokeThickness="1"
+                    HorizontalOptions="Start"
+                    VerticalOptions="Start"
+                    Margin="4,28,0,0"
+                    MinimumWidthRequest="200">
+                <VerticalStackLayout x:Name="DropdownStack" Spacing="0"/>
+            </Border>
+        </Grid>
 
     </Grid>
 </ContentPage>

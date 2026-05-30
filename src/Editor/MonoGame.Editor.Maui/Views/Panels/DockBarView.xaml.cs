@@ -6,8 +6,8 @@ namespace MonoGame.Editor.Maui.Views.Panels;
 /// </summary>
 public sealed partial class DockBarView : ContentView
 {
-    private static readonly Color ActiveTabFg   = Color.FromArgb("#d6d6d8");
-    private static readonly Color InactiveTabFg = Color.FromArgb("#a7a7ab");
+    private static readonly Color ActiveTabFg   = Color.FromArgb("#E6E6E8");
+    private static readonly Color InactiveTabFg = Color.FromArgb("#9A9AA2");
 
     private string _activeTab = "Assets";
 
