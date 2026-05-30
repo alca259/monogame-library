@@ -16,6 +16,13 @@ partial class EditorForm
     private ToolStripMenuItem _undoMenuItem = null!;
     private ToolStripMenuItem _redoMenuItem = null!;
     private ToolStripSeparator _editSeparator1 = null!;
+    private ToolStripMenuItem _viewMenu = null!;
+    private ToolStripMenuItem _viewHierarchyMenuItem = null!;
+    private ToolStripMenuItem _viewInspectorMenuItem = null!;
+    private ToolStripMenuItem _viewAssetBrowserMenuItem = null!;
+    private ToolStripMenuItem _viewConsoleMenuItem = null!;
+    private ToolStripSeparator _viewMenuSeparator1 = null!;
+    private ToolStripMenuItem _resetLayoutMenuItem = null!;
     private ToolStripMenuItem _projectMenu = null!;
     private ToolStripMenuItem _debugMenu = null!;
 
@@ -44,9 +51,7 @@ partial class EditorForm
 
     // ── Status ────────────────────────────────────────────────────────────
     private StatusStrip _statusStrip = null!;
-    private ToolStripStatusLabel _buildStatusLabel = null!;
-    private ToolStripStatusLabel _sceneObjectsLabel = null!;
-    private ToolStripStatusLabel _platformLabel = null!;
+    private ToolStripStatusLabel _statusLabel = null!;
     private ToolStripStatusLabel _fpsStatusLabel = null!;
 
     // ── Split containers ──────────────────────────────────────────────────
@@ -82,14 +87,8 @@ partial class EditorForm
     private TabPage _scriptsTab = null!;
     private ScriptBrowserPanel _scriptBrowserPanel = null!;
 
-    // ── View menu (items kept for preferences/panel-visibility logic; not shown in menu bar) ─
-    private ToolStripMenuItem _viewMenu = null!;
-    private ToolStripMenuItem _viewHierarchyMenuItem = null!;
-    private ToolStripMenuItem _viewInspectorMenuItem = null!;
-    private ToolStripMenuItem _viewAssetBrowserMenuItem = null!;
-    private ToolStripMenuItem _viewConsoleMenuItem = null!;
-    private ToolStripSeparator _viewMenuSeparator1 = null!;
-    private ToolStripMenuItem _resetLayoutMenuItem = null!;
+    // ── View menu ─────────────────────────────────────────────────────────
+    // (declared alongside _viewSceneManagerMenuItem below in field declarations)
     private ToolStripMenuItem _viewSceneManagerMenuItem = null!;
     private ToolStripMenuItem _viewLocalizationMenuItem = null!;
     private ToolStripMenuItem _viewInputMapEditorMenuItem = null!;
@@ -147,9 +146,7 @@ partial class EditorForm
         _playButton               = new ToolStripButton();
         _stopButton               = new ToolStripButton();
         _statusStrip              = new StatusStrip();
-        _buildStatusLabel         = new ToolStripStatusLabel();
-        _sceneObjectsLabel        = new ToolStripStatusLabel();
-        _platformLabel            = new ToolStripStatusLabel();
+        _statusLabel              = new ToolStripStatusLabel();
         _fpsStatusLabel           = new ToolStripStatusLabel();
         _mainSplit                = new SplitContainer();
         _outerSplit               = new SplitContainer();
@@ -212,7 +209,7 @@ partial class EditorForm
         SuspendLayout();
 
         // _mainMenuStrip
-        _mainMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _fileMenu, _editMenu, _projectMenu, _debugMenu });
+        _mainMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _fileMenu, _editMenu, _viewMenu, _projectMenu, _debugMenu });
         _mainMenuStrip.Location = new System.Drawing.Point(0, 0);
         _mainMenuStrip.Name = "_mainMenuStrip";
         _mainMenuStrip.Size = new System.Drawing.Size(1280, 24);
@@ -556,24 +553,16 @@ partial class EditorForm
         _toolbarTable.TabIndex = 1;
 
         // _statusStrip
-        _statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _buildStatusLabel, _sceneObjectsLabel, _platformLabel, _fpsStatusLabel });
+        _statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _statusLabel, _fpsStatusLabel });
         _statusStrip.Location = new System.Drawing.Point(0, 778);
         _statusStrip.Name = "_statusStrip";
         _statusStrip.Size = new System.Drawing.Size(1280, 22);
         _statusStrip.TabIndex = 3;
 
-        // _buildStatusLabel
-        _buildStatusLabel.Name = "_buildStatusLabel";
-        _buildStatusLabel.Text = "Ready";
-
-        // _sceneObjectsLabel
-        _sceneObjectsLabel.Name = "_sceneObjectsLabel";
-        _sceneObjectsLabel.Text = "0 objects in scene";
-
-        // _platformLabel
-        _platformLabel.Name = "_platformLabel";
-        _platformLabel.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-        _platformLabel.Text = "x64 · Debug";
+        // _statusLabel
+        _statusLabel.Name = "_statusLabel";
+        _statusLabel.Size = new System.Drawing.Size(43, 17);
+        _statusLabel.Text = "Editing";
 
         // _fpsStatusLabel
         _fpsStatusLabel.Name = "_fpsStatusLabel";
