@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace MonoGame.Editor.WinForms;
 
@@ -49,6 +49,16 @@ public sealed partial class EditorForm : Form
     // Color de limpieza predeterminado para el viewport de la escena
     private static readonly Microsoft.Xna.Framework.Color DefaultClearColor = new(30, 30, 30);
 
+    private static readonly System.Drawing.Font _mdl2Font =
+        new System.Drawing.Font("Segoe MDL2 Assets", 13f);
+
+    private System.Drawing.Color _defaultStatusBackColor;
+
+    private ToolStripStatusLabel? _cameraInfoLabel;
+    private ToolStripStatusLabel? _zoomInfoLabel;
+    private ToolStripStatusLabel? _gridInfoLabel;
+    private ToolStripStatusLabel? _cursorInfoLabel;
+
     /// <summary>Constructor exclusivo del Designer.</summary>
     public EditorForm() => InitializeComponent();
 
@@ -61,10 +71,66 @@ public sealed partial class EditorForm : Form
         _contentWatcher = new ContentWatcher(context.EventBus);
 
         InitializeComponent();
+        _defaultStatusBackColor = _statusStrip.BackColor;
+        ApplyGizmoIcons();
         WireEvents();
     }
 
     #region Startup / Shutdown
+
+    private void ApplyGizmoIcons()
+    {
+        _selectModeButton.Font    = _mdl2Font;
+        _selectModeButton.Text    = "\uE15E";
+        _moveModeButton.Font      = _mdl2Font;
+        _moveModeButton.Text      = "\uE7C2";
+        _rotateModeButton.Font    = _mdl2Font;
+        _rotateModeButton.Text    = "\uE7AD";
+        _scaleModeButton.Font     = _mdl2Font;
+        _scaleModeButton.Text     = "\uE740";
+        _rectModeButton.Font      = _mdl2Font;
+        _rectModeButton.Text      = "\uEC50";
+        _handModeButton.Font      = _mdl2Font;
+        _handModeButton.Text      = "\uE7C0";
+        _playButton.Font          = _mdl2Font;
+        _playButton.Text          = "\uE768";
+        _stopButton.Font          = _mdl2Font;
+        _stopButton.Text          = "\uE71A";
+        _sceneViewModeButton.Text = "2D";
+
+        // Pill padding for toggle buttons
+        System.Windows.Forms.Padding pill = new System.Windows.Forms.Padding(4, 0, 4, 0);
+        _snapButton.Padding          = pill;
+        _navButton.Padding           = pill;
+        _resButton.Padding           = pill;
+        _sceneViewModeButton.Padding = pill;
+
+        // Dark theme renderer
+        EditorToolStripRenderer renderer = new();
+        _gizmoStrip.Renderer    = renderer;
+        _playbackStrip.Renderer = renderer;
+        _statusStrip.Renderer   = renderer;
+        _mainMenuStrip.Renderer = renderer;
+
+        // Dark background/foreground for menu and status
+        System.Drawing.Color darkBg   = System.Drawing.Color.FromArgb(30, 30, 30);
+        System.Drawing.Color lightFg  = System.Drawing.Color.FromArgb(204, 204, 204);
+        _mainMenuStrip.BackColor = darkBg;
+        _mainMenuStrip.ForeColor = lightFg;
+        _statusStrip.BackColor   = darkBg;
+        _statusStrip.ForeColor   = lightFg;
+        _statusLabel.ForeColor   = lightFg;
+        _fpsStatusLabel.ForeColor = lightFg;
+        _defaultStatusBackColor  = darkBg;
+    }
+
+    private void SetStatus(string text, bool isError = false)
+    {
+        _statusLabel.Text = text;
+        _statusStrip.BackColor = isError
+            ? System.Drawing.Color.FromArgb(179, 64, 61)
+            : _defaultStatusBackColor;
+    }
 
     private void ApplyPreferences()
     {
@@ -109,6 +175,26 @@ public sealed partial class EditorForm : Form
 
     private void WireEvents()
     {
+        // Barra de información del viewport (anclada abajo en la pestaña de escena)
+        StatusStrip viewportInfoBar = new StatusStrip
+        {
+            Dock       = DockStyle.Bottom,
+            Height     = 22,
+            SizingGrip = false,
+        };
+        _cameraInfoLabel = new ToolStripStatusLabel("Camera: Editor");
+        _zoomInfoLabel   = new ToolStripStatusLabel("Zoom: 100%");
+        _gridInfoLabel   = new ToolStripStatusLabel($"Grid: {_gizmoCtrl.GridCellSize:F0}px");
+        _cursorInfoLabel = new ToolStripStatusLabel("Cursor: 0, 0");
+        viewportInfoBar.Items.Add(_cameraInfoLabel);
+        viewportInfoBar.Items.Add(new ToolStripSeparator());
+        viewportInfoBar.Items.Add(_zoomInfoLabel);
+        viewportInfoBar.Items.Add(new ToolStripSeparator());
+        viewportInfoBar.Items.Add(_gridInfoLabel);
+        viewportInfoBar.Items.Add(new ToolStripSeparator());
+        viewportInfoBar.Items.Add(_cursorInfoLabel);
+        _sceneTab.Controls.Add(viewportInfoBar);
+
         Shown  += (_, _) => { ApplyPreferences(); CenterPlaybackStrip(); _registry.Scan(); };
         KeyPreview = true;
         KeyDown    += OnFormKeyDown;
@@ -292,7 +378,7 @@ public sealed partial class EditorForm : Form
         if (!File.Exists(mgcbFile)) return;
 
         _consolePanel.AppendLine("[Play] Building content before play…");
-        _statusLabel.Text = "Building content…";
+        SetStatus("Building content…");
 
         try
         {
@@ -302,11 +388,11 @@ public sealed partial class EditorForm : Form
             if (exitCode != 0)
             {
                 _consolePanel.AppendLine($"[Play] Content build failed (exit {exitCode}). Aborting play.");
-                _statusLabel.Text = "Build failed.";
+                SetStatus("Build failed.", isError: true);
                 throw new InvalidOperationException($"Content build failed with exit code {exitCode}.");
             }
 
-            _statusLabel.Text = "Build succeeded.";
+            SetStatus("Build succeeded.");
         }
         catch (InvalidOperationException)
         {
@@ -315,7 +401,7 @@ public sealed partial class EditorForm : Form
         catch (Exception ex)
         {
             _consolePanel.AppendLine($"[Play] Build error: {ex.Message}");
-            _statusLabel.Text = "Build error.";
+            SetStatus("Build error.", isError: true);
         }
     }
 
@@ -330,12 +416,12 @@ public sealed partial class EditorForm : Form
         if (InvokeRequired) { BeginInvoke(() => OnEditorStateChanged(evt)); return; }
 
         UpdatePlaybackButtons(evt.NewState);
-        _statusLabel.Text = evt.NewState switch
+        SetStatus(evt.NewState switch
         {
             EditorState.Editing => "Editing",
             EditorState.Playing => "Playing",
             _                   => string.Empty,
-        };
+        });
 
         switch (evt.NewState)
         {
@@ -474,8 +560,8 @@ public sealed partial class EditorForm : Form
             : SceneViewMode.TwoD;
 
         _sceneViewModeButton.Text = _sceneViewMode == SceneViewMode.TwoD
-            ? "View: 2D"
-            : "View: 2.5D";
+            ? "2D"
+            : "2.5D";
 
         _gizmoCtrl.IsDepthMode = _sceneViewMode == SceneViewMode.TwoPointFiveD;
         _viewport.Invalidate();
@@ -712,7 +798,7 @@ public sealed partial class EditorForm : Form
         }
 
         _consolePanel.AppendLine("[Build] Starting content build…");
-        _statusLabel.Text = "Building content…";
+        SetStatus("Building content…");
 
         try
         {
@@ -721,12 +807,12 @@ public sealed partial class EditorForm : Form
 
             string result = exitCode == 0 ? "Build succeeded." : $"Build failed (exit {exitCode}).";
             _consolePanel.AppendLine($"[Build] {result}");
-            _statusLabel.Text = result;
+            SetStatus(result, isError: exitCode != 0);
         }
         catch (Exception ex)
         {
             _consolePanel.AppendLine($"[Build] Error: {ex.Message}");
-            _statusLabel.Text = "Build error.";
+            SetStatus("Build error.", isError: true);
         }
     }
 
@@ -753,7 +839,7 @@ public sealed partial class EditorForm : Form
 
         string config = _projectSettings?.BuildConfiguration ?? "Debug";
         _consolePanel.AppendLine($"[Build] Building {project.Name} ({config})…");
-        _statusLabel.Text = "Building game…";
+        SetStatus("Building game…");
 
         try
         {
@@ -764,7 +850,7 @@ public sealed partial class EditorForm : Form
 
             string result = exitCode == 0 ? "Build succeeded." : $"Build failed (exit {exitCode}).";
             _consolePanel.AppendLine($"[Build] {result}");
-            _statusLabel.Text = result;
+            SetStatus(result, isError: exitCode != 0);
             _context.EventBus.Publish(new BuildOutputLineEvent(result, exitCode != 0));
 
             if (exitCode == 0)
@@ -773,7 +859,7 @@ public sealed partial class EditorForm : Form
         catch (Exception ex)
         {
             _consolePanel.AppendLine($"[Build] Error: {ex.Message}");
-            _statusLabel.Text = "Build error.";
+            SetStatus("Build error.", isError: true);
         }
     }
 
@@ -877,7 +963,7 @@ public sealed partial class EditorForm : Form
         }
 
         _context.EventBus.Publish(new CodeGenStartedEvent(scene.Name));
-        _statusLabel.Text = "Generating code...";
+        SetStatus("Generating code...");
 
         try
         {
@@ -891,12 +977,12 @@ public sealed partial class EditorForm : Form
                 _consolePanel.AppendLine($"[CodeGen] Error: {result.ErrorMessage}", LogLevel.Error);
 
             _context.EventBus.Publish(new CodeGenCompletedEvent(result));
-            _statusLabel.Text = result.Success ? "Code generated." : "Code gen failed.";
+            SetStatus(result.Success ? "Code generated." : "Code gen failed.", isError: !result.Success);
         }
         catch (Exception ex)
         {
             _consolePanel.AppendLine($"[CodeGen] Exception: {ex.Message}", LogLevel.Error);
-            _statusLabel.Text = "Code gen failed.";
+            SetStatus("Code gen failed.", isError: true);
         }
     }
 
@@ -930,7 +1016,7 @@ public sealed partial class EditorForm : Form
 
         string[] sceneFiles = Directory.GetFiles(project.ScenesPath, "*.scene.json");
         _consolePanel.AppendLine($"[CodeGen] Generating code for {sceneFiles.Length} scene(s)...");
-        _statusLabel.Text = "Generating all scenes...";
+        SetStatus("Generating all scenes...");
 
         CodeGenProgressDialog progressDlg = new();
         progressDlg.Show(this);
@@ -976,7 +1062,7 @@ public sealed partial class EditorForm : Form
         }
 
         progressDlg.MarkComplete(success, failed);
-        _statusLabel.Text = $"CodeGen: {success} OK, {failed} failed.";
+        SetStatus($"CodeGen: {success} OK, {failed} failed.", isError: failed > 0);
     }
 
     private async void OnRescanBehavioursClick(object? sender, EventArgs e)
@@ -1039,7 +1125,7 @@ public sealed partial class EditorForm : Form
 
         if (string.IsNullOrEmpty(dlg.ClassName)) return;
 
-        _statusLabel.Text = $"Creating {dlg.ClassName}...";
+        SetStatus($"Creating {dlg.ClassName}...");
 
         try
         {
@@ -1060,12 +1146,12 @@ public sealed partial class EditorForm : Form
                 _consolePanel.AppendLine($"[CodeGen] Failed: {result.ErrorMessage}", LogLevel.Error);
             }
 
-            _statusLabel.Text = result.Success ? "Behaviour created." : "Failed.";
+            SetStatus(result.Success ? "Behaviour created." : "Failed.", isError: !result.Success);
         }
         catch (Exception ex)
         {
             _consolePanel.AppendLine($"[CodeGen] Error: {ex.Message}", LogLevel.Error);
-            _statusLabel.Text = "Error.";
+            SetStatus("Error.", isError: true);
         }
     }
 
@@ -1220,7 +1306,7 @@ public sealed partial class EditorForm : Form
                 await SceneSerializer.SaveAsync(scene, scenePath).ConfigureAwait(true);
                 _context.MarkSceneClean();
                 _consolePanel.AppendLine($"[Save] Scene saved to {scenePath}");
-                _statusLabel.Text = "Saved.";
+                SetStatus("Saved.");
 
                 // Generar código automáticamente al guardar si está configurado
                 await TryGenerateCodeOnSaveAsync(scene, project).ConfigureAwait(true);
@@ -1229,7 +1315,7 @@ public sealed partial class EditorForm : Form
         catch (Exception ex)
         {
             _consolePanel.AppendLine($"[Save] Error: {ex.Message}");
-            _statusLabel.Text = "Save failed.";
+            SetStatus("Save failed.", isError: true);
         }
     }
 
@@ -1242,7 +1328,7 @@ public sealed partial class EditorForm : Form
         if (string.IsNullOrWhiteSpace(settings.RootNamespace)) return;
 
         _context.EventBus.Publish(new CodeGenStartedEvent(scene.Name));
-        _statusLabel.Text = "Generating code...";
+        SetStatus("Generating code...");
 
         try
         {
@@ -1256,12 +1342,12 @@ public sealed partial class EditorForm : Form
                 _consolePanel.AppendLine($"[CodeGen] Error: {result.ErrorMessage}", LogLevel.Error);
 
             _context.EventBus.Publish(new CodeGenCompletedEvent(result));
-            _statusLabel.Text = result.Success ? "Saved + code generated." : "Saved (code gen failed).";
+            SetStatus(result.Success ? "Saved + code generated." : "Saved (code gen failed).", isError: !result.Success);
         }
         catch (Exception ex)
         {
             _consolePanel.AppendLine($"[CodeGen] Exception on save: {ex.Message}", LogLevel.Error);
-            _statusLabel.Text = "Saved (code gen error).";
+            SetStatus("Saved (code gen error).", isError: true);
         }
     }
 
@@ -1296,12 +1382,12 @@ public sealed partial class EditorForm : Form
             await SceneSerializer.SaveAsync(scene, dlg.FileName).ConfigureAwait(true);
             _context.MarkSceneClean();
             _consolePanel.AppendLine($"[Save As] Scene saved to {dlg.FileName}");
-            _statusLabel.Text = "Saved.";
+            SetStatus("Saved.");
         }
         catch (Exception ex)
         {
             _consolePanel.AppendLine($"[Save As] Error: {ex.Message}");
-            _statusLabel.Text = "Save failed.";
+            SetStatus("Save failed.", isError: true);
         }
     }
 
@@ -1600,7 +1686,16 @@ public sealed partial class EditorForm : Form
             _fpsCurrent    = (float)(_fpsFrameCount / _fpsAccumTime);
             _fpsAccumTime  = 0;
             _fpsFrameCount = 0;
-            BeginInvoke(() => _fpsStatusLabel.Text = $"{_fpsCurrent:F0} fps");
+            float zoom     = _viewport.Camera.Zoom;
+            float gridSize = _gizmoCtrl.GridCellSize;
+            BeginInvoke(() =>
+            {
+                _fpsStatusLabel.Text = $"{_fpsCurrent:F0} fps";
+                if (_zoomInfoLabel is not null)
+                    _zoomInfoLabel.Text = $"Zoom: {zoom * 100:F0}%";
+                if (_gridInfoLabel is not null)
+                    _gridInfoLabel.Text = $"Grid: {gridSize:F0}px";
+            });
         }
 
         // La pestaña de escena siempre renderiza la superposición del modo edición (cuadrícula, gizmos, vistas previas de sprites)
@@ -1742,6 +1837,21 @@ public sealed partial class EditorForm : Form
 
     private void OnViewportMouseMove(object? sender, MouseEventArgs e)
     {
+        // Actualizar posición del cursor en la barra de información del viewport
+        if (_cursorInfoLabel is not null)
+        {
+            int cw = _viewport.ClientSize.Width;
+            int ch = _viewport.ClientSize.Height;
+            if (cw > 0 && ch > 0)
+            {
+                Viewport cvp = new(0, 0, cw, ch);
+                Vector2 cursorWorld = Vector2.Transform(
+                    new Vector2(e.X, e.Y),
+                    Matrix.Invert(_viewport.Camera.GetTransformMatrix(cvp)));
+                _cursorInfoLabel.Text = $"Cursor: {cursorWorld.X:F0}, {cursorWorld.Y:F0}";
+            }
+        }
+
         if (_handToolEnabled)
             return;
 

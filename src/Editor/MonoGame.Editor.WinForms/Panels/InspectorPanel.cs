@@ -19,6 +19,10 @@ public sealed class InspectorPanel : UserControl
     private const int NumericWidth  = 68;
     private const int HeaderHeight  = 56;
 
+    private static readonly System.Drawing.Color AxisX = System.Drawing.Color.FromArgb(224, 108, 108);
+    private static readonly System.Drawing.Color AxisY = System.Drawing.Color.FromArgb(124, 196, 124);
+    private static readonly System.Drawing.Color AxisZ = System.Drawing.Color.FromArgb(111, 159, 240);
+
     #endregion
 
     #region Fields
@@ -251,7 +255,7 @@ public sealed class InspectorPanel : UserControl
         Panel header = new Panel
         {
             Height    = 32,
-            BackColor = System.Drawing.SystemColors.ControlDarkDark,
+            BackColor = System.Drawing.Color.FromArgb(37, 37, 38),
             Location  = new System.Drawing.Point(SidePadding, y),
             Width     = width,
         };
@@ -344,7 +348,7 @@ public sealed class InspectorPanel : UserControl
         Panel panel = new Panel
         {
             Height    = HeaderHeight,
-            BackColor = System.Drawing.SystemColors.ControlDarkDark,
+            BackColor = System.Drawing.Color.FromArgb(37, 37, 38),
             Padding   = new System.Windows.Forms.Padding(4, 2, 4, 2),
         };
 
@@ -354,7 +358,7 @@ public sealed class InspectorPanel : UserControl
             Dock      = DockStyle.Bottom,
             Height    = 16,
             Text      = obj.Id.ToString()[..8],
-            Font      = new System.Drawing.Font("Segoe UI", 7f),
+            Font      = new System.Drawing.Font("Consolas", 7f),
             ForeColor = System.Drawing.SystemColors.GrayText,
             TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
         };
@@ -403,7 +407,7 @@ public sealed class InspectorPanel : UserControl
             Dock      = DockStyle.Fill,
             Text      = obj.Name,
             Font      = new System.Drawing.Font("Segoe UI", 10f, System.Drawing.FontStyle.Bold),
-            BackColor = System.Drawing.SystemColors.ControlDarkDark,
+            BackColor = System.Drawing.Color.FromArgb(37, 37, 38),
             ForeColor = System.Drawing.SystemColors.ControlText,
             BorderStyle = BorderStyle.None,
         };
@@ -427,11 +431,55 @@ public sealed class InspectorPanel : UserControl
 
     private Control BuildTransformSection(EditorGameObject obj)
     {
-        GroupBox grp = new GroupBox
+        bool collapsed = _preferences?.BehaviourSectionCollapsed.GetValueOrDefault("Transform", false) ?? false;
+
+        Panel outerPanel = new Panel { Padding = new System.Windows.Forms.Padding(0) };
+
+        // --- Encabezado ---
+        Panel header = new Panel
         {
-            Text    = "Transform",
-            Height  = 24 + RowHeight * 4 + 12,
-            Padding = new System.Windows.Forms.Padding(4),
+            Dock      = DockStyle.Top,
+            Height    = 28,
+            BackColor = System.Drawing.Color.FromArgb(45, 45, 48),
+            Padding   = new System.Windows.Forms.Padding(2),
+        };
+
+        Label chevron = new Label
+        {
+            Text      = collapsed ? "▶" : "▼",
+            Dock      = DockStyle.Left,
+            Width     = 16,
+            TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
+            Cursor    = Cursors.Hand,
+        };
+
+        Label iconLabel = new Label
+        {
+            Text      = "⊞",
+            Dock      = DockStyle.Left,
+            Width     = 18,
+            TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
+        };
+
+        Label nameLabel = new Label
+        {
+            Text      = "Transform",
+            Dock      = DockStyle.Fill,
+            TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+        };
+
+        header.Controls.Add(nameLabel);
+        header.Controls.Add(iconLabel);
+        header.Controls.Add(chevron);
+
+        // --- Cuerpo ---
+        int bodyHeight = RowHeight * 4 + 8;
+        Panel body = new Panel
+        {
+            Dock    = DockStyle.Top,
+            Height  = bodyHeight,
+            Padding = new System.Windows.Forms.Padding(4, 2, 4, 2),
+            Visible = !collapsed,
         };
 
         TableLayoutPanel table = new TableLayoutPanel
@@ -449,7 +497,7 @@ public sealed class InspectorPanel : UserControl
         table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
 
         // Posición
-        table.Controls.Add(MakeLabel("Local Position"), 0, 0);
+        table.Controls.Add(MakeLabel("Position"), 0, 0);
         table.Controls.Add(BuildTransformVec2Editor(
             obj.LocalPosition.X,
             obj.LocalPosition.Y,
@@ -467,7 +515,7 @@ public sealed class InspectorPanel : UserControl
             }), 1, 0);
 
         // Rotación
-        table.Controls.Add(MakeLabel("Local Rotation"), 0, 1);
+        table.Controls.Add(MakeLabel("Rotation"), 0, 1);
         table.Controls.Add(BuildTransformFloatEditor(
             obj.LocalRotation,
             -360f,
@@ -480,7 +528,7 @@ public sealed class InspectorPanel : UserControl
             }), 1, 1);
 
         // Escala
-        table.Controls.Add(MakeLabel("Local Scale"), 0, 2);
+        table.Controls.Add(MakeLabel("Scale"), 0, 2);
         table.Controls.Add(BuildTransformVec2Editor(
             obj.LocalScale.X,
             obj.LocalScale.Y,
@@ -498,7 +546,7 @@ public sealed class InspectorPanel : UserControl
             }), 1, 2);
 
         // Profundidad Z (ordenamiento por parallax 2.5D)
-        table.Controls.Add(MakeLabel("Depth Z"), 0, 3);
+        table.Controls.Add(MakeLabel("Depth"), 0, 3);
         table.Controls.Add(BuildTransformFloatEditor(
             obj.PositionZ,
             -10_000f,
@@ -510,8 +558,18 @@ public sealed class InspectorPanel : UserControl
                 _context!.Commands.Execute(new MoveEntityZCommand(obj, obj.PositionZ, v));
             }), 1, 3);
 
-        grp.Controls.Add(table);
-        return grp;
+        body.Controls.Add(table);
+
+        // Alternar colapso (reutiliza ToggleSectionCollapse con clave "Transform")
+        chevron.Click += (_, _) => ToggleSectionCollapse("Transform", chevron, body, outerPanel, bodyHeight);
+        header.Click  += (_, _) => ToggleSectionCollapse("Transform", chevron, body, outerPanel, bodyHeight);
+
+        // DockStyle.Top: agregar cuerpo primero, luego encabezado (encabezado queda arriba)
+        outerPanel.Controls.Add(body);
+        outerPanel.Controls.Add(header);
+        outerPanel.Height = collapsed ? 28 : 28 + bodyHeight;
+
+        return outerPanel;
     }
 
     private Panel BuildTransformFloatEditor(
@@ -522,12 +580,21 @@ public sealed class InspectorPanel : UserControl
         Action<float> onChange)
     {
         Panel panel = new Panel { Height = RowHeight };
+        Label lz = new Label
+        {
+            Text      = "Z",
+            Width     = 14,
+            Dock      = DockStyle.Left,
+            TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+            ForeColor = AxisZ,
+        };
         NumericUpDown num = CreateNumericUpDown((decimal)value,
             (decimal)Math.Max(min, (float)decimal.MinValue),
             (decimal)Math.Min(max, (float)decimal.MaxValue), 3);
         num.Dock = DockStyle.Fill;
         num.ValueChanged += (_, _) => onChange((float)num.Value);
         panel.Controls.Add(num);
+        panel.Controls.Add(lz);
         captureInput(num);
         return panel;
     }
@@ -540,12 +607,12 @@ public sealed class InspectorPanel : UserControl
     {
         Panel panel = new Panel { Height = RowHeight };
 
-        Label lx = new Label { Text = "X", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft };
+        Label lx = new Label { Text = "X", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft, ForeColor = AxisX };
         NumericUpDown nx = CreateNumericUpDown((decimal)x, -1_000_000m, 1_000_000m, 3);
         nx.Width = NumericWidth;
         nx.Dock  = DockStyle.Left;
 
-        Label ly = new Label { Text = "Y", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft };
+        Label ly = new Label { Text = "Y", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft, ForeColor = AxisY };
         NumericUpDown ny = CreateNumericUpDown((decimal)y, -1_000_000m, 1_000_000m, 3);
         ny.Dock = DockStyle.Fill;
 
@@ -613,7 +680,7 @@ public sealed class InspectorPanel : UserControl
         {
             Dock      = DockStyle.Top,
             Height    = 28,
-            BackColor = System.Drawing.SystemColors.ControlDark,
+            BackColor = System.Drawing.Color.FromArgb(45, 45, 48),
             Padding   = new System.Windows.Forms.Padding(2),
         };
 
@@ -1112,12 +1179,12 @@ public sealed class InspectorPanel : UserControl
     {
         Panel panel = new Panel { Height = RowHeight };
 
-        Label lx = new Label { Text = "X", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft };
+        Label lx = new Label { Text = "X", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft, ForeColor = AxisX };
         NumericUpDown nx = CreateNumericUpDown((decimal)x, -1_000_000m, 1_000_000m, 3);
         nx.Width = NumericWidth;
         nx.Dock  = DockStyle.Left;
 
-        Label ly = new Label { Text = "Y", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft };
+        Label ly = new Label { Text = "Y", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft, ForeColor = AxisY };
         NumericUpDown ny = CreateNumericUpDown((decimal)y, -1_000_000m, 1_000_000m, 3);
         ny.Dock = DockStyle.Fill;
 
@@ -1136,17 +1203,17 @@ public sealed class InspectorPanel : UserControl
     {
         Panel panel = new Panel { Height = RowHeight };
 
-        Label lx = new Label { Text = "X", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft };
+        Label lx = new Label { Text = "X", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft, ForeColor = AxisX };
         NumericUpDown nx = CreateNumericUpDown((decimal)x, -1_000_000m, 1_000_000m, 3);
         nx.Width = 54;
         nx.Dock  = DockStyle.Left;
 
-        Label ly = new Label { Text = "Y", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft };
+        Label ly = new Label { Text = "Y", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft, ForeColor = AxisY };
         NumericUpDown ny = CreateNumericUpDown((decimal)y, -1_000_000m, 1_000_000m, 3);
         ny.Width = 54;
         ny.Dock  = DockStyle.Left;
 
-        Label lz = new Label { Text = "Z", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft };
+        Label lz = new Label { Text = "Z", Width = 14, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleLeft, ForeColor = AxisZ };
         NumericUpDown nz = CreateNumericUpDown((decimal)z, -1_000_000m, 1_000_000m, 3);
         nz.Dock = DockStyle.Fill;
 
