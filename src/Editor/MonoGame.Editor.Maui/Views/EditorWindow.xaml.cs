@@ -69,6 +69,14 @@ public sealed partial class EditorWindow : ContentPage
     private double _inspSepPanLast;
     private double _dockSepPanLast;
 
+    private Action<double, double>? _activeSepOnDrag;
+    private Action?                 _activeSepOnDragEnd;
+    private double                  _sepDragLastX;
+    private double                  _sepDragLastY;
+
+    // Populated by AddSeparatorDrag; used for hit-testing at window root level.
+    private readonly List<(BoxView Sep, Action<double, double> OnDrag, Action OnDragEnd)> _sepEntries = [];
+
     private Action<EditorStateChangedEvent>?  _onStateChanged;
     private Action<SceneLoadedEvent>?         _onSceneLoaded;
     private Action<BuildOutputLineEvent>?     _onBuildOutput;
@@ -111,7 +119,13 @@ public sealed partial class EditorWindow : ContentPage
                     Microsoft.UI.Xaml.UIElement.KeyDownEvent,
                     new Microsoft.UI.Xaml.Input.KeyEventHandler(OnNativeKeyDown),
                     handledEventsToo: false);
+                win.Content.AddHandler(
+                    Microsoft.UI.Xaml.UIElement.PointerPressedEvent,
+                    new Microsoft.UI.Xaml.Input.PointerEventHandler(OnNativeSepDragStarted),
+                    handledEventsToo: true);
                 win.Content.PointerWheelChanged += OnNativePointerWheelChanged;
+                win.Content.PointerMoved        += OnNativeSepDragMoved;
+                win.Content.PointerReleased     += OnNativeSepDragReleased;
                 win.Closed += (_, _) => SavePreferences();
             }
 
@@ -1415,7 +1429,6 @@ public sealed partial class EditorWindow : ContentPage
 
     #region Panel resizing
 
-    // Attaches hover-highlight feedback and native resize-cursor to every separator strip.
     private void AttachSeparatorCursors()
     {
         AddSeparatorDrag(
@@ -1423,8 +1436,12 @@ public sealed partial class EditorWindow : ContentPage
             isVertical: true,
             onDrag: (dx, _) =>
             {
-                double newW = Math.Clamp(BodyGrid.ColumnDefinitions[0].Width.Value + dx, 120, 600);
+                double cur  = BodyGrid.ColumnDefinitions[0].Width.Value;
+                double newW = Math.Clamp(cur + dx, 120, 600);
+                System.Diagnostics.Debug.WriteLine($"[SEP] Hierarchy onDrag isMain={MainThread.IsMainThread} handler={BodyGrid.Handler?.GetType().Name ?? "NULL"} cur={cur:F1} dx={dx:F1} → {newW:F1}");
                 BodyGrid.ColumnDefinitions[0].Width = new GridLength(newW);
+                BodyGrid.InvalidateMeasure();
+                System.Diagnostics.Debug.WriteLine($"[SEP] Hierarchy after-set={BodyGrid.ColumnDefinitions[0].Width.Value:F1}");
             },
             onDragEnd: () =>
             {
@@ -1437,8 +1454,12 @@ public sealed partial class EditorWindow : ContentPage
             isVertical: true,
             onDrag: (dx, _) =>
             {
-                double newW = Math.Clamp(BodyGrid.ColumnDefinitions[4].Width.Value - dx, 120, 600);
+                double cur  = BodyGrid.ColumnDefinitions[4].Width.Value;
+                double newW = Math.Clamp(cur - dx, 120, 600);
+                System.Diagnostics.Debug.WriteLine($"[SEP] Inspector onDrag isMain={MainThread.IsMainThread} handler={BodyGrid.Handler?.GetType().Name ?? "NULL"} cur={cur:F1} dx={dx:F1} → {newW:F1}");
                 BodyGrid.ColumnDefinitions[4].Width = new GridLength(newW);
+                BodyGrid.InvalidateMeasure();
+                System.Diagnostics.Debug.WriteLine($"[SEP] Inspector after-set={BodyGrid.ColumnDefinitions[4].Width.Value:F1}");
             },
             onDragEnd: () =>
             {
@@ -1451,8 +1472,12 @@ public sealed partial class EditorWindow : ContentPage
             isVertical: false,
             onDrag: (_, dy) =>
             {
-                double newH = Math.Clamp(MainGrid.RowDefinitions[3].Height.Value - dy, 80, 500);
+                double cur  = MainGrid.RowDefinitions[3].Height.Value;
+                double newH = Math.Clamp(cur - dy, 80, 500);
+                System.Diagnostics.Debug.WriteLine($"[SEP] Dock onDrag isMain={MainThread.IsMainThread} handler={MainGrid.Handler?.GetType().Name ?? "NULL"} cur={cur:F1} dy={dy:F1} → {newH:F1}");
                 MainGrid.RowDefinitions[3].Height = new GridLength(newH);
+                MainGrid.InvalidateMeasure();
+                System.Diagnostics.Debug.WriteLine($"[SEP] Dock after-set={MainGrid.RowDefinitions[3].Height.Value:F1}");
             },
             onDragEnd: () =>
             {
@@ -1472,62 +1497,125 @@ public sealed partial class EditorWindow : ContentPage
         ptr.PointerExited  += (_, _) => sep.Color = idle;
         sep.GestureRecognizers.Add(ptr);
 
+        // Store so the window-level PointerPressed handler can hit-test against it.
+        _sepEntries.Add((sep, onDrag, onDragEnd));
+
 #if WINDOWS
-        sep.HandlerChanged += (_, _) =>
+        // HandlerChanged on a child BoxView often fires BEFORE the parent's OnHandlerChanged
+        // subscribes, so we call SetupNative() immediately as well as on future changes.
+        Microsoft.UI.Xaml.UIElement? lastSetupEl = null;
+
+        void SetupNative()
         {
             if (sep.Handler?.PlatformView is not Microsoft.UI.Xaml.UIElement uiEl) return;
+            if (ReferenceEquals(uiEl, lastSetupEl)) return;
+            lastSetupEl = uiEl;
+
+            System.Diagnostics.Debug.WriteLine($"[SEP] SetupNative OK — sep={sep.GetType().Name} uiEl={uiEl.GetType().FullName}");
 
             var shape = isVertical
                 ? Microsoft.UI.Input.InputSystemCursorShape.SizeWestEast
                 : Microsoft.UI.Input.InputSystemCursorShape.SizeNorthSouth;
-            var cursor = Microsoft.UI.Input.InputSystemCursor.Create(shape);
-
-            // ProtectedCursor is protected; access via reflection so we don't need to subclass.
-            System.Reflection.PropertyInfo? prop = typeof(Microsoft.UI.Xaml.UIElement)
+            typeof(Microsoft.UI.Xaml.UIElement)
                 .GetProperty("ProtectedCursor",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            prop?.SetValue(uiEl, cursor);
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(uiEl, Microsoft.UI.Input.InputSystemCursor.Create(shape));
+        }
 
-            // PanGestureRecognizer does not fire for left-click drag on Windows —
-            // wire native WinUI pointer events instead.
-            bool dragging = false;
-            double lastX  = 0;
-            double lastY  = 0;
-
-            uiEl.PointerPressed += (_, e) =>
-            {
-                var pt = e.GetCurrentPoint(null);
-                if (pt.Properties.PointerUpdateKind != Microsoft.UI.Input.PointerUpdateKind.LeftButtonPressed)
-                    return;
-                lastX = pt.Position.X;
-                lastY = pt.Position.Y;
-                uiEl.CapturePointer(e.Pointer);
-                dragging = true;
-            };
-
-            uiEl.PointerMoved += (_, e) =>
-            {
-                if (!dragging) return;
-                var pt = e.GetCurrentPoint(null);
-                double dx = pt.Position.X - lastX;
-                double dy = pt.Position.Y - lastY;
-                lastX = pt.Position.X;
-                lastY = pt.Position.Y;
-                if (Math.Abs(isVertical ? dx : dy) < 0.5) return;
-                onDrag(dx, dy);
-            };
-
-            uiEl.PointerReleased += (_, e) =>
-            {
-                if (!dragging) return;
-                dragging = false;
-                uiEl.ReleasePointerCapture(e.Pointer);
-                onDragEnd();
-            };
-
-            uiEl.PointerCaptureLost += (_, _) => dragging = false;
-        };
+        sep.HandlerChanged += (_, _) => SetupNative();
+        SetupNative();
 #endif
+    }
+
+    // Detects left-click on a separator via OriginalSource → visual-tree walk.
+    // Using the window root (handledEventsToo: true) because PointerPressed on the
+    // BoxView's ContentPanel is swallowed by MAUI before it reaches direct handlers.
+    private void OnNativeSepDragStarted(object sender,
+        Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        var pt = e.GetCurrentPoint(null);
+
+        System.Diagnostics.Debug.WriteLine(
+            $"[SEP] PointerPressed at root — kind={pt.Properties.PointerUpdateKind} pos=({pt.Position.X:F0},{pt.Position.Y:F0}) source={e.OriginalSource?.GetType().FullName}");
+
+        if (pt.Properties.PointerUpdateKind
+            != Microsoft.UI.Input.PointerUpdateKind.LeftButtonPressed) return;
+
+        var source = e.OriginalSource as Microsoft.UI.Xaml.DependencyObject;
+
+        System.Diagnostics.Debug.WriteLine($"[SEP] Checking {_sepEntries.Count} separator(s)");
+
+        foreach (var (sep, onDrag, onDragEnd) in _sepEntries)
+        {
+            var sepEl = sep.Handler?.PlatformView as Microsoft.UI.Xaml.UIElement;
+            System.Diagnostics.Debug.WriteLine($"[SEP]   sep PlatformView={sepEl?.GetType().FullName ?? "NULL"}");
+
+            if (sepEl is null) continue;
+
+            // Walk up from the pressed element to see if it belongs to this separator.
+            var current = source;
+            int depth = 0;
+            while (current is not null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SEP]     walk[{depth++}] {current.GetType().FullName}");
+                if (ReferenceEquals(current, sepEl))
+                {
+                    System.Diagnostics.Debug.WriteLine("[SEP] >>> HIT — drag started");
+                    _activeSepOnDrag    = onDrag;
+                    _activeSepOnDragEnd = onDragEnd;
+                    _sepDragLastX       = pt.Position.X;
+                    _sepDragLastY       = pt.Position.Y;
+                    return;
+                }
+                current = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(current);
+            }
+        }
+
+        System.Diagnostics.Debug.WriteLine("[SEP] No separator matched");
+    }
+
+    // Tracked at the root window level so the drag keeps working when the
+    // pointer moves outside the narrow separator strip.
+    private void OnNativeSepDragMoved(object sender,
+        Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (_activeSepOnDrag is null) return;
+
+        var pt = e.GetCurrentPoint(null);
+        System.Diagnostics.Debug.WriteLine($"[SEP] DragMoved pos=({pt.Position.X:F0},{pt.Position.Y:F0}) leftBtn={pt.Properties.IsLeftButtonPressed}");
+        if (!pt.Properties.IsLeftButtonPressed)
+        {
+            // Button released without a PointerReleased event (edge case) — end drag.
+            var endAction = _activeSepOnDragEnd;
+            _activeSepOnDrag    = null;
+            _activeSepOnDragEnd = null;
+            Dispatcher.Dispatch(() => endAction?.Invoke());
+            return;
+        }
+
+        double dx = pt.Position.X - _sepDragLastX;
+        double dy = pt.Position.Y - _sepDragLastY;
+        _sepDragLastX = pt.Position.X;
+        _sepDragLastY = pt.Position.Y;
+        if (Math.Abs(dx) < 0.5 && Math.Abs(dy) < 0.5) return;
+
+        // Use Dispatcher.Dispatch: executes synchronously if already on the UI thread
+        // (WinUI dispatcher == MAUI main thread on Windows), which ensures MAUI's layout
+        // system receives the property change within the same frame as the pointer event.
+        var action     = _activeSepOnDrag;
+        var capturedDx = dx;
+        var capturedDy = dy;
+        Dispatcher.Dispatch(() => action(capturedDx, capturedDy));
+    }
+
+    private void OnNativeSepDragReleased(object sender,
+        Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (_activeSepOnDrag is null) return;
+        var endAction   = _activeSepOnDragEnd;
+        _activeSepOnDrag    = null;
+        _activeSepOnDragEnd = null;
+        Dispatcher.Dispatch(() => endAction?.Invoke());
     }
 
     private void OnHierarchySepPanned(object sender, PanUpdatedEventArgs e)
