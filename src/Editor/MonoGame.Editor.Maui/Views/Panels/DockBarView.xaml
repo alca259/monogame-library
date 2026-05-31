@@ -13,6 +13,11 @@
                 StrokeThickness="0">
             <ScrollView Orientation="Horizontal">
                 <HorizontalStackLayout Spacing="0" x:Name="TabBar">
+                    <Button x:Name="ScenesTabBtn"
+                            Text="Scenes"
+                            CommandParameter="Scenes"
+                            Style="{StaticResource TabButton}"
+                            Clicked="OnDockTabClicked"/>
                     <Button x:Name="AssetsTabBtn"
                             Text="Assets"
                             CommandParameter="Assets"
@@ -21,11 +26,6 @@
                     <Button x:Name="ConsoleTabBtn"
                             Text="Console"
                             CommandParameter="Console"
-                            Style="{StaticResource TabButton}"
-                            Clicked="OnDockTabClicked"/>
-                    <Button x:Name="ScenesTabBtn"
-                            Text="Scenes"
-                            CommandParameter="Scenes"
                             Style="{StaticResource TabButton}"
                             Clicked="OnDockTabClicked"/>
                     <Button x:Name="LocalizationTabBtn"
@@ -63,14 +63,14 @@
         <!-- ── Tab content area ─────────────────────────────────── -->
         <Grid Grid.Row="1">
 
+            <!-- Scenes tab (default) -->
+            <panels:SceneManagerView x:Name="ScenesContent"/>
+
             <!-- Assets tab -->
-            <panels:AssetBrowserView x:Name="AssetsContent"/>
+            <panels:AssetBrowserView x:Name="AssetsContent" IsVisible="False"/>
 
             <!-- Console tab -->
             <panels:ConsolePanelView x:Name="ConsoleContent" IsVisible="False"/>
-
-            <!-- Scenes tab -->
-            <panels:SceneManagerView x:Name="ScenesContent" IsVisible="False"/>
 
             <!-- Phase 7 tabs -->
             <panels:LocalizationBrowserView x:Name="LocalizationContent" IsVisible="False"/>

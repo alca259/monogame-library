@@ -76,10 +76,14 @@
                          Margin="6,0" VerticalOptions="Center"/>
 
                 <!-- Mode toggles -->
-                <Button x:Name="Toggle2DBtn"   Text="2D"   Style="{StaticResource ActivePillButton}" Clicked="OnToggle2D"/>
-                <Button x:Name="ToggleSnapBtn" Text="SNAP" Style="{StaticResource PillButton}"       Clicked="OnToggleSnap"/>
-                <Button x:Name="ToggleNavBtn"  Text="NAV"  Style="{StaticResource PillButton}"       Clicked="OnToggleNav"/>
-                <Button x:Name="ToggleResBtn"  Text="RES"  Style="{StaticResource PillButton}"       Clicked="OnToggleRes"/>
+                <Button x:Name="Toggle2DBtn"   Text="2D"   Style="{StaticResource ActivePillButton}" Clicked="OnToggle2D"
+                        ToolTipProperties.Text="Toggle 2D Mode"/>
+                <Button x:Name="ToggleSnapBtn" Text="SNAP" Style="{StaticResource PillButton}"       Clicked="OnToggleSnap"
+                        ToolTipProperties.Text="Snap to Grid (G)"/>
+                <Button x:Name="ToggleNavBtn"  Text="NAV"  Style="{StaticResource PillButton}"       Clicked="OnToggleNav"
+                        ToolTipProperties.Text="Navigate Mode"/>
+                <Button x:Name="ToggleResBtn"  Text="RES"  Style="{StaticResource PillButton}"       Clicked="OnToggleRes"
+                        ToolTipProperties.Text="Resolution Mode"/>
 
                 <!-- Separator -->
                 <BoxView WidthRequest="1" HeightRequest="24"
@@ -112,12 +116,16 @@
                Col 4 (362) — Inspector   -->
         <Grid x:Name="BodyGrid"
               Grid.Row="2"
-              ColumnDefinitions="268,1,*,1,362"
+              ColumnDefinitions="268,4,*,4,362"
               ColumnSpacing="0">
 
             <panels:SceneHierarchyView Grid.Column="0"/>
 
-            <BoxView x:Name="HierarchySep" Grid.Column="1" Color="{StaticResource BorderColor}"/>
+            <BoxView x:Name="HierarchySep" Grid.Column="1" Color="{StaticResource BorderColor}">
+                <BoxView.GestureRecognizers>
+                    <PanGestureRecognizer PanUpdated="OnHierarchySepPanned"/>
+                </BoxView.GestureRecognizers>
+            </BoxView>
 
             <GraphicsView x:Name="Viewport"
                           Grid.Column="2"
@@ -126,11 +134,17 @@
                     <TapGestureRecognizer Tapped="OnViewportTapped"/>
                     <PanGestureRecognizer PanUpdated="OnViewportPanned"/>
                     <PinchGestureRecognizer PinchUpdated="OnViewportPinched"/>
-                    <PointerGestureRecognizer PointerMoved="OnViewportPointerMoved"/>
+                    <PointerGestureRecognizer PointerMoved="OnViewportPointerMoved"
+                                              PointerEntered="OnViewportPointerEntered"
+                                              PointerExited="OnViewportPointerExited"/>
                 </GraphicsView.GestureRecognizers>
             </GraphicsView>
 
-            <BoxView x:Name="InspectorSep" Grid.Column="3" Color="{StaticResource BorderColor}"/>
+            <BoxView x:Name="InspectorSep" Grid.Column="3" Color="{StaticResource BorderColor}">
+                <BoxView.GestureRecognizers>
+                    <PanGestureRecognizer PanUpdated="OnInspectorSepPanned"/>
+                </BoxView.GestureRecognizers>
+            </BoxView>
 
             <panels:InspectorView Grid.Column="4"/>
         </Grid>
@@ -138,8 +152,12 @@
         <!-- Body top separator (between toolbar and body) handled by toolbar's BoxView -->
 
         <!-- ── Row 3: Dock bar ───────────────────────────────────── -->
-        <Grid x:Name="DockRow" Grid.Row="3" RowDefinitions="1,*" RowSpacing="0">
-            <BoxView Grid.Row="0" Color="{StaticResource BorderColor}"/>
+        <Grid x:Name="DockRow" Grid.Row="3" RowDefinitions="4,*" RowSpacing="0">
+            <BoxView x:Name="DockSep" Grid.Row="0" Color="{StaticResource BorderColor}">
+                <BoxView.GestureRecognizers>
+                    <PanGestureRecognizer PanUpdated="OnDockSepPanned"/>
+                </BoxView.GestureRecognizers>
+            </BoxView>
             <panels:DockBarView Grid.Row="1"/>
         </Grid>
 

@@ -18,6 +18,7 @@ public sealed class EditorContext
     private readonly InternalEditorLogger _logger;
     private bool _isSceneDirty;
     private string? _playSnapshot;
+    private EditorGameObject? _clipboardEntity;
 
     #region Singleton
 
@@ -82,6 +83,9 @@ public sealed class EditorContext
 
     /// <summary>Indica si la escena activa tiene cambios sin guardar.</summary>
     public bool IsSceneDirty { get { lock (_stateLock) return _isSceneDirty; } }
+
+    /// <summary>Entidad copiada en el portapapeles del editor para operaciones Cut/Copy/Paste.</summary>
+    public EditorGameObject? ClipboardEntity { get { lock (_stateLock) return _clipboardEntity; } }
 
     #endregion
 
@@ -201,6 +205,13 @@ public sealed class EditorContext
     {
         lock (_stateLock)
             _playSnapshot = null;
+    }
+
+    /// <summary>Almacena una copia profunda de <paramref name="entity"/> en el portapapeles del editor.</summary>
+    public void SetClipboard(EditorGameObject? entity)
+    {
+        lock (_stateLock)
+            _clipboardEntity = entity;
     }
 
     #endregion

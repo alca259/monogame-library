@@ -5,6 +5,7 @@ global using MonoGame.Editor.Core.Events;
 global using MonoGame.Editor.Core.Gizmos;
 global using MonoGame.Editor.Core.Logging;
 global using MonoGame.Editor.Core.Models;
+global using MonoGame.Editor.Core.Preferences;
 global using MonoGame.Editor.Core.Project;
 global using MonoGame.Editor.Core.Serialization;
 global using MonoGame.Editor.Core.Tilemaps;

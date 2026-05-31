@@ -4,11 +4,16 @@ public sealed partial class ProjectSettingsDialog : ContentPage
 {
     private static readonly string[] BuildConfigs = ["Debug", "Release"];
 
+    private static readonly Color ActiveTabFg   = Color.FromArgb("#E6E6E8");
+    private static readonly Color InactiveTabFg = Color.FromArgb("#9A9AA2");
+    private static readonly Color ActiveTabBg   = Color.FromArgb("#2D2D33");
+
     private readonly TaskCompletionSource<bool> _tcs = new();
     private readonly EditorProject   _project;
     private readonly ProjectSettings _settings;
 
     private ScrollView _activePanel;
+    private Button?    _activeTabBtn;
 
     private ProjectSettingsDialog(EditorProject project, ProjectSettings settings)
     {
@@ -21,6 +26,7 @@ public sealed partial class ProjectSettingsDialog : ContentPage
             BuildConfigPicker.Items.Add(cfg);
 
         LoadFromSettings();
+        SetActiveTab(GeneralTabBtn);
     }
 
     public static async Task<bool> ShowAsync(INavigation navigation,
@@ -41,7 +47,13 @@ public sealed partial class ProjectSettingsDialog : ContentPage
         BuildConfigPicker.SelectedIndex = cfgIdx >= 0 ? cfgIdx : 0;
         VirtualWidthEntry.Text          = _settings.VirtualWidth.ToString();
         VirtualHeightEntry.Text         = _settings.VirtualHeight.ToString();
-        GameAppCsprojEntry.Text         = _settings.GameAppCsprojRelPath;
+
+        GameAppCsprojEntry.Text = !string.IsNullOrEmpty(_settings.GameAppCsprojRelPath)
+            ? _settings.GameAppCsprojRelPath
+            : (!string.IsNullOrEmpty(_project.GameCsprojPath)
+                ? Path.GetRelativePath(_project.RootPath, _project.GameCsprojPath)
+                : string.Empty);
+
         GameScriptsCsprojEntry.Text     = _settings.GameScriptsCsprojRelPath;
 
         // Content
@@ -83,9 +95,22 @@ public sealed partial class ProjectSettingsDialog : ContentPage
 
     // ── Tab switching ─────────────────────────────────────────────────────────
 
+    private void SetActiveTab(Button btn)
+    {
+        if (_activeTabBtn is not null)
+        {
+            _activeTabBtn.TextColor       = InactiveTabFg;
+            _activeTabBtn.BackgroundColor = Colors.Transparent;
+        }
+        _activeTabBtn         = btn;
+        btn.TextColor         = ActiveTabFg;
+        btn.BackgroundColor   = ActiveTabBg;
+    }
+
     private void OnTabClicked(object sender, EventArgs e)
     {
-        string tag = (sender as Button)?.CommandParameter as string ?? "General";
+        if (sender is not Button btn) return;
+        string tag = btn.CommandParameter as string ?? "General";
         _activePanel.IsVisible = false;
         _activePanel = tag switch
         {
@@ -95,6 +120,50 @@ public sealed partial class ProjectSettingsDialog : ContentPage
             _              => GeneralPanel,
         };
         _activePanel.IsVisible = true;
+        SetActiveTab(btn);
+    }
+
+    // ── File pickers ──────────────────────────────────────────────────────────
+
+    private async void OnBrowseCsprojClicked(object sender, EventArgs e)
+    {
+        string? rel = await PickFileRelativeToProjectAsync(".csproj").ConfigureAwait(true);
+        if (rel is not null) GameAppCsprojEntry.Text = rel;
+    }
+
+    private async void OnBrowseScriptsCsprojClicked(object sender, EventArgs e)
+    {
+        string? rel = await PickFileRelativeToProjectAsync(".csproj").ConfigureAwait(true);
+        if (rel is not null) GameScriptsCsprojEntry.Text = rel;
+    }
+
+    private async Task<string?> PickFileRelativeToProjectAsync(string extension)
+    {
+        try
+        {
+            Microsoft.UI.Xaml.Window? win = Application.Current?.Windows.FirstOrDefault()
+                ?.Handler?.PlatformView as Microsoft.UI.Xaml.Window;
+            if (win is null) return null;
+
+            IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(win);
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            picker.FileTypeFilter.Add(extension);
+
+            Windows.Storage.StorageFile? file = await picker.PickSingleFileAsync();
+            if (file is null) return null;
+
+            string fullPath = file.Path;
+            if (!fullPath.StartsWith(_project.RootPath, StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            return Path.GetRelativePath(_project.RootPath, fullPath);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     // ── Navigation ────────────────────────────────────────────────────────────
@@ -114,9 +183,9 @@ public sealed partial class ProjectSettingsDialog : ContentPage
     private async void OnSubmit(object sender, EventArgs e)
     {
         SaveToSettings();
-        await _settings.SaveAsync(_project).ConfigureAwait(false);
+        await _settings.SaveAsync(_project).ConfigureAwait(true);
         _tcs.TrySetResult(true);
-        await Navigation.PopModalAsync().ConfigureAwait(false);
+        await Navigation.PopModalAsync();
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

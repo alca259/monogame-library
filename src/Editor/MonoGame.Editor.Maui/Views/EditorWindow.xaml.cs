@@ -37,6 +37,8 @@ public sealed partial class EditorWindow : ContentPage
     private readonly IEditorEventBus    _bus              = EditorContext.Instance.EventBus;
     private readonly GameObjectRegistry _registry         = new();
     private readonly ViewportRenderer   _viewportRenderer = new();
+    private readonly EditorPreferences  _preferences      = new();
+    private readonly ExternalPlayLauncher _externalLauncher = new();
 
     private string _activeTool = "Select";
     private bool _is2D   = true;
@@ -62,6 +64,11 @@ public sealed partial class EditorWindow : ContentPage
     private float           _panStartScreenY;
     private bool            _gizmoDragging;
 
+    private bool   _pointerOverViewport;
+    private double _hierSepPanLast;
+    private double _inspSepPanLast;
+    private double _dockSepPanLast;
+
     private Action<EditorStateChangedEvent>?  _onStateChanged;
     private Action<SceneLoadedEvent>?         _onSceneLoaded;
     private Action<BuildOutputLineEvent>?     _onBuildOutput;
@@ -76,13 +83,16 @@ public sealed partial class EditorWindow : ContentPage
     {
         InitializeComponent();
         Viewport.Drawable = _viewportRenderer;
+        _preferences.Load();
         Subscribe();
+        ApplyPreferences();
         SetPillStyle(Toggle2DBtn, _is2D);
         SetPillStyle(ToggleSnapBtn, _isSnap);
         SetPillStyle(ToggleNavBtn, _isNav);
         SetPillStyle(ToggleResBtn, _isRes);
         UpdateToolButtons();
         PlayBtn.IsEnabled = false;
+        _ = TryAutoLoadLastProjectAsync();
     }
 
     #region Lifecycle — keyboard shortcuts
@@ -90,10 +100,139 @@ public sealed partial class EditorWindow : ContentPage
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
+
+        if (Handler is not null)
+        {
+            Microsoft.UI.Xaml.Window? win = Application.Current?.Windows.FirstOrDefault()
+                ?.Handler?.PlatformView as Microsoft.UI.Xaml.Window;
+            if (win?.Content is not null)
+            {
+                win.Content.AddHandler(
+                    Microsoft.UI.Xaml.UIElement.KeyDownEvent,
+                    new Microsoft.UI.Xaml.Input.KeyEventHandler(OnNativeKeyDown),
+                    handledEventsToo: false);
+                win.Content.PointerWheelChanged += OnNativePointerWheelChanged;
+                win.Closed += (_, _) => SavePreferences();
+            }
+        }
     }
 
-    // TODO: keyboard shortcuts require platform-specific WinUI implementation.
-    // Wire up via native Microsoft.UI.Xaml.Input.KeyboardAccelerator when needed.
+    private void OnNativeKeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        Microsoft.UI.Xaml.Window? win = Application.Current?.Windows.FirstOrDefault()
+            ?.Handler?.PlatformView as Microsoft.UI.Xaml.Window;
+
+        bool textFocused = win?.Content?.XamlRoot is { } root &&
+            Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root)
+                is Microsoft.UI.Xaml.Controls.TextBox or Microsoft.UI.Xaml.Controls.PasswordBox;
+
+        bool ctrl  = Microsoft.UI.Input.InputKeyboardSource
+            .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+        bool shift = Microsoft.UI.Input.InputKeyboardSource
+            .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+
+        switch (e.Key)
+        {
+            // Global shortcuts — always active
+            case Windows.System.VirtualKey.Z when ctrl && !shift:
+                MainThread.BeginInvokeOnMainThread(OnUndoClicked);
+                e.Handled = true;
+                return;
+            case Windows.System.VirtualKey.Y when ctrl && !shift:
+                MainThread.BeginInvokeOnMainThread(OnRedoClicked);
+                e.Handled = true;
+                return;
+            case Windows.System.VirtualKey.S when ctrl && !shift:
+                MainThread.BeginInvokeOnMainThread(() => _ = SaveSceneAsync());
+                e.Handled = true;
+                return;
+            case Windows.System.VirtualKey.S when ctrl && shift:
+                MainThread.BeginInvokeOnMainThread(() => _ = SaveSceneAsAsync());
+                e.Handled = true;
+                return;
+            case Windows.System.VirtualKey.B when ctrl && !shift:
+                MainThread.BeginInvokeOnMainThread(() => _ = BuildSolutionAsync());
+                e.Handled = true;
+                return;
+            case Windows.System.VirtualKey.F5 when ctrl:
+                MainThread.BeginInvokeOnMainThread(OnPlayClicked);
+                e.Handled = true;
+                return;
+            case Windows.System.VirtualKey.G when ctrl && !shift:
+                MainThread.BeginInvokeOnMainThread(() => _ = GenerateCodeAsync());
+                e.Handled = true;
+                return;
+        }
+
+        // Viewport shortcuts — skip when a text input is focused
+        if (textFocused) return;
+
+        switch (e.Key)
+        {
+            case Windows.System.VirtualKey.Q:
+                MainThread.BeginInvokeOnMainThread(() => ActivateTool("Select"));
+                e.Handled = true;
+                break;
+            case Windows.System.VirtualKey.W:
+                MainThread.BeginInvokeOnMainThread(() => ActivateTool("Move"));
+                e.Handled = true;
+                break;
+            case Windows.System.VirtualKey.E:
+                MainThread.BeginInvokeOnMainThread(() => ActivateTool("Rotate"));
+                e.Handled = true;
+                break;
+            case Windows.System.VirtualKey.R:
+                MainThread.BeginInvokeOnMainThread(() => ActivateTool("Scale"));
+                e.Handled = true;
+                break;
+            case Windows.System.VirtualKey.T:
+                MainThread.BeginInvokeOnMainThread(() => ActivateTool("Rect"));
+                e.Handled = true;
+                break;
+            case Windows.System.VirtualKey.H:
+                MainThread.BeginInvokeOnMainThread(() => ActivateTool("Pan"));
+                e.Handled = true;
+                break;
+            case Windows.System.VirtualKey.G:
+                MainThread.BeginInvokeOnMainThread(OnToggleSnap);
+                e.Handled = true;
+                break;
+            case Windows.System.VirtualKey.Delete:
+                MainThread.BeginInvokeOnMainThread(OnDeleteSelected);
+                e.Handled = true;
+                break;
+        }
+    }
+
+    #endregion
+
+    #region Lifecycle — mouse wheel zoom
+
+    private void OnNativePointerWheelChanged(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (!_pointerOverViewport) return;
+        if (e.Pointer.PointerDeviceType != Microsoft.UI.Input.PointerDeviceType.Mouse) return;
+
+        int delta = e.GetCurrentPoint(null).Properties.MouseWheelDelta;
+        if (delta == 0) return;
+
+        float factor = delta > 0 ? 1.1f : 1f / 1.1f;
+        SizeF vs     = new((float)Viewport.Width, (float)Viewport.Height);
+        Microsoft.Maui.Graphics.PointF focus = new(_lastPointerScreenX, _lastPointerScreenY);
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            _viewportRenderer.Camera.ZoomAt(factor, focus, vs);
+            Viewport.Invalidate();
+        });
+
+        e.Handled = true;
+    }
+
+    private void OnViewportPointerEntered(object sender, PointerEventArgs e) => _pointerOverViewport = true;
+    private void OnViewportPointerExited(object sender, PointerEventArgs e)  => _pointerOverViewport = false;
 
     #endregion
 
@@ -163,6 +302,10 @@ public sealed partial class EditorWindow : ContentPage
         bool hasScene  = e.Scene is not null;
         bool isPlaying = EditorContext.Instance.State is EditorState.Playing;
         PlayBtn.IsEnabled = hasScene && !isPlaying;
+
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+        if (project is not null && e.Scene is not null && !string.IsNullOrEmpty(e.Scene.ScenePath))
+            _ = Task.Run(() => ProjectManager.SaveLastOpenedScene(project, e.Scene.ScenePath));
     }
 
     private void OnBuildOutputLine(BuildOutputLineEvent e)
@@ -207,6 +350,80 @@ public sealed partial class EditorWindow : ContentPage
         string dirtyMark   = dirty ? " ●" : string.Empty;
 
         Title = $"MonoGame Editor — {projectPart} — {scenePart}{dirtyMark}";
+    }
+
+    // ── Preferences ───────────────────────────────────────────────────────────
+
+    private void ApplyPreferences()
+    {
+        _hierarchyVisible = _preferences.HierarchyVisible;
+        _inspectorVisible = _preferences.InspectorVisible;
+        _dockVisible      = _preferences.AssetBrowserVisible;
+
+        BodyGrid.ColumnDefinitions[0].Width = new GridLength(_hierarchyVisible ? _preferences.LeftPanelWidth  : 0);
+        BodyGrid.ColumnDefinitions[4].Width = new GridLength(_inspectorVisible ? _preferences.RightPanelWidth : 0);
+        MainGrid.RowDefinitions[3].Height   = new GridLength(_dockVisible      ? _preferences.ConsolePanelHeight : 0);
+        HierarchySep.IsVisible = _hierarchyVisible;
+        InspectorSep.IsVisible = _inspectorVisible;
+        DockRow.IsVisible      = _dockVisible;
+
+        _viewportRenderer.GridCellSize                    = _preferences.GridCellSize;
+        EditorContext.Instance.Gizmos.GridCellSize        = _preferences.GridCellSize;
+        EditorContext.Instance.Gizmos.SnapRotationDegrees = _preferences.SnapRotationDegrees;
+        EditorContext.Instance.Gizmos.SnapScaleStep       = _preferences.SnapScaleStep;
+    }
+
+    private void SavePreferences()
+    {
+        _preferences.HierarchyVisible    = _hierarchyVisible;
+        _preferences.InspectorVisible    = _inspectorVisible;
+        _preferences.AssetBrowserVisible = _dockVisible;
+        _preferences.LeftPanelWidth      = (int)(BodyGrid.ColumnDefinitions[0].Width.Value);
+        _preferences.RightPanelWidth     = (int)(BodyGrid.ColumnDefinitions[4].Width.Value);
+        _preferences.ConsolePanelHeight  = (int)(MainGrid.RowDefinitions[3].Height.Value);
+        _preferences.GridCellSize        = _viewportRenderer.GridCellSize;
+        _preferences.SnapRotationDegrees = EditorContext.Instance.Gizmos.SnapRotationDegrees;
+        _preferences.SnapScaleStep       = EditorContext.Instance.Gizmos.SnapScaleStep;
+        _preferences.Save();
+    }
+
+    private async Task TryAutoLoadLastProjectAsync()
+    {
+        if (string.IsNullOrEmpty(_preferences.LastProjectPath)) return;
+        if (!Directory.Exists(_preferences.LastProjectPath)) return;
+
+        try
+        {
+            EditorProject? project = await Task.Run(() => ProjectManager.Load(_preferences.LastProjectPath))
+                                               .ConfigureAwait(true);
+            if (project is null) return;
+            EditorContext.Instance.SetActiveProject(project);
+            Log($"[Editor] Auto-loaded project '{project.Name}'.");
+            await TryLoadLastSceneForProjectAsync(project).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            Log($"[Editor] Auto-load failed: {ex.Message}", LogLevel.Warning);
+        }
+    }
+
+    private async Task TryLoadLastSceneForProjectAsync(EditorProject project)
+    {
+        string lastScene = await Task.Run(() => ProjectManager.GetLastOpenedScene(project.RootPath))
+                                     .ConfigureAwait(true);
+        if (string.IsNullOrEmpty(lastScene) || !File.Exists(lastScene)) return;
+
+        try
+        {
+            EditorScene? scene = await SceneSerializer.LoadAsync(lastScene).ConfigureAwait(true);
+            if (scene is null) return;
+            EditorContext.Instance.SetActiveScene(scene);
+            Log($"[Editor] Auto-loaded last scene '{scene.Name}'.");
+        }
+        catch (Exception ex)
+        {
+            Log($"[Editor] Failed to auto-load last scene: {ex.Message}", LogLevel.Warning);
+        }
     }
 
     #endregion
@@ -324,6 +541,19 @@ public sealed partial class EditorWindow : ContentPage
 
         yield return ("New Project…",   false, () => _ = NewProjectAsync());
         yield return ("Open Project…",  false, () => _ = OpenProjectAsync());
+
+        if (_preferences.RecentProjects.Count > 0)
+        {
+            yield return ("---", true, null);
+            yield return ("Recent Projects", false, null);
+            foreach (string path in _preferences.RecentProjects)
+            {
+                string captured = path;
+                string label    = $"  {Path.GetFileName(captured)}";
+                yield return (label, false, () => _ = OpenProjectByPathAsync(captured));
+            }
+        }
+
         yield return ("---",            true,  null);
         yield return ("New Scene",      false, hasProject ? () => _ = NewSceneAsync()    : null);
         yield return ("Save Scene",     false, hasScene   ? () => _ = SaveSceneAsync()   : null);
@@ -336,17 +566,18 @@ public sealed partial class EditorWindow : ContentPage
     {
         bool hasScene     = EditorContext.Instance.ActiveScene is not null;
         bool hasSelection = EditorContext.Instance.SelectedObject is not null;
+        bool hasClipboard = EditorContext.Instance.ClipboardEntity is not null;
 
-        yield return ("Undo",       false, hasScene     ? OnUndoClicked       : null);
-        yield return ("Redo",       false, hasScene     ? OnRedoClicked       : null);
+        yield return ("Undo",       false, hasScene                    ? OnUndoClicked       : null);
+        yield return ("Redo",       false, hasScene                    ? OnRedoClicked       : null);
         yield return ("---",        true,  null);
-        yield return ("Cut",        false, null);
-        yield return ("Copy",       false, null);
-        yield return ("Paste",      false, null);
-        yield return ("Duplicate",  false, hasSelection ? OnDuplicateSelected : null);
-        yield return ("Delete",     false, hasSelection ? OnDeleteSelected    : null);
+        yield return ("Cut",        false, hasSelection                ? OnCut               : null);
+        yield return ("Copy",       false, hasSelection                ? OnCopy              : null);
+        yield return ("Paste",      false, hasScene && hasClipboard    ? OnPaste             : null);
+        yield return ("Duplicate",  false, hasSelection                ? OnDuplicateSelected : null);
+        yield return ("Delete",     false, hasSelection                ? OnDeleteSelected    : null);
         yield return ("---",        true,  null);
-        yield return ("Select All", false, hasScene     ? OnSelectAll         : null);
+        yield return ("Select All", false, hasScene                    ? OnSelectAll         : null);
     }
 
     private IEnumerable<(string, bool, Action?)> BuildProjectMenuItems()
@@ -390,6 +621,7 @@ public sealed partial class EditorWindow : ContentPage
         _hierarchyVisible = !_hierarchyVisible;
         BodyGrid.ColumnDefinitions[0].Width = new GridLength(_hierarchyVisible ? HierarchyWidth : 0);
         HierarchySep.IsVisible = _hierarchyVisible;
+        SavePreferences();
     }
 
     private void ToggleInspector()
@@ -397,6 +629,7 @@ public sealed partial class EditorWindow : ContentPage
         _inspectorVisible = !_inspectorVisible;
         BodyGrid.ColumnDefinitions[4].Width = new GridLength(_inspectorVisible ? InspectorWidth : 0);
         InspectorSep.IsVisible = _inspectorVisible;
+        SavePreferences();
     }
 
     private void ToggleDock()
@@ -404,6 +637,7 @@ public sealed partial class EditorWindow : ContentPage
         _dockVisible = !_dockVisible;
         MainGrid.RowDefinitions[3].Height = new GridLength(_dockVisible ? DockHeight : 0);
         DockRow.IsVisible = _dockVisible;
+        SavePreferences();
     }
 
     private void ResetLayout()
@@ -435,6 +669,8 @@ public sealed partial class EditorWindow : ContentPage
                 .ConfigureAwait(true);
 
             EditorContext.Instance.SetActiveProject(project);
+            _preferences.LastProjectPath = project.RootPath;
+            _preferences.AddRecentProject(project.RootPath);
             Log($"[Editor] Project '{project.Name}' created.");
         }
         catch (Exception ex)
@@ -449,7 +685,18 @@ public sealed partial class EditorWindow : ContentPage
         {
             string? path = await PickFolderAsync();
             if (path is null) return;
+            await OpenProjectByPathAsync(path).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            Log($"[Editor] Open project error: {ex.Message}", LogLevel.Error);
+        }
+    }
 
+    private async Task OpenProjectByPathAsync(string path)
+    {
+        try
+        {
             EditorProject? project = await Task.Run(() => ProjectManager.Load(path)).ConfigureAwait(true);
             if (project is null)
             {
@@ -458,7 +705,10 @@ public sealed partial class EditorWindow : ContentPage
             }
 
             EditorContext.Instance.SetActiveProject(project);
+            _preferences.LastProjectPath = path;
+            _preferences.AddRecentProject(path);
             Log($"[Editor] Project '{project.Name}' opened.");
+            await TryLoadLastSceneForProjectAsync(project).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
@@ -637,12 +887,54 @@ public sealed partial class EditorWindow : ContentPage
 
     private void OnDuplicateSelected()
     {
-        // Duplication via CreateEntityCommand from a clone; stubbed for Phase 12
+        EditorGameObject? obj   = EditorContext.Instance.SelectedObject;
+        EditorScene?      scene = EditorContext.Instance.ActiveScene;
+        if (obj is null || scene is null) return;
+        EditorContext.Instance.Commands.Execute(new DuplicateEntityCommand(obj, scene));
     }
 
     private void OnSelectAll()
     {
-        // Multi-selection across all root objects; stubbed for Phase 12
+        EditorScene? scene = EditorContext.Instance.ActiveScene;
+        if (scene is null) return;
+        List<EditorGameObject> all = [];
+        CollectAll(scene.RootGameObjects, all);
+        EditorContext.Instance.SetMultiSelection(all);
+    }
+
+    private void OnCopy()
+    {
+        EditorGameObject? obj = EditorContext.Instance.SelectedObject;
+        if (obj is null) return;
+        EditorContext.Instance.SetClipboard(DuplicateEntityCommand.DeepClone(obj, null));
+    }
+
+    private void OnCut()
+    {
+        EditorGameObject? obj   = EditorContext.Instance.SelectedObject;
+        EditorScene?      scene = EditorContext.Instance.ActiveScene;
+        if (obj is null || scene is null) return;
+        EditorContext.Instance.SetClipboard(DuplicateEntityCommand.DeepClone(obj, null));
+        EditorContext.Instance.Commands.Execute(new DeleteEntityCommand(obj, scene));
+    }
+
+    private void OnPaste()
+    {
+        EditorGameObject? clipboard = EditorContext.Instance.ClipboardEntity;
+        EditorScene?      scene     = EditorContext.Instance.ActiveScene;
+        if (clipboard is null || scene is null) return;
+        EditorGameObject? parent = EditorContext.Instance.SelectedObject;
+        EditorGameObject  clone  = DuplicateEntityCommand.DeepClone(clipboard, parent);
+        EditorContext.Instance.Commands.Execute(new CreateEntityCommand(clone, scene, parent));
+    }
+
+    private static void CollectAll(List<EditorGameObject> objects, List<EditorGameObject> result)
+    {
+        foreach (EditorGameObject obj in objects)
+        {
+            result.Add(obj);
+            CollectAll(obj.Children, result);
+        }
     }
 
     #endregion
@@ -817,6 +1109,7 @@ public sealed partial class EditorWindow : ContentPage
             "Rect"   => GizmoMode.Rect,
             _        => GizmoMode.Select,
         };
+        Viewport.Invalidate();
     }
 
     private void UpdateToolButtons()
@@ -882,17 +1175,45 @@ public sealed partial class EditorWindow : ContentPage
     {
         if (EditorContext.Instance.State is EditorState.Playing) return;
 
-        EditorScene? scene = EditorContext.Instance.ActiveScene;
+        EditorScene?   scene   = EditorContext.Instance.ActiveScene;
+        EditorProject? project = EditorContext.Instance.ActiveProject;
         if (scene is null) return;
 
         _registry.Scan();
         EditorContext.Instance.TakePlaySnapshot();
-
-        _activeRunner = new PlayModeRunner(scene, _registry);
-        // TODO: launch play mode as separate process
-
         EditorContext.Instance.SetState(EditorState.Playing);
-        Log("[Play] Play mode started.");
+
+        if (project is not null && !string.IsNullOrEmpty(scene.ScenePath))
+        {
+            string dir      = Path.GetDirectoryName(project.GameCsprojPath) ?? string.Empty;
+            string exeName  = Path.GetFileNameWithoutExtension(project.GameCsprojPath) + ".exe";
+            string[] search =
+            [
+                Path.Combine(dir, "bin", "Debug",   "net10.0-windows"),
+                Path.Combine(dir, "bin", "Debug",   "net10.0-windows10.0.19041.0"),
+                Path.Combine(dir, "bin", "Release",  "net10.0-windows"),
+                Path.Combine(dir, "bin", "Release",  "net10.0-windows10.0.19041.0"),
+            ];
+
+            string? exePath = null;
+            foreach (string candidate in search)
+            {
+                string p = Path.Combine(candidate, exeName);
+                if (File.Exists(p)) { exePath = p; break; }
+            }
+
+            if (exePath is not null)
+            {
+                _externalLauncher.Launch(exePath, scene.ScenePath,
+                    line => _bus.Publish(new BuildOutputLineEvent(line, false)));
+                Log("[Play] External game process started.");
+                return;
+            }
+        }
+
+        // Fallback: in-editor runner
+        _activeRunner = new PlayModeRunner(scene, _registry);
+        Log("[Play] Play mode started (in-editor).");
     }
 
     private void OnStopClicked(object sender, EventArgs e) => OnStopClicked();
@@ -900,6 +1221,8 @@ public sealed partial class EditorWindow : ContentPage
     {
         EditorState state = EditorContext.Instance.State;
         if (state is EditorState.Editing) return;
+
+        _externalLauncher.Stop();
 
         _activeRunner?.Dispose();
         _activeRunner = null;
@@ -1017,7 +1340,12 @@ public sealed partial class EditorWindow : ContentPage
                     IEditorCommand? cmd = EditorContext.Instance.Gizmos.EndDrag(
                         EditorContext.Instance.SelectedObject, ctrlHeld: false);
                     if (cmd is not null)
+                    {
                         EditorContext.Instance.Commands.Execute(cmd);
+                        EditorGameObject? dragSel = EditorContext.Instance.SelectedObject;
+                        if (dragSel is not null)
+                            _bus.Publish(new GameObjectSelectedEvent(dragSel));
+                    }
                     Viewport.Invalidate();
                 }
                 _gizmoDragging = false;
@@ -1060,6 +1388,79 @@ public sealed partial class EditorWindow : ContentPage
         }
 
         return null;
+    }
+
+    #endregion
+
+    #region Panel resizing
+
+    private void OnHierarchySepPanned(object sender, PanUpdatedEventArgs e)
+    {
+        switch (e.StatusType)
+        {
+            case GestureStatus.Started:
+                _hierSepPanLast = 0;
+                break;
+            case GestureStatus.Running:
+            {
+                double delta = e.TotalX - _hierSepPanLast;
+                _hierSepPanLast = e.TotalX;
+                double newW = Math.Clamp(BodyGrid.ColumnDefinitions[0].Width.Value + delta, 120, 600);
+                BodyGrid.ColumnDefinitions[0].Width = new GridLength(newW);
+                break;
+            }
+            case GestureStatus.Completed:
+            case GestureStatus.Canceled:
+                _preferences.LeftPanelWidth = (int)BodyGrid.ColumnDefinitions[0].Width.Value;
+                SavePreferences();
+                break;
+        }
+    }
+
+    private void OnInspectorSepPanned(object sender, PanUpdatedEventArgs e)
+    {
+        switch (e.StatusType)
+        {
+            case GestureStatus.Started:
+                _inspSepPanLast = 0;
+                break;
+            case GestureStatus.Running:
+            {
+                double delta = e.TotalX - _inspSepPanLast;
+                _inspSepPanLast = e.TotalX;
+                double newW = Math.Clamp(BodyGrid.ColumnDefinitions[4].Width.Value - delta, 120, 600);
+                BodyGrid.ColumnDefinitions[4].Width = new GridLength(newW);
+                break;
+            }
+            case GestureStatus.Completed:
+            case GestureStatus.Canceled:
+                _preferences.RightPanelWidth = (int)BodyGrid.ColumnDefinitions[4].Width.Value;
+                SavePreferences();
+                break;
+        }
+    }
+
+    private void OnDockSepPanned(object sender, PanUpdatedEventArgs e)
+    {
+        switch (e.StatusType)
+        {
+            case GestureStatus.Started:
+                _dockSepPanLast = 0;
+                break;
+            case GestureStatus.Running:
+            {
+                double delta = e.TotalY - _dockSepPanLast;
+                _dockSepPanLast = e.TotalY;
+                double newH = Math.Clamp(MainGrid.RowDefinitions[3].Height.Value - delta, 80, 500);
+                MainGrid.RowDefinitions[3].Height = new GridLength(newH);
+                break;
+            }
+            case GestureStatus.Completed:
+            case GestureStatus.Canceled:
+                _preferences.ConsolePanelHeight = (int)MainGrid.RowDefinitions[3].Height.Value;
+                SavePreferences();
+                break;
+        }
     }
 
     #endregion

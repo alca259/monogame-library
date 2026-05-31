@@ -9,12 +9,12 @@ public sealed partial class DockBarView : ContentView
     private static readonly Color ActiveTabFg   = Color.FromArgb("#E6E6E8");
     private static readonly Color InactiveTabFg = Color.FromArgb("#9A9AA2");
 
-    private string _activeTab = "Assets";
+    private string _activeTab = "Scenes";
 
     public DockBarView()
     {
         InitializeComponent();
-        SetActiveTab(AssetsTabBtn);
+        SetActiveTab(ScenesTabBtn);
     }
 
     private void OnDockTabClicked(object sender, EventArgs e)

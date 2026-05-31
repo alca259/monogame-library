@@ -105,6 +105,13 @@
                             <Setter Property="BackgroundColor" Value="{StaticResource InputBackgroundHover}"/>
                         </VisualState.Setters>
                     </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="TextColor"       Value="{StaticResource TextMuted}"/>
+                            <Setter Property="BackgroundColor" Value="Transparent"/>
+                            <Setter Property="Opacity"         Value="0.45"/>
+                        </VisualState.Setters>
+                    </VisualState>
                 </VisualStateGroup>
             </VisualStateGroupList>
         </Setter>
@@ -163,6 +170,20 @@
         <Setter Property="Padding"         Value="10,4"/>
         <Setter Property="HeightRequest"   Value="26"/>
         <Setter Property="FontSize"        Value="11"/>
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal"/>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="TextColor"       Value="{StaticResource TextMuted}"/>
+                            <Setter Property="BackgroundColor" Value="{StaticResource PanelBackgroundAlt}"/>
+                            <Setter Property="Opacity"         Value="0.45"/>
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
     </Style>
 
     <Style x:Key="ActivePillButton" TargetType="Button" BasedOn="{StaticResource PillButton}">
@@ -181,6 +202,20 @@
         <Setter Property="HeightRequest"   Value="28"/>
         <Setter Property="WidthRequest"    Value="36"/>
         <Setter Property="FontSize"        Value="16"/>
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal"/>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{StaticResource PanelBackgroundAlt}"/>
+                            <Setter Property="TextColor"       Value="{StaticResource TextMuted}"/>
+                            <Setter Property="Opacity"         Value="0.55"/>
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
     </Style>
 
     <Style x:Key="StopButton" TargetType="Button">
@@ -192,6 +227,20 @@
         <Setter Property="HeightRequest"   Value="28"/>
         <Setter Property="WidthRequest"    Value="36"/>
         <Setter Property="FontSize"        Value="14"/>
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal"/>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{StaticResource PanelBackgroundAlt}"/>
+                            <Setter Property="TextColor"       Value="{StaticResource TextMuted}"/>
+                            <Setter Property="Opacity"         Value="0.45"/>
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
     </Style>
 
     <Style x:Key="ActiveStopButton" TargetType="Button" BasedOn="{StaticResource StopButton}">

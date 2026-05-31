@@ -200,6 +200,17 @@ public sealed class ViewportRenderer : IDrawable
                 canvas.StrokeColor = accent;
                 canvas.StrokeSize  = 2;
                 canvas.DrawCircle(ox, oy, r);
+
+                // Orientation line — points in the direction of the object's current rotation
+                float rad  = selected.Rotation * MathF.PI / 180f;
+                float endX = ox + r * MathF.Cos(rad);
+                float endY = oy + r * MathF.Sin(rad); // screen Y increases downward, matches Atan2 convention
+                canvas.StrokeColor = accent;
+                canvas.DrawLine(ox, oy, endX, endY);
+                canvas.FillColor = Colors.White;
+                canvas.FillCircle(endX, endY, 4f);
+                canvas.StrokeColor = accent;
+                canvas.DrawCircle(endX, endY, 4f);
                 break;
             }
 

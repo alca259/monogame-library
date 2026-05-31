@@ -16,6 +16,7 @@ public sealed partial class InspectorView : ContentView
     private Action<GameObjectSelectedEvent>? _onObjectSelected;
     private Action<UndoPerformedEvent>?      _onUndo;
     private Action<RedoPerformedEvent>?      _onRedo;
+    private Action<EditorStateChangedEvent>? _onStateChanged;
 
     private static readonly Color ActiveTabFg   = Color.FromArgb("#E6E6E8");
     private static readonly Color InactiveTabFg = Color.FromArgb("#9A9AA2");
@@ -41,10 +42,13 @@ public sealed partial class InspectorView : ContentView
         _onObjectSelected = e => MainThread.BeginInvokeOnMainThread(() => { _selected = e.GameObject; RefreshInspector(); });
         _onUndo           = _ => MainThread.BeginInvokeOnMainThread(() => RefreshInspector());
         _onRedo           = _ => MainThread.BeginInvokeOnMainThread(() => RefreshInspector());
+        _onStateChanged   = e => MainThread.BeginInvokeOnMainThread(() =>
+            InspectorContent.IsEnabled = e.NewState is EditorState.Editing);
 
         _bus.Subscribe(_onObjectSelected);
         _bus.Subscribe(_onUndo);
         _bus.Subscribe(_onRedo);
+        _bus.Subscribe(_onStateChanged);
     }
 
     private void Unsubscribe()
@@ -52,6 +56,7 @@ public sealed partial class InspectorView : ContentView
         if (_onObjectSelected is not null) _bus.Unsubscribe(_onObjectSelected);
         if (_onUndo           is not null) _bus.Unsubscribe(_onUndo);
         if (_onRedo           is not null) _bus.Unsubscribe(_onRedo);
+        if (_onStateChanged   is not null) _bus.Unsubscribe(_onStateChanged);
     }
 
     // ── Transform command wiring ──────────────────────────────────────────────
@@ -154,26 +159,27 @@ public sealed partial class InspectorView : ContentView
         body.IsVisible = !collapsed;
 
         // Header — chevron / type name / enabled switch / remove button
-        Label chevron = new()
+        Button chevron = new()
         {
-            Text                    = collapsed ? "▶" : "▼",
-            TextColor               = Color.FromArgb("#6A6A72"),
-            FontSize                = 10,
-            WidthRequest            = 16,
-            VerticalOptions         = LayoutOptions.Center,
-            HorizontalTextAlignment = TextAlignment.Center,
+            Text            = collapsed ? "▶" : "▼",
+            TextColor       = Color.FromArgb("#6A6A72"),
+            FontSize        = 10,
+            WidthRequest    = 20,
+            HeightRequest   = 20,
+            BackgroundColor = Colors.Transparent,
+            BorderWidth     = 0,
+            Padding         = Thickness.Zero,
+            CornerRadius    = 0,
+            VerticalOptions = LayoutOptions.Center,
         };
-        chevron.GestureRecognizers.Add(new TapGestureRecognizer
+        chevron.Clicked += (_, _) =>
         {
-            Command = new Command(() =>
-            {
-                bool nowCollapsed = !_collapsedBehaviours.Contains(behaviour.TypeName);
-                if (nowCollapsed) _collapsedBehaviours.Add(behaviour.TypeName);
-                else              _collapsedBehaviours.Remove(behaviour.TypeName);
-                chevron.Text   = nowCollapsed ? "▶" : "▼";
-                body.IsVisible = !nowCollapsed;
-            })
-        });
+            bool nowCollapsed = !_collapsedBehaviours.Contains(behaviour.TypeName);
+            if (nowCollapsed) _collapsedBehaviours.Add(behaviour.TypeName);
+            else              _collapsedBehaviours.Remove(behaviour.TypeName);
+            chevron.Text   = nowCollapsed ? "▶" : "▼";
+            body.IsVisible = !nowCollapsed;
+        };
 
         Switch enabledSwitch = new()
         {

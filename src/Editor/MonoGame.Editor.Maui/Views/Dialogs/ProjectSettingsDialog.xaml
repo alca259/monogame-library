@@ -92,19 +92,35 @@
                                Text="Game .csproj (rel)"
                                Style="{StaticResource DimLabel}"
                                VerticalOptions="Center"/>
-                        <Entry Grid.Row="3" Grid.Column="1"
-                               x:Name="GameAppCsprojEntry"
-                               BackgroundColor="{StaticResource BgPanel}"
-                               TextColor="{StaticResource PrimaryLabel}"/>
+                        <Grid Grid.Row="3" Grid.Column="1"
+                              ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                            <Entry Grid.Column="0"
+                                   x:Name="GameAppCsprojEntry"
+                                   BackgroundColor="{StaticResource BgPanel}"
+                                   TextColor="{StaticResource PrimaryLabel}"/>
+                            <Button Grid.Column="1"
+                                    Text="…"
+                                    WidthRequest="32"
+                                    Style="{StaticResource FlatButton}"
+                                    Clicked="OnBrowseCsprojClicked"/>
+                        </Grid>
 
                         <Label Grid.Row="4" Grid.Column="0"
                                Text="Scripts .csproj (rel)"
                                Style="{StaticResource DimLabel}"
                                VerticalOptions="Center"/>
-                        <Entry Grid.Row="4" Grid.Column="1"
-                               x:Name="GameScriptsCsprojEntry"
-                               BackgroundColor="{StaticResource BgPanel}"
-                               TextColor="{StaticResource PrimaryLabel}"/>
+                        <Grid Grid.Row="4" Grid.Column="1"
+                              ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                            <Entry Grid.Column="0"
+                                   x:Name="GameScriptsCsprojEntry"
+                                   BackgroundColor="{StaticResource BgPanel}"
+                                   TextColor="{StaticResource PrimaryLabel}"/>
+                            <Button Grid.Column="1"
+                                    Text="…"
+                                    WidthRequest="32"
+                                    Style="{StaticResource FlatButton}"
+                                    Clicked="OnBrowseScriptsCsprojClicked"/>
+                        </Grid>
 
                     </Grid>
                 </ScrollView>
