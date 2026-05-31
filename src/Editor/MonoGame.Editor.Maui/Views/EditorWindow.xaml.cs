@@ -65,9 +65,9 @@ public sealed partial class EditorWindow : ContentPage
     private bool            _gizmoDragging;
 
     private bool   _pointerOverViewport;
-    private double _hierSepPanLast;
-    private double _inspSepPanLast;
-    private double _dockSepPanLast;
+    private double _hierPanelWidth  = HierarchyWidth;
+    private double _inspPanelWidth  = InspectorWidth;
+    private double _dockPanelHeight = DockHeight;
 
     private Action<double, double>? _activeSepOnDrag;
     private Action?                 _activeSepOnDragEnd;
@@ -376,9 +376,13 @@ public sealed partial class EditorWindow : ContentPage
         _inspectorVisible = _preferences.InspectorVisible;
         _dockVisible      = _preferences.AssetBrowserVisible;
 
-        BodyGrid.ColumnDefinitions[0].Width = new GridLength(_hierarchyVisible ? _preferences.LeftPanelWidth  : 0);
-        BodyGrid.ColumnDefinitions[4].Width = new GridLength(_inspectorVisible ? _preferences.RightPanelWidth : 0);
-        MainGrid.RowDefinitions[3].Height   = new GridLength(_dockVisible      ? _preferences.ConsolePanelHeight : 0);
+        _hierPanelWidth  = _preferences.LeftPanelWidth;
+        _inspPanelWidth  = _preferences.RightPanelWidth;
+        _dockPanelHeight = _preferences.ConsolePanelHeight;
+
+        BodyGrid.ColumnDefinitions[0].Width = new GridLength(_hierarchyVisible ? _hierPanelWidth  : 0);
+        BodyGrid.ColumnDefinitions[4].Width = new GridLength(_inspectorVisible ? _inspPanelWidth  : 0);
+        MainGrid.RowDefinitions[3].Height   = new GridLength(_dockVisible      ? _dockPanelHeight : 0);
         HierarchySep.IsVisible = _hierarchyVisible;
         InspectorSep.IsVisible = _inspectorVisible;
         DockRow.IsVisible      = _dockVisible;
@@ -394,9 +398,9 @@ public sealed partial class EditorWindow : ContentPage
         _preferences.HierarchyVisible    = _hierarchyVisible;
         _preferences.InspectorVisible    = _inspectorVisible;
         _preferences.AssetBrowserVisible = _dockVisible;
-        _preferences.LeftPanelWidth      = (int)(BodyGrid.ColumnDefinitions[0].Width.Value);
-        _preferences.RightPanelWidth     = (int)(BodyGrid.ColumnDefinitions[4].Width.Value);
-        _preferences.ConsolePanelHeight  = (int)(MainGrid.RowDefinitions[3].Height.Value);
+        _preferences.LeftPanelWidth      = (int)_hierPanelWidth;
+        _preferences.RightPanelWidth     = (int)_inspPanelWidth;
+        _preferences.ConsolePanelHeight  = (int)_dockPanelHeight;
         _preferences.GridCellSize        = _viewportRenderer.GridCellSize;
         _preferences.SnapRotationDegrees = EditorContext.Instance.Gizmos.SnapRotationDegrees;
         _preferences.SnapScaleStep       = EditorContext.Instance.Gizmos.SnapScaleStep;
@@ -635,7 +639,7 @@ public sealed partial class EditorWindow : ContentPage
     private void ToggleHierarchy()
     {
         _hierarchyVisible = !_hierarchyVisible;
-        double w = _hierarchyVisible ? Math.Max(_preferences.LeftPanelWidth, 120) : 0;
+        double w = _hierarchyVisible ? Math.Max(_hierPanelWidth, 120) : 0;
         BodyGrid.ColumnDefinitions[0].Width = new GridLength(w);
         HierarchySep.IsVisible = _hierarchyVisible;
         SavePreferences();
@@ -644,7 +648,7 @@ public sealed partial class EditorWindow : ContentPage
     private void ToggleInspector()
     {
         _inspectorVisible = !_inspectorVisible;
-        double w = _inspectorVisible ? Math.Max(_preferences.RightPanelWidth, 120) : 0;
+        double w = _inspectorVisible ? Math.Max(_inspPanelWidth, 120) : 0;
         BodyGrid.ColumnDefinitions[4].Width = new GridLength(w);
         InspectorSep.IsVisible = _inspectorVisible;
         SavePreferences();
@@ -653,7 +657,7 @@ public sealed partial class EditorWindow : ContentPage
     private void ToggleDock()
     {
         _dockVisible = !_dockVisible;
-        double h = _dockVisible ? Math.Max(_preferences.ConsolePanelHeight, 80) : 0;
+        double h = _dockVisible ? Math.Max(_dockPanelHeight, 80) : 0;
         MainGrid.RowDefinitions[3].Height = new GridLength(h);
         DockRow.IsVisible = _dockVisible;
         SavePreferences();
@@ -664,15 +668,15 @@ public sealed partial class EditorWindow : ContentPage
         _hierarchyVisible = true;
         _inspectorVisible = true;
         _dockVisible      = true;
+        _hierPanelWidth   = HierarchyWidth;
+        _inspPanelWidth   = InspectorWidth;
+        _dockPanelHeight  = DockHeight;
         BodyGrid.ColumnDefinitions[0].Width = new GridLength(HierarchyWidth);
         BodyGrid.ColumnDefinitions[4].Width = new GridLength(InspectorWidth);
         MainGrid.RowDefinitions[3].Height   = new GridLength(DockHeight);
         HierarchySep.IsVisible = true;
         InspectorSep.IsVisible = true;
         DockRow.IsVisible      = true;
-        _preferences.LeftPanelWidth     = (int)HierarchyWidth;
-        _preferences.RightPanelWidth    = (int)InspectorWidth;
-        _preferences.ConsolePanelHeight = (int)DockHeight;
         SavePreferences();
     }
 
@@ -1436,16 +1440,13 @@ public sealed partial class EditorWindow : ContentPage
             isVertical: true,
             onDrag: (dx, _) =>
             {
-                double cur  = BodyGrid.ColumnDefinitions[0].Width.Value;
-                double newW = Math.Clamp(cur + dx, 120, 600);
-                System.Diagnostics.Debug.WriteLine($"[SEP] Hierarchy onDrag isMain={MainThread.IsMainThread} handler={BodyGrid.Handler?.GetType().Name ?? "NULL"} cur={cur:F1} dx={dx:F1} → {newW:F1}");
-                BodyGrid.ColumnDefinitions[0].Width = new GridLength(newW);
+                _hierPanelWidth = Math.Clamp(_hierPanelWidth + dx, 120, 600);
+                BodyGrid.ColumnDefinitions[0].Width = new GridLength(_hierPanelWidth);
                 BodyGrid.InvalidateMeasure();
-                System.Diagnostics.Debug.WriteLine($"[SEP] Hierarchy after-set={BodyGrid.ColumnDefinitions[0].Width.Value:F1}");
             },
             onDragEnd: () =>
             {
-                _preferences.LeftPanelWidth = (int)BodyGrid.ColumnDefinitions[0].Width.Value;
+                _preferences.LeftPanelWidth = (int)_hierPanelWidth;
                 SavePreferences();
             });
 
@@ -1454,16 +1455,13 @@ public sealed partial class EditorWindow : ContentPage
             isVertical: true,
             onDrag: (dx, _) =>
             {
-                double cur  = BodyGrid.ColumnDefinitions[4].Width.Value;
-                double newW = Math.Clamp(cur - dx, 120, 600);
-                System.Diagnostics.Debug.WriteLine($"[SEP] Inspector onDrag isMain={MainThread.IsMainThread} handler={BodyGrid.Handler?.GetType().Name ?? "NULL"} cur={cur:F1} dx={dx:F1} → {newW:F1}");
-                BodyGrid.ColumnDefinitions[4].Width = new GridLength(newW);
+                _inspPanelWidth = Math.Clamp(_inspPanelWidth - dx, 120, 600);
+                BodyGrid.ColumnDefinitions[4].Width = new GridLength(_inspPanelWidth);
                 BodyGrid.InvalidateMeasure();
-                System.Diagnostics.Debug.WriteLine($"[SEP] Inspector after-set={BodyGrid.ColumnDefinitions[4].Width.Value:F1}");
             },
             onDragEnd: () =>
             {
-                _preferences.RightPanelWidth = (int)BodyGrid.ColumnDefinitions[4].Width.Value;
+                _preferences.RightPanelWidth = (int)_inspPanelWidth;
                 SavePreferences();
             });
 
@@ -1472,16 +1470,13 @@ public sealed partial class EditorWindow : ContentPage
             isVertical: false,
             onDrag: (_, dy) =>
             {
-                double cur  = MainGrid.RowDefinitions[3].Height.Value;
-                double newH = Math.Clamp(cur - dy, 80, 500);
-                System.Diagnostics.Debug.WriteLine($"[SEP] Dock onDrag isMain={MainThread.IsMainThread} handler={MainGrid.Handler?.GetType().Name ?? "NULL"} cur={cur:F1} dy={dy:F1} → {newH:F1}");
-                MainGrid.RowDefinitions[3].Height = new GridLength(newH);
+                _dockPanelHeight = Math.Clamp(_dockPanelHeight - dy, 80, 500);
+                MainGrid.RowDefinitions[3].Height = new GridLength(_dockPanelHeight);
                 MainGrid.InvalidateMeasure();
-                System.Diagnostics.Debug.WriteLine($"[SEP] Dock after-set={MainGrid.RowDefinitions[3].Height.Value:F1}");
             },
             onDragEnd: () =>
             {
-                _preferences.ConsolePanelHeight = (int)MainGrid.RowDefinitions[3].Height.Value;
+                _preferences.ConsolePanelHeight = (int)_dockPanelHeight;
                 SavePreferences();
             });
     }
@@ -1511,8 +1506,6 @@ public sealed partial class EditorWindow : ContentPage
             if (ReferenceEquals(uiEl, lastSetupEl)) return;
             lastSetupEl = uiEl;
 
-            System.Diagnostics.Debug.WriteLine($"[SEP] SetupNative OK — sep={sep.GetType().Name} uiEl={uiEl.GetType().FullName}");
-
             var shape = isVertical
                 ? Microsoft.UI.Input.InputSystemCursorShape.SizeWestEast
                 : Microsoft.UI.Input.InputSystemCursorShape.SizeNorthSouth;
@@ -1527,40 +1520,26 @@ public sealed partial class EditorWindow : ContentPage
 #endif
     }
 
-    // Detects left-click on a separator via OriginalSource → visual-tree walk.
-    // Using the window root (handledEventsToo: true) because PointerPressed on the
-    // BoxView's ContentPanel is swallowed by MAUI before it reaches direct handlers.
     private void OnNativeSepDragStarted(object sender,
         Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
         var pt = e.GetCurrentPoint(null);
-
-        System.Diagnostics.Debug.WriteLine(
-            $"[SEP] PointerPressed at root — kind={pt.Properties.PointerUpdateKind} pos=({pt.Position.X:F0},{pt.Position.Y:F0}) source={e.OriginalSource?.GetType().FullName}");
 
         if (pt.Properties.PointerUpdateKind
             != Microsoft.UI.Input.PointerUpdateKind.LeftButtonPressed) return;
 
         var source = e.OriginalSource as Microsoft.UI.Xaml.DependencyObject;
 
-        System.Diagnostics.Debug.WriteLine($"[SEP] Checking {_sepEntries.Count} separator(s)");
-
         foreach (var (sep, onDrag, onDragEnd) in _sepEntries)
         {
             var sepEl = sep.Handler?.PlatformView as Microsoft.UI.Xaml.UIElement;
-            System.Diagnostics.Debug.WriteLine($"[SEP]   sep PlatformView={sepEl?.GetType().FullName ?? "NULL"}");
-
             if (sepEl is null) continue;
 
-            // Walk up from the pressed element to see if it belongs to this separator.
             var current = source;
-            int depth = 0;
             while (current is not null)
             {
-                System.Diagnostics.Debug.WriteLine($"[SEP]     walk[{depth++}] {current.GetType().FullName}");
                 if (ReferenceEquals(current, sepEl))
                 {
-                    System.Diagnostics.Debug.WriteLine("[SEP] >>> HIT — drag started");
                     _activeSepOnDrag    = onDrag;
                     _activeSepOnDragEnd = onDragEnd;
                     _sepDragLastX       = pt.Position.X;
@@ -1570,22 +1549,16 @@ public sealed partial class EditorWindow : ContentPage
                 current = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(current);
             }
         }
-
-        System.Diagnostics.Debug.WriteLine("[SEP] No separator matched");
     }
 
-    // Tracked at the root window level so the drag keeps working when the
-    // pointer moves outside the narrow separator strip.
     private void OnNativeSepDragMoved(object sender,
         Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
         if (_activeSepOnDrag is null) return;
 
         var pt = e.GetCurrentPoint(null);
-        System.Diagnostics.Debug.WriteLine($"[SEP] DragMoved pos=({pt.Position.X:F0},{pt.Position.Y:F0}) leftBtn={pt.Properties.IsLeftButtonPressed}");
         if (!pt.Properties.IsLeftButtonPressed)
         {
-            // Button released without a PointerReleased event (edge case) — end drag.
             var endAction = _activeSepOnDragEnd;
             _activeSepOnDrag    = null;
             _activeSepOnDragEnd = null;
@@ -1599,9 +1572,6 @@ public sealed partial class EditorWindow : ContentPage
         _sepDragLastY = pt.Position.Y;
         if (Math.Abs(dx) < 0.5 && Math.Abs(dy) < 0.5) return;
 
-        // Use Dispatcher.Dispatch: executes synchronously if already on the UI thread
-        // (WinUI dispatcher == MAUI main thread on Windows), which ensures MAUI's layout
-        // system receives the property change within the same frame as the pointer event.
         var action     = _activeSepOnDrag;
         var capturedDx = dx;
         var capturedDy = dy;
@@ -1616,75 +1586,6 @@ public sealed partial class EditorWindow : ContentPage
         _activeSepOnDrag    = null;
         _activeSepOnDragEnd = null;
         Dispatcher.Dispatch(() => endAction?.Invoke());
-    }
-
-    private void OnHierarchySepPanned(object sender, PanUpdatedEventArgs e)
-    {
-        switch (e.StatusType)
-        {
-            case GestureStatus.Started:
-                _hierSepPanLast = 0;
-                break;
-            case GestureStatus.Running:
-            {
-                double delta = e.TotalX - _hierSepPanLast;
-                _hierSepPanLast = e.TotalX;
-                double newW = Math.Clamp(BodyGrid.ColumnDefinitions[0].Width.Value + delta, 120, 600);
-                BodyGrid.ColumnDefinitions[0].Width = new GridLength(newW);
-                break;
-            }
-            case GestureStatus.Completed:
-            case GestureStatus.Canceled:
-                _preferences.LeftPanelWidth = (int)BodyGrid.ColumnDefinitions[0].Width.Value;
-                SavePreferences();
-                break;
-        }
-    }
-
-    private void OnInspectorSepPanned(object sender, PanUpdatedEventArgs e)
-    {
-        switch (e.StatusType)
-        {
-            case GestureStatus.Started:
-                _inspSepPanLast = 0;
-                break;
-            case GestureStatus.Running:
-            {
-                double delta = e.TotalX - _inspSepPanLast;
-                _inspSepPanLast = e.TotalX;
-                double newW = Math.Clamp(BodyGrid.ColumnDefinitions[4].Width.Value - delta, 120, 600);
-                BodyGrid.ColumnDefinitions[4].Width = new GridLength(newW);
-                break;
-            }
-            case GestureStatus.Completed:
-            case GestureStatus.Canceled:
-                _preferences.RightPanelWidth = (int)BodyGrid.ColumnDefinitions[4].Width.Value;
-                SavePreferences();
-                break;
-        }
-    }
-
-    private void OnDockSepPanned(object sender, PanUpdatedEventArgs e)
-    {
-        switch (e.StatusType)
-        {
-            case GestureStatus.Started:
-                _dockSepPanLast = 0;
-                break;
-            case GestureStatus.Running:
-            {
-                double delta = e.TotalY - _dockSepPanLast;
-                _dockSepPanLast = e.TotalY;
-                double newH = Math.Clamp(MainGrid.RowDefinitions[3].Height.Value - delta, 80, 500);
-                MainGrid.RowDefinitions[3].Height = new GridLength(newH);
-                break;
-            }
-            case GestureStatus.Completed:
-            case GestureStatus.Canceled:
-                _preferences.ConsolePanelHeight = (int)MainGrid.RowDefinitions[3].Height.Value;
-                SavePreferences();
-                break;
-        }
     }
 
     #endregion

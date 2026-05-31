@@ -121,11 +121,7 @@
 
             <panels:SceneHierarchyView Grid.Column="0"/>
 
-            <BoxView x:Name="HierarchySep" Grid.Column="1" Color="{StaticResource BorderColor}">
-                <BoxView.GestureRecognizers>
-                    <PanGestureRecognizer PanUpdated="OnHierarchySepPanned"/>
-                </BoxView.GestureRecognizers>
-            </BoxView>
+            <BoxView x:Name="HierarchySep" Grid.Column="1" Color="{StaticResource BorderColor}"/>
 
             <GraphicsView x:Name="Viewport"
                           Grid.Column="2"
@@ -140,11 +136,7 @@
                 </GraphicsView.GestureRecognizers>
             </GraphicsView>
 
-            <BoxView x:Name="InspectorSep" Grid.Column="3" Color="{StaticResource BorderColor}">
-                <BoxView.GestureRecognizers>
-                    <PanGestureRecognizer PanUpdated="OnInspectorSepPanned"/>
-                </BoxView.GestureRecognizers>
-            </BoxView>
+            <BoxView x:Name="InspectorSep" Grid.Column="3" Color="{StaticResource BorderColor}"/>
 
             <panels:InspectorView Grid.Column="4"/>
         </Grid>
@@ -153,11 +145,7 @@
 
         <!-- ── Row 3: Dock bar ───────────────────────────────────── -->
         <Grid x:Name="DockRow" Grid.Row="3" RowDefinitions="4,*" RowSpacing="0">
-            <BoxView x:Name="DockSep" Grid.Row="0" Color="{StaticResource BorderColor}">
-                <BoxView.GestureRecognizers>
-                    <PanGestureRecognizer PanUpdated="OnDockSepPanned"/>
-                </BoxView.GestureRecognizers>
-            </BoxView>
+            <BoxView x:Name="DockSep" Grid.Row="0" Color="{StaticResource BorderColor}"/>
             <panels:DockBarView Grid.Row="1"/>
         </Grid>
 
