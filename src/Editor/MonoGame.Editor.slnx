@@ -1,5 +1,5 @@
 <Solution>
   <Project Path="MonoGame.Editor.Core/MonoGame.Editor.Core.csproj" />
-  <Project Path="MonoGame.Editor.WinForms/MonoGame.Editor.WinForms.csproj" />
   <Project Path="MonoGame.Editor.SourceGenerator/MonoGame.Editor.SourceGenerator.csproj" />
+  <Project Path="MonoGame.Editor.Maui/MonoGame.Editor.Maui.csproj" />
 </Solution>

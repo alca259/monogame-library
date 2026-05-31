@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.ScriptBrowserView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
+             BackgroundColor="{StaticResource BgPanel}">
+
+    <Grid RowDefinitions="28,1,*" RowSpacing="0">
+
+        <!-- ── Toolbar ──────────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,1,Auto,Auto,1,*" ColumnSpacing="4" Padding="4,2">
+                <Button Grid.Column="0"
+                        Text="⟳ Rescan"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnRescanClicked"/>
+                <Button Grid.Column="1"
+                        x:Name="NewFolderBtn"
+                        Text="📁"
+                        ToolTipProperties.Text="New folder"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnNewFolderClicked"/>
+                <Button Grid.Column="2"
+                        x:Name="FolderRenameBtn"
+                        Text="✎"
+                        ToolTipProperties.Text="Rename folder"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnFolderRenameClicked"/>
+                <Button Grid.Column="3"
+                        x:Name="FolderDeleteBtn"
+                        Text="🗑"
+                        ToolTipProperties.Text="Delete folder"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnFolderDeleteClicked"/>
+                <BoxView Grid.Column="4"
+                         Color="{StaticResource BorderColor}"
+                         VerticalOptions="Fill"
+                         Margin="2,2"/>
+                <Button Grid.Column="5"
+                        x:Name="ScriptRenameBtn"
+                        Text="✎"
+                        ToolTipProperties.Text="Rename script"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnScriptRenameClicked"/>
+                <Button Grid.Column="6"
+                        x:Name="ScriptDeleteBtn"
+                        Text="🗑"
+                        ToolTipProperties.Text="Delete script"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnScriptDeleteClicked"/>
+                <BoxView Grid.Column="7"
+                         Color="{StaticResource BorderColor}"
+                         VerticalOptions="Fill"
+                         Margin="2,2"/>
+                <Label Grid.Column="8"
+                       x:Name="ScriptCountLabel"
+                       Text="0 scripts"
+                       Style="{StaticResource DimLabel}"
+                       VerticalOptions="Center"
+                       Margin="4,0"/>
+            </Grid>
+        </Border>
+        <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Body ─────────────────────────────────────────────── -->
+        <Grid Grid.Row="2" ColumnDefinitions="180,1,*" ColumnSpacing="0">
+
+            <!-- Folder tree -->
+            <CollectionView Grid.Column="0"
+                            x:Name="FolderTree"
+                            SelectionMode="None"
+                            BackgroundColor="{StaticResource BgPanel}">
+                <FlyoutBase.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="📁 New folder"
+                                        Clicked="OnNewFolderClicked"/>
+                        <MenuFlyoutItem Text="New script"
+                                        Clicked="OnNewScriptClicked"/>
+                    </MenuFlyout>
+                </FlyoutBase.ContextFlyout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="local:FolderItem">
+                        <Grid Padding="{Binding LeftPadding}" ColumnDefinitions="14,*" ColumnSpacing="2">
+                            <FlyoutBase.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="📁 New folder"
+                                                    Clicked="OnNewFolderClicked"/>
+                                    <MenuFlyoutItem Text="New script"
+                                                    Clicked="OnNewScriptClicked"/>
+                                    <MenuFlyoutSeparator/>
+                                    <MenuFlyoutItem Text="✎ Rename folder"
+                                                    IsEnabled="{Binding IsNotRoot}"
+                                                    Command="{Binding RenameCommand}"/>
+                                    <MenuFlyoutItem Text="🗑 Delete folder"
+                                                    IsEnabled="{Binding IsNotRoot}"
+                                                    Command="{Binding DeleteCommand}"/>
+                                </MenuFlyout>
+                            </FlyoutBase.ContextFlyout>
+                            <Label Grid.Column="0"
+                                   Text="{Binding ExpandIcon}"
+                                   TextColor="{StaticResource TextMuted}"
+                                   FontSize="10"
+                                   VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ToggleExpandCommand}"/>
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <Label Grid.Column="1"
+                                   Text="{Binding Name}"
+                                   Style="{StaticResource PrimaryLabel}"
+                                   VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ToggleExpandCommand}"/>
+                                </Label.GestureRecognizers>
+                            </Label>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <BoxView Grid.Column="1" Color="{StaticResource BorderColor}"/>
+
+            <!-- Script file list -->
+            <CollectionView Grid.Column="2"
+                            x:Name="ScriptList"
+                            SelectionMode="None"
+                            BackgroundColor="{StaticResource BgPanel}">
+                <FlyoutBase.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="📁 New folder"
+                                        Clicked="OnNewFolderClicked"/>
+                        <MenuFlyoutItem Text="New script"
+                                        Clicked="OnNewScriptClicked"/>
+                    </MenuFlyout>
+                </FlyoutBase.ContextFlyout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="local:ScriptItem">
+                        <Label Text="{Binding FileName}"
+                               Style="{StaticResource PrimaryLabel}"
+                               Padding="10,5">
+                            <FlyoutBase.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="📁 New folder"
+                                                    Clicked="OnNewFolderClicked"/>
+                                    <MenuFlyoutItem Text="New script"
+                                                    Clicked="OnNewScriptClicked"/>
+                                    <MenuFlyoutSeparator/>
+                                    <MenuFlyoutItem Text="✎ Rename script"
+                                                    Command="{Binding RenameCommand}"/>
+                                    <MenuFlyoutItem Text="🗑 Delete script"
+                                                    Command="{Binding DeleteCommand}"/>
+                                </MenuFlyout>
+                            </FlyoutBase.ContextFlyout>
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding TapCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <Label Text="No scripts in folder"
+                           Style="{StaticResource PlaceholderLabel}"
+                           Margin="0,16"/>
+                </CollectionView.EmptyView>
+            </CollectionView>
+
+        </Grid>
+    </Grid>
+</ContentView>

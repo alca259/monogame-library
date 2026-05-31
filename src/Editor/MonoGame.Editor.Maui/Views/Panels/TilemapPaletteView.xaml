@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.TilemapPaletteView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             BackgroundColor="{StaticResource BgPanel}">
+
+    <Grid RowDefinitions="28,1,24,1,*" RowSpacing="0">
+
+        <!-- ── Toolbar ──────────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4" Padding="4,2">
+                <Label Grid.Column="0"
+                       x:Name="TilemapInfoLabel"
+                       Text="No tilemap layer selected"
+                       Style="{StaticResource DimLabel}"
+                       VerticalOptions="Center"/>
+                <Button Grid.Column="1"
+                        x:Name="PaintModeBtn"
+                        Text="Paint"
+                        Style="{StaticResource ActivePillButton}"
+                        IsEnabled="False"
+                        Clicked="OnPaintModeClicked"/>
+                <Button Grid.Column="2"
+                        x:Name="EraseModeBtn"
+                        Text="Erase"
+                        Style="{StaticResource PillButton}"
+                        IsEnabled="False"
+                        Clicked="OnEraseModeClicked"/>
+            </Grid>
+        </Border>
+        <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Tile count / selection info ──────────────────────── -->
+        <Border Grid.Row="2"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0"
+                Padding="8,0">
+            <Label x:Name="TileCountLabel"
+                   Text="0 tiles"
+                   Style="{StaticResource DimLabel}"
+                   VerticalOptions="Center"/>
+        </Border>
+        <BoxView Grid.Row="3" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Palette canvas ───────────────────────────────────── -->
+        <ScrollView Grid.Row="4" Orientation="Vertical">
+            <Grid>
+                <GraphicsView x:Name="PaletteCanvas"
+                              BackgroundColor="{StaticResource BgPanel}">
+                    <GraphicsView.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPaletteTapped"/>
+                    </GraphicsView.GestureRecognizers>
+                </GraphicsView>
+                <Label x:Name="PalettePlaceholderLabel"
+                       Text="Open a project and select a tilemap layer"
+                       Style="{StaticResource PlaceholderLabel}"
+                       VerticalOptions="Center"
+                       HorizontalOptions="Center"/>
+            </Grid>
+        </ScrollView>
+
+    </Grid>
+</ContentView>

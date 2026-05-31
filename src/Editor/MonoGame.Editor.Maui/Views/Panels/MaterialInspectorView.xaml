@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.MaterialInspectorView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             BackgroundColor="{StaticResource PanelBackground}">
+
+    <Grid RowDefinitions="*,1,36" RowSpacing="0">
+
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Spacing="0">
+
+                <!-- ── Material filename header ─────────────────────────── -->
+                <Border BackgroundColor="{StaticResource PanelBackground}"
+                        StrokeThickness="0"
+                        Padding="10,6">
+                    <Label x:Name="MaterialFileLabel"
+                           Text="(no material)"
+                           Style="{StaticResource SectionTitle}"/>
+                </Border>
+                <BoxView Style="{StaticResource Divider}"/>
+
+                <!-- ── Shader + Rendering Mode (always visible) ─────────── -->
+                <Grid RowDefinitions="Auto,Auto"
+                      ColumnDefinitions="100,*"
+                      RowSpacing="4"
+                      ColumnSpacing="8"
+                      Padding="10,8">
+
+                    <Label Grid.Row="0" Grid.Column="0"
+                           Text="Shader"
+                           Style="{StaticResource LabelSecondary}"/>
+                    <Picker Grid.Row="0" Grid.Column="1"
+                            x:Name="ShaderPicker"
+                            SelectedIndexChanged="OnShaderPickerChanged"/>
+
+                    <Label Grid.Row="1" Grid.Column="0"
+                           Text="Rendering Mode"
+                           Style="{StaticResource LabelSecondary}"/>
+                    <Picker Grid.Row="1" Grid.Column="1"
+                            x:Name="RenderingModePicker">
+                        <Picker.Items>
+                            <x:String>Opaque</x:String>
+                            <x:String>Cutout</x:String>
+                            <x:String>Fade</x:String>
+                            <x:String>Transparent</x:String>
+                        </Picker.Items>
+                    </Picker>
+
+                </Grid>
+                <BoxView Style="{StaticResource Divider}"/>
+
+                <!-- ── Dynamic shader-specific sections ─────────────────── -->
+                <VerticalStackLayout x:Name="ShaderSections" Spacing="0"/>
+
+                <!-- ── Material preview ──────────────────────────────────── -->
+                <Border x:Name="PreviewBorder"
+                        BackgroundColor="{StaticResource ViewportBackground}"
+                        Stroke="{StaticResource Border}"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 4"
+                        Margin="8,6,8,2"
+                        HeightRequest="160"
+                        IsVisible="False">
+                    <Image x:Name="PreviewImage"
+                           Aspect="AspectFit"
+                           Margin="4"/>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <BoxView Grid.Row="1" Style="{StaticResource Divider}"/>
+
+        <!-- ── Footer ────────────────────────────────────────────────── -->
+        <Border Grid.Row="2"
+                BackgroundColor="{StaticResource PanelBackgroundAlt}"
+                StrokeThickness="0"
+                Padding="8,0">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+                <Label x:Name="MaterialStatusLabel"
+                       Grid.Column="0"
+                       Text=""
+                       Style="{StaticResource LabelSecondary}"
+                       VerticalOptions="Center"/>
+                <Button Grid.Column="1"
+                        x:Name="RenderButton"
+                        Text="▶ Render"
+                        Style="{StaticResource FlatButton}"
+                        IsEnabled="False"
+                        Clicked="OnRenderClicked"/>
+                <Button Grid.Column="2"
+                        x:Name="MaterialSaveButton"
+                        Text="Save .mat.json"
+                        Style="{StaticResource FlatButton}"
+                        IsEnabled="False"
+                        Clicked="OnSaveClicked"/>
+            </Grid>
+        </Border>
+
+    </Grid>
+</ContentView>

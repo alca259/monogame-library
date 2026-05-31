@@ -216,6 +216,30 @@ public static class ProjectManager
         }
     }
 
+    /// <summary>
+    /// Devuelve la ruta absoluta de la última escena abierta registrada en <c>project.json</c>,
+    /// o <see cref="string.Empty"/> si no hay ninguna o no existe el archivo.
+    /// </summary>
+    public static string GetLastOpenedScene(string projectPath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectPath);
+
+        string jsonPath = GetProjectFilePath(projectPath);
+        if (!File.Exists(jsonPath)) return string.Empty;
+
+        try
+        {
+            string json = File.ReadAllText(jsonPath);
+            ProjectFileData? data = JsonSerializer.Deserialize<ProjectFileData>(json);
+            if (data is null || string.IsNullOrWhiteSpace(data.LastOpenedScene)) return string.Empty;
+            return Path.GetFullPath(Path.Combine(projectPath, data.LastOpenedScene));
+        }
+        catch (Exception ex) when (ex is JsonException or IOException)
+        {
+            return string.Empty;
+        }
+    }
+
     private static void EnsureEditorDirectories(EditorProject project)
     {
         Directory.CreateDirectory(project.ConfigPath);

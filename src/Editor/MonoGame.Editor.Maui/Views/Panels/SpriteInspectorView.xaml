@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.SpriteInspectorView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             BackgroundColor="{StaticResource BgPanel}">
+
+    <Grid RowDefinitions="28,1,*,1,24" RowSpacing="0">
+
+        <!-- ── Toolbar ──────────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0">
+            <Grid ColumnDefinitions="*,Auto" Padding="8,2">
+                <Label x:Name="SpriteNameLabel"
+                       Grid.Column="0"
+                       Text="No sprite selected"
+                       Style="{StaticResource DimLabel}"
+                       VerticalOptions="Center"/>
+                <Button Grid.Column="1"
+                        x:Name="SaveButton"
+                        Text="Save"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnSaveClicked"/>
+            </Grid>
+        </Border>
+        <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Fields ───────────────────────────────────────────── -->
+        <ScrollView Grid.Row="2">
+            <VerticalStackLayout Padding="10,8" Spacing="6">
+
+                <Label Text="Texture Path" Style="{StaticResource DimLabel}"/>
+                <Entry x:Name="TexturePathEntry"
+                       Placeholder="relative/path/texture.png"/>
+
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1" Margin="0,4"/>
+
+                <Label Text="9-Slice Borders" Style="{StaticResource DimLabel}"/>
+                <Grid ColumnDefinitions="*,*"
+                      ColumnSpacing="8"
+                      RowSpacing="4"
+                      RowDefinitions="Auto,Auto,Auto,Auto">
+                    <Label Grid.Row="0" Grid.Column="0"
+                           Text="Left"
+                           Style="{StaticResource DimLabel}"
+                           FontSize="10"/>
+                    <Label Grid.Row="0" Grid.Column="1"
+                           Text="Right"
+                           Style="{StaticResource DimLabel}"
+                           FontSize="10"/>
+                    <Entry Grid.Row="1" Grid.Column="0"
+                           x:Name="BorderLeftEntry"
+                           Keyboard="Numeric"
+                           Text="0"/>
+                    <Entry Grid.Row="1" Grid.Column="1"
+                           x:Name="BorderRightEntry"
+                           Keyboard="Numeric"
+                           Text="0"/>
+                    <Label Grid.Row="2" Grid.Column="0"
+                           Text="Top"
+                           Style="{StaticResource DimLabel}"
+                           FontSize="10"/>
+                    <Label Grid.Row="2" Grid.Column="1"
+                           Text="Bottom"
+                           Style="{StaticResource DimLabel}"
+                           FontSize="10"/>
+                    <Entry Grid.Row="3" Grid.Column="0"
+                           x:Name="BorderTopEntry"
+                           Keyboard="Numeric"
+                           Text="0"/>
+                    <Entry Grid.Row="3" Grid.Column="1"
+                           x:Name="BorderBottomEntry"
+                           Keyboard="Numeric"
+                           Text="0"/>
+                </Grid>
+
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1" Margin="0,4"/>
+
+                <Label Text="Tile Options" Style="{StaticResource DimLabel}"/>
+                <HorizontalStackLayout Spacing="8">
+                    <CheckBox x:Name="TileEdgesCheck" Color="{StaticResource AccentBlue}"/>
+                    <Label Text="Tile Edges"
+                           Style="{StaticResource PrimaryLabel}"
+                           VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="8">
+                    <CheckBox x:Name="TileCenterCheck" Color="{StaticResource AccentBlue}"/>
+                    <Label Text="Tile Center"
+                           Style="{StaticResource PrimaryLabel}"
+                           VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <BoxView Grid.Row="3" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Status footer ────────────────────────────────────── -->
+        <Border Grid.Row="4"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0"
+                Padding="8,0">
+            <Label x:Name="SpriteStatusLabel"
+                   Text=""
+                   Style="{StaticResource DimLabel}"
+                   VerticalOptions="Center"/>
+        </Border>
+
+    </Grid>
+</ContentView>

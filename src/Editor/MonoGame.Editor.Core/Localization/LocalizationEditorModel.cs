@@ -139,4 +139,16 @@ public sealed class LocalizationEditorModel
 
         _data[locale] = dict;
     }
+
+    /// <summary>Elimina un locale del modelo en memoria y borra su archivo <c>{locale}.json</c> del disco.</summary>
+    public void RemoveLocale(string locale)
+    {
+        if (!_locales.Remove(locale)) return;
+
+        _data.Remove(locale);
+
+        string filePath = Path.Combine(_localizationPath, $"{locale}.json");
+        if (File.Exists(filePath))
+            File.Delete(filePath);
+    }
 }

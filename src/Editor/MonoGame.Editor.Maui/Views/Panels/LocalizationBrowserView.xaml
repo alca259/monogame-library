@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.LocalizationBrowserView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             BackgroundColor="{StaticResource BgPanel}">
+
+    <Grid RowDefinitions="28,1,*,1,24" RowSpacing="0">
+
+        <!-- ── Toolbar ──────────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,1,*,Auto" ColumnSpacing="2" Padding="4,2">
+                <Button Grid.Column="0"
+                        Text="+ Key"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnAddKeyClicked"/>
+                <Button Grid.Column="1"
+                        Text="+ Locale"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnAddLocaleClicked"/>
+                <Button Grid.Column="2"
+                        Text="🗑 Key"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnRemoveKeyClicked"/>
+                <Button Grid.Column="3"
+                        Text="🗑 Locale"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnRemoveLocaleClicked"/>
+                <BoxView Grid.Column="4"
+                         Color="{StaticResource BorderColor}"
+                         VerticalOptions="Fill"
+                         Margin="2,2"/>
+                <Label Grid.Column="5"
+                       x:Name="LocaleCountLabel"
+                       Text="0 locales"
+                       Style="{StaticResource DimLabel}"
+                       VerticalOptions="Center"
+                       Margin="4,0"/>
+                <Button Grid.Column="6"
+                        Text="Save"
+                        Style="{StaticResource SmallIconButton}"
+                        x:Name="LocaleSaveButton"
+                        IsEnabled="False"
+                        Clicked="OnSaveClicked"/>
+            </Grid>
+        </Border>
+        <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Body ─────────────────────────────────────────────── -->
+        <Grid Grid.Row="2" ColumnDefinitions="180,1,*" ColumnSpacing="0">
+
+            <!-- Keys list -->
+            <CollectionView Grid.Column="0"
+                            x:Name="KeysList"
+                            SelectionMode="Single"
+                            BackgroundColor="{StaticResource BgPanel}"
+                            SelectionChanged="OnKeySelected">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <Label Text="{Binding .}"
+                               Style="{StaticResource PrimaryLabel}"
+                               Padding="10,5"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <Label Text="No keys"
+                           Style="{StaticResource PlaceholderLabel}"
+                           Margin="0,16"/>
+                </CollectionView.EmptyView>
+            </CollectionView>
+
+            <BoxView Grid.Column="1" Color="{StaticResource BorderColor}"/>
+
+            <!-- Translation entries (built in code-behind) -->
+            <ScrollView Grid.Column="2">
+                <VerticalStackLayout x:Name="TranslationStack"
+                                     Padding="10,8"
+                                     Spacing="6"/>
+            </ScrollView>
+
+        </Grid>
+
+        <BoxView Grid.Row="3" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Status footer ────────────────────────────────────── -->
+        <Border Grid.Row="4"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0"
+                Padding="8,0">
+            <Label x:Name="LocalizationStatusLabel"
+                   Text=""
+                   Style="{StaticResource DimLabel}"
+                   VerticalOptions="Center"/>
+        </Border>
+
+    </Grid>
+</ContentView>

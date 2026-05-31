@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage x:Class="MonoGame.Editor.Maui.Views.Dialogs.RgbaColorPickerDialog"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             BackgroundColor="#80000000"
+             Title="Select Color">
+
+    <Grid>
+        <Border BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0"
+                WidthRequest="300"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+            <VerticalStackLayout Spacing="0">
+
+                <!-- Header -->
+                <Border BackgroundColor="{StaticResource BgPanel}"
+                        StrokeThickness="0"
+                        Padding="16,12">
+                    <Label Text="Select Color"
+                           Style="{StaticResource PrimaryLabel}"
+                           FontSize="14"/>
+                </Border>
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- Main picker grid: [SV area] [gap] [hue strip] -->
+                <Grid Padding="12,12,12,10"
+                      ColumnDefinitions="*,8,20"
+                      RowDefinitions="220,8,18">
+
+                    <!-- SV gradient square -->
+                    <GraphicsView x:Name="SvPicker"
+                                  Grid.Row="0" Grid.Column="0"
+                                  HeightRequest="220"
+                                  BackgroundColor="Transparent"/>
+
+                    <!-- Hue strip -->
+                    <GraphicsView x:Name="HuePicker"
+                                  Grid.Row="0" Grid.Column="2"
+                                  HeightRequest="220"
+                                  BackgroundColor="Transparent"/>
+
+                    <!-- Alpha row -->
+                    <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                          ColumnDefinitions="16,*,6,18">
+                        <Label Grid.Column="0"
+                               Text="A"
+                               Style="{StaticResource DimLabel}"
+                               FontSize="10"
+                               VerticalOptions="Center"/>
+                        <GraphicsView x:Name="AlphaPicker"
+                                      Grid.Column="1"
+                                      HeightRequest="18"
+                                      BackgroundColor="Transparent"/>
+                        <Button Grid.Column="3"
+                                Text="✕"
+                                FontSize="9"
+                                WidthRequest="18"
+                                HeightRequest="18"
+                                Padding="0"
+                                CornerRadius="3"
+                                BackgroundColor="{StaticResource BgPanel}"
+                                TextColor="#9A9AA2"
+                                VerticalOptions="Center"
+                                Clicked="OnAlphaReset"/>
+                    </Grid>
+
+                </Grid>
+
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- Footer: preview swatch + hex + buttons -->
+                <Grid ColumnDefinitions="26,8,*,8,Auto,8,Auto"
+                      Padding="12,10">
+
+                    <Border x:Name="ColorPreviewSwatch"
+                            Grid.Column="0"
+                            WidthRequest="26"
+                            HeightRequest="22"
+                            StrokeThickness="1"
+                            Stroke="{StaticResource BorderColor}"
+                            BackgroundColor="White">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="3"/>
+                        </Border.StrokeShape>
+                    </Border>
+
+                    <Border Grid.Column="2"
+                            Style="{StaticResource InputShell}"
+                            HeightRequest="22">
+                        <Entry x:Name="HexEntry"
+                               Style="{StaticResource InputEntry}"
+                               Placeholder="#RRGGBBAA"
+                               MaxLength="9"
+                               FontSize="11"
+                               Completed="OnHexEntryCompleted"/>
+                    </Border>
+
+                    <Button Grid.Column="4"
+                            Text="Cancel"
+                            Style="{StaticResource SmallIconButton}"
+                            Clicked="OnCancel"/>
+                    <Button Grid.Column="6"
+                            Text="Choose"
+                            Style="{StaticResource SmallIconButton}"
+                            Clicked="OnSubmit"/>
+
+                </Grid>
+
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+
+</ContentPage>

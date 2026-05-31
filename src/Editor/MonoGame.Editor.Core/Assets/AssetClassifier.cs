@@ -55,11 +55,22 @@ public static class AssetClassifier
     public static AssetInfo CreateInfo(string absolutePath, string rootPath)
     {
         string relative  = Path.GetRelativePath(rootPath, absolutePath);
-        string name      = Path.GetFileNameWithoutExtension(absolutePath);
+        string name      = GetDisplayName(absolutePath);
         string extension = Path.GetExtension(absolutePath).ToLowerInvariant();
         AssetType type   = Classify(absolutePath);
         long size        = File.Exists(absolutePath) ? new FileInfo(absolutePath).Length : 0L;
 
         return new AssetInfo(absolutePath, relative, name, type, extension, size);
+    }
+
+    private static string GetDisplayName(string filePath)
+    {
+        string fileName = Path.GetFileName(filePath);
+        for (int i = 0; i < CompoundSuffixes.Length; i++)
+        {
+            if (fileName.EndsWith(CompoundSuffixes[i].Suffix, StringComparison.OrdinalIgnoreCase))
+                return fileName[..^CompoundSuffixes[i].Suffix.Length];
+        }
+        return Path.GetFileNameWithoutExtension(filePath);
     }
 }

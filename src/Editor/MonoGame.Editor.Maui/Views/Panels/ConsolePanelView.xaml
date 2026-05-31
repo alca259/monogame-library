@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.ConsolePanelView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             BackgroundColor="{StaticResource BgPanel}">
+
+    <Grid RowDefinitions="28,1,*" RowSpacing="0">
+
+        <!-- ── Toolbar ──────────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,1,*" ColumnSpacing="2" Padding="4,2">
+
+                <Button Grid.Column="0"
+                        x:Name="FilterInfoBtn"
+                        Text="ℹ"
+                        ToolTipProperties.Text="Toggle Info"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnFilterInfoClicked"/>
+                <Button Grid.Column="1"
+                        x:Name="FilterWarnBtn"
+                        Text="⚠"
+                        ToolTipProperties.Text="Toggle Warnings"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnFilterWarnClicked"/>
+                <Button Grid.Column="2"
+                        x:Name="FilterErrorBtn"
+                        Text="✕"
+                        ToolTipProperties.Text="Toggle Errors"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnFilterErrorClicked"/>
+
+                <BoxView Grid.Column="3"
+                         Color="{StaticResource BorderColor}"
+                         VerticalOptions="Fill"
+                         Margin="2,2"/>
+
+                <Button Grid.Column="4"
+                        Text="Clear"
+                        Style="{StaticResource SmallIconButton}"
+                        HorizontalOptions="End"
+                        Clicked="OnClearClicked"/>
+            </Grid>
+        </Border>
+        <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Log entries ───────────────────────────────────────── -->
+        <CollectionView Grid.Row="2"
+                        x:Name="LogList"
+                        SelectionMode="None"
+                        BackgroundColor="{StaticResource BgPanel}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <Label Text="{Binding .}"
+                           Style="{StaticResource MonoLabel}"
+                           Padding="8,2"
+                           FontSize="11"
+                           LineBreakMode="WordWrap"/>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.EmptyView>
+                <Label Text="No log entries"
+                       Style="{StaticResource PlaceholderLabel}"
+                       Margin="0,24"/>
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+    </Grid>
+</ContentView>

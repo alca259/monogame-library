@@ -5,8 +5,6 @@ using Alca.MonoGame.Kernel.Lighting;
 using Alca.MonoGame.Kernel.Navigation;
 using Alca.MonoGame.Kernel.Physics;
 using Microsoft.Xna.Framework;
-using MonoGame.Editor.Core.Models;
-using MonoGame.Editor.Core.Registry;
 
 namespace MonoGame.Editor.Core.PlayMode;
 

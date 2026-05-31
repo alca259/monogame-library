@@ -72,6 +72,15 @@ public sealed class EditorPreferences
     /// <summary>Persiste qué secciones de comportamiento en el inspector están contraídas. Clave = nombre de sección.</summary>
     public Dictionary<string, bool> BehaviourSectionCollapsed { get; set; } = [];
 
+    /// <summary>Tamaño de celda del grid visual en unidades de mundo. Debe coincidir con el paso de snap al mover.</summary>
+    public int GridCellSize { get; set; } = 26;
+
+    /// <summary>Ángulo de snap para la herramienta Rotar (en grados).</summary>
+    public float SnapRotationDegrees { get; set; } = 15f;
+
+    /// <summary>Paso de snap para la herramienta Escalar.</summary>
+    public float SnapScaleStep { get; set; } = 0.1f;
+
     /// <summary>
     /// Agrega <paramref name="path"/> al inicio de <see cref="RecentProjects"/>, elimina cualquier
     /// entrada duplicada y recorta la lista a <see cref="MaxRecentProjects"/> elementos. Persiste inmediatamente.
@@ -83,6 +92,14 @@ public sealed class EditorPreferences
         RecentProjects.Insert(0, path);
         if (RecentProjects.Count > MaxRecentProjects)
             RecentProjects.RemoveRange(MaxRecentProjects, RecentProjects.Count - MaxRecentProjects);
+        Save();
+    }
+
+    /// <summary>Elimina <paramref name="path"/> de <see cref="RecentProjects"/> y persiste inmediatamente.</summary>
+    public void RemoveRecentProject(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return;
+        if (!RecentProjects.Remove(path)) return;
         Save();
     }
 
@@ -124,6 +141,9 @@ public sealed class EditorPreferences
             ScriptsBrowserVisible = loaded.ScriptsBrowserVisible;
             LastProjectPath = loaded.LastProjectPath;
             AssetBrowserSplitterDistance = loaded.AssetBrowserSplitterDistance;
+            GridCellSize         = loaded.GridCellSize;
+            SnapRotationDegrees  = loaded.SnapRotationDegrees;
+            SnapScaleStep        = loaded.SnapScaleStep;
             BehaviourSectionCollapsed.Clear();
             foreach (System.Collections.Generic.KeyValuePair<string, bool> kv in loaded.BehaviourSectionCollapsed)
                 BehaviourSectionCollapsed[kv.Key] = kv.Value;

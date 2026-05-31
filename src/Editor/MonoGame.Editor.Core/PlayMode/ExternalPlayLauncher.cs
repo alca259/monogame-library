@@ -42,11 +42,14 @@ public sealed class ExternalPlayLauncher : IDisposable
         _process = Process.Start(psi);
 
         if (logLine is not null && _process is not null)
+        {
             _process.ErrorDataReceived += (_, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
                     logLine(e.Data);
             };
+            _process.BeginErrorReadLine();
+        }
     }
 
     /// <summary>Termina el proceso del juego y sus procesos hijos.</summary>

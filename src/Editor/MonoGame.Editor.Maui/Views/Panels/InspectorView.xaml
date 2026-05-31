@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.InspectorView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:MonoGame.Editor.Maui.Controls"
+             xmlns:panels="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
+             BackgroundColor="{StaticResource PanelBackground}">
+
+    <Grid RowDefinitions="30,*" RowSpacing="0">
+
+        <!-- ── Inspector tabs ───────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource PanelBackgroundAlt}"
+                StrokeThickness="0">
+            <HorizontalStackLayout Spacing="0">
+                <Button x:Name="InspectorTabBtn"
+                        Text="Inspector"
+                        Style="{StaticResource InspectorTabButton}"
+                        Clicked="OnInspectorTabClicked"/>
+                <Button x:Name="MaterialTabBtn"
+                        Text="Material Editor"
+                        Style="{StaticResource InspectorTabButton}"
+                        Clicked="OnMaterialTabClicked"/>
+                <Button x:Name="UIThemeTabBtn"
+                        Text="UI Theme Editor"
+                        Style="{StaticResource InspectorTabButton}"
+                        Clicked="OnUIThemeTabClicked"/>
+                <Button x:Name="SpriteEditorTabBtn"
+                        Text="Sprite Editor"
+                        Style="{StaticResource InspectorTabButton}"
+                        Clicked="OnSpriteEditorTabClicked"/>
+            </HorizontalStackLayout>
+        </Border>
+        <BoxView Grid.Row="0" VerticalOptions="End"
+                 HeightRequest="1" Color="{StaticResource Border}"/>
+
+        <!-- ── Tab content area ─────────────────────────────────────── -->
+        <Grid Grid.Row="1">
+
+            <!-- ── Inspector tab content ─────────────────────────────── -->
+            <ScrollView x:Name="InspectorContent"
+                        BackgroundColor="{StaticResource PanelBackground}">
+                <VerticalStackLayout Spacing="0">
+
+                    <!-- No selection placeholder -->
+                    <Label x:Name="NoSelectionLabel"
+                           Text="No object selected"
+                           Style="{StaticResource PlaceholderLabel}"
+                           Margin="0,48"/>
+
+                    <!-- ── Object header ──────────────────────────────── -->
+                    <Border x:Name="ObjectHeader"
+                            BackgroundColor="{StaticResource PanelBackgroundAlt}"
+                            StrokeThickness="0"
+                            Padding="10,8"
+                            IsVisible="False">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                            <CheckBox Grid.Column="0"
+                                      x:Name="ObjectActiveCheck"
+                                      Color="{StaticResource AccentBlue}"
+                                      CheckedChanged="OnObjectActiveChanged"/>
+                            <Label Grid.Column="1"
+                                   x:Name="ObjectNameLabel"
+                                   Text="GameObject"
+                                   Style="{StaticResource SectionTitle}"
+                                   FontSize="15"
+                                   VerticalOptions="Center"/>
+                            <Border Grid.Column="2"
+                                    Style="{StaticResource Badge}"
+                                    VerticalOptions="Center">
+                                <HorizontalStackLayout Spacing="4">
+                                    <Label Text="ID"
+                                           Style="{StaticResource LabelSecondary}"
+                                           FontSize="10"/>
+                                    <Label x:Name="ObjectIdLabel"
+                                           Text="--------"
+                                           Style="{StaticResource MonoLabel}"
+                                           VerticalOptions="Center"/>
+                                </HorizontalStackLayout>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- ── Transform section ─────────────────────────── -->
+                    <Border x:Name="TransformSection"
+                            BackgroundColor="{StaticResource PanelBackground}"
+                            StrokeThickness="0"
+                            IsVisible="False">
+                        <VerticalStackLayout Spacing="0">
+
+                            <!-- Section header -->
+                            <Grid ColumnDefinitions="20,*"
+                                  BackgroundColor="{StaticResource PanelBackgroundAlt}"
+                                  Padding="8,4">
+                                <Label Grid.Column="0"
+                                       x:Name="TransformChevron"
+                                       Text="▼"
+                                       TextColor="{StaticResource TextMuted}"
+                                       FontSize="10"
+                                       VerticalOptions="Center"/>
+                                <Label Grid.Column="1"
+                                       Text="Transform"
+                                       Style="{StaticResource SectionTitle}"
+                                       VerticalOptions="Center"/>
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource Border}"/>
+
+                            <!-- Transform fields using AxisStepper -->
+                            <Grid Padding="10,8"
+                                  RowDefinitions="Auto,Auto,Auto,Auto"
+                                  ColumnDefinitions="70,*,*"
+                                  RowSpacing="6"
+                                  ColumnSpacing="6">
+
+                                <!-- Position -->
+                                <Label Grid.Row="0" Grid.Column="0" Text="Position"
+                                       Style="{StaticResource LabelSecondary}" VerticalOptions="Center"/>
+                                <controls:AxisStepper Grid.Row="0" Grid.Column="1"
+                                                      x:Name="PosXStepper" Axis="X"/>
+                                <controls:AxisStepper Grid.Row="0" Grid.Column="2"
+                                                      x:Name="PosYStepper" Axis="Y"/>
+
+                                <!-- Rotation -->
+                                <Label Grid.Row="1" Grid.Column="0" Text="Rotation"
+                                       Style="{StaticResource LabelSecondary}" VerticalOptions="Center"/>
+                                <controls:AxisStepper Grid.Row="1" Grid.Column="1"
+                                                      Grid.ColumnSpan="2"
+                                                      x:Name="RotZStepper" Axis="Z"/>
+
+                                <!-- Scale -->
+                                <Label Grid.Row="2" Grid.Column="0" Text="Scale"
+                                       Style="{StaticResource LabelSecondary}" VerticalOptions="Center"/>
+                                <controls:AxisStepper Grid.Row="2" Grid.Column="1"
+                                                      x:Name="ScaleXStepper" Axis="X"/>
+                                <controls:AxisStepper Grid.Row="2" Grid.Column="2"
+                                                      x:Name="ScaleYStepper" Axis="Y"/>
+
+                                <!-- Depth -->
+                                <Label Grid.Row="3" Grid.Column="0" Text="Depth"
+                                       Style="{StaticResource LabelSecondary}" VerticalOptions="Center"/>
+                                <controls:AxisStepper Grid.Row="3" Grid.Column="1"
+                                                      Grid.ColumnSpan="2"
+                                                      x:Name="DepthStepper" Axis="Z"
+                                                      ShowAxisTag="False"/>
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource Border}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Behaviour cards (built dynamically in code-behind) -->
+                    <VerticalStackLayout x:Name="BehaviourCardsStack"
+                                         Spacing="0"
+                                         IsVisible="False"/>
+
+                    <!-- Add Behaviour -->
+                    <Button x:Name="AddBehaviourBtn"
+                            Text="+ Add Behaviour"
+                            Style="{StaticResource AddButton}"
+                            Margin="10,8"
+                            IsVisible="False"
+                            Clicked="OnAddBehaviourClicked"/>
+
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- ── Material Editor tab content ───────────────────────── -->
+            <panels:MaterialInspectorView x:Name="MaterialContent" IsVisible="False"/>
+
+            <!-- ── UI Theme Editor tab content ───────────────────────── -->
+            <panels:UIThemeInspectorView x:Name="UIThemeContent" IsVisible="False"/>
+
+            <!-- ── Sprite Editor tab content ─────────────────────────── -->
+            <panels:SpriteInspectorView x:Name="SpriteEditorContent" IsVisible="False"/>
+
+        </Grid>
+    </Grid>
+</ContentView>

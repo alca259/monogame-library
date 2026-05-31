@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage x:Class="MonoGame.Editor.Maui.Views.EditorWindow"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:panels="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
+             BackgroundColor="{StaticResource BgWindow}"
+             Padding="0">
+
+    <!--
+        Layout de 5 zonas:
+          Row 0 — MenuBar   (28px)
+          Row 1 — Toolbar   (42px)
+          Row 2 — Body      (*)
+          Row 3 — Dock      (266px)
+          Row 4 — StatusBar (24px)
+    -->
+    <Grid x:Name="MainGrid"
+          RowDefinitions="28,42,*,266,24"
+          RowSpacing="0">
+
+        <!-- ── Row 0: Menu bar ──────────────────────────────────── -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0">
+            <HorizontalStackLayout Spacing="0"
+                                   VerticalOptions="Fill"
+                                   Padding="4,0">
+                <Button x:Name="FileMenuBtn"    Text="File"    Style="{StaticResource MenuButton}" Clicked="OnFileMenuClicked"/>
+                <Button x:Name="EditMenuBtn"    Text="Edit"    Style="{StaticResource MenuButton}" Clicked="OnEditMenuClicked"/>
+                <Button x:Name="ProjectMenuBtn" Text="Project" Style="{StaticResource MenuButton}" Clicked="OnProjectMenuClicked"/>
+                <Button x:Name="DebugMenuBtn"   Text="Debug"   Style="{StaticResource MenuButton}" Clicked="OnDebugMenuClicked"/>
+                <Button x:Name="ViewMenuBtn"    Text="View"    Style="{StaticResource MenuButton}" Clicked="OnViewMenuClicked"/>
+            </HorizontalStackLayout>
+        </Border>
+        <!-- MenuBar bottom separator -->
+        <BoxView Grid.Row="0" VerticalOptions="End"
+                 HeightRequest="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Row 1: Toolbar ───────────────────────────────────── -->
+        <Border Grid.Row="1"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0">
+            <HorizontalStackLayout Spacing="2"
+                                   VerticalOptions="Center"
+                                   Padding="8,0">
+
+                <!-- Gizmo tools -->
+                <Button x:Name="SelectBtn" Text="↖"
+                        ToolTipProperties.Text="Select (Q)"
+                        Style="{StaticResource ActiveToolButton}"
+                        Clicked="OnToolClicked" CommandParameter="Select"/>
+                <Button x:Name="MoveBtn" Text="✥"
+                        ToolTipProperties.Text="Move (W)"
+                        Style="{StaticResource ToolButton}"
+                        Clicked="OnToolClicked" CommandParameter="Move"/>
+                <Button x:Name="RotateBtn" Text="↺"
+                        ToolTipProperties.Text="Rotate (E)"
+                        Style="{StaticResource ToolButton}"
+                        Clicked="OnToolClicked" CommandParameter="Rotate"/>
+                <Button x:Name="ScaleBtn" Text="⤡"
+                        ToolTipProperties.Text="Scale (R)"
+                        Style="{StaticResource ToolButton}"
+                        Clicked="OnToolClicked" CommandParameter="Scale"/>
+                <Button x:Name="RectBtn" Text="▭"
+                        ToolTipProperties.Text="Rect Transform (T)"
+                        Style="{StaticResource ToolButton}"
+                        Clicked="OnToolClicked" CommandParameter="Rect"/>
+                <Button x:Name="PanBtn" Text="✋"
+                        ToolTipProperties.Text="Pan (H)"
+                        Style="{StaticResource ToolButton}"
+                        Clicked="OnToolClicked" CommandParameter="Pan"/>
+
+                <!-- Separator -->
+                <BoxView WidthRequest="1" HeightRequest="24"
+                         Color="{StaticResource BorderColor}"
+                         Margin="6,0" VerticalOptions="Center"/>
+
+                <!-- Mode toggles -->
+                <Button x:Name="Toggle2DBtn"   Text="2D"   Style="{StaticResource ActivePillButton}" Clicked="OnToggle2D"
+                        ToolTipProperties.Text="Toggle 2D Mode"/>
+                <Button x:Name="ToggleSnapBtn" Text="SNAP" Style="{StaticResource PillButton}"       Clicked="OnToggleSnap"
+                        ToolTipProperties.Text="Snap to Grid (G)"/>
+                <Button x:Name="ToggleNavBtn"  Text="NAV"  Style="{StaticResource PillButton}"       Clicked="OnToggleNav"
+                        ToolTipProperties.Text="Navigate Mode"/>
+                <Button x:Name="ToggleResBtn"  Text="RES"  Style="{StaticResource PillButton}"       Clicked="OnToggleRes"
+                        ToolTipProperties.Text="Resolution Mode"/>
+
+                <!-- Separator -->
+                <BoxView WidthRequest="1" HeightRequest="24"
+                         Color="{StaticResource BorderColor}"
+                         Margin="6,0" VerticalOptions="Center"/>
+
+                <!-- Transport -->
+                <Button x:Name="PlayBtn" Text="▶"
+                        ToolTipProperties.Text="Play (F5)"
+                        Style="{StaticResource PlayButton}"
+                        IsEnabled="False"
+                        Clicked="OnPlayClicked"/>
+                <Button x:Name="StopBtn" Text="■"
+                        ToolTipProperties.Text="Stop (Shift+F5)"
+                        Style="{StaticResource StopButton}"
+                        IsEnabled="False"
+                        Clicked="OnStopClicked"/>
+
+            </HorizontalStackLayout>
+        </Border>
+        <!-- Toolbar bottom separator -->
+        <BoxView Grid.Row="1" VerticalOptions="End"
+                 HeightRequest="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Row 2: Center body ────────────────────────────────── -->
+        <!--   Col 0 (268) — Hierarchy
+               Col 1 (1)   — separator
+               Col 2 (*)   — Viewport
+               Col 3 (1)   — separator
+               Col 4 (362) — Inspector   -->
+        <Grid x:Name="BodyGrid"
+              Grid.Row="2"
+              ColumnDefinitions="268,4,*,4,362"
+              ColumnSpacing="0">
+
+            <panels:SceneHierarchyView Grid.Column="0"/>
+
+            <BoxView x:Name="HierarchySep" Grid.Column="1" Color="{StaticResource BorderColor}"/>
+
+            <GraphicsView x:Name="Viewport"
+                          Grid.Column="2"
+                          BackgroundColor="{StaticResource BgWindow}">
+                <GraphicsView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnViewportTapped"/>
+                    <PanGestureRecognizer PanUpdated="OnViewportPanned"/>
+                    <PinchGestureRecognizer PinchUpdated="OnViewportPinched"/>
+                    <PointerGestureRecognizer PointerMoved="OnViewportPointerMoved"
+                                              PointerEntered="OnViewportPointerEntered"
+                                              PointerExited="OnViewportPointerExited"/>
+                </GraphicsView.GestureRecognizers>
+            </GraphicsView>
+
+            <BoxView x:Name="InspectorSep" Grid.Column="3" Color="{StaticResource BorderColor}"/>
+
+            <panels:InspectorView Grid.Column="4"/>
+        </Grid>
+
+        <!-- Body top separator (between toolbar and body) handled by toolbar's BoxView -->
+
+        <!-- ── Row 3: Dock bar ───────────────────────────────────── -->
+        <Grid x:Name="DockRow" Grid.Row="3" RowDefinitions="4,*" RowSpacing="0">
+            <BoxView x:Name="DockSep" Grid.Row="0" Color="{StaticResource BorderColor}"/>
+            <panels:DockBarView Grid.Row="1"/>
+        </Grid>
+
+        <!-- ── Row 4: Status bar ─────────────────────────────────── -->
+        <Border Grid.Row="4"
+                BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0">
+            <Grid ColumnDefinitions="Auto,1,*,Auto,Auto"
+                  ColumnSpacing="0">
+
+                <!-- Build status segment -->
+                <Border Grid.Column="0"
+                        x:Name="BuildStatusSegment"
+                        BackgroundColor="{StaticResource BgChrome}"
+                        StrokeThickness="0"
+                        Padding="8,0">
+                    <Label x:Name="BuildStatusLabel"
+                           Text="Ready"
+                           Style="{StaticResource DimLabel}"
+                           VerticalOptions="Center"/>
+                </Border>
+
+                <!-- Separator -->
+                <BoxView Grid.Column="1" Color="{StaticResource BorderColor}" VerticalOptions="Fill"/>
+
+                <!-- Scene object count -->
+                <Label Grid.Column="2"
+                       x:Name="ObjectCountLabel"
+                       Text=""
+                       Style="{StaticResource DimLabel}"
+                       Margin="8,0"
+                       VerticalOptions="Center"/>
+
+                <!-- Platform info -->
+                <Label Grid.Column="3"
+                       Text="x64 · Debug"
+                       Style="{StaticResource DimLabel}"
+                       Margin="8,0"
+                       VerticalOptions="Center"/>
+
+                <!-- FPS counter -->
+                <Label Grid.Column="4"
+                       x:Name="FpsLabel"
+                       Text="-- FPS"
+                       Style="{StaticResource MonoLabel}"
+                       Margin="8,0"
+                       VerticalOptions="Center"/>
+            </Grid>
+        </Border>
+        <!-- StatusBar top separator -->
+        <BoxView Grid.Row="4" VerticalOptions="Start"
+                 HeightRequest="1" Color="{StaticResource BorderColor}"/>
+
+        <!-- ── Dropdown menu overlay ─────────────────────────────────── -->
+        <!--   Spans all rows; rendered on top. Tap outside dropdown to close. -->
+        <Grid x:Name="MenuOverlay"
+              Grid.RowSpan="5"
+              IsVisible="False">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnMenuOverlayTapped"/>
+            </Grid.GestureRecognizers>
+
+            <Border x:Name="DropdownPanel"
+                    BackgroundColor="{StaticResource BgChrome}"
+                    Stroke="{StaticResource BorderColor}"
+                    StrokeThickness="1"
+                    HorizontalOptions="Start"
+                    VerticalOptions="Start"
+                    Margin="4,28,0,0"
+                    MinimumWidthRequest="200">
+                <VerticalStackLayout x:Name="DropdownStack" Spacing="0"/>
+            </Border>
+        </Grid>
+
+    </Grid>
+</ContentPage>

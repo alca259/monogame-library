@@ -1,5 +1,3 @@
-using MonoGame.Editor.Core.Commands;
-
 namespace MonoGame.Editor.Core.Prefabs;
 
 /// <summary>

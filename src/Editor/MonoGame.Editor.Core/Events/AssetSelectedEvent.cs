@@ -1,5 +1,3 @@
-using MonoGame.Editor.Core.Assets;
-
 namespace MonoGame.Editor.Core.Events;
 
 /// <summary>Publicado cuando se selecciona un asset en el explorador de assets.</summary>

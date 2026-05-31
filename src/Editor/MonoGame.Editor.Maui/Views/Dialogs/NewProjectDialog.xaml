@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage x:Class="MonoGame.Editor.Maui.Views.Dialogs.NewProjectDialog"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             BackgroundColor="#80000000"
+             Title="New Project">
+
+    <Grid>
+        <Border BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0"
+                WidthRequest="480"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+            <VerticalStackLayout Spacing="0">
+
+                <!-- Header -->
+                <Border BackgroundColor="{StaticResource BgPanel}"
+                        StrokeThickness="0"
+                        Padding="20,14">
+                    <Label Text="New Project"
+                           Style="{StaticResource PrimaryLabel}"
+                           FontSize="15"/>
+                </Border>
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- Fields -->
+                <Grid Padding="20,16"
+                      RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                      ColumnDefinitions="120,*"
+                      RowSpacing="10"
+                      ColumnSpacing="8">
+
+                    <Label Grid.Row="0" Grid.Column="0"
+                           Text="Project name"
+                           Style="{StaticResource DimLabel}"
+                           VerticalOptions="Center"/>
+                    <Entry Grid.Row="0" Grid.Column="1"
+                           x:Name="ProjectNameEntry"
+                           Placeholder="MyGame"
+                           BackgroundColor="{StaticResource BgPanel}"
+                           TextColor="{StaticResource PrimaryLabel}"
+                           PlaceholderColor="{StaticResource DimLabel}"/>
+
+                    <Label Grid.Row="1" Grid.Column="0"
+                           Text="Parent folder"
+                           Style="{StaticResource DimLabel}"
+                           VerticalOptions="Center"/>
+                    <Grid Grid.Row="1" Grid.Column="1"
+                          ColumnDefinitions="*,Auto"
+                          ColumnSpacing="4">
+                        <Entry Grid.Column="0"
+                               x:Name="ParentPathEntry"
+                               Placeholder="C:\Projects"
+                               BackgroundColor="{StaticResource BgPanel}"
+                               TextColor="{StaticResource PrimaryLabel}"
+                               PlaceholderColor="{StaticResource DimLabel}"/>
+                        <Button Grid.Column="1"
+                                Text="…"
+                                Style="{StaticResource SmallIconButton}"
+                                WidthRequest="32"
+                                Clicked="OnBrowseParentClicked"/>
+                    </Grid>
+
+                    <Label Grid.Row="2" Grid.Column="0"
+                           Text="Game .csproj"
+                           Style="{StaticResource DimLabel}"
+                           VerticalOptions="Center"/>
+                    <Grid Grid.Row="2" Grid.Column="1"
+                          ColumnDefinitions="*,Auto"
+                          ColumnSpacing="4">
+                        <Entry Grid.Column="0"
+                               x:Name="GameCsprojEntry"
+                               Placeholder="Relative path to Game.csproj"
+                               BackgroundColor="{StaticResource BgPanel}"
+                               TextColor="{StaticResource PrimaryLabel}"
+                               PlaceholderColor="{StaticResource DimLabel}"/>
+                        <Button Grid.Column="1"
+                                Text="…"
+                                Style="{StaticResource SmallIconButton}"
+                                WidthRequest="32"
+                                Clicked="OnBrowseCsprojClicked"/>
+                    </Grid>
+
+                </Grid>
+
+                <!-- Validation -->
+                <Label x:Name="ValidationLabel"
+                       IsVisible="False"
+                       FontSize="11"
+                       Margin="20,0,20,8"/>
+
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- Footer -->
+                <HorizontalStackLayout HorizontalOptions="End"
+                                       Spacing="8"
+                                       Padding="20,12">
+                    <Button Text="Cancel"
+                            Style="{StaticResource SmallIconButton}"
+                            Clicked="OnCancel"/>
+                    <Button Text="Create"
+                            Style="{StaticResource SmallIconButton}"
+                            Clicked="OnSubmit"/>
+                </HorizontalStackLayout>
+
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+
+</ContentPage>
