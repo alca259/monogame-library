@@ -11,7 +11,7 @@
         <Border Grid.Row="0"
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0">
-            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto" ColumnSpacing="4" Padding="4,2">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,1,Auto,*,Auto" ColumnSpacing="4" Padding="4,2">
 
                 <Button Grid.Column="0"
                         Text="⬆"
@@ -21,14 +21,14 @@
                 <Button Grid.Column="1"
                         x:Name="AssetRenameBtn"
                         Text="✎"
-                        ToolTipProperties.Text="Rename asset"
+                        ToolTipProperties.Text="Rename selected"
                         Style="{StaticResource SmallIconButton}"
                         IsEnabled="False"
                         Clicked="OnRenameAssetClicked"/>
                 <Button Grid.Column="2"
                         x:Name="AssetDeleteBtn"
                         Text="🗑"
-                        ToolTipProperties.Text="Delete asset"
+                        ToolTipProperties.Text="Delete selected"
                         Style="{StaticResource SmallIconButton}"
                         IsEnabled="False"
                         Clicked="OnDeleteAssetClicked"/>
@@ -45,28 +45,19 @@
                         Style="{StaticResource SmallIconButton}"
                         IsEnabled="False"
                         Clicked="OnNewFolderClicked"/>
-                <Button Grid.Column="5"
-                        x:Name="FolderRenameBtn"
-                        Text="✎"
-                        ToolTipProperties.Text="Rename folder"
-                        Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnFolderRenameClicked"/>
-                <Button Grid.Column="6"
-                        x:Name="FolderDeleteBtn"
-                        Text="🗑"
-                        ToolTipProperties.Text="Delete folder"
-                        Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnFolderDeleteClicked"/>
 
-                <Entry Grid.Column="7"
+                <BoxView Grid.Column="5"
+                         Color="{StaticResource BorderColor}"
+                         VerticalOptions="Fill"
+                         Margin="2,2"/>
+
+                <Entry Grid.Column="6"
                        x:Name="AssetSearchEntry"
                        Placeholder="Filter assets…"
                        Style="{StaticResource InputEntry}"
                        TextChanged="OnFilterChanged"/>
 
-                <Label Grid.Column="8"
+                <Label Grid.Column="7"
                        x:Name="AssetCountLabel"
                        Text="0 assets"
                        Style="{StaticResource DimLabel}"
@@ -87,6 +78,30 @@
                             SelectionMode="Single"
                             SelectionChanged="OnFolderSelectionChanged"
                             BackgroundColor="{StaticResource BgPanel}">
+                <FlyoutBase.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="📁 New folder"
+                                        Clicked="OnNewFolderClicked"/>
+                        <MenuFlyoutSeparator/>
+                        <MenuFlyoutSubItem Text="New asset">
+                            <MenuFlyoutItem Text="◈ Material"
+                                            Clicked="OnNewMaterialClicked"/>
+                            <MenuFlyoutItem Text="◧ UI Theme"
+                                            Clicked="OnNewUIThemeClicked"/>
+                            <MenuFlyoutItem Text="✦ Sprite NineSlice"
+                                            Clicked="OnNewSpriteClicked"/>
+                        </MenuFlyoutSubItem>
+                        <MenuFlyoutSeparator/>
+                        <MenuFlyoutItem x:Name="FolderCtxRenameItem"
+                                        Text="✎ Rename folder"
+                                        IsEnabled="False"
+                                        Clicked="OnFolderRenameClicked"/>
+                        <MenuFlyoutItem x:Name="FolderCtxDeleteItem"
+                                        Text="🗑 Delete folder"
+                                        IsEnabled="False"
+                                        Clicked="OnFolderDeleteClicked"/>
+                    </MenuFlyout>
+                </FlyoutBase.ContextFlyout>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="local:FolderItem">
                         <Grid ColumnDefinitions="14,*"
@@ -157,6 +172,30 @@
                                 SelectionMode="Single"
                                 SelectionChanged="OnAssetSelectionChanged"
                                 BackgroundColor="{StaticResource BgPanel}">
+                    <FlyoutBase.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem Text="📁 New folder"
+                                            Clicked="OnNewFolderClicked"/>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutSubItem Text="New asset">
+                                <MenuFlyoutItem Text="◈ Material"
+                                                Clicked="OnNewMaterialClicked"/>
+                                <MenuFlyoutItem Text="◧ UI Theme"
+                                                Clicked="OnNewUIThemeClicked"/>
+                                <MenuFlyoutItem Text="✦ Sprite NineSlice"
+                                                Clicked="OnNewSpriteClicked"/>
+                            </MenuFlyoutSubItem>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutItem x:Name="AssetCtxRenameItem"
+                                            Text="✎ Rename"
+                                            IsEnabled="False"
+                                            Clicked="OnRenameAssetClicked"/>
+                            <MenuFlyoutItem x:Name="AssetCtxDeleteItem"
+                                            Text="🗑 Delete"
+                                            IsEnabled="False"
+                                            Clicked="OnDeleteAssetClicked"/>
+                        </MenuFlyout>
+                    </FlyoutBase.ContextFlyout>
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="local:AssetItem">
                             <Grid ColumnDefinitions="24,*,80,60"

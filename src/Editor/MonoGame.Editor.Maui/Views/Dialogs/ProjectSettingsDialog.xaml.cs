@@ -123,6 +123,37 @@ public sealed partial class ProjectSettingsDialog : ContentPage
         SetActiveTab(btn);
     }
 
+    private async void OnBrowseLocalizationFolderClicked(object sender, EventArgs e)
+    {
+        string? rel = await PickFolderRelativeToProjectAsync().ConfigureAwait(true);
+        if (rel is not null) LocalizationRelPathEntry.Text = rel;
+    }
+
+    private async Task<string?> PickFolderRelativeToProjectAsync()
+    {
+        try
+        {
+            Microsoft.UI.Xaml.Window? win = Application.Current?.Windows.FirstOrDefault()
+                ?.Handler?.PlatformView as Microsoft.UI.Xaml.Window;
+            if (win is null) return null;
+
+            IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(win);
+            var picker = new Windows.Storage.Pickers.FolderPicker();
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            picker.FileTypeFilter.Add("*");
+
+            Windows.Storage.StorageFolder? folder = await picker.PickSingleFolderAsync();
+            if (folder is null) return null;
+
+            return Path.GetRelativePath(_project.RootPath, folder.Path);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     // ── File pickers ──────────────────────────────────────────────────────────
 
     private async void OnBrowseCsprojClicked(object sender, EventArgs e)

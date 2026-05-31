@@ -158,13 +158,17 @@ public sealed partial class ScriptBrowserView : ContentView
             _selectedFolderPath       = string.Empty;
             FolderRenameBtn.IsEnabled = false;
             FolderDeleteBtn.IsEnabled = false;
+            FolderCtxRenameItem.IsEnabled = false;
+            FolderCtxDeleteItem.IsEnabled = false;
             return;
         }
 
         _selectedFolderPath = item.FullPath;
         bool isRoot = string.Equals(_selectedFolderPath, _scriptsRoot, StringComparison.OrdinalIgnoreCase);
-        FolderRenameBtn.IsEnabled = !isRoot;
-        FolderDeleteBtn.IsEnabled = !isRoot;
+        FolderRenameBtn.IsEnabled     = !isRoot;
+        FolderDeleteBtn.IsEnabled     = !isRoot;
+        FolderCtxRenameItem.IsEnabled = !isRoot;
+        FolderCtxDeleteItem.IsEnabled = !isRoot;
     }
 
     // ── Folder management ─────────────────────────────────────────────────────
@@ -219,9 +223,11 @@ public sealed partial class ScriptBrowserView : ContentView
 
         _expandedFolders.Remove(_selectedFolderPath);
         _expandedFolders.Add(newPath);
-        _selectedFolderPath       = string.Empty;
-        FolderRenameBtn.IsEnabled = false;
-        FolderDeleteBtn.IsEnabled = false;
+        _selectedFolderPath           = string.Empty;
+        FolderRenameBtn.IsEnabled     = false;
+        FolderDeleteBtn.IsEnabled     = false;
+        FolderCtxRenameItem.IsEnabled = false;
+        FolderCtxDeleteItem.IsEnabled = false;
 
         BuildFolderTree();
         LoadScripts();
@@ -249,11 +255,82 @@ public sealed partial class ScriptBrowserView : ContentView
             _currentFolderPath = _scriptsRoot;
 
         _expandedFolders.Remove(_selectedFolderPath);
-        _selectedFolderPath       = string.Empty;
-        FolderRenameBtn.IsEnabled = false;
-        FolderDeleteBtn.IsEnabled = false;
+        _selectedFolderPath           = string.Empty;
+        FolderRenameBtn.IsEnabled     = false;
+        FolderDeleteBtn.IsEnabled     = false;
+        FolderCtxRenameItem.IsEnabled = false;
+        FolderCtxDeleteItem.IsEnabled = false;
 
         BuildFolderTree();
         LoadScripts();
     }
+
+    // ── New script creation ───────────────────────────────────────────────────
+
+    private async void OnNewScriptClicked(object sender, EventArgs e)
+    {
+        if (string.IsNullOrEmpty(_currentFolderPath)) return;
+
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+        ProjectSettings? settings = project is not null
+            ? await ProjectSettings.LoadAsync(project).ConfigureAwait(true)
+            : null;
+
+        string defaultNs = settings?.RootNamespace ?? string.Empty;
+
+        ScriptCreationResult? result = await ScriptCreationDialog
+            .ShowAsync(page.Navigation, defaultNs)
+            .ConfigureAwait(true);
+
+        if (result is null) return;
+
+        string targetFolder = string.IsNullOrEmpty(result.RelativeFolder)
+            ? _currentFolderPath
+            : Path.Combine(_currentFolderPath, result.RelativeFolder);
+
+        try { Directory.CreateDirectory(targetFolder); }
+        catch { return; }
+
+        string filePath = Path.Combine(targetFolder, result.ClassName + ".cs");
+        string ns       = string.IsNullOrEmpty(result.NamespaceName) ? defaultNs : result.NamespaceName;
+        string content  = GenerateScriptTemplate(result.ClassName, ns);
+
+        try
+        {
+            await File.WriteAllTextAsync(filePath, content);
+            _expandedFolders.Add(targetFolder);
+            BuildFolderTree();
+            _currentFolderPath = targetFolder;
+            LoadScripts();
+        }
+        catch { }
+    }
+
+    private static string GenerateScriptTemplate(string className, string ns) =>
+        string.IsNullOrEmpty(ns)
+            ? $$"""
+              using Alca.MonoGame.Kernel.ECS;
+
+              public sealed class {{className}} : GameBehaviour
+              {
+                  public override void Update(float deltaTime)
+                  {
+                  }
+              }
+              """
+            : $$"""
+              using Alca.MonoGame.Kernel.ECS;
+
+              namespace {{ns}};
+
+              public sealed class {{className}} : GameBehaviour
+              {
+                  public override void Update(float deltaTime)
+                  {
+                  }
+              }
+              """;
 }

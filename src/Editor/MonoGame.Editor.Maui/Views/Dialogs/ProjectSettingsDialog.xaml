@@ -146,10 +146,18 @@
                                Text="Localization path (rel)"
                                Style="{StaticResource DimLabel}"
                                VerticalOptions="Center"/>
-                        <Entry Grid.Row="1" Grid.Column="1"
-                               x:Name="LocalizationRelPathEntry"
-                               BackgroundColor="{StaticResource BgPanel}"
-                               TextColor="{StaticResource PrimaryLabel}"/>
+                        <Grid Grid.Row="1" Grid.Column="1"
+                              ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                            <Entry Grid.Column="0"
+                                   x:Name="LocalizationRelPathEntry"
+                                   BackgroundColor="{StaticResource BgPanel}"
+                                   TextColor="{StaticResource PrimaryLabel}"/>
+                            <Button Grid.Column="1"
+                                    Text="…"
+                                    WidthRequest="32"
+                                    Style="{StaticResource FlatButton}"
+                                    Clicked="OnBrowseLocalizationFolderClicked"/>
+                        </Grid>
 
                     </Grid>
                 </ScrollView>

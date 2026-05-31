@@ -2,13 +2,14 @@
 <ContentPage x:Class="MonoGame.Editor.Maui.Views.Dialogs.AddBehaviourDialog"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Dialogs"
              BackgroundColor="#80000000"
              Title="Add Behaviour">
 
     <Grid>
         <Border BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0"
-                WidthRequest="440"
+                WidthRequest="480"
                 HorizontalOptions="Center"
                 VerticalOptions="Center">
             <VerticalStackLayout Spacing="0">
@@ -17,9 +18,18 @@
                 <Border BackgroundColor="{StaticResource BgPanel}"
                         StrokeThickness="0"
                         Padding="20,14">
-                    <Label Text="Add Behaviour"
-                           Style="{StaticResource PrimaryLabel}"
-                           FontSize="15"/>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Label Grid.Column="0"
+                               Text="Add Behaviour"
+                               Style="{StaticResource PrimaryLabel}"
+                               FontSize="15"
+                               VerticalOptions="Center"/>
+                        <Button Grid.Column="1"
+                                x:Name="RescanButton"
+                                Text="⟳ Rescan"
+                                Style="{StaticResource SmallIconButton}"
+                                Clicked="OnRescanClicked"/>
+                    </Grid>
                 </Border>
                 <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
 
@@ -36,22 +46,36 @@
                 </Border>
                 <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
 
-                <!-- List -->
+                <!-- Tree / List -->
                 <CollectionView x:Name="TypeList"
-                                HeightRequest="300"
+                                HeightRequest="320"
                                 SelectionMode="Single"
                                 SelectionChanged="OnTypeSelected">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                            <Border Padding="12,7"
-                                    BackgroundColor="Transparent"
-                                    StrokeThickness="0">
-                                <Label Text="{Binding .}"
-                                       Style="{StaticResource PrimaryLabel}"
-                                       FontSize="13"/>
-                            </Border>
+                        <DataTemplate x:DataType="local:BehaviourTreeNode">
+                            <Grid ColumnDefinitions="16,*"
+                                  Padding="{Binding LeftPadding}"
+                                  ColumnSpacing="4"
+                                  BackgroundColor="Transparent">
+                                <Label Grid.Column="0"
+                                       Text="{Binding ExpandIcon}"
+                                       Style="{StaticResource DimLabel}"
+                                       FontSize="10"
+                                       VerticalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                                <Label Grid.Column="1"
+                                       Text="{Binding DisplayName}"
+                                       TextColor="{Binding TextColor}"
+                                       FontSize="13"
+                                       VerticalOptions="Center"/>
+                            </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
+                    <CollectionView.EmptyView>
+                        <Label Text="No behaviours found"
+                               Style="{StaticResource PlaceholderLabel}"
+                               Margin="0,24"/>
+                    </CollectionView.EmptyView>
                 </CollectionView>
                 <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
 

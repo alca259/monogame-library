@@ -1,4 +1,5 @@
 using System.Reflection;
+using MauiShapes = Microsoft.Maui.Controls.Shapes;
 using System.Text.Json;
 
 namespace MonoGame.Editor.Maui.Views.Panels;
@@ -270,7 +271,10 @@ public sealed partial class InspectorView : ContentView
         // Body — property rows
         VerticalStackLayout body = new() { Spacing = 0 };
         foreach (KeyValuePair<string, JsonElement> prop in behaviour.Properties)
+        {
+            if (prop.Key == "Enabled") continue; // controlled by header switch
             body.Children.Add(BuildPropertyRow(behaviour, prop.Key, prop.Value));
+        }
         body.IsVisible = !collapsed;
 
         // Header — chevron / type name / enabled switch / remove button
@@ -375,12 +379,15 @@ public sealed partial class InspectorView : ContentView
 
     private static View BuildPropertyRow(EditorBehaviour behaviour, string key, JsonElement value)
     {
-        View control = value.ValueKind switch
-        {
-            JsonValueKind.True or JsonValueKind.False => BuildBoolPropertyControl(behaviour, key, value.GetBoolean()),
-            JsonValueKind.Number                      => BuildNumberPropertyControl(behaviour, key, value.GetDouble()),
-            _                                         => BuildStringPropertyControl(behaviour, key, value.ToString()),
-        };
+        View control;
+        if (value.ValueKind is JsonValueKind.True or JsonValueKind.False)
+            control = BuildBoolPropertyControl(behaviour, key, value.GetBoolean());
+        else if (value.ValueKind == JsonValueKind.Number)
+            control = BuildNumberPropertyControl(behaviour, key, value.GetDouble());
+        else if (value.ValueKind == JsonValueKind.Object && IsColorValue(value))
+            control = BuildColorPropertyControl(behaviour, key, value);
+        else
+            control = BuildStringPropertyControl(behaviour, key, value.ToString());
 
         Grid row = new()
         {
@@ -401,6 +408,86 @@ public sealed partial class InspectorView : ContentView
         row.Add(control, 1, 0);
         return row;
     }
+
+    private static bool IsColorValue(JsonElement value)
+        => value.ValueKind == JsonValueKind.Object
+        && value.TryGetProperty("R", out _)
+        && value.TryGetProperty("G", out _)
+        && value.TryGetProperty("B", out _)
+        && value.TryGetProperty("A", out _);
+
+    private static View BuildColorPropertyControl(EditorBehaviour behaviour, string key, JsonElement value)
+    {
+        int r = value.TryGetProperty("R", out JsonElement rp) ? rp.GetInt32() : 0;
+        int g = value.TryGetProperty("G", out JsonElement gp) ? gp.GetInt32() : 0;
+        int b = value.TryGetProperty("B", out JsonElement bp) ? bp.GetInt32() : 0;
+        int a = value.TryGetProperty("A", out JsonElement ap) ? ap.GetInt32() : 255;
+
+        Color initialColor = Color.FromRgba(r, g, b, a);
+
+        Border swatch = new()
+        {
+            BackgroundColor = initialColor,
+            WidthRequest    = 32,
+            HeightRequest   = 20,
+            StrokeThickness = 1,
+            Stroke          = Color.FromArgb("#505058"),
+            StrokeShape     = new MauiShapes.RoundRectangle { CornerRadius = 3 },
+        };
+
+        Label hexLabel = new()
+        {
+            Text            = ColorToHex(r, g, b, a),
+            Style           = (Style)Application.Current!.Resources["LabelSecondary"],
+            VerticalOptions = LayoutOptions.Center,
+        };
+
+        Grid container = new()
+        {
+            ColumnDefinitions = new ColumnDefinitionCollection
+            {
+                new ColumnDefinition(new GridLength(36, GridUnitType.Absolute)),
+                new ColumnDefinition(GridLength.Star),
+            },
+            ColumnSpacing = 6,
+        };
+        container.Add(swatch,    0, 0);
+        container.Add(hexLabel,  1, 0);
+
+        TapGestureRecognizer tap = new();
+        tap.Tapped += async (_, _) =>
+        {
+            Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+            if (page is null) return;
+
+            Color? picked = await RgbaColorPickerDialog.ShowAsync(
+                page.Navigation, swatch.BackgroundColor);
+            if (picked is null) return;
+
+            swatch.BackgroundColor = picked;
+
+            int nr = (int)(picked.Red   * 255);
+            int ng = (int)(picked.Green * 255);
+            int nb = (int)(picked.Blue  * 255);
+            int na = (int)(picked.Alpha * 255);
+            hexLabel.Text = ColorToHex(nr, ng, nb, na);
+
+            uint packed = ((uint)na << 24) | ((uint)nb << 16) | ((uint)ng << 8) | (uint)nr;
+            var colorData = new { R = (byte)nr, G = (byte)ng, B = (byte)nb, A = (byte)na, PackedValue = packed };
+
+            JsonElement previous = behaviour.Properties[key];
+            JsonElement next     = JsonSerializer.SerializeToElement(colorData);
+            EditorContext.Instance.Commands.Execute(
+                new SetPropertyCommand<JsonElement>($"Set {key}", previous, next,
+                    v => behaviour.Properties[key] = v));
+        };
+        container.GestureRecognizers.Add(tap);
+
+        return container;
+    }
+
+    private static string ColorToHex(int r, int g, int b, int a)
+        => $"#{r:X2}{g:X2}{b:X2}{a:X2}";
 
     private static View BuildBoolPropertyControl(EditorBehaviour behaviour, string key, bool current)
     {
@@ -517,7 +604,9 @@ public sealed partial class InspectorView : ContentView
         if (!_registryReady)
             await ScanProjectAsync().ConfigureAwait(true);
 
-        string? typeName = await AddBehaviourDialog.ShowAsync(page.Navigation, _registry);
+        string? typeName = await AddBehaviourDialog.ShowAsync(
+            page.Navigation, _registry,
+            async () => await ScanProjectAsync().ConfigureAwait(true));
         if (string.IsNullOrEmpty(typeName)) return;
 
         EditorContext.Instance.Commands.Execute(

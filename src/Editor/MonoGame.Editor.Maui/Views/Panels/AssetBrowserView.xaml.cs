@@ -244,15 +244,19 @@ public sealed partial class AssetBrowserView : ContentView
     {
         if (e.CurrentSelection.FirstOrDefault() is not AssetItem item)
         {
-            AssetPathLabel.Text    = string.Empty;
-            AssetRenameBtn.IsEnabled = false;
-            AssetDeleteBtn.IsEnabled = false;
+            AssetPathLabel.Text       = string.Empty;
+            AssetRenameBtn.IsEnabled  = false;
+            AssetDeleteBtn.IsEnabled  = false;
+            AssetCtxRenameItem.IsEnabled = false;
+            AssetCtxDeleteItem.IsEnabled = false;
             return;
         }
 
-        AssetPathLabel.Text      = item.Info.RelativePath;
-        AssetRenameBtn.IsEnabled = true;
-        AssetDeleteBtn.IsEnabled = true;
+        AssetPathLabel.Text          = item.Info.RelativePath;
+        AssetRenameBtn.IsEnabled     = true;
+        AssetDeleteBtn.IsEnabled     = true;
+        AssetCtxRenameItem.IsEnabled = true;
+        AssetCtxDeleteItem.IsEnabled = true;
         EditorContext.Instance.EventBus.Publish(new AssetSelectedEvent(item.Info));
     }
 
@@ -324,16 +328,16 @@ public sealed partial class AssetBrowserView : ContentView
     {
         if (e.CurrentSelection.FirstOrDefault() is not FolderItem item)
         {
-            _selectedFolderPath      = string.Empty;
-            FolderRenameBtn.IsEnabled = false;
-            FolderDeleteBtn.IsEnabled = false;
+            _selectedFolderPath          = string.Empty;
+            FolderCtxRenameItem.IsEnabled = false;
+            FolderCtxDeleteItem.IsEnabled = false;
             return;
         }
 
         _selectedFolderPath = item.FullPath;
         bool isRoot = string.Equals(_selectedFolderPath, _contentRoot, StringComparison.OrdinalIgnoreCase);
-        FolderRenameBtn.IsEnabled = !isRoot;
-        FolderDeleteBtn.IsEnabled = !isRoot;
+        FolderCtxRenameItem.IsEnabled = !isRoot;
+        FolderCtxDeleteItem.IsEnabled = !isRoot;
     }
 
     // ── Folder management ─────────────────────────────────────────────────────
@@ -388,9 +392,9 @@ public sealed partial class AssetBrowserView : ContentView
 
         _expandedFolders.Remove(_selectedFolderPath);
         _expandedFolders.Add(newPath);
-        _selectedFolderPath = string.Empty;
-        FolderRenameBtn.IsEnabled = false;
-        FolderDeleteBtn.IsEnabled = false;
+        _selectedFolderPath           = string.Empty;
+        FolderCtxRenameItem.IsEnabled = false;
+        FolderCtxDeleteItem.IsEnabled = false;
 
         BuildFolderTree();
         BuildBreadcrumb(_currentFolderPath);
@@ -419,12 +423,55 @@ public sealed partial class AssetBrowserView : ContentView
             _currentFolderPath = _contentRoot;
 
         _expandedFolders.Remove(_selectedFolderPath);
-        _selectedFolderPath = string.Empty;
-        FolderRenameBtn.IsEnabled = false;
-        FolderDeleteBtn.IsEnabled = false;
+        _selectedFolderPath           = string.Empty;
+        FolderCtxRenameItem.IsEnabled = false;
+        FolderCtxDeleteItem.IsEnabled = false;
 
         BuildFolderTree();
         BuildBreadcrumb(_currentFolderPath);
         LoadAssetsFromFolder();
+    }
+
+    // ── New asset creation ────────────────────────────────────────────────────
+
+    private async void OnNewMaterialClicked(object sender, EventArgs e)
+        => await CreateAssetFileAsync(".mat.json",
+            """{"ShaderPath":"","Properties":{}}""",
+            "New Material", "Enter material name:");
+
+    private async void OnNewUIThemeClicked(object sender, EventArgs e)
+        => await CreateAssetFileAsync(".uitheme.json",
+            """{"Controls":{}}""",
+            "New UI Theme", "Enter UI theme name:");
+
+    private async void OnNewSpriteClicked(object sender, EventArgs e)
+        => await CreateAssetFileAsync(".sprite.json",
+            """{"TexturePath":"","NineSliceBorders":{"Left":0,"Right":0,"Top":0,"Bottom":0}}""",
+            "New Sprite NineSlice", "Enter sprite name:");
+
+    private async Task CreateAssetFileAsync(string suffix, string defaultContent,
+                                             string title, string prompt)
+    {
+        if (string.IsNullOrEmpty(_currentFolderPath)) return;
+
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        string? name = await page.DisplayPromptAsync(title, prompt,
+            maxLength: 128, keyboard: Keyboard.Text);
+        if (string.IsNullOrWhiteSpace(name)) return;
+
+        if (name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            name = name[..^suffix.Length];
+
+        string filePath = Path.Combine(_currentFolderPath, name + suffix);
+        try
+        {
+            await File.WriteAllTextAsync(filePath, defaultContent);
+            AssetInfo info = AssetClassifier.CreateInfo(filePath, _contentRoot);
+            _bus.Publish(new AssetImportedEvent(info));
+            LoadAssetsFromFolder();
+        }
+        catch { }
     }
 }
