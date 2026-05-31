@@ -109,6 +109,13 @@ public sealed partial class AssetBrowserView : ContentView
 
             BuildFolderTree();
 
+            // Assign AFTER BuildFolderTree(): clearing _folderItems fires SelectionChanged(empty)
+            // which would reset _selectedFolderPath and disable the menu items.
+            _selectedFolderPath = dir;
+            bool isRoot = string.Equals(dir, _contentRoot, StringComparison.OrdinalIgnoreCase);
+            FolderCtxRenameItem.IsEnabled = !isRoot;
+            FolderCtxDeleteItem.IsEnabled = !isRoot;
+
             if (item.IsExpanded)
             {
                 _currentFolderPath = dir;

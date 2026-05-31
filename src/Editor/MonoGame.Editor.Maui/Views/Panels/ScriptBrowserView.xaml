@@ -11,7 +11,7 @@
         <Border Grid.Row="0"
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0">
-            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,1,*" ColumnSpacing="4" Padding="4,2">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,1,Auto,Auto,1,*" ColumnSpacing="4" Padding="4,2">
                 <Button Grid.Column="0"
                         Text="⟳ Rescan"
                         Style="{StaticResource SmallIconButton}"
@@ -41,7 +41,25 @@
                          Color="{StaticResource BorderColor}"
                          VerticalOptions="Fill"
                          Margin="2,2"/>
-                <Label Grid.Column="5"
+                <Button Grid.Column="5"
+                        x:Name="ScriptRenameBtn"
+                        Text="✎"
+                        ToolTipProperties.Text="Rename script"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnScriptRenameClicked"/>
+                <Button Grid.Column="6"
+                        x:Name="ScriptDeleteBtn"
+                        Text="🗑"
+                        ToolTipProperties.Text="Delete script"
+                        Style="{StaticResource SmallIconButton}"
+                        IsEnabled="False"
+                        Clicked="OnScriptDeleteClicked"/>
+                <BoxView Grid.Column="7"
+                         Color="{StaticResource BorderColor}"
+                         VerticalOptions="Fill"
+                         Margin="2,2"/>
+                <Label Grid.Column="8"
                        x:Name="ScriptCountLabel"
                        Text="0 scripts"
                        Style="{StaticResource DimLabel}"
@@ -107,7 +125,7 @@
             <!-- Script file list -->
             <CollectionView Grid.Column="2"
                             x:Name="ScriptList"
-                            SelectionMode="Single"
+                            SelectionMode="None"
                             BackgroundColor="{StaticResource BgPanel}">
                 <FlyoutBase.ContextFlyout>
                     <MenuFlyout>
@@ -115,13 +133,26 @@
                                         Clicked="OnNewFolderClicked"/>
                         <MenuFlyoutItem Text="New script"
                                         Clicked="OnNewScriptClicked"/>
+                        <MenuFlyoutSeparator/>
+                        <MenuFlyoutItem x:Name="ScriptCtxRenameItem"
+                                        Text="✎ Rename script"
+                                        IsEnabled="False"
+                                        Clicked="OnScriptRenameClicked"/>
+                        <MenuFlyoutItem x:Name="ScriptCtxDeleteItem"
+                                        Text="🗑 Delete script"
+                                        IsEnabled="False"
+                                        Clicked="OnScriptDeleteClicked"/>
                     </MenuFlyout>
                 </FlyoutBase.ContextFlyout>
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="x:String">
-                        <Label Text="{Binding .}"
+                    <DataTemplate x:DataType="local:ScriptItem">
+                        <Label Text="{Binding FileName}"
                                Style="{StaticResource PrimaryLabel}"
-                               Padding="10,5"/>
+                               Padding="10,5">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding TapCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
                 <CollectionView.EmptyView>

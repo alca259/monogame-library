@@ -11,13 +11,14 @@ public sealed partial class ScriptBrowserView : ContentView
 {
     private readonly IEditorEventBus _bus = EditorContext.Instance.EventBus;
 
-    private readonly ObservableCollection<FolderItem> _folderItems  = [];
-    private readonly ObservableCollection<string>     _scriptItems  = [];
+    private readonly ObservableCollection<FolderItem>  _folderItems  = [];
+    private readonly ObservableCollection<ScriptItem>  _scriptItems  = [];
     private readonly HashSet<string> _expandedFolders = [];
 
     private string _scriptsRoot         = string.Empty;
     private string _currentFolderPath   = string.Empty;
     private string _selectedFolderPath  = string.Empty;
+    private string _selectedScriptFile  = string.Empty;
 
     private Action<ProjectOpenedEvent>? _onProjectOpened;
 
@@ -55,8 +56,11 @@ public sealed partial class ScriptBrowserView : ContentView
         _expandedFolders.Clear();
         ScriptCountLabel.Text     = "0 scripts";
         _selectedFolderPath       = string.Empty;
+        _selectedScriptFile       = string.Empty;
         FolderRenameBtn.IsEnabled = false;
         FolderDeleteBtn.IsEnabled = false;
+        ScriptRenameBtn.IsEnabled = false;
+        ScriptDeleteBtn.IsEnabled = false;
         NewFolderBtn.IsEnabled    = false;
 
         if (e.Project is null)
@@ -106,6 +110,15 @@ public sealed partial class ScriptBrowserView : ContentView
 
             BuildFolderTree();
 
+            // Assign AFTER BuildFolderTree(): clearing _folderItems fires SelectionChanged(empty)
+            // which would reset _selectedFolderPath and disable the menu items.
+            _selectedFolderPath = dir;
+            bool isRoot = string.Equals(dir, _scriptsRoot, StringComparison.OrdinalIgnoreCase);
+            FolderRenameBtn.IsEnabled     = !isRoot;
+            FolderDeleteBtn.IsEnabled     = !isRoot;
+            FolderCtxRenameItem.IsEnabled = !isRoot;
+            FolderCtxDeleteItem.IsEnabled = !isRoot;
+
             if (item.IsExpanded)
             {
                 _currentFolderPath = dir;
@@ -127,13 +140,27 @@ public sealed partial class ScriptBrowserView : ContentView
     private void LoadScripts()
     {
         _scriptItems.Clear();
+        _selectedScriptFile           = string.Empty;
+        ScriptRenameBtn.IsEnabled     = false;
+        ScriptDeleteBtn.IsEnabled     = false;
+        ScriptCtxRenameItem.IsEnabled = false;
+        ScriptCtxDeleteItem.IsEnabled = false;
+
         if (!Directory.Exists(_currentFolderPath)) return;
 
         int count = 0;
         foreach (string file in Directory.GetFiles(_currentFolderPath, "*.cs")
                                          .OrderBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase))
         {
-            _scriptItems.Add(Path.GetFileName(file));
+            string fileName = Path.GetFileName(file);
+            _scriptItems.Add(new ScriptItem(fileName, () =>
+            {
+                _selectedScriptFile           = fileName;
+                ScriptRenameBtn.IsEnabled     = true;
+                ScriptDeleteBtn.IsEnabled     = true;
+                ScriptCtxRenameItem.IsEnabled = true;
+                ScriptCtxDeleteItem.IsEnabled = true;
+            }));
             count++;
         }
 
@@ -262,6 +289,72 @@ public sealed partial class ScriptBrowserView : ContentView
         FolderCtxDeleteItem.IsEnabled = false;
 
         BuildFolderTree();
+        LoadScripts();
+    }
+
+    // ── Script management ─────────────────────────────────────────────────────
+
+    private async void OnScriptRenameClicked(object sender, EventArgs e)
+    {
+        if (string.IsNullOrEmpty(_selectedScriptFile)) return;
+
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        string oldClassName = Path.GetFileNameWithoutExtension(_selectedScriptFile);
+        string? newClassName = await page.DisplayPromptAsync(
+            "Rename script",
+            "Enter new class name (file will be renamed to match):",
+            initialValue: oldClassName,
+            maxLength: 128,
+            keyboard: Keyboard.Text);
+
+        if (string.IsNullOrWhiteSpace(newClassName) || newClassName == oldClassName) return;
+
+        string oldPath = Path.Combine(_currentFolderPath, _selectedScriptFile);
+        string newPath = Path.Combine(_currentFolderPath, newClassName + ".cs");
+
+        try
+        {
+            string content = await File.ReadAllTextAsync(oldPath).ConfigureAwait(true);
+            content = content.Replace($"class {oldClassName}", $"class {newClassName}");
+            await File.WriteAllTextAsync(newPath, content).ConfigureAwait(true);
+            if (!string.Equals(oldPath, newPath, StringComparison.OrdinalIgnoreCase))
+                File.Delete(oldPath);
+        }
+        catch { return; }
+
+        _selectedScriptFile           = string.Empty;
+        ScriptRenameBtn.IsEnabled     = false;
+        ScriptDeleteBtn.IsEnabled     = false;
+        ScriptCtxRenameItem.IsEnabled = false;
+        ScriptCtxDeleteItem.IsEnabled = false;
+        LoadScripts();
+    }
+
+    private async void OnScriptDeleteClicked(object sender, EventArgs e)
+    {
+        if (string.IsNullOrEmpty(_selectedScriptFile)) return;
+
+        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null) return;
+
+        bool confirmed = await page.DisplayAlertAsync(
+            "Delete script",
+            $"Delete '{_selectedScriptFile}'? This cannot be undone.",
+            "Delete", "Cancel");
+
+        if (!confirmed) return;
+
+        string path = Path.Combine(_currentFolderPath, _selectedScriptFile);
+        try { File.Delete(path); }
+        catch { return; }
+
+        _selectedScriptFile           = string.Empty;
+        ScriptRenameBtn.IsEnabled     = false;
+        ScriptDeleteBtn.IsEnabled     = false;
+        ScriptCtxRenameItem.IsEnabled = false;
+        ScriptCtxDeleteItem.IsEnabled = false;
         LoadScripts();
     }
 
