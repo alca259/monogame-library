@@ -95,34 +95,39 @@ public sealed partial class AssetBrowserView : ContentView
     {
         if (!Directory.Exists(dir)) return;
 
-        string[] subdirs    = Directory.GetDirectories(dir);
+        string[] subdirs     = Directory.GetDirectories(dir);
         bool     hasChildren = subdirs.Length > 0;
         bool     isExpanded  = _expandedFolders.Contains(dir);
+        bool     isRoot      = string.Equals(dir, _contentRoot, StringComparison.OrdinalIgnoreCase);
 
         FolderItem item = null!;
-        item = new FolderItem(dir, depth, hasChildren, isExpanded, () =>
-        {
-            if (item.IsExpanded)
-                _expandedFolders.Add(dir);
-            else
-                _expandedFolders.Remove(dir);
-
-            BuildFolderTree();
-
-            // Assign AFTER BuildFolderTree(): clearing _folderItems fires SelectionChanged(empty)
-            // which would reset _selectedFolderPath and disable the menu items.
-            _selectedFolderPath = dir;
-            bool isRoot = string.Equals(dir, _contentRoot, StringComparison.OrdinalIgnoreCase);
-            FolderCtxRenameItem.IsEnabled = !isRoot;
-            FolderCtxDeleteItem.IsEnabled = !isRoot;
-
-            if (item.IsExpanded)
+        item = new FolderItem(dir, depth, hasChildren, isExpanded, isRoot,
+            onToggle: () =>
             {
-                _currentFolderPath = dir;
-                BuildBreadcrumb(dir);
-                LoadAssetsFromFolder();
-            }
-        });
+                if (item.IsExpanded)
+                    _expandedFolders.Add(dir);
+                else
+                    _expandedFolders.Remove(dir);
+
+                BuildFolderTree();
+
+                if (item.IsExpanded)
+                {
+                    _currentFolderPath = dir;
+                    BuildBreadcrumb(dir);
+                    LoadAssetsFromFolder();
+                }
+            },
+            onRename: () =>
+            {
+                _selectedFolderPath = dir;
+                _ = OnFolderRenameAsync();
+            },
+            onDelete: () =>
+            {
+                _selectedFolderPath = dir;
+                _ = OnFolderDeleteAsync();
+            });
 
         _folderItems.Add(item);
 
@@ -330,21 +335,7 @@ public sealed partial class AssetBrowserView : ContentView
 
     // ── Folder selection ──────────────────────────────────────────────────────
 
-    private void OnFolderSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (e.CurrentSelection.FirstOrDefault() is not FolderItem item)
-        {
-            _selectedFolderPath          = string.Empty;
-            FolderCtxRenameItem.IsEnabled = false;
-            FolderCtxDeleteItem.IsEnabled = false;
-            return;
-        }
-
-        _selectedFolderPath = item.FullPath;
-        bool isRoot = string.Equals(_selectedFolderPath, _contentRoot, StringComparison.OrdinalIgnoreCase);
-        FolderCtxRenameItem.IsEnabled = !isRoot;
-        FolderCtxDeleteItem.IsEnabled = !isRoot;
-    }
+    private void OnFolderSelectionChanged(object sender, SelectionChangedEventArgs e) { }
 
     // ── Folder management ─────────────────────────────────────────────────────
 
@@ -372,7 +363,7 @@ public sealed partial class AssetBrowserView : ContentView
         LoadAssetsFromFolder();
     }
 
-    private async void OnFolderRenameClicked(object sender, EventArgs e)
+    private async Task OnFolderRenameAsync()
     {
         if (string.IsNullOrEmpty(_selectedFolderPath)) return;
 
@@ -398,16 +389,14 @@ public sealed partial class AssetBrowserView : ContentView
 
         _expandedFolders.Remove(_selectedFolderPath);
         _expandedFolders.Add(newPath);
-        _selectedFolderPath           = string.Empty;
-        FolderCtxRenameItem.IsEnabled = false;
-        FolderCtxDeleteItem.IsEnabled = false;
+        _selectedFolderPath = string.Empty;
 
         BuildFolderTree();
         BuildBreadcrumb(_currentFolderPath);
         LoadAssetsFromFolder();
     }
 
-    private async void OnFolderDeleteClicked(object sender, EventArgs e)
+    private async Task OnFolderDeleteAsync()
     {
         if (string.IsNullOrEmpty(_selectedFolderPath)) return;
 
@@ -429,9 +418,7 @@ public sealed partial class AssetBrowserView : ContentView
             _currentFolderPath = _contentRoot;
 
         _expandedFolders.Remove(_selectedFolderPath);
-        _selectedFolderPath           = string.Empty;
-        FolderCtxRenameItem.IsEnabled = false;
-        FolderCtxDeleteItem.IsEnabled = false;
+        _selectedFolderPath = string.Empty;
 
         BuildFolderTree();
         BuildBreadcrumb(_currentFolderPath);

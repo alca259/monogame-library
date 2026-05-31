@@ -75,8 +75,7 @@
             <!-- Folder tree -->
             <CollectionView Grid.Column="0"
                             x:Name="FolderTree"
-                            SelectionMode="Single"
-                            SelectionChanged="OnFolderSelectionChanged"
+                            SelectionMode="None"
                             BackgroundColor="{StaticResource BgPanel}">
                 <FlyoutBase.ContextFlyout>
                     <MenuFlyout>
@@ -91,15 +90,6 @@
                             <MenuFlyoutItem Text="✦ Sprite NineSlice"
                                             Clicked="OnNewSpriteClicked"/>
                         </MenuFlyoutSubItem>
-                        <MenuFlyoutSeparator/>
-                        <MenuFlyoutItem x:Name="FolderCtxRenameItem"
-                                        Text="✎ Rename folder"
-                                        IsEnabled="False"
-                                        Clicked="OnFolderRenameClicked"/>
-                        <MenuFlyoutItem x:Name="FolderCtxDeleteItem"
-                                        Text="🗑 Delete folder"
-                                        IsEnabled="False"
-                                        Clicked="OnFolderDeleteClicked"/>
                     </MenuFlyout>
                 </FlyoutBase.ContextFlyout>
                 <CollectionView.ItemTemplate>
@@ -107,6 +97,28 @@
                         <Grid ColumnDefinitions="14,*"
                               Padding="{Binding LeftPadding}"
                               ColumnSpacing="2">
+                            <FlyoutBase.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="📁 New folder"
+                                                    Clicked="OnNewFolderClicked"/>
+                                    <MenuFlyoutSeparator/>
+                                    <MenuFlyoutSubItem Text="New asset">
+                                        <MenuFlyoutItem Text="◈ Material"
+                                                        Clicked="OnNewMaterialClicked"/>
+                                        <MenuFlyoutItem Text="◧ UI Theme"
+                                                        Clicked="OnNewUIThemeClicked"/>
+                                        <MenuFlyoutItem Text="✦ Sprite NineSlice"
+                                                        Clicked="OnNewSpriteClicked"/>
+                                    </MenuFlyoutSubItem>
+                                    <MenuFlyoutSeparator/>
+                                    <MenuFlyoutItem Text="✎ Rename folder"
+                                                    IsEnabled="{Binding IsNotRoot}"
+                                                    Command="{Binding RenameCommand}"/>
+                                    <MenuFlyoutItem Text="🗑 Delete folder"
+                                                    IsEnabled="{Binding IsNotRoot}"
+                                                    Command="{Binding DeleteCommand}"/>
+                                </MenuFlyout>
+                            </FlyoutBase.ContextFlyout>
                             <Label Grid.Column="0"
                                    Text="{Binding ExpandIcon}"
                                    Style="{StaticResource DimLabel}"

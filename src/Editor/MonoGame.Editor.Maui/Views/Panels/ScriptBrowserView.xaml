@@ -75,8 +75,7 @@
             <!-- Folder tree -->
             <CollectionView Grid.Column="0"
                             x:Name="FolderTree"
-                            SelectionMode="Single"
-                            SelectionChanged="OnFolderSelectionChanged"
+                            SelectionMode="None"
                             BackgroundColor="{StaticResource BgPanel}">
                 <FlyoutBase.ContextFlyout>
                     <MenuFlyout>
@@ -84,20 +83,26 @@
                                         Clicked="OnNewFolderClicked"/>
                         <MenuFlyoutItem Text="New script"
                                         Clicked="OnNewScriptClicked"/>
-                        <MenuFlyoutSeparator/>
-                        <MenuFlyoutItem x:Name="FolderCtxRenameItem"
-                                        Text="✎ Rename folder"
-                                        IsEnabled="False"
-                                        Clicked="OnFolderRenameClicked"/>
-                        <MenuFlyoutItem x:Name="FolderCtxDeleteItem"
-                                        Text="🗑 Delete folder"
-                                        IsEnabled="False"
-                                        Clicked="OnFolderDeleteClicked"/>
                     </MenuFlyout>
                 </FlyoutBase.ContextFlyout>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="local:FolderItem">
                         <Grid Padding="{Binding LeftPadding}" ColumnDefinitions="14,*" ColumnSpacing="2">
+                            <FlyoutBase.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="📁 New folder"
+                                                    Clicked="OnNewFolderClicked"/>
+                                    <MenuFlyoutItem Text="New script"
+                                                    Clicked="OnNewScriptClicked"/>
+                                    <MenuFlyoutSeparator/>
+                                    <MenuFlyoutItem Text="✎ Rename folder"
+                                                    IsEnabled="{Binding IsNotRoot}"
+                                                    Command="{Binding RenameCommand}"/>
+                                    <MenuFlyoutItem Text="🗑 Delete folder"
+                                                    IsEnabled="{Binding IsNotRoot}"
+                                                    Command="{Binding DeleteCommand}"/>
+                                </MenuFlyout>
+                            </FlyoutBase.ContextFlyout>
                             <Label Grid.Column="0"
                                    Text="{Binding ExpandIcon}"
                                    TextColor="{StaticResource TextMuted}"
@@ -133,15 +138,6 @@
                                         Clicked="OnNewFolderClicked"/>
                         <MenuFlyoutItem Text="New script"
                                         Clicked="OnNewScriptClicked"/>
-                        <MenuFlyoutSeparator/>
-                        <MenuFlyoutItem x:Name="ScriptCtxRenameItem"
-                                        Text="✎ Rename script"
-                                        IsEnabled="False"
-                                        Clicked="OnScriptRenameClicked"/>
-                        <MenuFlyoutItem x:Name="ScriptCtxDeleteItem"
-                                        Text="🗑 Delete script"
-                                        IsEnabled="False"
-                                        Clicked="OnScriptDeleteClicked"/>
                     </MenuFlyout>
                 </FlyoutBase.ContextFlyout>
                 <CollectionView.ItemTemplate>
@@ -149,6 +145,19 @@
                         <Label Text="{Binding FileName}"
                                Style="{StaticResource PrimaryLabel}"
                                Padding="10,5">
+                            <FlyoutBase.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="📁 New folder"
+                                                    Clicked="OnNewFolderClicked"/>
+                                    <MenuFlyoutItem Text="New script"
+                                                    Clicked="OnNewScriptClicked"/>
+                                    <MenuFlyoutSeparator/>
+                                    <MenuFlyoutItem Text="✎ Rename script"
+                                                    Command="{Binding RenameCommand}"/>
+                                    <MenuFlyoutItem Text="🗑 Delete script"
+                                                    Command="{Binding DeleteCommand}"/>
+                                </MenuFlyout>
+                            </FlyoutBase.ContextFlyout>
                             <Label.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding TapCommand}"/>
                             </Label.GestureRecognizers>
