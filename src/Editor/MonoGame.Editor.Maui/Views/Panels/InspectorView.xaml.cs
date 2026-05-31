@@ -271,10 +271,7 @@ public sealed partial class InspectorView : ContentView
         // Body — property rows
         VerticalStackLayout body = new() { Spacing = 0 };
         foreach (KeyValuePair<string, JsonElement> prop in behaviour.Properties)
-        {
-            if (prop.Key == "Enabled") continue; // controlled by header switch
             body.Children.Add(BuildPropertyRow(behaviour, prop.Key, prop.Value));
-        }
         body.IsVisible = !collapsed;
 
         // Header — chevron / type name / enabled switch / remove button
@@ -297,19 +294,6 @@ public sealed partial class InspectorView : ContentView
             if (nowCollapsed) _collapsedBehaviours.Add(behaviour.TypeName);
             else              _collapsedBehaviours.Remove(behaviour.TypeName);
             BuildBehaviourCards();
-        };
-
-        Switch enabledSwitch = new()
-        {
-            IsToggled       = behaviour.Enabled,
-            Scale           = 0.7,
-            VerticalOptions = LayoutOptions.Center,
-        };
-        enabledSwitch.Toggled += (_, te) =>
-        {
-            bool prev = behaviour.Enabled;
-            EditorContext.Instance.Commands.Execute(
-                new SetPropertyCommand<bool>($"Toggle {shortName}", prev, te.Value, v => behaviour.Enabled = v));
         };
 
         Button removeBtn = new()
@@ -336,7 +320,6 @@ public sealed partial class InspectorView : ContentView
             {
                 new ColumnDefinition(new GridLength(20, GridUnitType.Absolute)),
                 new ColumnDefinition(GridLength.Star),
-                new ColumnDefinition(new GridLength(44, GridUnitType.Absolute)),
                 new ColumnDefinition(new GridLength(24, GridUnitType.Absolute)),
             },
             BackgroundColor = Color.FromArgb("#252528"),
@@ -349,8 +332,7 @@ public sealed partial class InspectorView : ContentView
             Style           = (Style)Application.Current!.Resources["SectionTitle"],
             VerticalOptions = LayoutOptions.Center,
         }, 1, 0);
-        header.Add(enabledSwitch, 2, 0);
-        header.Add(removeBtn, 3, 0);
+        header.Add(removeBtn, 2, 0);
 
         return new VerticalStackLayout
         {

@@ -3,12 +3,12 @@
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              BackgroundColor="#80000000"
-             Title="Pick Color">
+             Title="Select Color">
 
     <Grid>
         <Border BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0"
-                WidthRequest="360"
+                WidthRequest="300"
                 HorizontalOptions="Center"
                 VerticalOptions="Center">
             <VerticalStackLayout Spacing="0">
@@ -16,117 +16,96 @@
                 <!-- Header -->
                 <Border BackgroundColor="{StaticResource BgPanel}"
                         StrokeThickness="0"
-                        Padding="20,14">
-                    <Label Text="Pick Color"
+                        Padding="16,12">
+                    <Label Text="Select Color"
                            Style="{StaticResource PrimaryLabel}"
-                           FontSize="15"/>
+                           FontSize="14"/>
                 </Border>
                 <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
 
-                <!-- Sliders + preview -->
-                <Grid Padding="20,16"
-                      RowDefinitions="Auto,Auto,Auto,Auto,32"
-                      ColumnDefinitions="16,*,40"
-                      RowSpacing="10"
-                      ColumnSpacing="10">
+                <!-- Main picker grid: [SV area] [gap] [hue strip] -->
+                <Grid Padding="12,12,12,10"
+                      ColumnDefinitions="*,8,20"
+                      RowDefinitions="220,8,18">
 
-                    <!-- R -->
-                    <Label Grid.Row="0" Grid.Column="0"
-                           Text="R"
-                           TextColor="#E85050"
-                           FontAttributes="Bold"
-                           VerticalOptions="Center"/>
-                    <Slider Grid.Row="0" Grid.Column="1"
-                            x:Name="RedSlider"
-                            Minimum="0" Maximum="255"
-                            Value="255"
-                            ThumbColor="{StaticResource AccentBlue}"
-                            ValueChanged="OnSliderChanged"/>
-                    <Label Grid.Row="0" Grid.Column="2"
-                           x:Name="RedLabel"
-                           Text="255"
-                           Style="{StaticResource DimLabel}"
-                           HorizontalOptions="End"
-                           VerticalOptions="Center"/>
+                    <!-- SV gradient square -->
+                    <GraphicsView x:Name="SvPicker"
+                                  Grid.Row="0" Grid.Column="0"
+                                  HeightRequest="220"
+                                  BackgroundColor="Transparent"/>
 
-                    <!-- G -->
-                    <Label Grid.Row="1" Grid.Column="0"
-                           Text="G"
-                           TextColor="#50E850"
-                           FontAttributes="Bold"
-                           VerticalOptions="Center"/>
-                    <Slider Grid.Row="1" Grid.Column="1"
-                            x:Name="GreenSlider"
-                            Minimum="0" Maximum="255"
-                            Value="255"
-                            ThumbColor="{StaticResource AccentBlue}"
-                            ValueChanged="OnSliderChanged"/>
-                    <Label Grid.Row="1" Grid.Column="2"
-                           x:Name="GreenLabel"
-                           Text="255"
-                           Style="{StaticResource DimLabel}"
-                           HorizontalOptions="End"
-                           VerticalOptions="Center"/>
+                    <!-- Hue strip -->
+                    <GraphicsView x:Name="HuePicker"
+                                  Grid.Row="0" Grid.Column="2"
+                                  HeightRequest="220"
+                                  BackgroundColor="Transparent"/>
 
-                    <!-- B -->
-                    <Label Grid.Row="2" Grid.Column="0"
-                           Text="B"
-                           TextColor="#5080E8"
-                           FontAttributes="Bold"
-                           VerticalOptions="Center"/>
-                    <Slider Grid.Row="2" Grid.Column="1"
-                            x:Name="BlueSlider"
-                            Minimum="0" Maximum="255"
-                            Value="255"
-                            ThumbColor="{StaticResource AccentBlue}"
-                            ValueChanged="OnSliderChanged"/>
-                    <Label Grid.Row="2" Grid.Column="2"
-                           x:Name="BlueLabel"
-                           Text="255"
-                           Style="{StaticResource DimLabel}"
-                           HorizontalOptions="End"
-                           VerticalOptions="Center"/>
-
-                    <!-- A -->
-                    <Label Grid.Row="3" Grid.Column="0"
-                           Text="A"
-                           Style="{StaticResource DimLabel}"
-                           FontAttributes="Bold"
-                           VerticalOptions="Center"/>
-                    <Slider Grid.Row="3" Grid.Column="1"
-                            x:Name="AlphaSlider"
-                            Minimum="0" Maximum="255"
-                            Value="255"
-                            ThumbColor="{StaticResource AccentBlue}"
-                            ValueChanged="OnSliderChanged"/>
-                    <Label Grid.Row="3" Grid.Column="2"
-                           x:Name="AlphaLabel"
-                           Text="255"
-                           Style="{StaticResource DimLabel}"
-                           HorizontalOptions="End"
-                           VerticalOptions="Center"/>
-
-                    <!-- Preview swatch -->
-                    <BoxView Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
-                             x:Name="ColorPreview"
-                             CornerRadius="4"
-                             Color="White"/>
+                    <!-- Alpha row -->
+                    <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                          ColumnDefinitions="16,*,6,18">
+                        <Label Grid.Column="0"
+                               Text="A"
+                               Style="{StaticResource DimLabel}"
+                               FontSize="10"
+                               VerticalOptions="Center"/>
+                        <GraphicsView x:Name="AlphaPicker"
+                                      Grid.Column="1"
+                                      HeightRequest="18"
+                                      BackgroundColor="Transparent"/>
+                        <Button Grid.Column="3"
+                                Text="✕"
+                                FontSize="9"
+                                WidthRequest="18"
+                                HeightRequest="18"
+                                Padding="0"
+                                CornerRadius="3"
+                                BackgroundColor="{StaticResource BgPanel}"
+                                TextColor="#9A9AA2"
+                                VerticalOptions="Center"
+                                Clicked="OnAlphaReset"/>
+                    </Grid>
 
                 </Grid>
 
                 <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
 
-                <!-- Footer -->
-                <HorizontalStackLayout HorizontalOptions="End"
-                                       Spacing="8"
-                                       Padding="20,12">
-                    <Button Text="Cancel"
+                <!-- Footer: preview swatch + hex + buttons -->
+                <Grid ColumnDefinitions="26,8,*,8,Auto,8,Auto"
+                      Padding="12,10">
+
+                    <Border x:Name="ColorPreviewSwatch"
+                            Grid.Column="0"
+                            WidthRequest="26"
+                            HeightRequest="22"
+                            StrokeThickness="1"
+                            Stroke="{StaticResource BorderColor}"
+                            BackgroundColor="White">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="3"/>
+                        </Border.StrokeShape>
+                    </Border>
+
+                    <Border Grid.Column="2"
+                            Style="{StaticResource InputShell}"
+                            HeightRequest="22">
+                        <Entry x:Name="HexEntry"
+                               Style="{StaticResource InputEntry}"
+                               Placeholder="#RRGGBBAA"
+                               MaxLength="9"
+                               FontSize="11"
+                               Completed="OnHexEntryCompleted"/>
+                    </Border>
+
+                    <Button Grid.Column="4"
+                            Text="Cancel"
                             Style="{StaticResource SmallIconButton}"
                             Clicked="OnCancel"/>
-                    <Button Text="OK"
+                    <Button Grid.Column="6"
+                            Text="Choose"
                             Style="{StaticResource SmallIconButton}"
                             Clicked="OnSubmit"/>
-                </HorizontalStackLayout>
+
+                </Grid>
 
             </VerticalStackLayout>
         </Border>

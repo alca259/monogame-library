@@ -4,46 +4,39 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              BackgroundColor="{StaticResource PanelBackground}">
 
-    <Grid RowDefinitions="*,1,28" RowSpacing="0">
+    <Grid RowDefinitions="*,1,36" RowSpacing="0">
 
         <ScrollView Grid.Row="0">
             <VerticalStackLayout Spacing="0">
 
-                <!-- ── Fixed fields ─────────────────────────────── -->
-                <Border BackgroundColor="{StaticResource PanelBackgroundAlt}"
+                <!-- ── Material filename header ─────────────────────────── -->
+                <Border BackgroundColor="{StaticResource PanelBackground}"
                         StrokeThickness="0"
-                        Padding="10,4">
-                    <Label Text="Material" Style="{StaticResource SectionTitle}"/>
+                        Padding="10,6">
+                    <Label x:Name="MaterialFileLabel"
+                           Text="(no material)"
+                           Style="{StaticResource SectionTitle}"/>
                 </Border>
-                <BoxView HeightRequest="1" Color="{StaticResource Border}"/>
+                <BoxView Style="{StaticResource Divider}"/>
 
-                <Grid RowDefinitions="Auto,Auto,Auto,Auto"
-                      ColumnDefinitions="70,*"
-                      RowSpacing="6"
+                <!-- ── Shader + Rendering Mode (always visible) ─────────── -->
+                <Grid RowDefinitions="Auto,Auto"
+                      ColumnDefinitions="100,*"
+                      RowSpacing="4"
                       ColumnSpacing="8"
                       Padding="10,8">
 
                     <Label Grid.Row="0" Grid.Column="0"
-                           Text="Name"
-                           Style="{StaticResource LabelSecondary}"
-                           VerticalOptions="Center"/>
-                    <Entry Grid.Row="0" Grid.Column="1"
-                           x:Name="MaterialNameEntry"
-                           Placeholder="Material name"/>
-
-                    <Label Grid.Row="1" Grid.Column="0"
                            Text="Shader"
-                           Style="{StaticResource LabelSecondary}"
-                           VerticalOptions="Center"/>
-                    <Picker Grid.Row="1" Grid.Column="1"
+                           Style="{StaticResource LabelSecondary}"/>
+                    <Picker Grid.Row="0" Grid.Column="1"
                             x:Name="ShaderPicker"
                             SelectedIndexChanged="OnShaderPickerChanged"/>
 
-                    <Label Grid.Row="2" Grid.Column="0"
-                           Text="Mode"
-                           Style="{StaticResource LabelSecondary}"
-                           VerticalOptions="Center"/>
-                    <Picker Grid.Row="2" Grid.Column="1"
+                    <Label Grid.Row="1" Grid.Column="0"
+                           Text="Rendering Mode"
+                           Style="{StaticResource LabelSecondary}"/>
+                    <Picker Grid.Row="1" Grid.Column="1"
                             x:Name="RenderingModePicker">
                         <Picker.Items>
                             <x:String>Opaque</x:String>
@@ -53,49 +46,52 @@
                         </Picker.Items>
                     </Picker>
 
-                    <Label Grid.Row="3" Grid.Column="0"
-                           Text="UV Set"
-                           Style="{StaticResource LabelSecondary}"
-                           VerticalOptions="Center"/>
-                    <Entry Grid.Row="3" Grid.Column="1"
-                           x:Name="UVSetEntry"
-                           Keyboard="Numeric"
-                           Text="0"/>
-
                 </Grid>
+                <BoxView Style="{StaticResource Divider}"/>
 
-                <BoxView HeightRequest="1" Color="{StaticResource Border}"/>
+                <!-- ── Dynamic shader-specific sections ─────────────────── -->
+                <VerticalStackLayout x:Name="ShaderSections" Spacing="0"/>
 
-                <!-- ── Dynamic properties ───────────────────────── -->
-                <Border BackgroundColor="{StaticResource PanelBackgroundAlt}"
-                        StrokeThickness="0"
-                        Padding="10,4">
-                    <Label Text="Properties" Style="{StaticResource SectionTitle}"/>
+                <!-- ── Material preview ──────────────────────────────────── -->
+                <Border x:Name="PreviewBorder"
+                        BackgroundColor="{StaticResource ViewportBackground}"
+                        Stroke="{StaticResource Border}"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 4"
+                        Margin="8,6,8,2"
+                        HeightRequest="160"
+                        IsVisible="False">
+                    <Image x:Name="PreviewImage"
+                           Aspect="AspectFit"
+                           Margin="4"/>
                 </Border>
-                <BoxView HeightRequest="1" Color="{StaticResource Border}"/>
-
-                <VerticalStackLayout x:Name="PropsStack" Padding="10,6" Spacing="6"/>
 
             </VerticalStackLayout>
         </ScrollView>
 
-        <BoxView Grid.Row="1" Color="{StaticResource Border}"/>
+        <BoxView Grid.Row="1" Style="{StaticResource Divider}"/>
 
-        <!-- ── Footer ───────────────────────────────────────────── -->
+        <!-- ── Footer ────────────────────────────────────────────────── -->
         <Border Grid.Row="2"
                 BackgroundColor="{StaticResource PanelBackgroundAlt}"
                 StrokeThickness="0"
                 Padding="8,0">
-            <Grid ColumnDefinitions="*,Auto">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
                 <Label x:Name="MaterialStatusLabel"
                        Grid.Column="0"
                        Text=""
                        Style="{StaticResource LabelSecondary}"
                        VerticalOptions="Center"/>
                 <Button Grid.Column="1"
+                        x:Name="RenderButton"
+                        Text="▶ Render"
+                        Style="{StaticResource FlatButton}"
+                        IsEnabled="False"
+                        Clicked="OnRenderClicked"/>
+                <Button Grid.Column="2"
                         x:Name="MaterialSaveButton"
-                        Text="Save"
-                        Style="{StaticResource SmallIconButton}"
+                        Text="Save .mat.json"
+                        Style="{StaticResource FlatButton}"
                         IsEnabled="False"
                         Clicked="OnSaveClicked"/>
             </Grid>

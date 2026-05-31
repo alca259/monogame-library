@@ -57,6 +57,15 @@ public sealed partial class AddBehaviourDialog : ContentPage
 
         // Namespace tree
         NamespaceNode root = BuildNamespaceTree(_registry.RegisteredTypes.Keys);
+
+        if (_expandedNamespaces.Count == 0 && root.Children.Count > 0)
+        {
+            List<string> allPaths = [];
+            CollectNamespacePaths(root.Children, allPaths);
+            for (int i = 0; i < allPaths.Count - 1; i++)
+                _expandedNamespaces.Add(allPaths[i]);
+        }
+
         FlattenNamespaceTree(root.Children, root.Types, _filtered, 0);
 
         // Pending types as flat entries at the bottom
@@ -64,6 +73,18 @@ public sealed partial class AddBehaviourDialog : ContentPage
                      .OrderBy(k => k, StringComparer.OrdinalIgnoreCase))
         {
             _filtered.Add(new BehaviourTreeNode($"~ {pending}", pending, true, 0));
+        }
+    }
+
+    private static void CollectNamespacePaths(
+        Dictionary<string, NamespaceNode> nodes,
+        List<string> paths)
+    {
+        foreach (KeyValuePair<string, NamespaceNode> kv in
+                     nodes.OrderBy(k => k.Key, StringComparer.Ordinal))
+        {
+            paths.Add(kv.Value.FullPath);
+            CollectNamespacePaths(kv.Value.Children, paths);
         }
     }
 

@@ -276,7 +276,6 @@ public sealed partial class AssetBrowserView : ContentView
 
         AssetInfo info = AssetClassifier.CreateInfo(dest, _contentRoot);
         _bus.Publish(new AssetImportedEvent(info));
-        LoadAssetsFromFolder();
     }
 
     private async void OnRenameAssetClicked(object sender, EventArgs e)
@@ -470,7 +469,6 @@ public sealed partial class AssetBrowserView : ContentView
             await File.WriteAllTextAsync(filePath, defaultContent);
             AssetInfo info = AssetClassifier.CreateInfo(filePath, _contentRoot);
             _bus.Publish(new AssetImportedEvent(info));
-            LoadAssetsFromFolder();
         }
         catch { }
     }
