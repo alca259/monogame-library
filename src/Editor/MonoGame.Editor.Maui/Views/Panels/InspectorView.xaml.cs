@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json;
 
 namespace MonoGame.Editor.Maui.Views.Panels;
@@ -12,11 +13,14 @@ public sealed partial class InspectorView : ContentView
     private EditorGameObject? _selected;
     private bool _suppressTransformEvents;
     private readonly HashSet<string> _collapsedBehaviours = [];
+    private readonly GameObjectRegistry _registry = new();
+    private bool _registryReady;
 
     private Action<GameObjectSelectedEvent>? _onObjectSelected;
     private Action<UndoPerformedEvent>?      _onUndo;
     private Action<RedoPerformedEvent>?      _onRedo;
     private Action<EditorStateChangedEvent>? _onStateChanged;
+    private Action<ProjectOpenedEvent>?      _onProjectOpened;
 
     private static readonly Color ActiveTabFg   = Color.FromArgb("#E6E6E8");
     private static readonly Color InactiveTabFg = Color.FromArgb("#9A9AA2");
@@ -31,8 +35,17 @@ public sealed partial class InspectorView : ContentView
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
-        if (Handler is not null) Subscribe();
-        else Unsubscribe();
+        if (Handler is not null)
+        {
+            Subscribe();
+            _registry.Scan();
+            if (EditorContext.Instance.ActiveProject is not null)
+                _ = ScanProjectAsync();
+        }
+        else
+        {
+            Unsubscribe();
+        }
     }
 
     // ── EventBus ─────────────────────────────────────────────────────────────
@@ -44,11 +57,13 @@ public sealed partial class InspectorView : ContentView
         _onRedo           = _ => MainThread.BeginInvokeOnMainThread(() => RefreshInspector());
         _onStateChanged   = e => MainThread.BeginInvokeOnMainThread(() =>
             InspectorContent.IsEnabled = e.NewState is EditorState.Editing);
+        _onProjectOpened  = evt => MainThread.BeginInvokeOnMainThread(() => _ = ScanProjectAsync());
 
         _bus.Subscribe(_onObjectSelected);
         _bus.Subscribe(_onUndo);
         _bus.Subscribe(_onRedo);
         _bus.Subscribe(_onStateChanged);
+        _bus.Subscribe(_onProjectOpened);
     }
 
     private void Unsubscribe()
@@ -57,6 +72,7 @@ public sealed partial class InspectorView : ContentView
         if (_onUndo           is not null) _bus.Unsubscribe(_onUndo);
         if (_onRedo           is not null) _bus.Unsubscribe(_onRedo);
         if (_onStateChanged   is not null) _bus.Unsubscribe(_onStateChanged);
+        if (_onProjectOpened  is not null) _bus.Unsubscribe(_onProjectOpened);
     }
 
     // ── Transform command wiring ──────────────────────────────────────────────
@@ -135,6 +151,64 @@ public sealed partial class InspectorView : ContentView
         BuildBehaviourCards();
     }
 
+    // ── Registry scanning ─────────────────────────────────────────────────────
+
+    private async Task ScanProjectAsync()
+    {
+        _registryReady = false;
+        _registry.Scan();
+
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+        if (project is null) { _registryReady = true; return; }
+
+        try
+        {
+            ProjectSettings settings = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
+            bool isDebug = settings.BuildConfiguration.Equals("Debug", StringComparison.OrdinalIgnoreCase);
+
+            if (isDebug)
+            {
+                await ScanProjectAssembliesAsync(project, settings).ConfigureAwait(true);
+
+                string sourceRoot = string.IsNullOrEmpty(project.GameSourcePath)
+                    ? project.RootPath
+                    : project.GameSourcePath;
+                await _registry.ScanSourceAsync(sourceRoot).ConfigureAwait(true);
+            }
+        }
+        catch (Exception) { }
+
+        _registryReady = true;
+        if (_selected is not null)
+            BuildBehaviourCards();
+    }
+
+    private async Task ScanProjectAssembliesAsync(EditorProject project, ProjectSettings settings)
+    {
+        try
+        {
+            string[] csprojFiles = Directory.GetFiles(project.RootPath, "*.csproj",
+                SearchOption.AllDirectories);
+
+            List<Task> tasks = [];
+            foreach (string csproj in csprojFiles)
+            {
+                string dir     = Path.GetDirectoryName(csproj) ?? string.Empty;
+                string dllName = Path.GetFileNameWithoutExtension(csproj) + ".dll";
+                string binDir  = Path.Combine(dir, "bin", settings.BuildConfiguration);
+                if (!Directory.Exists(binDir)) continue;
+
+                string? dllPath = Directory.GetFiles(binDir, dllName, SearchOption.AllDirectories)
+                    .FirstOrDefault();
+                if (dllPath is not null)
+                    tasks.Add(_registry.ScanFromAssemblyAsync(dllPath));
+            }
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+        }
+        catch (IOException) { }
+    }
+
     // ── Behaviour cards ───────────────────────────────────────────────────────
 
     private void BuildBehaviourCards()
@@ -144,7 +218,48 @@ public sealed partial class InspectorView : ContentView
         if (_selected is null) return;
 
         foreach (EditorBehaviour behaviour in _selected.Behaviours)
+        {
+            if (_registry.RegisteredTypes.TryGetValue(behaviour.TypeName, out Type? type))
+                EnsurePropertiesPopulated(behaviour, type);
             BehaviourCardsStack.Children.Add(BuildBehaviourCard(behaviour, _selected));
+        }
+    }
+
+    private static void EnsurePropertiesPopulated(EditorBehaviour behaviour, Type type)
+    {
+        PropertyInfo[] props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0
+                        && !behaviour.Properties.ContainsKey(p.Name))
+            .ToArray();
+
+        if (props.Length == 0) return;
+
+        object? instance = null;
+        try { instance = Activator.CreateInstance(type); } catch { }
+
+        foreach (PropertyInfo prop in props)
+        {
+            try
+            {
+                object? value = instance is not null ? prop.GetValue(instance) : null;
+                behaviour.Properties[prop.Name] = value is not null
+                    ? JsonSerializer.SerializeToElement(value, prop.PropertyType)
+                    : GetDefaultJsonElement(prop.PropertyType);
+            }
+            catch { }
+        }
+    }
+
+    private static JsonElement GetDefaultJsonElement(Type type)
+    {
+        if (type == typeof(bool))   return JsonSerializer.SerializeToElement(false);
+        if (type == typeof(string)) return JsonSerializer.SerializeToElement(string.Empty);
+        if (type.IsValueType)
+        {
+            try { return JsonSerializer.SerializeToElement(Activator.CreateInstance(type)!, type); }
+            catch { }
+        }
+        return JsonSerializer.SerializeToElement(string.Empty);
     }
 
     private View BuildBehaviourCard(EditorBehaviour behaviour, EditorGameObject owner)
@@ -177,8 +292,7 @@ public sealed partial class InspectorView : ContentView
             bool nowCollapsed = !_collapsedBehaviours.Contains(behaviour.TypeName);
             if (nowCollapsed) _collapsedBehaviours.Add(behaviour.TypeName);
             else              _collapsedBehaviours.Remove(behaviour.TypeName);
-            chevron.Text   = nowCollapsed ? "▶" : "▼";
-            body.IsVisible = !nowCollapsed;
+            BuildBehaviourCards();
         };
 
         Switch enabledSwitch = new()
@@ -400,10 +514,10 @@ public sealed partial class InspectorView : ContentView
         Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
         if (page is null) return;
 
-        GameObjectRegistry registry = new();
-        registry.Scan();
+        if (!_registryReady)
+            await ScanProjectAsync().ConfigureAwait(true);
 
-        string? typeName = await AddBehaviourDialog.ShowAsync(page.Navigation, registry);
+        string? typeName = await AddBehaviourDialog.ShowAsync(page.Navigation, _registry);
         if (string.IsNullOrEmpty(typeName)) return;
 
         EditorContext.Instance.Commands.Execute(

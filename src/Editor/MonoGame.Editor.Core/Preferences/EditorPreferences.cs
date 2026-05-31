@@ -95,6 +95,14 @@ public sealed class EditorPreferences
         Save();
     }
 
+    /// <summary>Elimina <paramref name="path"/> de <see cref="RecentProjects"/> y persiste inmediatamente.</summary>
+    public void RemoveRecentProject(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return;
+        if (!RecentProjects.Remove(path)) return;
+        Save();
+    }
+
     /// <summary>Serializa las preferencias actuales en disco.</summary>
     public void Save()
     {

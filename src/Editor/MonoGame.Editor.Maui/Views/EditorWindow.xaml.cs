@@ -114,6 +114,8 @@ public sealed partial class EditorWindow : ContentPage
                 win.Content.PointerWheelChanged += OnNativePointerWheelChanged;
                 win.Closed += (_, _) => SavePreferences();
             }
+
+            AttachSeparatorCursors();
         }
     }
 
@@ -619,7 +621,8 @@ public sealed partial class EditorWindow : ContentPage
     private void ToggleHierarchy()
     {
         _hierarchyVisible = !_hierarchyVisible;
-        BodyGrid.ColumnDefinitions[0].Width = new GridLength(_hierarchyVisible ? HierarchyWidth : 0);
+        double w = _hierarchyVisible ? Math.Max(_preferences.LeftPanelWidth, 120) : 0;
+        BodyGrid.ColumnDefinitions[0].Width = new GridLength(w);
         HierarchySep.IsVisible = _hierarchyVisible;
         SavePreferences();
     }
@@ -627,7 +630,8 @@ public sealed partial class EditorWindow : ContentPage
     private void ToggleInspector()
     {
         _inspectorVisible = !_inspectorVisible;
-        BodyGrid.ColumnDefinitions[4].Width = new GridLength(_inspectorVisible ? InspectorWidth : 0);
+        double w = _inspectorVisible ? Math.Max(_preferences.RightPanelWidth, 120) : 0;
+        BodyGrid.ColumnDefinitions[4].Width = new GridLength(w);
         InspectorSep.IsVisible = _inspectorVisible;
         SavePreferences();
     }
@@ -635,7 +639,8 @@ public sealed partial class EditorWindow : ContentPage
     private void ToggleDock()
     {
         _dockVisible = !_dockVisible;
-        MainGrid.RowDefinitions[3].Height = new GridLength(_dockVisible ? DockHeight : 0);
+        double h = _dockVisible ? Math.Max(_preferences.ConsolePanelHeight, 80) : 0;
+        MainGrid.RowDefinitions[3].Height = new GridLength(h);
         DockRow.IsVisible = _dockVisible;
         SavePreferences();
     }
@@ -651,6 +656,10 @@ public sealed partial class EditorWindow : ContentPage
         HierarchySep.IsVisible = true;
         InspectorSep.IsVisible = true;
         DockRow.IsVisible      = true;
+        _preferences.LeftPanelWidth     = (int)HierarchyWidth;
+        _preferences.RightPanelWidth    = (int)InspectorWidth;
+        _preferences.ConsolePanelHeight = (int)DockHeight;
+        SavePreferences();
     }
 
     #endregion
@@ -695,6 +704,18 @@ public sealed partial class EditorWindow : ContentPage
 
     private async Task OpenProjectByPathAsync(string path)
     {
+        if (!Directory.Exists(path))
+        {
+            bool remove = await this.DisplayAlertAsync(
+                "Project not found",
+                $"The project '{Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))}' could not be found at:\n{path}\n\nDo you want to remove it from recent projects?",
+                "Remove",
+                "Keep").ConfigureAwait(true);
+            if (remove)
+                _preferences.RemoveRecentProject(path);
+            return;
+        }
+
         try
         {
             EditorProject? project = await Task.Run(() => ProjectManager.Load(path)).ConfigureAwait(true);
@@ -1393,6 +1414,121 @@ public sealed partial class EditorWindow : ContentPage
     #endregion
 
     #region Panel resizing
+
+    // Attaches hover-highlight feedback and native resize-cursor to every separator strip.
+    private void AttachSeparatorCursors()
+    {
+        AddSeparatorDrag(
+            HierarchySep,
+            isVertical: true,
+            onDrag: (dx, _) =>
+            {
+                double newW = Math.Clamp(BodyGrid.ColumnDefinitions[0].Width.Value + dx, 120, 600);
+                BodyGrid.ColumnDefinitions[0].Width = new GridLength(newW);
+            },
+            onDragEnd: () =>
+            {
+                _preferences.LeftPanelWidth = (int)BodyGrid.ColumnDefinitions[0].Width.Value;
+                SavePreferences();
+            });
+
+        AddSeparatorDrag(
+            InspectorSep,
+            isVertical: true,
+            onDrag: (dx, _) =>
+            {
+                double newW = Math.Clamp(BodyGrid.ColumnDefinitions[4].Width.Value - dx, 120, 600);
+                BodyGrid.ColumnDefinitions[4].Width = new GridLength(newW);
+            },
+            onDragEnd: () =>
+            {
+                _preferences.RightPanelWidth = (int)BodyGrid.ColumnDefinitions[4].Width.Value;
+                SavePreferences();
+            });
+
+        AddSeparatorDrag(
+            DockSep,
+            isVertical: false,
+            onDrag: (_, dy) =>
+            {
+                double newH = Math.Clamp(MainGrid.RowDefinitions[3].Height.Value - dy, 80, 500);
+                MainGrid.RowDefinitions[3].Height = new GridLength(newH);
+            },
+            onDragEnd: () =>
+            {
+                _preferences.ConsolePanelHeight = (int)MainGrid.RowDefinitions[3].Height.Value;
+                SavePreferences();
+            });
+    }
+
+    private void AddSeparatorDrag(BoxView sep, bool isVertical,
+                                   Action<double, double> onDrag, Action onDragEnd)
+    {
+        Color idle  = Color.FromArgb("#34343A");
+        Color hover = Color.FromArgb("#4A9EFF");
+
+        PointerGestureRecognizer ptr = new();
+        ptr.PointerEntered += (_, _) => sep.Color = hover;
+        ptr.PointerExited  += (_, _) => sep.Color = idle;
+        sep.GestureRecognizers.Add(ptr);
+
+#if WINDOWS
+        sep.HandlerChanged += (_, _) =>
+        {
+            if (sep.Handler?.PlatformView is not Microsoft.UI.Xaml.UIElement uiEl) return;
+
+            var shape = isVertical
+                ? Microsoft.UI.Input.InputSystemCursorShape.SizeWestEast
+                : Microsoft.UI.Input.InputSystemCursorShape.SizeNorthSouth;
+            var cursor = Microsoft.UI.Input.InputSystemCursor.Create(shape);
+
+            // ProtectedCursor is protected; access via reflection so we don't need to subclass.
+            System.Reflection.PropertyInfo? prop = typeof(Microsoft.UI.Xaml.UIElement)
+                .GetProperty("ProtectedCursor",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            prop?.SetValue(uiEl, cursor);
+
+            // PanGestureRecognizer does not fire for left-click drag on Windows —
+            // wire native WinUI pointer events instead.
+            bool dragging = false;
+            double lastX  = 0;
+            double lastY  = 0;
+
+            uiEl.PointerPressed += (_, e) =>
+            {
+                var pt = e.GetCurrentPoint(null);
+                if (pt.Properties.PointerUpdateKind != Microsoft.UI.Input.PointerUpdateKind.LeftButtonPressed)
+                    return;
+                lastX = pt.Position.X;
+                lastY = pt.Position.Y;
+                uiEl.CapturePointer(e.Pointer);
+                dragging = true;
+            };
+
+            uiEl.PointerMoved += (_, e) =>
+            {
+                if (!dragging) return;
+                var pt = e.GetCurrentPoint(null);
+                double dx = pt.Position.X - lastX;
+                double dy = pt.Position.Y - lastY;
+                lastX = pt.Position.X;
+                lastY = pt.Position.Y;
+                if (Math.Abs(isVertical ? dx : dy) < 0.5) return;
+                onDrag(dx, dy);
+            };
+
+            uiEl.PointerReleased += (_, e) =>
+            {
+                if (!dragging) return;
+                dragging = false;
+                uiEl.ReleasePointerCapture(e.Pointer);
+                onDragEnd();
+            };
+
+            uiEl.PointerCaptureLost += (_, _) => dragging = false;
+        };
+#endif
+    }
 
     private void OnHierarchySepPanned(object sender, PanUpdatedEventArgs e)
     {
