@@ -1214,6 +1214,7 @@ public sealed partial class EditorWindow : ContentPage
     private void OnToggle2D(object sender, EventArgs e)
     {
         _is2D = !_is2D;
+        Toggle2DBtn.Text = _is2D ? "2D" : "2.5D";
         SetPillStyle(Toggle2DBtn, _is2D);
         EditorContext.Instance.Gizmos.IsDepthMode = !_is2D;
     }
@@ -1454,7 +1455,7 @@ public sealed partial class EditorWindow : ContentPage
                         Viewport.Invalidate();
                     }
                 }
-                else if (_activeTool == "Pan")
+                else if (_activeTool == "Pan" || !_is2D)
                 {
                     float zoom = _viewportRenderer.Camera.Zoom;
                     _viewportRenderer.Camera.Pan(
