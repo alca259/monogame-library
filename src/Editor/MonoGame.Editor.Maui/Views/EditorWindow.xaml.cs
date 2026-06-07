@@ -63,6 +63,9 @@ public sealed partial class EditorWindow : ContentPage
     private bool            _gizmoDragging;
 
     private bool   _pointerOverViewport;
+    private bool   _nativeViewportPanActive;
+    private double _nativeViewportPanLastX;
+    private double _nativeViewportPanLastY;
     private double _hierPanelWidth  = HierarchyWidth;
     private double _inspPanelWidth  = InspectorWidth;
     private double _dockPanelHeight = DockHeight;
@@ -221,6 +224,10 @@ public sealed partial class EditorWindow : ContentPage
                 break;
             case Windows.System.VirtualKey.Delete:
                 MainThread.BeginInvokeOnMainThread(OnDeleteSelected);
+                e.Handled = true;
+                break;
+            case Windows.System.VirtualKey.F:
+                MainThread.BeginInvokeOnMainThread(FocusOnSelected);
                 e.Handled = true;
                 break;
         }
@@ -1217,6 +1224,8 @@ public sealed partial class EditorWindow : ContentPage
         Toggle2DBtn.Text = _is2D ? "2D" : "2.5D";
         SetPillStyle(Toggle2DBtn, _is2D);
         EditorContext.Instance.Gizmos.IsDepthMode = !_is2D;
+        _viewportRenderer.Is2D = _is2D;
+        Viewport.Invalidate();
     }
 
     private void OnToggleSnap(object sender, EventArgs e) => OnToggleSnap();
@@ -1374,6 +1383,15 @@ public sealed partial class EditorWindow : ContentPage
 
     #region Viewport — input
 
+    private void FocusOnSelected()
+    {
+        EditorGameObject? sel = EditorContext.Instance.SelectedObject;
+        if (sel is null) return;
+        _viewportRenderer.Camera.Position =
+            new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y);
+        Viewport.Invalidate();
+    }
+
     private void OnViewportTapped(object sender, TappedEventArgs e)
     {
         if (EditorContext.Instance.Gizmos.Mode != GizmoMode.Select) return;
@@ -1455,7 +1473,7 @@ public sealed partial class EditorWindow : ContentPage
                         Viewport.Invalidate();
                     }
                 }
-                else if (_activeTool == "Pan" || !_is2D)
+                else if (_activeTool == "Pan")
                 {
                     float zoom = _viewportRenderer.Camera.Zoom;
                     _viewportRenderer.Camera.Pan(
@@ -1619,6 +1637,19 @@ public sealed partial class EditorWindow : ContentPage
     {
         var pt = e.GetCurrentPoint(null);
 
+        // Viewport pan con botón central o derecho
+        var kind = pt.Properties.PointerUpdateKind;
+        if (_pointerOverViewport &&
+            (kind == Microsoft.UI.Input.PointerUpdateKind.MiddleButtonPressed ||
+             kind == Microsoft.UI.Input.PointerUpdateKind.RightButtonPressed))
+        {
+            _nativeViewportPanActive = true;
+            _nativeViewportPanLastX  = pt.Position.X;
+            _nativeViewportPanLastY  = pt.Position.Y;
+            e.Handled = true;
+            return;
+        }
+
         if (pt.Properties.PointerUpdateKind
             != Microsoft.UI.Input.PointerUpdateKind.LeftButtonPressed) return;
 
@@ -1648,6 +1679,31 @@ public sealed partial class EditorWindow : ContentPage
     private void OnNativeSepDragMoved(object sender,
         Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
+        if (_nativeViewportPanActive)
+        {
+            var npt = e.GetCurrentPoint(null);
+            if (!npt.Properties.IsMiddleButtonPressed && !npt.Properties.IsRightButtonPressed)
+            {
+                _nativeViewportPanActive = false;
+                return;
+            }
+            double panDx = npt.Position.X - _nativeViewportPanLastX;
+            double panDy = npt.Position.Y - _nativeViewportPanLastY;
+            _nativeViewportPanLastX = npt.Position.X;
+            _nativeViewportPanLastY = npt.Position.Y;
+            if (Math.Abs(panDx) >= 0.5 || Math.Abs(panDy) >= 0.5)
+            {
+                float zoom = _viewportRenderer.Camera.Zoom;
+                Dispatcher.Dispatch(() =>
+                {
+                    _viewportRenderer.Camera.Pan(
+                        new Microsoft.Maui.Graphics.PointF((float)(-panDx / zoom), (float)(-panDy / zoom)));
+                    Viewport.Invalidate();
+                });
+            }
+            return;
+        }
+
         if (_activeSepOnDrag is null) return;
 
         var pt = e.GetCurrentPoint(null);
@@ -1675,6 +1731,12 @@ public sealed partial class EditorWindow : ContentPage
     private void OnNativeSepDragReleased(object sender,
         Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
+        if (_nativeViewportPanActive)
+        {
+            _nativeViewportPanActive = false;
+            return;
+        }
+
         if (_activeSepOnDrag is null) return;
         var endAction   = _activeSepOnDragEnd;
         _activeSepOnDrag    = null;

@@ -10,9 +10,14 @@ public sealed class ViewportRenderer : IDrawable
 
     public int GridCellSize { get; set; } = 26;
 
+    public bool Is2D { get; set; } = true;
+
     public void Draw(ICanvas canvas, RectF rect)
     {
-        DrawGrid(canvas, rect);
+        if (Is2D)
+            DrawGrid(canvas, rect);
+        else
+            DrawPerspectiveGrid(canvas, rect);
         DrawSceneObjects(canvas, rect);
 
         EditorGameObject? selected = EditorContext.Instance.SelectedObject;
@@ -27,7 +32,7 @@ public sealed class ViewportRenderer : IDrawable
         DrawGizmo(canvas, rect);
     }
 
-    // ── Grid (no crosshair) ──────────────────────────────────────────────────
+    // ── Orthographic grid (2D mode) ──────────────────────────────────────────
 
     private void DrawGrid(ICanvas canvas, RectF rect)
     {
@@ -53,6 +58,59 @@ public sealed class ViewportRenderer : IDrawable
         {
             PointF sp = Camera.WorldToScreen(new PointF(0, wy), size);
             canvas.DrawLine(rect.Left, sp.Y, rect.Right, sp.Y);
+        }
+    }
+
+    // ── Perspective grid (2.5D mode) ─────────────────────────────────────────
+
+    private void DrawPerspectiveGrid(ICanvas canvas, RectF rect)
+    {
+        // Single vanishing point: world origin projected to screen.
+        // Camera.Position.X pans the VP horizontally; Camera.Position.Y raises/lowers the horizon.
+        float vpX      = rect.Width  * 0.5f - Camera.Position.X * Camera.Zoom;
+        float horizonY = rect.Height * 0.38f - Camera.Position.Y * Camera.Zoom * 0.35f;
+        horizonY = Math.Clamp(horizonY, rect.Top + 16f, rect.Bottom - 24f);
+
+        float floorH = rect.Bottom - horizonY;
+        if (floorH < 2f) return;
+
+        Color gridFaint = ResolveColor("Border").WithAlpha(0.20f);
+        Color gridMid   = ResolveColor("Border").WithAlpha(0.38f);
+        Color horizClr  = ResolveColor("AccentBlue").WithAlpha(0.55f);
+
+        // Horizon line
+        canvas.StrokeColor = horizClr;
+        canvas.StrokeSize  = 1.5f;
+        canvas.DrawLine(rect.Left, horizonY, rect.Right, horizonY);
+
+        canvas.StrokeSize = 1f;
+        float step = Math.Max(GridCellSize * Camera.Zoom, 6f);
+
+        // Radial lines (X-axis): fan from VP down to bottom edge, spaced by step at the bottom
+        float bLeft  = rect.Left  - step;
+        float bRight = rect.Right + step;
+        float startX = MathF.Floor((bLeft - vpX) / step) * step + vpX;
+        for (float bx = startX; bx <= bRight; bx += step)
+        {
+            bool isAxis = MathF.Abs(bx - vpX) < step * 0.5f;
+            canvas.StrokeColor = isAxis ? gridMid : gridFaint;
+            canvas.DrawLine(vpX, horizonY, bx, rect.Bottom);
+        }
+
+        // Depth cross-lines (Z-axis): horizontal bands, perspective-compressed near horizon
+        int depthLines = Math.Clamp((int)(floorH / step), 6, 28);
+        for (int i = 1; i <= depthLines; i++)
+        {
+            float t  = (float)i / (depthLines + 1);
+            float sy = horizonY + t * t * floorH;           // t² → denser near horizon
+
+            float tWidth = (sy - horizonY) / floorH;        // 0 at horizon, 1 at bottom
+            float halfW  = tWidth * rect.Width * 1.1f;
+            float x0 = Math.Max(vpX - halfW, rect.Left  - 10f);
+            float x1 = Math.Min(vpX + halfW, rect.Right + 10f);
+
+            canvas.StrokeColor = gridFaint;
+            canvas.DrawLine(x0, sy, x1, sy);
         }
     }
 
@@ -272,7 +330,7 @@ public sealed class ViewportRenderer : IDrawable
 
     // ── Axis gizmo, bottom-left ───────────────────────────────────────────────
 
-    private static void DrawGizmo(ICanvas canvas, RectF rect)
+    private void DrawGizmo(ICanvas canvas, RectF rect)
     {
         float ox = 28, oy = rect.Height - 28, len = 22;
         canvas.StrokeSize = 2;
@@ -289,7 +347,7 @@ public sealed class ViewportRenderer : IDrawable
         canvas.StrokeColor = axisY;
         canvas.DrawLine(ox, oy, ox, oy - len);
         canvas.FontColor = axisY;
-        canvas.DrawString("y", ox, oy - len - 10, HorizontalAlignment.Center);
+        canvas.DrawString(Is2D ? "y" : "z", ox, oy - len - 10, HorizontalAlignment.Center);
 
         canvas.FillColor = axisX;
         canvas.FillCircle(ox, oy, 2.5f);
