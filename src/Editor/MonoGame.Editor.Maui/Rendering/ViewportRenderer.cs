@@ -2,22 +2,28 @@ namespace MonoGame.Editor.Maui.Rendering;
 
 /// <summary>
 /// IDrawable del viewport: grid sutil, previsualización de objetos de escena,
-/// selection box con 8 handles y rotation handle, y gizmo de ejes (esquina inferior izquierda).
+/// selection box con 8 handles y rotation handle, gizmo de ejes (esquina inferior izquierda)
+/// y gizmo de orientación interactivo (esquina superior derecha).
 /// </summary>
 public sealed class ViewportRenderer : IDrawable
 {
+    // ── Layout constants del gizmo de orientación ────────────────────────────
+    private const float OGizmoCenterOffsetX = 52f; // desde rect.Right
+    private const float OGizmoCenterOffsetY = 52f; // desde rect.Top
+    private const float OGizmoSpokeRadius   = 28f;
+    private const float OGizmoHitRadius     = 12f;
+
     public EditorCamera2D Camera { get; } = new();
 
     public int GridCellSize { get; set; } = 26;
 
-    public bool Is2D { get; set; } = true;
+    /// <summary>Plano ortográfico activo. Controla qué ejes del mundo se muestran y qué propiedades
+    /// afectan el arrastre del gizmo de transformación.</summary>
+    public ViewOrientation Orientation { get; set; } = ViewOrientation.Front;
 
     public void Draw(ICanvas canvas, RectF rect)
     {
-        if (Is2D)
-            DrawGrid(canvas, rect);
-        else
-            DrawPerspectiveGrid(canvas, rect);
+        DrawGrid(canvas, rect);
         DrawSceneObjects(canvas, rect);
 
         EditorGameObject? selected = EditorContext.Instance.SelectedObject;
@@ -30,9 +36,10 @@ public sealed class ViewportRenderer : IDrawable
         }
 
         DrawGizmo(canvas, rect);
+        DrawOrientationGizmo(canvas, rect);
     }
 
-    // ── Orthographic grid (2D mode) ──────────────────────────────────────────
+    // ── Grid ortográfico ─────────────────────────────────────────────────────
 
     private void DrawGrid(ICanvas canvas, RectF rect)
     {
@@ -43,7 +50,7 @@ public sealed class ViewportRenderer : IDrawable
         canvas.StrokeSize  = 1;
 
         SizeF  size = new(rect.Width, rect.Height);
-        PointF tl   = Camera.ScreenToWorld(new PointF(rect.Left, rect.Top),    size);
+        PointF tl   = Camera.ScreenToWorld(new PointF(rect.Left, rect.Top),     size);
         PointF br   = Camera.ScreenToWorld(new PointF(rect.Right, rect.Bottom), size);
 
         float startX = MathF.Floor(tl.X / GridCellSize) * GridCellSize;
@@ -61,58 +68,18 @@ public sealed class ViewportRenderer : IDrawable
         }
     }
 
-    // ── Perspective grid (2.5D mode) ─────────────────────────────────────────
+    // ── Proyección según orientación ─────────────────────────────────────────
 
-    private void DrawPerspectiveGrid(ICanvas canvas, RectF rect)
+    /// <summary>
+    /// Devuelve el punto 2D en espacio de mundo que representa el centro del objeto
+    /// para la orientación activa, listo para pasarlo a <see cref="EditorCamera2D.WorldToScreen"/>.
+    /// </summary>
+    private PointF GetWorldCenter(EditorGameObject obj) => Orientation switch
     {
-        // Single vanishing point: world origin projected to screen.
-        // Camera.Position.X pans the VP horizontally; Camera.Position.Y raises/lowers the horizon.
-        float vpX      = rect.Width  * 0.5f - Camera.Position.X * Camera.Zoom;
-        float horizonY = rect.Height * 0.38f - Camera.Position.Y * Camera.Zoom * 0.35f;
-        horizonY = Math.Clamp(horizonY, rect.Top + 16f, rect.Bottom - 24f);
-
-        float floorH = rect.Bottom - horizonY;
-        if (floorH < 2f) return;
-
-        Color gridFaint = ResolveColor("Border").WithAlpha(0.20f);
-        Color gridMid   = ResolveColor("Border").WithAlpha(0.38f);
-        Color horizClr  = ResolveColor("AccentBlue").WithAlpha(0.55f);
-
-        // Horizon line
-        canvas.StrokeColor = horizClr;
-        canvas.StrokeSize  = 1.5f;
-        canvas.DrawLine(rect.Left, horizonY, rect.Right, horizonY);
-
-        canvas.StrokeSize = 1f;
-        float step = Math.Max(GridCellSize * Camera.Zoom, 6f);
-
-        // Radial lines (X-axis): fan from VP down to bottom edge, spaced by step at the bottom
-        float bLeft  = rect.Left  - step;
-        float bRight = rect.Right + step;
-        float startX = MathF.Floor((bLeft - vpX) / step) * step + vpX;
-        for (float bx = startX; bx <= bRight; bx += step)
-        {
-            bool isAxis = MathF.Abs(bx - vpX) < step * 0.5f;
-            canvas.StrokeColor = isAxis ? gridMid : gridFaint;
-            canvas.DrawLine(vpX, horizonY, bx, rect.Bottom);
-        }
-
-        // Depth cross-lines (Z-axis): horizontal bands, perspective-compressed near horizon
-        int depthLines = Math.Clamp((int)(floorH / step), 6, 28);
-        for (int i = 1; i <= depthLines; i++)
-        {
-            float t  = (float)i / (depthLines + 1);
-            float sy = horizonY + t * t * floorH;           // t² → denser near horizon
-
-            float tWidth = (sy - horizonY) / floorH;        // 0 at horizon, 1 at bottom
-            float halfW  = tWidth * rect.Width * 1.1f;
-            float x0 = Math.Max(vpX - halfW, rect.Left  - 10f);
-            float x1 = Math.Min(vpX + halfW, rect.Right + 10f);
-
-            canvas.StrokeColor = gridFaint;
-            canvas.DrawLine(x0, sy, x1, sy);
-        }
-    }
+        ViewOrientation.Top   => new PointF(obj.Position.X, obj.PositionZ),
+        ViewOrientation.Right => new PointF(obj.PositionZ,  obj.Position.Y),
+        _                     => new PointF(obj.Position.X, obj.Position.Y),
+    };
 
     // ── Scene objects (placeholder rects) ────────────────────────────────────
 
@@ -143,8 +110,9 @@ public sealed class ViewportRenderer : IDrawable
         float halfW = defaultHalfSize * obj.Scale.X;
         float halfH = defaultHalfSize * obj.Scale.Y;
 
-        PointF topLeft  = Camera.WorldToScreen(new PointF(obj.Position.X - halfW, obj.Position.Y - halfH), viewSize);
-        PointF botRight = Camera.WorldToScreen(new PointF(obj.Position.X + halfW, obj.Position.Y + halfH), viewSize);
+        PointF wc       = GetWorldCenter(obj);
+        PointF topLeft  = Camera.WorldToScreen(new PointF(wc.X - halfW, wc.Y - halfH), viewSize);
+        PointF botRight = Camera.WorldToScreen(new PointF(wc.X + halfW, wc.Y + halfH), viewSize);
 
         if (topLeft.X > clipRect.Right || botRight.X < clipRect.Left) return;
         if (topLeft.Y > clipRect.Bottom || botRight.Y < clipRect.Top) return;
@@ -167,8 +135,9 @@ public sealed class ViewportRenderer : IDrawable
         float halfH = defaultHalfSize * obj.Scale.Y;
 
         SizeF  viewSize = new(rect.Width, rect.Height);
-        PointF tl = Camera.WorldToScreen(new PointF(obj.Position.X - halfW, obj.Position.Y - halfH), viewSize);
-        PointF br = Camera.WorldToScreen(new PointF(obj.Position.X + halfW, obj.Position.Y + halfH), viewSize);
+        PointF wc = GetWorldCenter(obj);
+        PointF tl = Camera.WorldToScreen(new PointF(wc.X - halfW, wc.Y - halfH), viewSize);
+        PointF br = Camera.WorldToScreen(new PointF(wc.X + halfW, wc.Y + halfH), viewSize);
 
         return new SelectionInfo(new RectF(tl.X, tl.Y, br.X - tl.X, br.Y - tl.Y), obj.Rotation);
     }
@@ -217,7 +186,7 @@ public sealed class ViewportRenderer : IDrawable
         if (mode is GizmoMode.Select or GizmoMode.Rect) return;
 
         SizeF  viewSize = new(rect.Width, rect.Height);
-        PointF o  = Camera.WorldToScreen(new PointF(selected.Position.X, selected.Position.Y), viewSize);
+        PointF o  = Camera.WorldToScreen(GetWorldCenter(selected), viewSize);
         float  ox = o.X, oy = o.Y;
         float  len = GizmoController.ArrowLength;
 
@@ -225,56 +194,44 @@ public sealed class ViewportRenderer : IDrawable
         Color axisY  = ResolveColor("AxisGreen");
         Color accent = ResolveColor("AccentBlue");
 
+        // Determine labels for the two visible axes based on orientation
+        (string labelX, string labelY) = Orientation switch
+        {
+            ViewOrientation.Top   => ("x", "z"),
+            ViewOrientation.Right => ("z", "y"),
+            _                     => ("x", "y"),
+        };
+
         switch (mode)
         {
             case GizmoMode.Move:
             {
-                // X axis arrow (red)
+                // X arm (red)
                 canvas.StrokeColor = axisX;
                 canvas.StrokeSize  = 2;
                 canvas.DrawLine(ox, oy, ox + len, oy);
                 canvas.FillColor = axisX;
                 canvas.FillRectangle(ox + len, oy - 6, 12, 12);
+                canvas.FontColor = axisX;
+                canvas.FontSize  = 9;
+                canvas.DrawString(labelX, ox + len + 14, oy, HorizontalAlignment.Left);
 
-                // Y axis arrow (green, screen-Y up)
+                // Y arm (green, screen-Y up)
                 canvas.StrokeColor = axisY;
+                canvas.StrokeSize  = 2;
                 canvas.DrawLine(ox, oy, ox, oy - len);
                 canvas.FillColor = axisY;
                 canvas.FillRectangle(ox - 6, oy - len - 12, 12, 12);
+                canvas.FontColor = axisY;
+                canvas.DrawString(labelY, ox, oy - len - 22, HorizontalAlignment.Center);
 
-                // XY free-move square (yellow)
+                // Free-move square (yellow)
                 Color yellow = Color.FromArgb("#FFEE44");
                 canvas.FillColor   = yellow.WithAlpha(0.55f);
                 canvas.FillRectangle(ox + 12, oy - 28, 16, 16);
                 canvas.StrokeColor = yellow;
                 canvas.StrokeSize  = 1;
                 canvas.DrawRectangle(ox + 12, oy - 28, 16, 16);
-
-                // Z (depth) diamond handle — only in 2.5D depth mode
-                if (EditorContext.Instance.Gizmos.IsDepthMode)
-                {
-                    float zhx  = ox + GizmoController.ZHandleOffsetX;
-                    float zhy  = oy - GizmoController.ArrowLength;
-                    float half = GizmoController.ZHandleSize / 2f;
-
-                    // Connecting line from origin to diamond
-                    canvas.StrokeColor = accent;
-                    canvas.StrokeSize  = 1.5f;
-                    canvas.DrawLine(ox, oy, zhx, zhy);
-
-                    // Diamond shape
-                    PathF diamond = new();
-                    diamond.MoveTo(zhx,        zhy - half);
-                    diamond.LineTo(zhx + half, zhy);
-                    diamond.LineTo(zhx,        zhy + half);
-                    diamond.LineTo(zhx - half, zhy);
-                    diamond.Close();
-                    canvas.FillColor = accent.WithAlpha(0.7f);
-                    canvas.FillPath(diamond);
-                    canvas.StrokeColor = accent;
-                    canvas.StrokeSize  = 1;
-                    canvas.DrawPath(diamond);
-                }
 
                 break;
             }
@@ -286,10 +243,9 @@ public sealed class ViewportRenderer : IDrawable
                 canvas.StrokeSize  = 2;
                 canvas.DrawCircle(ox, oy, r);
 
-                // Orientation line — points in the direction of the object's current rotation
                 float rad  = selected.Rotation * MathF.PI / 180f;
                 float endX = ox + r * MathF.Cos(rad);
-                float endY = oy + r * MathF.Sin(rad); // screen Y increases downward, matches Atan2 convention
+                float endY = oy + r * MathF.Sin(rad);
                 canvas.StrokeColor = accent;
                 canvas.DrawLine(ox, oy, endX, endY);
                 canvas.FillColor = Colors.White;
@@ -304,20 +260,17 @@ public sealed class ViewportRenderer : IDrawable
                 float sh  = GizmoController.ScaleHandleSize;
                 float hsh = sh / 2f;
 
-                // X arm + end handle (red)
                 canvas.StrokeColor = axisX;
                 canvas.StrokeSize  = 2;
                 canvas.DrawLine(ox, oy, ox + len, oy);
                 canvas.FillColor = axisX;
                 canvas.FillRectangle(ox + len - hsh, oy - hsh, sh, sh);
 
-                // Y arm + end handle (green)
                 canvas.StrokeColor = axisY;
                 canvas.DrawLine(ox, oy, ox, oy - len);
                 canvas.FillColor = axisY;
                 canvas.FillRectangle(ox - hsh, oy - len - hsh, sh, sh);
 
-                // Center handle (white — uniform scale)
                 canvas.FillColor   = Colors.White;
                 canvas.StrokeColor = Colors.Gray;
                 canvas.StrokeSize  = 1;
@@ -328,7 +281,7 @@ public sealed class ViewportRenderer : IDrawable
         }
     }
 
-    // ── Axis gizmo, bottom-left ───────────────────────────────────────────────
+    // ── Axis gizmo, esquina inferior-izquierda ────────────────────────────────
 
     private void DrawGizmo(ICanvas canvas, RectF rect)
     {
@@ -338,19 +291,130 @@ public sealed class ViewportRenderer : IDrawable
         Color axisX = ResolveColor("AxisRed");
         Color axisY = ResolveColor("AxisGreen");
 
+        (string labelX, string labelY) = Orientation switch
+        {
+            ViewOrientation.Top   => ("x", "z"),
+            ViewOrientation.Right => ("z", "y"),
+            _                     => ("x", "y"),
+        };
+
         canvas.StrokeColor = axisX;
         canvas.DrawLine(ox, oy, ox + len, oy);
         canvas.FontColor = axisX;
         canvas.FontSize  = 10;
-        canvas.DrawString("x", ox + len + 4, oy, HorizontalAlignment.Left);
+        canvas.DrawString(labelX, ox + len + 4, oy, HorizontalAlignment.Left);
 
         canvas.StrokeColor = axisY;
         canvas.DrawLine(ox, oy, ox, oy - len);
         canvas.FontColor = axisY;
-        canvas.DrawString(Is2D ? "y" : "z", ox, oy - len - 10, HorizontalAlignment.Center);
+        canvas.DrawString(labelY, ox, oy - len - 10, HorizontalAlignment.Center);
 
         canvas.FillColor = axisX;
         canvas.FillCircle(ox, oy, 2.5f);
+    }
+
+    // ── Gizmo de orientación, esquina superior-derecha ────────────────────────
+
+    /// <summary>
+    /// Dibuja el gizmo de orientación estilo Unity en la esquina superior-derecha.
+    /// Es puramente visual; el hit-test se resuelve por separado en <see cref="OrientationGizmoHitTest"/>.
+    /// </summary>
+    private void DrawOrientationGizmo(ICanvas canvas, RectF rect)
+    {
+        float gcx = rect.Right  - OGizmoCenterOffsetX;
+        float gcy = rect.Top    + OGizmoCenterOffsetY;
+        float r   = OGizmoSpokeRadius;
+
+        Color cX = ResolveColor("AxisRed");
+        Color cY = ResolveColor("AxisGreen");
+        Color cZ = Color.FromArgb("#4488FF");     // azul para Z
+
+        // Posiciones de las puntas de los tres spokes (X, Y, Z)
+        PointF tipX = new(gcx + r,          gcy);
+        PointF tipY = new(gcx,              gcy - r);
+        PointF tipZ = new(gcx - r * 0.65f,  gcy + r * 0.65f); // diagonal inferior-izquierda
+
+        // El eje "mirando hacia la cámara" se muestra como círculo; los demás como flecha
+        bool xIsEye = Orientation == ViewOrientation.Right;
+        bool yIsEye = Orientation == ViewOrientation.Top;
+        bool zIsEye = Orientation == ViewOrientation.Front;
+
+        canvas.StrokeSize = 2;
+
+        DrawOGizmoSpoke(canvas, gcx, gcy, tipX, cX, "x", xIsEye);
+        DrawOGizmoSpoke(canvas, gcx, gcy, tipY, cY, "y", yIsEye);
+        DrawOGizmoSpoke(canvas, gcx, gcy, tipZ, cZ, "z", zIsEye);
+
+        // Punto central
+        canvas.FillColor = ResolveColor("Border").WithAlpha(0.5f);
+        canvas.FillCircle(gcx, gcy, 4f);
+
+        // Etiqueta de vista activa
+        string viewLabel = Orientation switch
+        {
+            ViewOrientation.Top   => "Top",
+            ViewOrientation.Right => "Right",
+            _                     => "Front",
+        };
+        canvas.FontColor = ResolveColor("Border").WithAlpha(0.9f);
+        canvas.FontSize  = 10;
+        canvas.DrawString(viewLabel, gcx, gcy + r + 12, HorizontalAlignment.Center);
+    }
+
+    private static void DrawOGizmoSpoke(
+        ICanvas canvas, float cx, float cy, PointF tip,
+        Color color, string label, bool isEye)
+    {
+        canvas.StrokeColor = isEye ? color : color.WithAlpha(0.65f);
+        canvas.DrawLine(cx, cy, tip.X, tip.Y);
+
+        if (isEye)
+        {
+            canvas.FillColor = color;
+            canvas.FillCircle(tip.X, tip.Y, 5.5f);
+            canvas.StrokeColor = color;
+            canvas.DrawCircle(tip.X, tip.Y, 5.5f);
+        }
+        else
+        {
+            canvas.FillColor = color;
+            canvas.FillCircle(tip.X, tip.Y, 4.5f);
+        }
+
+        canvas.FontColor = color;
+        canvas.FontSize  = 10;
+        float labelX = tip.X + (tip.X > cx ? 8f : tip.X < cx ? -8f : 0f);
+        float labelY = tip.Y + (tip.Y > cy ? 6f : -14f);
+        canvas.DrawString(label, labelX, labelY, HorizontalAlignment.Center);
+    }
+
+    // ── Hit-test del gizmo de orientación ─────────────────────────────────────
+
+    /// <summary>
+    /// Comprueba si <paramref name="click"/> toca uno de los spokes del gizmo de orientación.
+    /// Devuelve la nueva <see cref="ViewOrientation"/> o <c>null</c> si no hay hit.
+    /// </summary>
+    public ViewOrientation? OrientationGizmoHitTest(PointF click, RectF viewportRect)
+    {
+        float gcx = viewportRect.Right  - OGizmoCenterOffsetX;
+        float gcy = viewportRect.Top    + OGizmoCenterOffsetY;
+        float r   = OGizmoSpokeRadius;
+
+        PointF tipX = new(gcx + r,          gcy);
+        PointF tipY = new(gcx,              gcy - r);
+        PointF tipZ = new(gcx - r * 0.65f,  gcy + r * 0.65f);
+
+        if (DistSq(click, tipX) <= OGizmoHitRadius * OGizmoHitRadius) return ViewOrientation.Right;
+        if (DistSq(click, tipY) <= OGizmoHitRadius * OGizmoHitRadius) return ViewOrientation.Top;
+        if (DistSq(click, tipZ) <= OGizmoHitRadius * OGizmoHitRadius) return ViewOrientation.Front;
+
+        return null;
+    }
+
+    private static float DistSq(PointF a, PointF b)
+    {
+        float dx = a.X - b.X, dy = a.Y - b.Y;
+        return dx * dx + dy * dy;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

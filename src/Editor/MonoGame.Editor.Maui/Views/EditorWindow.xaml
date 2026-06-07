@@ -76,8 +76,6 @@
                          Margin="6,0" VerticalOptions="Center"/>
 
                 <!-- Mode toggles -->
-                <Button x:Name="Toggle2DBtn"   Text="2D"   Style="{StaticResource ActivePillButton}" Clicked="OnToggle2D"
-                        ToolTipProperties.Text="Toggle 2D Mode"/>
                 <Button x:Name="ToggleSnapBtn" Text="SNAP" Style="{StaticResource PillButton}"       Clicked="OnToggleSnap"
                         ToolTipProperties.Text="Snap to Grid (G)"/>
                 <Button x:Name="ToggleNavBtn"  Text="NAV"  Style="{StaticResource PillButton}"       Clicked="OnToggleNav"

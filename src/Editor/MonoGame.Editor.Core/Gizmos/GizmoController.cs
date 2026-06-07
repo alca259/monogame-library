@@ -56,8 +56,8 @@ public sealed class GizmoController
         set => _gridCellSize = Math.Max(1f, value);
     }
 
-    /// <summary>Cuando es <c>true</c> (modo 2.5D), el gizmo de movimiento expone una manija de profundidad Z.</summary>
-    public bool IsDepthMode { get; set; }
+    /// <summary>Orientación ortográfica activa del viewport. Determina qué propiedad de mundo afecta cada eje del gizmo.</summary>
+    public ViewOrientation Orientation { get; set; } = ViewOrientation.Front;
 
     /// <summary>Cuando es <c>true</c>, las operaciones de transformación se ajustan a pasos de cuadrícula/ángulo/escala durante el arrastre.</summary>
     public bool SnapEnabled { get; set; }
@@ -85,7 +85,7 @@ public sealed class GizmoController
     {
         if (Mode == GizmoMode.Select || Mode == GizmoMode.Rect) return false;
 
-        GizmoDragAxis axis = HitTest(clickScreenX, clickScreenY, objScreenX, objScreenY, Mode, IsDepthMode);
+        GizmoDragAxis axis = HitTest(clickScreenX, clickScreenY, objScreenX, objScreenY, Mode);
         if (axis == GizmoDragAxis.None) return false;
 
         lock (_lock)
@@ -139,23 +139,48 @@ public sealed class GizmoController
         switch (axis)
         {
             case GizmoDragAxis.X:
-                selected.Position = new EditorVector2(posStartX + dx, posStartY);
-                if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
+                if (Orientation == ViewOrientation.Right)
+                {
+                    selected.PositionZ = posStartZ + dx;
+                }
+                else
+                {
+                    selected.Position = new EditorVector2(posStartX + dx, posStartY);
+                    if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
+                }
                 break;
 
             case GizmoDragAxis.Y:
-                selected.Position = new EditorVector2(posStartX, posStartY + dy);
-                if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
+                if (Orientation == ViewOrientation.Top)
+                {
+                    // Drag up (dy < 0) = aumentar Z (más profundidad / más lejos)
+                    selected.PositionZ = posStartZ - dy;
+                }
+                else
+                {
+                    selected.Position = new EditorVector2(posStartX, posStartY + dy);
+                    if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
+                }
                 break;
 
             case GizmoDragAxis.XY:
-                selected.Position = new EditorVector2(posStartX + dx, posStartY + dy);
-                if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
-                break;
-
-            case GizmoDragAxis.Z:
-                // Arrastrar hacia arriba (decrece screenY) = aumentar valor de profundidad (más lejos del observador).
-                selected.PositionZ = posStartZ - dy;
+                if (Orientation == ViewOrientation.Top)
+                {
+                    selected.Position  = new EditorVector2(posStartX + dx, posStartY);
+                    selected.PositionZ = posStartZ - dy;
+                    if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
+                }
+                else if (Orientation == ViewOrientation.Right)
+                {
+                    selected.Position  = new EditorVector2(posStartX, posStartY + dy);
+                    selected.PositionZ = posStartZ + dx;
+                    if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
+                }
+                else
+                {
+                    selected.Position = new EditorVector2(posStartX + dx, posStartY + dy);
+                    if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
+                }
                 break;
 
             case GizmoDragAxis.Rotate:
@@ -235,18 +260,29 @@ public sealed class GizmoController
         EditorVector2 startPos   = new(posStartX, posStartY);
         EditorVector2 startScale = new(scaleStartX, scaleStartY);
 
+        // Produce the most appropriate undo command based on axis + orientation.
+        // For combined XY drags in non-Front views both position and PositionZ change;
+        // we prioritise the MoveEntityCommand (position) since it covers the majority of cases.
         return axis switch
         {
+            GizmoDragAxis.X when Orientation == ViewOrientation.Right
+                => new MoveEntityZCommand(selected, posStartZ, selected.PositionZ),
+
+            GizmoDragAxis.Y when Orientation == ViewOrientation.Top
+                => new MoveEntityZCommand(selected, posStartZ, selected.PositionZ),
+
             GizmoDragAxis.X or GizmoDragAxis.Y or GizmoDragAxis.XY
                 => new MoveEntityCommand(selected, startPos, selected.Position),
+
             GizmoDragAxis.Z
                 => new MoveEntityZCommand(selected, posStartZ, selected.PositionZ),
+
             GizmoDragAxis.Rotate
                 => new RotateEntityCommand(selected, rotStart, selected.Rotation),
-            GizmoDragAxis.ScaleX or GizmoDragAxis.ScaleY
+
+            GizmoDragAxis.ScaleX or GizmoDragAxis.ScaleY or GizmoDragAxis.ScaleUniform
                 => new ScaleEntityCommand(selected, startScale, selected.Scale),
-            GizmoDragAxis.ScaleUniform
-                => new ScaleEntityCommand(selected, startScale, selected.Scale),
+
             _ => null,
         };
     }
@@ -262,29 +298,14 @@ public sealed class GizmoController
 
     // ── Prueba de colisión ────────────────────────────────────────────────────
 
-    private static GizmoDragAxis HitTest(float px, float py, float ox, float oy, GizmoMode mode, bool isDepthMode) =>
+    private static GizmoDragAxis HitTest(float px, float py, float ox, float oy, GizmoMode mode) =>
         mode switch
         {
-            GizmoMode.Move when isDepthMode => HitTestMoveWithZ(px, py, ox, oy),
             GizmoMode.Move   => HitTestMove(px, py, ox, oy),
             GizmoMode.Rotate => HitTestRotate(px, py, ox, oy),
             GizmoMode.Scale  => HitTestScale(px, py, ox, oy),
             _                => GizmoDragAxis.None,
         };
-
-    private static GizmoDragAxis HitTestMoveWithZ(float px, float py, float ox, float oy)
-    {
-        GizmoDragAxis result = HitTestMove(px, py, ox, oy);
-        return result != GizmoDragAxis.None ? result : HitTestZHandle(px, py, ox, oy);
-    }
-
-    private static GizmoDragAxis HitTestZHandle(float px, float py, float ox, float oy)
-    {
-        float hx = ox + ZHandleOffsetX;
-        float hy = oy - ArrowLength;
-        float h  = ZHandleSize / 2f + 4f;
-        return InRect(px, py, hx - h, hy - h, h * 2f, h * 2f) ? GizmoDragAxis.Z : GizmoDragAxis.None;
-    }
 
     private static GizmoDragAxis HitTestMove(float px, float py, float ox, float oy)
     {

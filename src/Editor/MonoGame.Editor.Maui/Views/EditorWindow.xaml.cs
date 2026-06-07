@@ -40,7 +40,6 @@ public sealed partial class EditorWindow : ContentPage
     private readonly ExternalPlayLauncher _externalLauncher = new();
 
     private string _activeTool = "Select";
-    private bool _is2D   = true;
     private bool _isSnap = false;
     private bool _isNav  = false;
     private bool _isRes  = false;
@@ -101,7 +100,6 @@ public sealed partial class EditorWindow : ContentPage
         _preferences.Load();
         Subscribe();
         ApplyPreferences();
-        SetPillStyle(Toggle2DBtn, _is2D);
         SetPillStyle(ToggleSnapBtn, _isSnap);
         SetPillStyle(ToggleNavBtn, _isNav);
         SetPillStyle(ToggleResBtn, _isRes);
@@ -324,7 +322,6 @@ public sealed partial class EditorWindow : ContentPage
         ScaleBtn.IsEnabled   = canEdit;
         RectBtn.IsEnabled    = canEdit;
         PanBtn.IsEnabled     = canEdit;
-        Toggle2DBtn.IsEnabled   = canEdit;
         ToggleSnapBtn.IsEnabled = canEdit;
         ToggleNavBtn.IsEnabled  = canEdit;
         ToggleResBtn.IsEnabled  = canEdit;
@@ -1218,16 +1215,6 @@ public sealed partial class EditorWindow : ContentPage
 
     #region Toolbar — mode toggles
 
-    private void OnToggle2D(object sender, EventArgs e)
-    {
-        _is2D = !_is2D;
-        Toggle2DBtn.Text = _is2D ? "2D" : "2.5D";
-        SetPillStyle(Toggle2DBtn, _is2D);
-        EditorContext.Instance.Gizmos.IsDepthMode = !_is2D;
-        _viewportRenderer.Is2D = _is2D;
-        Viewport.Invalidate();
-    }
-
     private void OnToggleSnap(object sender, EventArgs e) => OnToggleSnap();
     private void OnToggleSnap()
     {
@@ -1387,24 +1374,41 @@ public sealed partial class EditorWindow : ContentPage
     {
         EditorGameObject? sel = EditorContext.Instance.SelectedObject;
         if (sel is null) return;
-        _viewportRenderer.Camera.Position =
-            new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y);
+        Microsoft.Maui.Graphics.PointF pos = _viewportRenderer.Orientation switch
+        {
+            ViewOrientation.Top   => new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.PositionZ),
+            ViewOrientation.Right => new Microsoft.Maui.Graphics.PointF(sel.PositionZ,  sel.Position.Y),
+            _                     => new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y),
+        };
+        _viewportRenderer.Camera.Position = pos;
         Viewport.Invalidate();
     }
 
     private void OnViewportTapped(object sender, TappedEventArgs e)
     {
+        Point? tapPos = e.GetPosition(Viewport);
+        if (tapPos is null) return;
+
+        // Orientation gizmo click — consumes the event before any selection logic
+        Microsoft.Maui.Graphics.PointF tapPtF = new((float)tapPos.Value.X, (float)tapPos.Value.Y);
+        Microsoft.Maui.Graphics.RectF  vpRect  = new(0, 0, (float)Viewport.Width, (float)Viewport.Height);
+        ViewOrientation? newOrientation = _viewportRenderer.OrientationGizmoHitTest(tapPtF, vpRect);
+        if (newOrientation.HasValue)
+        {
+            _viewportRenderer.Orientation = newOrientation.Value;
+            EditorContext.Instance.Gizmos.Orientation = newOrientation.Value;
+            Viewport.Invalidate();
+            return;
+        }
+
         if (EditorContext.Instance.Gizmos.Mode != GizmoMode.Select) return;
 
         EditorScene? scene = EditorContext.Instance.ActiveScene;
         if (scene is null) return;
 
-        Point? tapPos = e.GetPosition(Viewport);
-        if (tapPos is null) return;
-
         Microsoft.Maui.Graphics.SizeF viewSize = new((float)Viewport.Width, (float)Viewport.Height);
         Microsoft.Maui.Graphics.PointF worldPos = _viewportRenderer.Camera.ScreenToWorld(
-            new Microsoft.Maui.Graphics.PointF((float)tapPos.Value.X, (float)tapPos.Value.Y),
+            tapPtF,
             viewSize);
 
         EditorGameObject? hit = HitTest(scene.RootGameObjects, worldPos);
