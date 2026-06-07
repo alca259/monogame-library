@@ -1062,10 +1062,24 @@ public sealed partial class EditorWindow : ContentPage
             return;
         }
 
+        ProjectSettings settings = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
+
+        EditorScene? scene = EditorContext.Instance.ActiveScene;
+        if (scene is not null && !string.IsNullOrWhiteSpace(settings.RootNamespace)
+            && !string.IsNullOrEmpty(project.GameSourcePath))
+        {
+            ICodeGenService codeGen = new SceneCodeGenerator();
+            CodeGenResult genResult = await codeGen.GenerateSceneAsync(scene, project, settings)
+                                                   .ConfigureAwait(true);
+            if (!genResult.Success)
+                Log($"[Build] CodeGen: {genResult.ErrorMessage}", LogLevel.Warning);
+            else
+                Log($"[Build] CodeGen OK: {Path.GetFileName(genResult.OutputPath)}", LogLevel.Info);
+        }
+
         BuildStatusLabel.Text      = "Building solution…";
         BuildStatusLabel.TextColor = Color.FromArgb("#9A9AA2");
 
-        ProjectSettings settings = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
         int exit = await MgcbRunner.RunDotnetBuildAsync(csproj, settings.BuildConfiguration, line =>
             _bus.Publish(new BuildOutputLineEvent(line, IsErrorLine(line))))
             .ConfigureAwait(true);
@@ -1247,36 +1261,11 @@ public sealed partial class EditorWindow : ContentPage
 
         if (project is not null && !string.IsNullOrEmpty(scene.ScenePath))
         {
-            string dir      = Path.GetDirectoryName(project.GameCsprojPath) ?? string.Empty;
-            string exeName  = Path.GetFileNameWithoutExtension(project.GameCsprojPath) + ".exe";
-            string[] search =
-            [
-                Path.Combine(dir, "bin", "Debug",   "net10.0-windows"),
-                Path.Combine(dir, "bin", "Debug",   "net10.0-windows10.0.19041.0"),
-                Path.Combine(dir, "bin", "Release",  "net10.0-windows"),
-                Path.Combine(dir, "bin", "Release",  "net10.0-windows10.0.19041.0"),
-            ];
-
-            string? exePath = null;
-            foreach (string candidate in search)
-            {
-                string p = Path.Combine(candidate, exeName);
-                if (File.Exists(p)) { exePath = p; break; }
-            }
+            string? exePath = FindGameExe(project);
 
             if (exePath is not null)
             {
-                EditorContext.Instance.TakePlaySnapshot();
-                EditorContext.Instance.SetState(EditorState.Playing);
-                _externalLauncher.Launch(exePath, scene.ScenePath, line =>
-                {
-                    if (line.StartsWith("[FPS]", StringComparison.OrdinalIgnoreCase)
-                        && int.TryParse(line.AsSpan(5).Trim(), out int fps))
-                        _bus.Publish(new FpsUpdatedEvent(fps));
-                    else
-                        _bus.Publish(new BuildOutputLineEvent(line, false));
-                });
-                Log("[Play] External game process started.");
+                LaunchGame(exePath, scene);
                 return;
             }
 
@@ -1290,6 +1279,42 @@ public sealed partial class EditorWindow : ContentPage
         }
 
         Log("[Play] No project or scene configured.");
+    }
+
+    private static string? FindGameExe(EditorProject project)
+    {
+        string dir     = Path.GetDirectoryName(project.GameCsprojPath) ?? string.Empty;
+        string exeName = Path.GetFileNameWithoutExtension(project.GameCsprojPath) + ".exe";
+        string[] search =
+        [
+            Path.Combine(dir, "bin", "Debug",   "net10.0"),
+            Path.Combine(dir, "bin", "Debug",   "net10.0-windows"),
+            Path.Combine(dir, "bin", "Debug",   "net10.0-windows10.0.19041.0"),
+            Path.Combine(dir, "bin", "Release",  "net10.0"),
+            Path.Combine(dir, "bin", "Release",  "net10.0-windows"),
+            Path.Combine(dir, "bin", "Release",  "net10.0-windows10.0.19041.0"),
+        ];
+        foreach (string candidate in search)
+        {
+            string p = Path.Combine(candidate, exeName);
+            if (File.Exists(p)) return p;
+        }
+        return null;
+    }
+
+    private void LaunchGame(string exePath, EditorScene scene)
+    {
+        EditorContext.Instance.TakePlaySnapshot();
+        EditorContext.Instance.SetState(EditorState.Playing);
+        _externalLauncher.Launch(exePath, scene.ScenePath, line =>
+        {
+            if (line.StartsWith("[FPS]", StringComparison.OrdinalIgnoreCase)
+                && int.TryParse(line.AsSpan(5).Trim(), out int fps))
+                _bus.Publish(new FpsUpdatedEvent(fps));
+            else
+                _bus.Publish(new BuildOutputLineEvent(line, false));
+        });
+        Log("[Play] External game process started.");
     }
 
     private void OnStopClicked(object sender, EventArgs e) => OnStopClicked();
@@ -1320,10 +1345,24 @@ public sealed partial class EditorWindow : ContentPage
         bool hasScene = EditorContext.Instance.ActiveScene is not null;
         PlayBtn.IsEnabled = hasScene;
 
-        if (e.Success)
-            OnPlayClicked();
-        else
+        if (!e.Success)
+        {
             Log("[Play] Build failed. Cannot launch game.", LogLevel.Error);
+            return;
+        }
+
+        EditorScene?   scene   = EditorContext.Instance.ActiveScene;
+        EditorProject? project = EditorContext.Instance.ActiveProject;
+        if (scene is null || project is null) return;
+
+        string? exePath = FindGameExe(project);
+        if (exePath is null)
+        {
+            Log("[Play] Build succeeded but executable not found.", LogLevel.Error);
+            return;
+        }
+
+        LaunchGame(exePath, scene);
     }
 
     #endregion

@@ -72,7 +72,7 @@ public sealed partial class ConsolePanelView : ContentView
             _                => _showInfo
         };
 
-        if (show) _visible.Add(line);
+        if (show) AddVisible(line);
     }
 
     private void OnBuildOutput(BuildOutputLineEvent e)
@@ -81,7 +81,7 @@ public sealed partial class ConsolePanelView : ContentView
         string line = $"{DateTime.Now:HH:mm:ss} {prefix}{e.Line}";
         if (_allEntries.Count >= MaxLogEntries) _allEntries.RemoveAt(0);
         _allEntries.Add(line);
-        if (_showInfo) _visible.Add(line);
+        if (_showInfo) AddVisible(line);
     }
 
     private void OnFilterInfoClicked(object sender, EventArgs e)
@@ -111,6 +111,12 @@ public sealed partial class ConsolePanelView : ContentView
         _visible.Clear();
     }
 
+    private void OnCopyAllClicked(object sender, EventArgs e)
+    {
+        if (_visible.Count == 0) return;
+        _ = Clipboard.SetTextAsync(string.Join(Environment.NewLine, _visible));
+    }
+
     private void RebuildVisible()
     {
         _visible.Clear();
@@ -126,5 +132,19 @@ public sealed partial class ConsolePanelView : ContentView
 
             if (show) _visible.Add(entry);
         }
+
+        ScrollToEnd();
+    }
+
+    private void AddVisible(string line)
+    {
+        _visible.Add(line);
+        ScrollToEnd();
+    }
+
+    private void ScrollToEnd()
+    {
+        if (_visible.Count == 0) return;
+        LogList.ScrollTo(_visible.Count - 1, ScrollToPosition.End, animate: false);
     }
 }

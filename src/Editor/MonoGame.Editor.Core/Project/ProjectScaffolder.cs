@@ -85,18 +85,19 @@ public static class ProjectScaffolder
         "  <ItemGroup>\n" +
         "    <PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.*\" />\n" +
         "    <PackageReference Include=\"MonoGame.Content.Builder.Task\" Version=\"3.8.*\" />\n" +
-        "    <PackageReference Include=\"Alca.MonoGame.Kernel\" Version=\"*\" />\n" +
         "  </ItemGroup>\n" +
         "\n" +
         "  <ItemGroup>\n" +
-        "    <None Update=\"Content\\Content.mgcb\">\n" +
-        "      <MonoGamePlatform>DesktopGL</MonoGamePlatform>\n" +
-        "    </None>\n" +
+        "    <ProjectReference Include=\"../GameScripts/GameScripts.csproj\" />\n" +
+        "  </ItemGroup>\n" +
+        "\n" +
+        "  <ItemGroup>\n" +
+        "    <MonoGameContentReference Include=\"Content\\Content.mgcb\" />\n" +
         "  </ItemGroup>\n" +
         "\n" +
         "  <!-- Generador de código fuente de escenas -->\n" +
         "  <ItemGroup>\n" +
-        "    <AdditionalFiles Include=\"../../../.editor/scenes/**/*.scene.json\" />\n" +
+        "    <AdditionalFiles Include=\"../../.editor/scenes/**/*.scene.json\" />\n" +
         "  </ItemGroup>\n" +
         "</Project>\n";
 
@@ -112,7 +113,8 @@ public static class ProjectScaffolder
         "  </PropertyGroup>\n" +
         "\n" +
         "  <ItemGroup>\n" +
-        "    <ProjectReference Include=\"../GameApp/GameApp.csproj\" />\n" +
+        "    <PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.*\" />\n" +
+        "    <PackageReference Include=\"Alca.MonoGame.Kernel\" Version=\"*\" />\n" +
         "  </ItemGroup>\n" +
         "</Project>\n";
 

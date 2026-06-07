@@ -11,7 +11,7 @@
         <Border Grid.Row="0"
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0">
-            <Grid ColumnDefinitions="Auto,Auto,Auto,1,*" ColumnSpacing="2" Padding="4,2">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,1,Auto,*" ColumnSpacing="2" Padding="4,2">
 
                 <Button Grid.Column="0"
                         x:Name="FilterInfoBtn"
@@ -38,6 +38,12 @@
                          Margin="2,2"/>
 
                 <Button Grid.Column="4"
+                        Text="📋"
+                        ToolTipProperties.Text="Copy all visible log lines"
+                        Style="{StaticResource SmallIconButton}"
+                        Clicked="OnCopyAllClicked"/>
+
+                <Button Grid.Column="5"
                         Text="Clear"
                         Style="{StaticResource SmallIconButton}"
                         HorizontalOptions="End"

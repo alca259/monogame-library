@@ -53,6 +53,45 @@ public static class CsprojFileEditor
     }
 
     /// <summary>
+    /// Garantiza que <paramref name="packageId"/> esté referenciado en el proyecto.
+    /// No hace nada si ya existe una referencia al paquete (comprobación por nombre, sin distinción de mayúsculas).
+    /// </summary>
+    public static async Task EnsurePackageReferencedAsync(string csprojPath, string packageId, string version = "*")
+    {
+        if (!File.Exists(csprojPath)) return;
+
+        string content = await File.ReadAllTextAsync(csprojPath).ConfigureAwait(false);
+
+        if (content.Contains($"Include=\"{packageId}\"", StringComparison.OrdinalIgnoreCase)) return;
+
+        XmlDocument doc = new();
+        doc.LoadXml(content);
+
+        XmlNode? root = doc.DocumentElement;
+        if (root is null) return;
+
+        XmlElement pkgRef = doc.CreateElement("PackageReference");
+        pkgRef.SetAttribute("Include", packageId);
+        pkgRef.SetAttribute("Version", version);
+
+        XmlNode? itemGroup = root.SelectSingleNode("ItemGroup[PackageReference]");
+        if (itemGroup is null)
+        {
+            itemGroup = doc.CreateElement("ItemGroup");
+            root.AppendChild(itemGroup);
+        }
+
+        itemGroup.AppendChild(pkgRef);
+
+        using StringWriter sw = new();
+        using XmlTextWriter xw = new(sw);
+        xw.Formatting = Formatting.Indented;
+        doc.WriteTo(xw);
+
+        await File.WriteAllTextAsync(csprojPath, sw.ToString()).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Devuelve <c>true</c> si el proyecto es de estilo SDK con los elementos de compilación predeterminados activos,
     /// lo que significa que <paramref name="absoluteFilePath"/> ya está incluido implícitamente.
     /// </summary>
