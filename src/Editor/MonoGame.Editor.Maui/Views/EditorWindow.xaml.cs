@@ -1306,14 +1306,18 @@ public sealed partial class EditorWindow : ContentPage
     {
         EditorContext.Instance.TakePlaySnapshot();
         EditorContext.Instance.SetState(EditorState.Playing);
-        _externalLauncher.Launch(exePath, scene.ScenePath, line =>
-        {
-            if (line.StartsWith("[FPS]", StringComparison.OrdinalIgnoreCase)
-                && int.TryParse(line.AsSpan(5).Trim(), out int fps))
-                _bus.Publish(new FpsUpdatedEvent(fps));
-            else
-                _bus.Publish(new BuildOutputLineEvent(line, false));
-        });
+        _externalLauncher.Launch(
+            exePath,
+            scene.ScenePath,
+            logLine: line =>
+            {
+                if (line.StartsWith("[FPS]", StringComparison.OrdinalIgnoreCase)
+                    && int.TryParse(line.AsSpan(5).Trim(), out int fps))
+                    _bus.Publish(new FpsUpdatedEvent(fps));
+                else
+                    _bus.Publish(new BuildOutputLineEvent(line, false));
+            },
+            onExited: () => MainThread.BeginInvokeOnMainThread(OnStopClicked));
         Log("[Play] External game process started.");
     }
 
