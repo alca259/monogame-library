@@ -21,7 +21,7 @@ public sealed class ExternalPlayLauncher : IDisposable
     /// </summary>
     /// <param name="gameExePath">Ruta absoluta al ejecutable del juego.</param>
     /// <param name="scenePath">Ruta absoluta al JSON de escena que se cargará al inicio. Vacío para cargar la predeterminada.</param>
-    /// <param name="logLine">Callback opcional para recibir las líneas de stderr redirigidas.</param>
+    /// <param name="logLine">Callback opcional para recibir las líneas de stdout y stderr redirigidas.</param>
     public void Launch(string gameExePath, string scenePath = "", Action<string>? logLine = null)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -34,20 +34,27 @@ public sealed class ExternalPlayLauncher : IDisposable
 
         ProcessStartInfo psi = new(gameExePath, args)
         {
-            UseShellExecute        = false,
-            RedirectStandardError  = logLine is not null,
-            CreateNoWindow         = false,
+            UseShellExecute         = false,
+            RedirectStandardOutput  = logLine is not null,
+            RedirectStandardError   = logLine is not null,
+            CreateNoWindow          = false,
         };
 
         _process = Process.Start(psi);
 
         if (logLine is not null && _process is not null)
         {
+            _process.OutputDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                    logLine(e.Data);
+            };
             _process.ErrorDataReceived += (_, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
                     logLine(e.Data);
             };
+            _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
         }
     }

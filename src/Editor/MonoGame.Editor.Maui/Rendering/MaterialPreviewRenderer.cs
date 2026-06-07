@@ -162,7 +162,7 @@ public static class MaterialPreviewRenderer
             string full = Path.Combine(contentRoot, p.TexturePath + ext);
             if (!File.Exists(full)) continue;
             try { return LoadTexels(full); }
-            catch { /* skip unreadable files */ }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[MaterialPreview] Could not load texture {full}, skipping: {ex.Message}"); }
         }
         return (0, 0, null);
     }

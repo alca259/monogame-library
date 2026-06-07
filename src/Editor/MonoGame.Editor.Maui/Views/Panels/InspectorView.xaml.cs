@@ -236,7 +236,7 @@ public sealed partial class InspectorView : ContentView
         if (props.Length == 0) return;
 
         object? instance = null;
-        try { instance = Activator.CreateInstance(type); } catch { }
+        try { instance = Activator.CreateInstance(type); } catch (Exception ex) { Log($"[Inspector] Failed to instantiate behaviour type {type.Name}: {ex.Message}", LogLevel.Warning); }
 
         foreach (PropertyInfo prop in props)
         {
@@ -247,7 +247,7 @@ public sealed partial class InspectorView : ContentView
                     ? JsonSerializer.SerializeToElement(value, prop.PropertyType)
                     : GetDefaultJsonElement(prop.PropertyType);
             }
-            catch { }
+            catch (Exception ex) { Log($"[Inspector] Failed to read property {prop.Name}: {ex.Message}", LogLevel.Warning); }
         }
     }
 
@@ -258,7 +258,7 @@ public sealed partial class InspectorView : ContentView
         if (type.IsValueType)
         {
             try { return JsonSerializer.SerializeToElement(Activator.CreateInstance(type)!, type); }
-            catch { }
+            catch (Exception ex) { Log($"[Inspector] Failed to create default instance for type {type.Name}: {ex.Message}", LogLevel.Debug); }
         }
         return JsonSerializer.SerializeToElement(string.Empty);
     }
@@ -595,4 +595,9 @@ public sealed partial class InspectorView : ContentView
             new AddBehaviourCommand(_selected, new EditorBehaviour { TypeName = typeName }));
         BuildBehaviourCards();
     }
+
+    // ── Logging ───────────────────────────────────────────────────────────────
+
+    private static void Log(string message, LogLevel level = LogLevel.Info)
+        => EditorContext.Instance.EventBus.Publish(new LogEntryAddedEvent(new LogEntry(DateTime.UtcNow, level, message)));
 }

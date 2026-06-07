@@ -214,7 +214,7 @@ public sealed partial class ScriptBrowserView : ContentView
 
         string newPath = Path.Combine(_currentFolderPath, name);
         try { Directory.CreateDirectory(newPath); }
-        catch { return; }
+        catch (Exception ex) { Log($"[ScriptBrowser] Failed to create folder: {ex.Message}", LogLevel.Error); return; }
 
         _expandedFolders.Add(_currentFolderPath);
         BuildFolderTree();
@@ -242,7 +242,7 @@ public sealed partial class ScriptBrowserView : ContentView
         string parent  = Path.GetDirectoryName(_selectedFolderPath) ?? _scriptsRoot;
         string newPath = Path.Combine(parent, newName);
         try { Directory.Move(_selectedFolderPath, newPath); }
-        catch { return; }
+        catch (Exception ex) { Log($"[ScriptBrowser] Failed to rename folder: {ex.Message}", LogLevel.Error); return; }
 
         if (_currentFolderPath.StartsWith(_selectedFolderPath, StringComparison.OrdinalIgnoreCase))
             _currentFolderPath = _currentFolderPath.Replace(_selectedFolderPath, newPath, StringComparison.OrdinalIgnoreCase);
@@ -273,7 +273,7 @@ public sealed partial class ScriptBrowserView : ContentView
         if (!confirmed) return;
 
         try { Directory.Delete(_selectedFolderPath, recursive: true); }
-        catch { return; }
+        catch (Exception ex) { Log($"[ScriptBrowser] Failed to delete folder: {ex.Message}", LogLevel.Error); return; }
 
         if (_currentFolderPath.StartsWith(_selectedFolderPath, StringComparison.OrdinalIgnoreCase))
             _currentFolderPath = _scriptsRoot;
@@ -317,7 +317,7 @@ public sealed partial class ScriptBrowserView : ContentView
             if (!string.Equals(oldPath, newPath, StringComparison.OrdinalIgnoreCase))
                 File.Delete(oldPath);
         }
-        catch { return; }
+        catch (Exception ex) { Log($"[ScriptBrowser] Failed to rename script: {ex.Message}", LogLevel.Error); return; }
 
         _selectedScriptFile       = string.Empty;
         ScriptRenameBtn.IsEnabled = false;
@@ -343,7 +343,7 @@ public sealed partial class ScriptBrowserView : ContentView
 
         string path = Path.Combine(_currentFolderPath, _selectedScriptFile);
         try { File.Delete(path); }
-        catch { return; }
+        catch (Exception ex) { Log($"[ScriptBrowser] Failed to delete script: {ex.Message}", LogLevel.Error); return; }
 
         _selectedScriptFile       = string.Empty;
         ScriptRenameBtn.IsEnabled = false;
@@ -378,7 +378,7 @@ public sealed partial class ScriptBrowserView : ContentView
             : Path.Combine(_currentFolderPath, result.RelativeFolder);
 
         try { Directory.CreateDirectory(targetFolder); }
-        catch { return; }
+        catch (Exception ex) { Log($"[ScriptBrowser] Failed to create target folder: {ex.Message}", LogLevel.Error); return; }
 
         string filePath = Path.Combine(targetFolder, result.ClassName + ".cs");
         string ns       = string.IsNullOrEmpty(result.NamespaceName) ? defaultNs : result.NamespaceName;
@@ -392,8 +392,13 @@ public sealed partial class ScriptBrowserView : ContentView
             _currentFolderPath = targetFolder;
             LoadScripts();
         }
-        catch { }
+        catch (Exception ex) { Log($"[ScriptBrowser] Failed to create script: {ex.Message}", LogLevel.Error); }
     }
+
+    // ── Logging ───────────────────────────────────────────────────────────────
+
+    private void Log(string message, LogLevel level = LogLevel.Info)
+        => _bus.Publish(new LogEntryAddedEvent(new LogEntry(DateTime.UtcNow, level, message)));
 
     private static string GenerateScriptTemplate(string className, string ns) =>
         string.IsNullOrEmpty(ns)

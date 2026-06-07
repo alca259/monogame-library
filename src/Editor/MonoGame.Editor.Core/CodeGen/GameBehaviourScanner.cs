@@ -51,7 +51,7 @@ public sealed class GameBehaviourScanner
                 result[fullName] = new TypeDescriptor(fullName, shortName, ns);
             }
         }
-        catch { /* best-effort */ }
+        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[GameBehaviourScanner] Failed to scan assembly, continuing: {ex.Message}"); }
 
         return result;
     }
@@ -91,7 +91,7 @@ public sealed class GameBehaviourScanner
                             result.Add(m.Groups[1].Value);
                     }
                 }
-                catch { /* skip unreadable files */ }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[GameBehaviourScanner] Could not read {files[i]}, skipping: {ex.Message}"); }
             }
 
             string[] subdirs = Directory.GetDirectories(dir);

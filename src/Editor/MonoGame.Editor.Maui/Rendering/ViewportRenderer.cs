@@ -191,6 +191,33 @@ public sealed class ViewportRenderer : IDrawable
                 canvas.StrokeColor = yellow;
                 canvas.StrokeSize  = 1;
                 canvas.DrawRectangle(ox + 12, oy - 28, 16, 16);
+
+                // Z (depth) diamond handle — only in 2.5D depth mode
+                if (EditorContext.Instance.Gizmos.IsDepthMode)
+                {
+                    float zhx  = ox + GizmoController.ZHandleOffsetX;
+                    float zhy  = oy - GizmoController.ArrowLength;
+                    float half = GizmoController.ZHandleSize / 2f;
+
+                    // Connecting line from origin to diamond
+                    canvas.StrokeColor = accent;
+                    canvas.StrokeSize  = 1.5f;
+                    canvas.DrawLine(ox, oy, zhx, zhy);
+
+                    // Diamond shape
+                    PathF diamond = new();
+                    diamond.MoveTo(zhx,        zhy - half);
+                    diamond.LineTo(zhx + half, zhy);
+                    diamond.LineTo(zhx,        zhy + half);
+                    diamond.LineTo(zhx - half, zhy);
+                    diamond.Close();
+                    canvas.FillColor = accent.WithAlpha(0.7f);
+                    canvas.FillPath(diamond);
+                    canvas.StrokeColor = accent;
+                    canvas.StrokeSize  = 1;
+                    canvas.DrawPath(diamond);
+                }
+
                 break;
             }
 

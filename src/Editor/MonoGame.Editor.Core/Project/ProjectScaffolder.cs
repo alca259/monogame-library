@@ -27,6 +27,8 @@ public static class ProjectScaffolder
         Directory.CreateDirectory(Path.Combine(gameAppPath, "i18n"));
         Directory.CreateDirectory(gameScriptsPath);
 
+        WriteIfAbsent(Path.Combine(gameAppPath, "Content", "Content.mgcb"), BuildEmptyMgcb());
+
         string ns = string.IsNullOrWhiteSpace(project.BaseNamespace) ? project.Name : project.BaseNamespace;
 
         WriteIfAbsent(Path.Combine(gameAppPath, $"{GameAppFolder}.csproj"), BuildGameAppCsproj(ns));
@@ -52,6 +54,17 @@ public static class ProjectScaffolder
             File.WriteAllText(path, content);
     }
 
+    private static string BuildEmptyMgcb() =>
+        "#----------------------------- Global Properties ----------------------------#\n\n" +
+        "/outputDir:bin/$(Platform)\n" +
+        "/intermediateDir:obj/$(Platform)\n" +
+        "/platform:DesktopGL\n" +
+        "/config:\n" +
+        "/profile:Reach\n" +
+        "/compress:False\n\n" +
+        "#-------------------------------- References --------------------------------#\n\n\n" +
+        "#---------------------------------- Content ---------------------------------#\n";
+
     private static string BuildSlnx() =>
         "<Solution>\n" +
         "  <Project Path=\"GameApp/GameApp.csproj\" />\n" +
@@ -72,6 +85,7 @@ public static class ProjectScaffolder
         "  <ItemGroup>\n" +
         "    <PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.*\" />\n" +
         "    <PackageReference Include=\"MonoGame.Content.Builder.Task\" Version=\"3.8.*\" />\n" +
+        "    <PackageReference Include=\"Alca.MonoGame.Kernel\" Version=\"*\" />\n" +
         "  </ItemGroup>\n" +
         "\n" +
         "  <ItemGroup>\n" +

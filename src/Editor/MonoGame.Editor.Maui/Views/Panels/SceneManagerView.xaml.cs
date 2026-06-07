@@ -190,7 +190,7 @@ public sealed partial class SceneManagerView : ContentView
 
         string newPath = Path.Combine(_scenesPath, $"{newName}.scene.json");
         try { File.Move(item.FilePath, newPath); }
-        catch { return; }
+        catch (Exception ex) { Log($"[SceneManager] Failed to rename scene: {ex.Message}", LogLevel.Error); return; }
 
         int idx = -1;
         for (int i = 0; i < _items.Count; i++)
@@ -244,4 +244,9 @@ public sealed partial class SceneManagerView : ContentView
         int count = _items.Count;
         SceneCountLabel.Text = count == 1 ? "1 scene" : $"{count} scenes";
     }
+
+    // ── Logging ───────────────────────────────────────────────────────────────
+
+    private void Log(string message, LogLevel level = LogLevel.Info)
+        => _bus.Publish(new LogEntryAddedEvent(new LogEntry(DateTime.UtcNow, level, message)));
 }

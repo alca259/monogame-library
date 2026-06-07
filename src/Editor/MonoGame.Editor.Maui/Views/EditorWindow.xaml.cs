@@ -35,7 +35,6 @@ public sealed partial class EditorWindow : ContentPage
     #region Fields
 
     private readonly IEditorEventBus    _bus              = EditorContext.Instance.EventBus;
-    private readonly GameObjectRegistry _registry         = new();
     private readonly ViewportRenderer   _viewportRenderer = new();
     private readonly EditorPreferences  _preferences      = new();
     private readonly ExternalPlayLauncher _externalLauncher = new();
@@ -55,7 +54,6 @@ public sealed partial class EditorWindow : ContentPage
 
     private string? _openMenuTag;
 
-    private PlayModeRunner? _activeRunner;
     private double          _panLastX;
     private double          _panLastY;
     private float           _lastPointerScreenX;
@@ -84,6 +82,12 @@ public sealed partial class EditorWindow : ContentPage
     private Action<SceneDirtyChangedEvent>?   _onSceneDirty;
     private Action<ProjectOpenedEvent>?       _onProjectOpened;
     private Action<GameObjectSelectedEvent>?  _onGameObjectSelected;
+    private Action<SceneCreatedEvent>?        _onSceneCreated;
+    private Action<UndoPerformedEvent>?       _onUndoPerformed;
+    private Action<RedoPerformedEvent>?       _onRedoPerformed;
+    private Action<BuildFinishedEvent>?       _onBuildFinished;
+
+    private bool _playPendingAfterBuild;
 
     #endregion
 
@@ -257,15 +261,33 @@ public sealed partial class EditorWindow : ContentPage
     private void Log(string message, LogLevel level = LogLevel.Info)
         => _bus.Publish(new LogEntryAddedEvent(new LogEntry(DateTime.UtcNow, level, message)));
 
+    private static string BuildEmptyMgcb() =>
+        "#----------------------------- Global Properties ----------------------------#\n\n" +
+        "/outputDir:bin/$(Platform)\n" +
+        "/intermediateDir:obj/$(Platform)\n" +
+        "/platform:DesktopGL\n" +
+        "/config:\n" +
+        "/profile:Reach\n" +
+        "/compress:False\n\n" +
+        "#-------------------------------- References --------------------------------#\n\n\n" +
+        "#---------------------------------- Content ---------------------------------#\n";
+
     private void Subscribe()
     {
         _onStateChanged       = e => MainThread.BeginInvokeOnMainThread(() => OnEditorStateChanged(e));
         _onSceneLoaded        = e => MainThread.BeginInvokeOnMainThread(() => OnSceneLoaded(e));
         _onBuildOutput        = e => MainThread.BeginInvokeOnMainThread(() => OnBuildOutputLine(e));
-        _onFpsUpdated         = e => MainThread.BeginInvokeOnMainThread(() => FpsLabel.Text = $"{e.Fps} FPS");
+        _onFpsUpdated         = e => MainThread.BeginInvokeOnMainThread(() =>
+            FpsLabel.Text = EditorContext.Instance.State is EditorState.Playing
+                ? $"{e.Fps} FPS"
+                : "-- FPS");
         _onSceneDirty         = e => MainThread.BeginInvokeOnMainThread(() => OnSceneDirtyChanged(e));
         _onProjectOpened      = e => MainThread.BeginInvokeOnMainThread(() => OnProjectOpened(e));
         _onGameObjectSelected = _ => MainThread.BeginInvokeOnMainThread(() => Viewport.Invalidate());
+        _onSceneCreated       = _ => MainThread.BeginInvokeOnMainThread(() => Viewport.Invalidate());
+        _onUndoPerformed      = _ => MainThread.BeginInvokeOnMainThread(() => Viewport.Invalidate());
+        _onRedoPerformed      = _ => MainThread.BeginInvokeOnMainThread(() => Viewport.Invalidate());
+        _onBuildFinished      = e => MainThread.BeginInvokeOnMainThread(() => OnBuildFinished(e));
 
         _bus.Subscribe(_onStateChanged);
         _bus.Subscribe(_onSceneLoaded);
@@ -274,6 +296,10 @@ public sealed partial class EditorWindow : ContentPage
         _bus.Subscribe(_onSceneDirty);
         _bus.Subscribe(_onProjectOpened);
         _bus.Subscribe(_onGameObjectSelected);
+        _bus.Subscribe(_onSceneCreated);
+        _bus.Subscribe(_onUndoPerformed);
+        _bus.Subscribe(_onRedoPerformed);
+        _bus.Subscribe(_onBuildFinished);
     }
 
     private void OnEditorStateChanged(EditorStateChangedEvent e)
@@ -305,11 +331,13 @@ public sealed partial class EditorWindow : ContentPage
         {
             StopBtn.BackgroundColor = Color.FromArgb("#252528");
             StopBtn.TextColor       = Color.FromArgb("#6A6A72");
+            _bus.Publish(new FpsUpdatedEvent(0));
         }
     }
 
     private void OnSceneLoaded(SceneLoadedEvent e)
     {
+        EditorContext.Instance.SetSelection(null);
         int count = e.Scene?.RootGameObjects.Count ?? 0;
         ObjectCountLabel.Text = count == 1 ? "1 object in scene" : $"{count} objects in scene";
         UpdateTitleBar();
@@ -352,7 +380,6 @@ public sealed partial class EditorWindow : ContentPage
     private void OnProjectOpened(ProjectOpenedEvent e)
     {
         UpdateTitleBar();
-        _registry.Scan();
     }
 
     private void UpdateTitleBar()
@@ -998,10 +1025,9 @@ public sealed partial class EditorWindow : ContentPage
         string mgcbFile = Path.Combine(project.ContentPath, "Content.mgcb");
         if (!File.Exists(mgcbFile))
         {
-            Log($"[Build] Content.mgcb not found at: {mgcbFile}", LogLevel.Warning);
-            BuildStatusLabel.Text      = "Content.mgcb not found";
-            BuildStatusLabel.TextColor = Color.FromArgb("#E8A050");
-            return;
+            Directory.CreateDirectory(project.ContentPath);
+            File.WriteAllText(mgcbFile, BuildEmptyMgcb(), System.Text.Encoding.UTF8);
+            Log($"[Build] Created empty Content.mgcb at: {mgcbFile}", LogLevel.Info);
         }
 
         BuildStatusLabel.Text      = "Building content…";
@@ -1213,14 +1239,11 @@ public sealed partial class EditorWindow : ContentPage
     private void OnPlayClicked()
     {
         if (EditorContext.Instance.State is EditorState.Playing) return;
+        if (_playPendingAfterBuild) return;
 
         EditorScene?   scene   = EditorContext.Instance.ActiveScene;
         EditorProject? project = EditorContext.Instance.ActiveProject;
         if (scene is null) return;
-
-        _registry.Scan();
-        EditorContext.Instance.TakePlaySnapshot();
-        EditorContext.Instance.SetState(EditorState.Playing);
 
         if (project is not null && !string.IsNullOrEmpty(scene.ScenePath))
         {
@@ -1243,16 +1266,30 @@ public sealed partial class EditorWindow : ContentPage
 
             if (exePath is not null)
             {
-                _externalLauncher.Launch(exePath, scene.ScenePath,
-                    line => _bus.Publish(new BuildOutputLineEvent(line, false)));
+                EditorContext.Instance.TakePlaySnapshot();
+                EditorContext.Instance.SetState(EditorState.Playing);
+                _externalLauncher.Launch(exePath, scene.ScenePath, line =>
+                {
+                    if (line.StartsWith("[FPS]", StringComparison.OrdinalIgnoreCase)
+                        && int.TryParse(line.AsSpan(5).Trim(), out int fps))
+                        _bus.Publish(new FpsUpdatedEvent(fps));
+                    else
+                        _bus.Publish(new BuildOutputLineEvent(line, false));
+                });
                 Log("[Play] External game process started.");
                 return;
             }
+
+            // Exe not found — trigger auto-build first
+            Log("[Play] Executable not found. Building solution first...");
+            _playPendingAfterBuild = true;
+            PlayBtn.IsEnabled = false;
+            PlayBtn.Text = "⏳";
+            _ = BuildSolutionAsync();
+            return;
         }
 
-        // Fallback: in-editor runner
-        _activeRunner = new PlayModeRunner(scene, _registry);
-        Log("[Play] Play mode started (in-editor).");
+        Log("[Play] No project or scene configured.");
     }
 
     private void OnStopClicked(object sender, EventArgs e) => OnStopClicked();
@@ -1263,9 +1300,6 @@ public sealed partial class EditorWindow : ContentPage
 
         _externalLauncher.Stop();
 
-        _activeRunner?.Dispose();
-        _activeRunner = null;
-
         EditorScene? restored = EditorContext.Instance.RestoreFromSnapshot();
         EditorContext.Instance.ClearPlaySnapshot();
 
@@ -1274,6 +1308,22 @@ public sealed partial class EditorWindow : ContentPage
 
         EditorContext.Instance.SetState(EditorState.Editing);
         Log("[Play] Play mode stopped.");
+    }
+
+    private void OnBuildFinished(BuildFinishedEvent e)
+    {
+        if (!_playPendingAfterBuild || e.BuildType != "Solution") return;
+
+        _playPendingAfterBuild = false;
+        PlayBtn.Text = "▶";
+
+        bool hasScene = EditorContext.Instance.ActiveScene is not null;
+        PlayBtn.IsEnabled = hasScene;
+
+        if (e.Success)
+            OnPlayClicked();
+        else
+            Log("[Play] Build failed. Cannot launch game.", LogLevel.Error);
     }
 
     #endregion

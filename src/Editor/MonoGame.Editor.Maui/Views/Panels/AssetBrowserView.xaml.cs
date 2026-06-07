@@ -284,7 +284,7 @@ public sealed partial class AssetBrowserView : ContentView
         {
             File.Copy(picked.FullPath, dest, overwrite: false);
         }
-        catch { return; }
+        catch (Exception ex) { Log($"[AssetBrowser] Failed to import asset: {ex.Message}", LogLevel.Error); return; }
 
         AssetInfo info = AssetClassifier.CreateInfo(dest, _contentRoot);
         _bus.Publish(new AssetImportedEvent(info));
@@ -308,7 +308,7 @@ public sealed partial class AssetBrowserView : ContentView
 
         string newPath = Path.Combine(_currentFolderPath, newName);
         try { File.Move(item.Info.AbsolutePath, newPath); }
-        catch { return; }
+        catch (Exception ex) { Log($"[AssetBrowser] Failed to rename asset: {ex.Message}", LogLevel.Error); return; }
 
         LoadAssetsFromFolder();
     }
@@ -328,7 +328,7 @@ public sealed partial class AssetBrowserView : ContentView
         if (!confirmed) return;
 
         try { File.Delete(item.Info.AbsolutePath); }
-        catch { return; }
+        catch (Exception ex) { Log($"[AssetBrowser] Failed to delete asset: {ex.Message}", LogLevel.Error); return; }
 
         LoadAssetsFromFolder();
     }
@@ -356,7 +356,7 @@ public sealed partial class AssetBrowserView : ContentView
 
         string newPath = Path.Combine(_currentFolderPath, name);
         try { Directory.CreateDirectory(newPath); }
-        catch { return; }
+        catch (Exception ex) { Log($"[AssetBrowser] Failed to create folder: {ex.Message}", LogLevel.Error); return; }
 
         _expandedFolders.Add(_currentFolderPath);
         BuildFolderTree();
@@ -382,7 +382,7 @@ public sealed partial class AssetBrowserView : ContentView
         string parent  = Path.GetDirectoryName(_selectedFolderPath) ?? _contentRoot;
         string newPath = Path.Combine(parent, newName);
         try { Directory.Move(_selectedFolderPath, newPath); }
-        catch { return; }
+        catch (Exception ex) { Log($"[AssetBrowser] Failed to rename folder: {ex.Message}", LogLevel.Error); return; }
 
         if (_currentFolderPath.StartsWith(_selectedFolderPath, StringComparison.OrdinalIgnoreCase))
             _currentFolderPath = _currentFolderPath.Replace(_selectedFolderPath, newPath, StringComparison.OrdinalIgnoreCase);
@@ -412,7 +412,7 @@ public sealed partial class AssetBrowserView : ContentView
         if (!confirmed) return;
 
         try { Directory.Delete(_selectedFolderPath, recursive: true); }
-        catch { return; }
+        catch (Exception ex) { Log($"[AssetBrowser] Failed to delete folder: {ex.Message}", LogLevel.Error); return; }
 
         if (_currentFolderPath.StartsWith(_selectedFolderPath, StringComparison.OrdinalIgnoreCase))
             _currentFolderPath = _contentRoot;
@@ -464,6 +464,11 @@ public sealed partial class AssetBrowserView : ContentView
             AssetInfo info = AssetClassifier.CreateInfo(filePath, _contentRoot);
             _bus.Publish(new AssetImportedEvent(info));
         }
-        catch { }
+        catch (Exception ex) { Log($"[AssetBrowser] Failed to create asset file: {ex.Message}", LogLevel.Error); }
     }
+
+    // ── Logging ───────────────────────────────────────────────────────────────
+
+    private void Log(string message, LogLevel level = LogLevel.Info)
+        => _bus.Publish(new LogEntryAddedEvent(new LogEntry(DateTime.UtcNow, level, message)));
 }

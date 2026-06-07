@@ -140,7 +140,10 @@ public sealed partial class RgbaColorPickerDialog : ContentPage
             RgbToHsv(r / 255f, g / 255f, b / 255f, out _hue, out _saturation, out _brightness);
             RefreshAll();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[RgbaColorPicker] Invalid hex color format, using default: {ex.Message}");
+        }
     }
 
     private void OnAlphaReset(object sender, EventArgs e)
