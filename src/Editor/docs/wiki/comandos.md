@@ -134,7 +134,7 @@ Al añadir una nueva operación al editor que modifique datos, hay que crear un 
 1. Crear una clase en `MonoGame.Editor.Core/Commands/` que implemente `IEditorCommand`.
 2. El constructor recibe los datos necesarios para ejecutar Y para deshacer la operación.
 3. Implementar `Execute()` y `Undo()` como operaciones inversas.
-4. En el código de UI (WinForms), en lugar de modificar el modelo directamente, llamar:
+4. En el código de UI (MAUI), en lugar de modificar el modelo directamente, llamar:
 
 ```csharp
 var cmd = new MiNuevoComando(parametros...);

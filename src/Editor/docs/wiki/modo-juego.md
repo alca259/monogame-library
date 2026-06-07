@@ -26,7 +26,7 @@ El modo Play lanza el juego compilado como **proceso externo** (`GameApp.exe`). 
 1. El usuario hace clic en **Play** (o atajo `F5`).
 2. Si no hay escena activa: se muestra un `MessageBox` informativo y se cancela.
 3. Se guarda la escena automáticamente si tiene cambios sin guardar.
-4. **Compilación**: `EditorForm` ejecuta `dotnet build src/GameApp/GameApp.csproj -c Debug` vía `Process`. Cada línea de salida se envía al `ConsolePanel` vía `BuildOutputLineEvent`.
+4. **Compilación**: `EditorWindow` ejecuta `dotnet build src/GameApp/GameApp.csproj -c Debug` vía `Process`. Cada línea de salida se envía al `ConsolePanel` vía `BuildOutputLineEvent`.
 5. Si el build falla: se cancela el modo Play y los errores se muestran en la consola.
 6. Si el build tiene éxito: se calcula la ruta al ejecutable:
    ```

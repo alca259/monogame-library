@@ -6,13 +6,13 @@ La solución tiene una separación limpia en tres capas:
 
 ```
 MonoGame.Editor.Core             ← Lógica pura, sin UI
-MonoGame.Editor.WinForms         ← Presentación, controles WinForms
+MonoGame.Editor.Maui             ← Presentación, páginas y vistas MAUI
 MonoGame.Editor.SourceGenerator  ← Roslyn Source Generator (netstandard2.0)
 ```
 
-**Core** contiene todo lo que el editor "sabe hacer": manipular escenas, ejecutar comandos, serializar datos, generar código, gestionar proyectos, lanzar el proceso de juego. No tiene ninguna dependencia de WinForms.
+**Core** contiene todo lo que el editor "sabe hacer": manipular escenas, ejecutar comandos, serializar datos, generar código, gestionar proyectos, lanzar el proceso de juego. No tiene ninguna dependencia de UI.
 
-**WinForms** contiene los formularios, paneles, diálogos y controles. Solo llama a Core; nunca al revés.
+**Maui** contiene las vistas, diálogos y controles. Solo llama a Core; nunca al revés.
 
 **SourceGenerator** es un `IIncrementalGenerator` de Roslyn empaquetado como analizador en `GameApp.csproj`. Lee los `*.scene.json` declarados como `<AdditionalFiles>` y emite una clase estática por escena compatible con AOT (sin reflexión en runtime).
 
@@ -185,24 +185,27 @@ El editor usa tres contextos de ejecución:
 
 | Hilo | Qué ejecuta |
 |------|------------|
-| **UI** (WinForms) | Todos los controles, event handlers del bus, `CommandStack`, publicaciones del `EventBus` |
+| **UI** (MAUI) | Todas las vistas, event handlers del bus, `CommandStack`, publicaciones del `EventBus` |
 | **Render** (MonoGameControl) | `EditModeRenderer`, `GizmoRenderer`, `NavGridPreviewRenderer`, `ResolutionPreviewRenderer` |
 | **Background** (Task/async) | Scan de assemblies y fuente, I/O de escenas, compilación, lectura de stderr del proceso externo |
 
-Cuando un hilo de fondo necesita actualizar la UI usa `Control.Invoke()`. `EditorContext` usa `lock` internamente para toda escritura de estado.
+Cuando un hilo de fondo necesita actualizar la UI usa `MainThread.BeginInvokeOnMainThread()`. `EditorContext` usa `lock` internamente para toda escritura de estado.
 
 ---
 
-## Organización de carpetas en WinForms
+## Organización de carpetas en Maui
 
 ```
-MonoGame.Editor.WinForms/
-├── Controls/        ← MonoGameControl (viewport editor), EditorCamera2D
-├── Dialogs/         ← Todos los diálogos modales
-├── Gizmos/          ← GizmoRenderer (dibuja los gizmos con GPU)
-├── Panels/          ← Todos los paneles del editor
-├── Rendering/       ← EditModeRenderer (dibuja escena en modo edición)
-└── EditorForm.cs    ← Formulario principal
+MonoGame.Editor.Maui/
+├── Controls/        ← Controles MAUI personalizados (AxisStepper, etc.)
+├── Platforms/       ← Código específico por plataforma (Windows)
+├── Rendering/       ← ViewportRenderer, EditorCamera2D, MaterialPreviewRenderer
+├── Views/
+│   ├── Dialogs/     ← Todos los diálogos modales
+│   ├── Panels/      ← Todos los paneles del editor (Views)
+│   ├── EditorWindow.xaml.cs ← Ventana principal
+│   └── TitleBarView.cs
+└── MauiProgram.cs   ← Punto de entrada MAUI
 ```
 
 ## Organización del SourceGenerator
@@ -223,12 +226,12 @@ Se referencia desde `GameApp.csproj` como:
 ## Flujo de datos en una operación típica (ejemplo: mover entidad)
 
 1. El usuario hace clic y arrastra el gizmo de movimiento en el viewport.
-2. `EditorForm` detecta el MouseMove y llama `GizmoController.UpdateDrag(worldPos)`.
+2. `EditorWindow` detecta el MouseMove y llama `GizmoController.UpdateDrag(worldPos)`.
 3. `GizmoController` modifica directamente `selectedObject.Position` (en tiempo real, sin comando aún).
 4. Publica `GameObjectTransformChangedEvent` para que el inspector muestre los valores al instante.
-5. Al soltar el ratón, `EditorForm` llama `GizmoController.EndDrag()`.
+5. Al soltar el ratón, `EditorWindow` llama `GizmoController.EndDrag()`.
 6. `GizmoController` devuelve un `MoveEntityCommand` con la posición inicial y final.
-7. `EditorForm` ejecuta `context.CommandStack.Execute(command)`.
+7. `EditorWindow` ejecuta `context.CommandStack.Execute(command)`.
 8. `CommandStack` llama `command.Execute()` (que ya no mueve nada, el movimiento ya ocurrió) y guarda la operación en el historial.
 9. `CommandStack` llama `context.MarkSceneDirty()`.
 10. Se publica `SceneDirtyChangedEvent(true)` y el título del formulario muestra el asterisco `*`.

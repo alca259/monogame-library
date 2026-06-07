@@ -10,7 +10,7 @@ Esta página describe paso a paso los flujos de trabajo más importantes del edi
 
 1. Se abre `NewProjectDialog` con campos para: nombre del proyecto y carpeta padre.
 2. El usuario confirma con OK.
-3. `EditorForm` llama a `ProjectManager.Create(name, parentPath)`.
+3. `EditorWindow` llama a `ProjectManager.Create(name, parentPath)`.
 4. `ProjectManager.Create()` hace:
    - Crea la carpeta `{parentPath}/{name}/`.
    - Crea las subcarpetas `.editor/config/`, `.editor/logs/`, `.editor/scenes/`, `.editor/prefabs/`.
@@ -55,7 +55,7 @@ src/
 
 **Menú**: `File → Open Project`
 
-1. Se abre un `FolderBrowserDialog` para seleccionar la carpeta raíz del proyecto.
+1. Se abre un selector de carpeta nativo para seleccionar la carpeta raíz del proyecto.
 2. `ProjectManager.Load(carpeta)` deserializa `{carpeta}/project.json` (en la **raíz**, no en `Editor/`).
 3. Se construye `EditorProject` con todas las rutas absolutas calculadas.
 4. Mismo flujo que al crear: `SetActiveProject` → `ProjectOpenedEvent`.
@@ -79,7 +79,7 @@ src/
 
 **Atajo**: `Ctrl+S`
 
-1. Si la escena no tiene `ScenePath`, se abre `SaveFileDialog` apuntando a `Editor/Scenes/`.
+1. Si la escena no tiene `ScenePath`, se abre un selector de archivos apuntando a `Editor/Scenes/`.
 2. `SceneSerializer.SaveAsync(scene, path)` serializa la escena completa a JSON (formato human-readable).
 3. `context.MarkSceneClean()` se llama al terminar.
 4. Se publica `SceneDirtyChangedEvent(false)`, el título del formulario pierde el asterisco `*`.
@@ -120,7 +120,7 @@ src/
 
 ## Editar propiedades en el inspector
 
-1. El usuario modifica un campo (por ejemplo, escribe un nuevo valor de velocidad en un NumericUpDown).
+1. El usuario modifica un campo (por ejemplo, escribe un nuevo valor de velocidad en un `AxisStepper`).
 2. El inspector captura el evento `Leave` (o `ValueChanged` con debounce).
 3. Se ejecuta `SetPropertyCommand<T>(entidad, behaviour, nombrePropiedad, valorAnterior, valorNuevo)`.
 4. El comando actualiza `behaviour.Properties[nombrePropiedad]` con el nuevo valor serializado como `JsonElement`.
@@ -134,8 +134,8 @@ src/
 2. Mueve el cursor sobre un handle del gizmo (flecha de eje, círculo de rotación, etc.).
 3. Hace clic: `GizmoController.BeginDrag(worldPos)` guarda la posición inicial de la entidad.
 4. Arrastra: `GizmoController.UpdateDrag(worldPos)` modifica directamente `entity.Position/Rotation/Scale` y publica `GameObjectTransformChangedEvent` para actualizar el inspector en tiempo real.
-5. Suelta el ratón: `GizmoController.EndDrag()` crea el comando correspondiente (`MoveEntityCommand`, `RotateEntityCommand` o `ScaleEntityCommand`) y lo devuelve al `EditorForm`.
-6. `EditorForm` ejecuta el comando en el `CommandStack`.
+5. Suelta el ratón: `GizmoController.EndDrag()` crea el comando correspondiente (`MoveEntityCommand`, `RotateEntityCommand` o `ScaleEntityCommand`) y lo devuelve a `EditorWindow`.
+6. `EditorWindow` ejecuta el comando en el `CommandStack`.
 7. **Nota**: el movimiento ya ocurrió durante el drag. El comando solo registra el cambio para poder deshacerlo (guarda posición inicial y final).
 
 **Snapping a cuadrícula**: Si se mantiene pulsada la tecla `Ctrl` al soltar, la posición final se redondea al tamaño de celda de la cuadrícula (`GridCellSize`).
@@ -145,7 +145,7 @@ src/
 ## Guardar una entidad como prefab
 
 1. Clic derecho sobre una entidad en la jerarquía → `Save as Prefab`.
-2. Se abre `SaveFileDialog` apuntando a `Editor/Prefabs/`.
+2. Se abre un selector de archivos apuntando a `Editor/Prefabs/`.
 3. `PrefabManager.Save(entidad, ruta)`:
    - Temporalmente pone `PrefabPath = ""` para no guardar la referencia circular.
    - Serializa la entidad (con todos sus behaviours e hijos) como JSON.

@@ -1,6 +1,6 @@
 # Paneles de la interfaz
 
-El editor está compuesto por un formulario principal (`EditorForm`) y varios paneles que pueden mostrarse u ocultarse. La comunicación entre paneles ocurre exclusivamente a través del bus de eventos (ver [arquitectura](arquitectura.md)).
+El editor está compuesto por una ventana principal (`EditorWindow`) y varios paneles que pueden mostrarse u ocultarse. La comunicación entre paneles ocurre exclusivamente a través del bus de eventos (ver [arquitectura](arquitectura.md)).
 
 ---
 
@@ -104,15 +104,15 @@ Cada cambio manual en el transform genera el comando correspondiente (`MoveEntit
 
 | Tipo C# | Control en el inspector |
 |---------|------------------------|
-| `float`, `int` | `NumericUpDown` |
+| `float`, `int` | `AxisStepper` (control personalizado MAUI) |
 | `bool` | `CheckBox` |
-| `string` | `TextBox` |
-| `Vector2` | Dos `NumericUpDown` (X e Y) en la misma fila |
-| `Vector3` | Tres `NumericUpDown` (X, Y, Z) en la misma fila |
-| `Color` | Rectángulo de color + botón `...` que abre `ColorDialog` |
-| `enum` (sin flags) | `ComboBox` con los valores del enum |
-| `enum` con `[Flags]` | `CheckedListBox` con todos los valores marcables |
-| Referencia a asset | TextBox (solo lectura) + botón `...` que abre `OpenFileDialog` |
+| `string` | `Entry` |
+| `Vector2` | Dos `AxisStepper` (X e Y) en la misma fila |
+| `Vector3` | Tres `AxisStepper` (X, Y, Z) en la misma fila |
+| `Color` | Rectángulo de color + botón `...` que abre `RgbaColorPickerDialog` |
+| `enum` (sin flags) | `Picker` con los valores del enum |
+| `enum` con `[Flags]` | Lista de `CheckBox` con todos los valores marcables |
+| Referencia a asset | `Entry` (solo lectura) + botón `...` que abre selector de archivo |
 
 ---
 
@@ -166,7 +166,7 @@ Muestra mensajes del editor, salida de compilación y logs del juego.
 ### Controles
 
 - **Barra superior**: botón Clear, botón Copy, desplegable de filtro (All / Debug / Info / Warning / Error).
-- **RichTextBox**: fondo oscuro, fuente Consolas 9pt, solo lectura.
+- **Área de texto**: fondo oscuro, fuente monoespaciada, solo lectura.
 
 ### Colores por nivel
 
@@ -226,7 +226,7 @@ Editor tabular para los archivos de localización del juego (`.json` en la carpe
 - **Panel izquierdo**: árbol de carpetas con la estructura de la carpeta `Localization` del proyecto. Al seleccionar una carpeta, se recargan automáticamente los archivos de locale de esa carpeta.
 - **Barra superior**: Add Key, Remove Key, Add Locale, Import .json, Export .csv, Save.
 - **Campo de filtro**: filtra las claves visibles sin reconstruir la tabla.
-- **DataGridView**: primera columna = clave (solo lectura), una columna por locale (editable).
+- **Tabla de localización**: primera columna = clave (solo lectura), una columna por locale (editable).
 - **Barra inferior**: contador de claves y locales.
 
 ### Comportamiento
@@ -271,8 +271,8 @@ Inspector para archivos de tema de interfaz (`.uitheme.json`). Se activa automá
 - **Título**: muestra el nombre del tema en la parte superior.
 - **Secciones por tipo de control** (Panel, Button, Dropdown, ProgressBar, TextBox), cada una con:
   - **Texture**: campo de texto con la ruta relativa a la textura nine-slice (sin extensión) + botón `...` que abre un `OpenFileDialog` filtrado a imágenes. La ruta se convierte automáticamente en relativa a `Content`.
-  - **Left / Right**: par de `NumericUpDown` con el inset izquierdo y derecho (0–512 px).
-  - **Top / Bottom**: par de `NumericUpDown` con el inset superior e inferior (0–512 px).
+  - **Left / Right**: par de `AxisStepper` con el inset izquierdo y derecho (0–512 px).
+  - **Top / Bottom**: par de `AxisStepper` con el inset superior e inferior (0–512 px).
   - **Tile edges / Tile center**: dos checkboxes que controlan si los bordes y el centro se tileán en vez de estirarse.
 - **Botón "Save .uitheme.json"**: serializa todos los valores a JSON y los escribe en el archivo del asset.
 
@@ -313,7 +313,7 @@ Vista > **Undo History** (tab "Undo History" en el panel inferior).
 
 ### Controles
 
-- **ListBox** con dibujado propio (`OwnerDraw`):
+- **Historial de acciones** con `CollectionView` y `DataTemplate` personalizado:
   - Entradas de **deshacer** (bloque superior): nombre de cada comando ejecutado, en color normal.
   - Separador `── redo ──` en gris cursiva (solo visible cuando hay entradas de rehacer).
   - Entradas de **rehacer** (bloque inferior): comandos pendientes de rehacer, en azul claro.
@@ -338,8 +338,8 @@ Se muestra como tab "Sprite Editor" en el panel inferior únicamente cuando hay 
 ### Controles
 
 - **Título**: nombre del asset activo.
-- **Vista previa** (`PictureBox` 200×200, modo Zoom): muestra la imagen del asset.
-- **Border Left / Right / Top / Bottom**: cuatro `NumericUpDown` (rango 0–512 px) que definen los insets del nine-slice.
+- **Vista previa** (`Image` 200×200): muestra la imagen del asset.
+- **Border Left / Right / Top / Bottom**: cuatro `AxisStepper` (rango 0–512 px) que definen los insets del nine-slice.
 - **Tile edges**: checkbox para activar el tileado de los bordes en lugar de estirarlos.
 - **Tile center**: checkbox para activar el tileado del centro en lugar de estirarlo.
 - **Botón "Save .sprite.json"**: serializa los valores a JSON y los guarda junto a la textura (mismo directorio, mismo nombre base con extensión `.sprite.json`).
@@ -381,7 +381,7 @@ Para shaders personalizados, se muestra una lista genérica de propiedades tipad
 
 **Área de vista previa** (parte inferior):
 
-- `PictureBox` 256×256 para la imagen de previsualización generada.
+- `Image` 256×256 para la imagen de previsualización generada.
 - Botón **▶ Render**: solicita una renderización de vista previa al hilo de renderizado.
 - Botón **Save .mat.json**: serializa el material a JSON y lo guarda en el archivo del asset.
 
@@ -394,11 +394,11 @@ Para shaders personalizados, se muestra una lista genérica de propiedades tipad
 
 ---
 
-## Controles del viewport (`MonoGameControl` y `EditorCamera2D`)
+## Controles del viewport (`ViewportRenderer` y `EditorCamera2D`)
 
-El viewport es un control WinForms personalizado que embebe un `GraphicsDevice` de MonoGame para renderizar la escena en **modo edición**. Durante el modo Play, el juego se ejecuta como proceso externo (ver [modo-juego](modo-juego.md)) y el viewport no se usa.
+El viewport es un control MAUI personalizado (`ViewportRenderer`) que embebe un `GraphicsDevice` de MonoGame para renderizar la escena en **modo edición**. Durante el modo Play, el juego se ejecuta como proceso externo (ver [modo-juego](modo-juego.md)) y el viewport no se usa.
 
-### MonoGameControl
+### ViewportRenderer
 
 - Publica el evento `RenderFrame` en cada frame.
 - Propiedad `Camera`: instancia de `EditorCamera2D`.
@@ -417,7 +417,7 @@ El viewport es un control WinForms personalizado que embebe un `GraphicsDevice` 
 Los gizmos son los controles visuales que aparecen sobre la entidad seleccionada para manipularla. Tienen dos capas:
 
 - **`GizmoController`** (en Core): lógica pura. Detecta si el cursor está sobre un handle, gestiona el arrastre, calcula el nuevo valor.
-- **`GizmoRenderer`** (en WinForms): rendering con GPU. Dibuja flechas, círculos, cuadrados y la cuadrícula.
+- **`GizmoRenderer`** (en Maui): rendering con GPU. Dibuja flechas, círculos, cuadrados y la cuadrícula.
 
 ### Modos de gizmo
 

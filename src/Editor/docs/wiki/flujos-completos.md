@@ -32,39 +32,38 @@ Documento de referencia para comprender todos los flujos internos del editor ant
 ## 1. Arranque y ciclo de vida de la aplicación
 
 ### Entrada
-`Program.cs` en `MonoGame.Editor.WinForms/Program.cs`
+`MauiProgram.cs` en `MonoGame.Editor.Maui/MauiProgram.cs`
 
 ### Secuencia de arranque
 
 ```
-Program.Main()
+MauiProgram.CreateMauiApp()
   │
   ├─ Configurar Serilog → %APPDATA%/MonoGameEditor/logs/editor-*.log
-  ├─ Registrar manejadores de excepción globales (UI thread + domain)
-  ├─ Application.SetHighDpiMode / VisualStyles / CompatibleTextRendering
+  ├─ Registrar manejadores de excepción globales
   ├─ EditorContext.Instance  ← singleton (se crea aquí por primera vez)
-  └─ Application.Run(new EditorForm(EditorContext.Instance))
+  └─ App.CreateWindow() → EditorWindow
 ```
 
-### Dentro de `EditorForm` (constructor)
-**Archivo:** `MonoGame.Editor.WinForms/EditorForm.cs`
+### Dentro de `EditorWindow` (constructor)
+**Archivo:** `MonoGame.Editor.Maui/Views/EditorWindow.xaml.cs`
 
 ```
-EditorForm(context)
+EditorWindow(context)
   │
-  ├─ InitializeComponent()                ← generado por el Designer
+  ├─ InitializeComponent()                ← generado por XAML
   ├─ EditorPreferences.Load()             ← restaura tamaños de paneles, visibilidad
   ├─ new GameObjectRegistry()             ← en memoria, vacío hasta que se abre proyecto
   ├─ new ContentWatcher()                 ← FileSystemWatcher inactivo hasta que se abre proyecto
-  ├─ Instanciar todos los paneles         ← cada panel recibe _context como parámetro
-  ├─ Suscribir todos los eventos del bus  ← EditorForm suscribe sus propios manejadores
-  └─ Restaurar layout de preferencias     ← anchuras de SplitContainers, visibilidad de pestañas
+  ├─ Instanciar todas las vistas          ← cada vista recibe _context como parámetro
+  ├─ Suscribir todos los eventos del bus  ← EditorWindow suscribe sus propios manejadores
+  └─ Restaurar layout de preferencias     ← anchuras de paneles, visibilidad de vistas
 ```
 
 ### Cierre de la aplicación
 
-1. El usuario cierra la ventana → `EditorForm.OnFormClosing()`
-2. Si hay cambios sin guardar, se muestra un `MessageBox` de confirmación.
+1. El usuario cierra la ventana → cierre de ventana MAUI
+2. Si hay cambios sin guardar, se muestra un diálogo de confirmación.
 3. `EditorPreferences.Save()` persiste el layout actual.
 4. `ContentWatcher.Dispose()` detiene el monitor de archivos.
 5. `_playLauncher?.Stop()` mata el proceso del juego si estaba en marcha.
@@ -75,7 +74,7 @@ EditorForm(context)
 
 ### Crear proyecto nuevo
 **Archivos clave:**
-- `MonoGame.Editor.WinForms/Dialogs/NewProjectDialog.cs`
+- `MonoGame.Editor.Maui/Views/Dialogs/NewProjectDialog.xaml.cs`
 - `MonoGame.Editor.Core/Project/ProjectManager.cs`
 - `MonoGame.Editor.Core/Project/ProjectScaffolder.cs`
 
@@ -94,11 +93,11 @@ File → New Project
 **Estado que cambia:** `EditorContext.ActiveProject`
 
 **Paneles que reaccionan a `ProjectOpenedEvent`:**
-- `SceneManagerPanel` — escanea `.editor/scenes/*.scene.json`
-- `AssetBrowserPanel` — apunta a `src/GameApp/Content/`
-- `ScriptBrowserPanel` — apunta a `src/GameScripts/`
-- `LocalizationBrowserPanel` — carga `ProjectSettings.LocalizationPath`
-- `InputMapEditorPanel` — escanea `*.input.json` en `GameSourcePath`
+- `SceneManagerView` — escanea `.editor/scenes/*.scene.json`
+- `AssetBrowserView` — apunta a `src/GameApp/Content/`
+- `ScriptBrowserView` — apunta a `src/GameScripts/`
+- `LocalizationBrowserView` — carga `ProjectSettings.LocalizationPath`
+- `InputMapEditorView` — escanea `*.input.json` en `GameSourcePath`
 - `GameObjectRegistry` — escanea assemblies y fuente del juego
 
 ### Abrir proyecto existente
@@ -106,7 +105,7 @@ File → New Project
 
 ```
 File → Open Project
-  → FolderBrowserDialog → ruta raíz
+  → Selector de carpeta nativo → ruta raíz
   → ProjectManager.Load(carpeta)
       → Deserializa {carpeta}/project.json
       → Construye EditorProject con todas las rutas absolutas
@@ -116,7 +115,7 @@ File → Open Project
 ```
 
 ### Configuración del proyecto
-**Archivo:** `MonoGame.Editor.WinForms/Dialogs/ProjectSettingsDialog.cs`
+**Archivo:** `MonoGame.Editor.Maui/Views/Dialogs/ProjectSettingsDialog.xaml.cs`
 
 ```
 Project → Project Settings...
@@ -131,7 +130,7 @@ Project → Project Settings...
 
 ### Crear escena nueva
 **Archivos clave:**
-- `MonoGame.Editor.WinForms/Dialogs/NewSceneDialog.cs`
+- `MonoGame.Editor.Maui/Views/Dialogs/NewSceneDialog.xaml.cs`
 - `MonoGame.Editor.Core/Models/EditorScene.cs`
 
 ```
@@ -164,7 +163,7 @@ SceneManagerPanel → doble clic en escena
 
 ```
 Ctrl+S
-  → Si ScenePath es null: SaveFileDialog → .editor/scenes/
+  → Si ScenePath es null: selector de archivos nativo → .editor/scenes/
   → SceneSerializer.SaveAsync(scene, path)
       → Serializa EditorScene a JSON indentado
       → Parent links excluidos de la serialización
@@ -177,10 +176,10 @@ Ctrl+S
 
 ### Marcado de escena como sucia
 
-Cualquier `CommandStack.Execute(cmd)` llama automáticamente a `context.MarkSceneDirty()` → publica `SceneDirtyChangedEvent(true)` → el título de `EditorForm` muestra `*`.
+Cualquier `CommandStack.Execute(cmd)` llama automáticamente a `context.MarkSceneDirty()` → publica `SceneDirtyChangedEvent(true)` → el título de `EditorWindow` muestra `*`.
 
 ### Configurar subsistemas del mundo
-**Archivo:** `MonoGame.Editor.WinForms/Dialogs/WorldConfigDialog.cs`
+**Archivo:** `MonoGame.Editor.Maui/Views/Dialogs/WorldConfigDialog.xaml.cs`
 
 ```
 Scene → Configure World Subsystems...
@@ -252,7 +251,7 @@ Arrastrar nodo → soltar sobre otro nodo (o sobre el árbol vacío)
 ```
 
 ### Selección de entidad
-**Archivo:** `MonoGame.Editor.WinForms/Panels/SceneHierarchyPanel.cs`
+**Archivo:** `MonoGame.Editor.Maui/Views/Panels/SceneHierarchyView.xaml.cs`
 
 ```
 Clic en nodo del TreeView
@@ -272,7 +271,7 @@ Deselección: mismo flujo con `null` como argumento.
 
 ### Añadir behaviour
 **Archivos:**
-- `MonoGame.Editor.WinForms/Dialogs/AddBehaviourDialog.cs`
+- `MonoGame.Editor.Maui/Views/Dialogs/AddBehaviourDialog.xaml.cs`
 - `MonoGame.Editor.Core/Commands/AddBehaviourCommand.cs`
 
 ```
@@ -303,7 +302,7 @@ Inspector → botón × en la sección del behaviour
 **Archivo:** `MonoGame.Editor.Core/Commands/SetPropertyCommand.cs`
 
 ```
-NumericUpDown / TextBox / CheckBox pierde el foco
+AxisStepper / Entry / CheckBox pierde el foco
   → Inspector captura evento Leave / ValueChanged
   → CommandStack.Execute(new SetPropertyCommand<T>(entidad, behaviour, prop, valorAnterior, valorNuevo))
       → Actualiza behaviour.Properties[prop] como JsonElement
@@ -320,31 +319,31 @@ NumericUpDown / TextBox / CheckBox pierde el foco
 - `MonoGame.Editor.Core/Gizmos/GizmoController.cs` — lógica pura
 - `MonoGame.Editor.Core/Gizmos/GizmoMode.cs` — enum de modos
 - `MonoGame.Editor.Core/Gizmos/GizmoDragAxis.cs` — enum de ejes
-- `MonoGame.Editor.WinForms/Gizmos/GizmoRenderer.cs` — rendering con GPU
-- `MonoGame.Editor.WinForms/Controls/EditorCamera2D.cs` — conversión pantalla ↔ mundo
+- `MonoGame.Editor.Maui/Rendering/ViewportRenderer.cs` — rendering con GPU
+- `MonoGame.Editor.Maui/Rendering/EditorCamera2D.cs` — conversión pantalla ↔ mundo
 
 ### Flujo de arrastre (mover como ejemplo)
 
 ```
 Cursor sobre handle del gizmo → clic ratón
-  → EditorForm.OnViewportMouseDown()
+  → EditorWindow.OnViewportPointerDown()
   → GizmoController.BeginDrag(worldPos)
       → HitTest: determina qué handle se pulsó (eje X, eje Y, ambos)
       → Guarda posición inicial de la entidad
 
 Cursor se mueve
-  → EditorForm.OnViewportMouseMove()
+  → EditorWindow.OnViewportPointerMoved()
   → GizmoController.UpdateDrag(worldPos)
       → Calcula delta según el eje activo
       → Modifica directamente entidad.Position (en tiempo real, sin comando)
       → EventBus.Publish(GameObjectTransformChangedEvent(entidad))
-          → Inspector actualiza los NumericUpDown de Position X/Y
+          → Inspector actualiza los AxisStepper de Position X/Y
 
 Botón ratón suelta
-  → EditorForm.OnViewportMouseUp()
+  → EditorWindow.OnViewportPointerUp()
   → GizmoController.EndDrag()
       → Devuelve MoveEntityCommand(entidad, posInicial, posFinal)
-  → EditorForm ejecuta: CommandStack.Execute(command)
+  → EditorWindow ejecuta: CommandStack.Execute(command)
       → cmd.Execute() NO mueve nada (ya está en la posición final)
       → Guarda el comando en el historial para undo
 ```
@@ -381,21 +380,21 @@ Cualquier operación del editor
 ### Deshacer (Ctrl+Z)
 
 ```
-EditorForm.OnFormKeyDown → Ctrl+Z
+EditorWindow key handler → Ctrl+Z
   → CommandStack.Undo()
       1. Saca cmd del historial
       2. cmd.Undo()
       3. Guarda cmd en la pila de redo
       4. EventBus.Publish(UndoPerformedEvent(cmd.Description))
-  → SceneHierarchyPanel reconstruye el árbol
-  → InspectorPanel recarga los controles
-  → UndoHistoryPanel actualiza la lista
+  → SceneHierarchyView reconstruye el árbol
+  → InspectorView recarga los controles
+  → UndoHistoryView actualiza la lista
 ```
 
 ### Rehacer (Ctrl+Y)
 
 ```
-EditorForm.OnFormKeyDown → Ctrl+Y
+EditorWindow key handler → Ctrl+Y
   → CommandStack.Redo()
       1. Saca cmd de la pila de redo
       2. cmd.Execute()
@@ -404,8 +403,8 @@ EditorForm.OnFormKeyDown → Ctrl+Y
   → Mismos refrescos que al deshacer
 ```
 
-### UndoHistoryPanel
-**Archivo:** `MonoGame.Editor.WinForms/Panels/UndoHistoryPanel.cs`
+### UndoHistoryView
+**Archivo:** `MonoGame.Editor.Maui/Views/Panels/UndoHistoryView.xaml.cs`
 
 Suscribe a `UndoPerformedEvent` y `RedoPerformedEvent`. Muestra la lista de comandos en el historial usando `CommandStack.GetHistory()`. El comando actual aparece resaltado.
 
@@ -415,14 +414,14 @@ Suscribe a `UndoPerformedEvent` y `RedoPerformedEvent`. Muestra la lista de coma
 
 **Archivos clave:**
 - `MonoGame.Editor.Core/PlayMode/ExternalPlayLauncher.cs`
-- `MonoGame.Editor.WinForms/EditorForm.cs` — orquesta el flujo
+- `MonoGame.Editor.Maui/Views/EditorWindow.xaml.cs` — orquesta el flujo
 
 ### Entrar en modo Play (F5 / botón ▶)
 
 ```
-EditorForm.OnPlayClick()
+EditorWindow.OnPlayClick()
   │
-  ├─ Si no hay escena activa: MessageBox + cancelar
+  ├─ Si no hay escena activa: diálogo informativo + cancelar
   ├─ Si la escena tiene cambios: guardar automáticamente (flujo 3 - Guardar)
   │
   ├─ Build de GameApp.csproj (flujo 15 - Compilación)
@@ -434,7 +433,7 @@ EditorForm.OnPlayClick()
   ├─ _playLauncher = new ExternalPlayLauncher()
   ├─ _playLauncher.Launch(exePath, scenePath, logLineCallback)
   │     → GameApp.exe --scene "{path/.editor/scenes/Scene.scene.json}"
-  │     → stderr redirigido → logLineCallback → ConsolePanel
+  │     → stderr redirigido → logLineCallback → ConsolePanelView
   │
   └─ context.SetState(EditorState.Playing)
        → EventBus.Publish(EditorStateChangedEvent(Editing, Playing))
@@ -445,7 +444,7 @@ EditorForm.OnPlayClick()
 ### Detener modo Play (botón ⏹)
 
 ```
-EditorForm.OnStopClick()
+EditorWindow.OnStopClick()
   │
   ├─ _playLauncher.Stop()
   │     → Process.Kill(entireProcessTree: true)
@@ -465,7 +464,7 @@ EditorForm.OnStopClick()
 - `MonoGame.Editor.Core/Assets/AssetClassifier.cs`
 - `MonoGame.Editor.Core/Assets/AssetInfo.cs`
 - `MonoGame.Editor.Core/Assets/AssetType.cs`
-- `MonoGame.Editor.WinForms/Panels/AssetBrowserPanel.cs`
+- `MonoGame.Editor.Maui/Views/Panels/AssetBrowserView.xaml.cs`
 
 ### ContentWatcher — detección de cambios
 
@@ -478,7 +477,7 @@ Al abrir proyecto:
 Al detectar archivo nuevo o modificado:
   → AssetClassifier.Classify(filePath) → AssetInfo { Path, Type, Name }
   → EventBus.Publish(AssetImportedEvent(assetInfo))
-  → AssetBrowserPanel suscrita → refresca la lista del panel derecho
+  → AssetBrowserView suscrita → refresca la lista del panel derecho
 ```
 
 ### Tipos de asset reconocidos por `AssetClassifier`
@@ -505,24 +504,24 @@ Al detectar archivo nuevo o modificado:
 AssetBrowserPanel → clic en archivo
   → EventBus.Publish(AssetSelectedEvent(assetInfo))
   → Paneles suscriptores reaccionan según el tipo:
-      UIThemeInspectorPanel  (AssetType.UITheme)
-      SpriteInspectorPanel   (AssetType.Sprite)
-      MaterialInspectorPanel (AssetType.Material)
+      UIThemeInspectorView   (AssetType.UITheme)
+      SpriteInspectorView    (AssetType.Sprite)
+      MaterialInspectorView  (AssetType.Material)
 ```
 
-### SpriteInspectorPanel
-**Archivo:** `MonoGame.Editor.WinForms/Panels/SpriteInspectorPanel.cs`
+### SpriteInspectorView
+**Archivo:** `MonoGame.Editor.Maui/Views/Panels/SpriteInspectorView.xaml.cs`
 
 Modelo: `MonoGame.Editor.Core/Models/EditorSpriteMetadata.cs`
 
 Al seleccionar un asset de tipo `Sprite`, carga y muestra la vista previa de la textura y los metadatos (nombre, atlas rect, pivot, etc.). Los cambios se serializan al archivo `.sprite.json`.
 
-### MaterialInspectorPanel
-**Archivo:** `MonoGame.Editor.WinForms/Panels/MaterialInspectorPanel.cs`
+### MaterialInspectorView
+**Archivo:** `MonoGame.Editor.Maui/Views/Panels/MaterialInspectorView.xaml.cs`
 
 Al seleccionar un asset de tipo `Material`, muestra una vista previa del material y sus propiedades. Usa `MaterialPreviewRenderer` para el render de vista previa.
 
-**Archivo del renderer:** `MonoGame.Editor.WinForms/Rendering/MaterialPreviewRenderer.cs`
+**Archivo del renderer:** `MonoGame.Editor.Maui/Rendering/MaterialPreviewRenderer.cs`
 
 ---
 
@@ -603,7 +602,7 @@ dotnet build GameApp.csproj
 
 ```
 Clic derecho → Save as Prefab
-  → SaveFileDialog → .editor/prefabs/
+  → Selector de archivos nativo → .editor/prefabs/
   → PrefabManager.Save(entidad, ruta)
       → Temporalmente pone PrefabPath = "" (evita referencia circular)
       → PrefabSerializer.Save() serializa la entidad a JSON
@@ -652,7 +651,7 @@ Clic derecho → Revert from Prefab
 - `MonoGame.Editor.Core/Tilemaps/EditorTileset.cs`
 - `MonoGame.Editor.Core/Commands/PaintTileCommand.cs`
 - `MonoGame.Editor.Core/Commands/EraseTileCommand.cs`
-- `MonoGame.Editor.WinForms/Panels/TilemapPalettePanel.cs`
+- `MonoGame.Editor.Maui/Views/Panels/TilemapPaletteView.xaml.cs`
 
 ### Importar tilemap
 
@@ -676,7 +675,7 @@ TilemapPalettePanel → clic en capa
 
 ```
 TilemapPalettePanel → tile seleccionado → clic en viewport
-  → EditorForm detecta clic en celda del tilemap
+  → EditorWindow detecta clic en celda del tilemap
   → CommandStack.Execute(new PaintTileCommand(layer, cellX, cellY, tileGid))
       → Guarda GID anterior de esa celda (para undo)
       → Actualiza layer.Tiles[cellY, cellX] = tileGid
@@ -703,7 +702,7 @@ TilemapPalettePanel → modo borrar → clic en viewport
 - `MonoGame.Editor.Core/Commands/RemoveInputActionCommand.cs`
 - `MonoGame.Editor.Core/Commands/AddInputBindingCommand.cs`
 - `MonoGame.Editor.Core/Commands/RemoveInputBindingCommand.cs`
-- `MonoGame.Editor.WinForms/Panels/InputMapEditorPanel.cs`
+- `MonoGame.Editor.Maui/Views/Panels/InputMapEditorView.xaml.cs`
 
 ### Cargar mapa de input
 
@@ -741,8 +740,8 @@ InputMapEditorPanel → acción seleccionada → Add Binding
 **Archivos clave:**
 - `MonoGame.Editor.Core/Localization/LocalizationEditorModel.cs`
 - `MonoGame.Editor.Core/Commands/SetLocalizationValueCommand.cs`
-- `MonoGame.Editor.WinForms/Panels/LocalizationBrowserPanel.cs`
-- `MonoGame.Editor.WinForms/Dialogs/LocaleCreationDialog.cs`
+- `MonoGame.Editor.Maui/Views/Panels/LocalizationBrowserView.xaml.cs`
+- `MonoGame.Editor.Maui/Views/Dialogs/LocaleCreationDialog.xaml.cs`
 
 ### Cargar localización
 
@@ -751,7 +750,7 @@ Al abrir proyecto (ProjectOpenedEvent)
   → LocalizationBrowserPanel construye árbol de carpetas en LocalizationPath
   → Al seleccionar carpeta: escanea *.json y construye LocalizationEditorModel
   → EventBus.Publish(LocalizationLoadedEvent(model))
-  → DataGridView: primera columna = clave, una columna por locale
+  → Tabla de localización: primera columna = clave, una columna por locale
 ```
 
 ### Añadir locale
@@ -766,7 +765,7 @@ Botón Add Locale
 ### Editar valor de clave
 
 ```
-Edición de celda en DataGridView
+Edición de celda en la tabla
   → CommandStack.Execute(new SetLocalizationValueCommand(model, locale, clave, valorNuevo))
       → Actualiza model.Values[locale][clave]
   → Botón Save: serializa todos los archivos de locale al disco
@@ -779,7 +778,7 @@ Edición de celda en DataGridView
 **Archivos clave:**
 - `MonoGame.Editor.Core/Assets/MgcbRunner.cs`
 - `MonoGame.Editor.Core/Registry/GameObjectRegistry.cs`
-- `MonoGame.Editor.WinForms/Panels/ConsolePanel.cs`
+- `MonoGame.Editor.Maui/Views/Panels/ConsolePanelView.xaml.cs`
 
 ### Build completo (Ctrl+B)
 
@@ -812,8 +811,8 @@ Project → Rescan Behaviours
 - `MonoGame.Editor.Core/Logging/IEditorLogger.cs`
 - `MonoGame.Editor.Core/Logging/LogEntry.cs`
 - `MonoGame.Editor.Core/Logging/LogLevel.cs`
-- `MonoGame.Editor.WinForms/Panels/ConsolePanel.cs`
-- `MonoGame.Editor.WinForms/Globals.cs` — instancia del logger accesible
+- `MonoGame.Editor.Maui/Views/Panels/ConsolePanelView.xaml.cs`
+- `MonoGame.Editor.Maui/Globals.cs` — instancia del logger accesible
 
 ### Flujo de un mensaje de log
 
@@ -821,13 +820,13 @@ Project → Rescan Behaviours
 Cualquier parte del editor:
   → context.Logger.Log(mensaje, nivel)
 
-IEditorLogger (implementado en WinForms/Globals.cs)
+IEditorLogger (implementado en Maui/Globals.cs)
   → Crea LogEntry { Message, Level, Timestamp }
   → EventBus.Publish(LogEntryAddedEvent(entry))
   → Serilog también lo persiste en %APPDATA%/MonoGameEditor/logs/editor-*.log
 
-ConsolePanel (suscrita a LogEntryAddedEvent)
-  → Añade línea al RichTextBox con el color correspondiente al nivel
+ConsolePanelView (suscrita a LogEntryAddedEvent)
+  → Añade línea al área de texto con el color correspondiente al nivel
   → Formato: [HH:mm:ss] [NIVEL] mensaje
 ```
 
@@ -869,8 +868,8 @@ ConsolePanel (suscrita a LogEntryAddedEvent)
 
 ### Cuándo se guarda y carga
 
-- **Carga:** `EditorPreferences.Load()` en el constructor de `EditorForm`
-- **Guardado:** `EditorPreferences.Save()` en `EditorForm.OnFormClosing()`
+- **Carga:** `EditorPreferences.Load()` en el constructor de `EditorWindow`
+- **Guardado:** `EditorPreferences.Save()` en el cierre de `EditorWindow`
 - **Formato:** JSON plano con `System.Text.Json`
 
 ### Configuración del proyecto (distinta de las preferencias)
@@ -926,10 +925,10 @@ Esto permite al editor mostrar scripts recién creados antes de compilar.
 
 El editor usa tres contextos de ejecución:
 
-### Hilo UI (WinForms)
+### Hilo UI (MAUI)
 
-- Todos los controles WinForms, paneles y diálogos
-- `EditorForm` y todos los event handlers del bus
+- Todas las vistas, paneles y diálogos MAUI
+- `EditorWindow` y todos los event handlers del bus
 - `CommandStack.Execute/Undo/Redo` (siempre desde el hilo UI)
 - Publicaciones del `EventBus` (síncronas en el hilo que publica)
 
@@ -953,7 +952,7 @@ El editor usa tres contextos de ejecución:
 
 - `EditorContext` usa `lock` interno para toda escritura de estado
 - `EventBus` usa `lock` para el registro y desregistro de manejadores (pero no para la publicación)
-- Los paneles que actualizan controles WinForms desde hilos de fondo usan `Control.Invoke()`
+- Las vistas que actualizan controles MAUI desde hilos de fondo usan `MainThread.BeginInvokeOnMainThread()`
 
 ---
 
@@ -963,7 +962,7 @@ Para cualquier acción del editor, la cadena habitual es:
 
 ```
 Input del usuario (ratón, teclado, botón)
-  → Panel WinForms captura el evento
+  → Vista MAUI captura el evento
   → Crea y ejecuta un IEditorCommand via CommandStack
       → Modifica el modelo (EditorScene / EditorGameObject / EditorBehaviour)
       → context.MarkSceneDirty()
@@ -976,4 +975,4 @@ Los **invariantes** que siempre se cumplen:
 1. El modelo solo se modifica a través de comandos (undo/redo garantizado).
 2. Los paneles nunca se comunican directamente entre sí (solo via EventBus).
 3. `EditorContext` es la única fuente de verdad del estado global.
-4. Los archivos `.Designer.cs` son competencia del Visual Studio Designer y no se modifican manualmente.
+4. Los archivos `.g.cs` generados por el compilador XAML de MAUI no se modifican manualmente.

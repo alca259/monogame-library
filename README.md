@@ -28,11 +28,12 @@ Todo el game loop es **zero-alloc**: sin LINQ, sin `new` de clases en `Update`/`
 
 ### MonoGame Editor — El editor _(en desarrollo)_
 
-Editor visual de MonoGame construido en WinForms, orientado a facilitar la creación de escenas, configuración de entidades y ajuste de propiedades sin necesidad de recompilar.
+Editor visual de MonoGame construido con **.NET MAUI**, orientado a facilitar la creación de escenas, configuración de entidades y ajuste de propiedades sin necesidad de recompilar.
 
-Actualmente en fase inicial — los proyectos relevantes son:
-- `src/Editor/MonoGame.Editor.Core` — lógica central del editor
-- `src/Editor/MonoGame.Editor.WinForms` — interfaz de usuario WinForms
+Actualmente en fase de desarrollo — los proyectos relevantes son:
+- `src/Editor/MonoGame.Editor.Core` — lógica central del editor (sin dependencias de UI)
+- `src/Editor/MonoGame.Editor.Maui` — interfaz de usuario MAUI (Windows)
+- `src/Editor/MonoGame.Editor.SourceGenerator` — generador de código Roslyn (AOT)
 
 ---
 
@@ -45,8 +46,9 @@ src/
 │   ├── Alca.MonoGame.Kernel.UnitTests/← tests xUnit (~700 tests)
 │   └── Wiki/                          ← documentación completa
 ├── Editor/
-│   ├── MonoGame.Editor.Core/          ← núcleo del editor (WIP)
-│   └── MonoGame.Editor.WinForms/      ← UI del editor (WIP)
+│   ├── MonoGame.Editor.Core/          ← núcleo del editor
+│   ├── MonoGame.Editor.Maui/          ← UI del editor (MAUI, Windows)
+│   └── MonoGame.Editor.SourceGenerator/ ← generador de código Roslyn
 └── Demo/
     └── Alca.MonoGame.Demo/            ← proyecto de demostración
 ```

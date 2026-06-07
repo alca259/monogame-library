@@ -25,12 +25,12 @@ Documentación técnica del editor visual para proyectos MonoGame. Esta wiki exp
 ```
 MonoGame.Editor.slnx
 ├── MonoGame.Editor.Core             ← Lógica del editor, sin UI
-├── MonoGame.Editor.WinForms         ← Aplicación WinForms, interfaz de usuario
+├── MonoGame.Editor.Maui             ← Aplicación MAUI (Windows), interfaz de usuario
 └── MonoGame.Editor.SourceGenerator  ← Roslyn IIncrementalGenerator (netstandard2.0)
 ```
 
-- **Core** no contiene ninguna referencia a `System.Windows.Forms`.
-- **WinForms** solo referencia a `Core`.
+- **Core** no contiene ninguna referencia a MAUI ni a `System.Windows.Forms`.
+- **Maui** solo referencia a `Core`.
 - **SourceGenerator** se empaqueta como analizador en `GameApp.csproj`; convierte `*.scene.json` en C# estático compatible AOT.
 - La comunicación entre paneles es exclusivamente a través de `IEditorEventBus`.
 
