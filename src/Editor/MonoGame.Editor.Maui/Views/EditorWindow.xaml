@@ -215,6 +215,11 @@
                 </GraphicsView.GestureRecognizers>
             </GraphicsView>
 
+            <!-- Resaltado del viewport activo (overlay, sin afectar al layout) -->
+            <Border Grid.Column="2"
+                    InputTransparent="True" BackgroundColor="Transparent" StrokeThickness="1"
+                    Stroke="{Binding IsViewportFocused, Converter={StaticResource BoolToColor}, ConverterParameter='#4A9EFF|#00000000'}"/>
+
             <BoxView x:Name="InspectorSep" Grid.Column="3" Color="{StaticResource BorderColor}"/>
 
             <panels:InspectorView Grid.Column="4"/>

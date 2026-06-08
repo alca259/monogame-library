@@ -93,12 +93,16 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string _fpsText = "-- FPS";
 
+    [ObservableProperty]
+    private bool _isViewportFocused;
+
     #endregion
 
     #region Bus subscriptions
 
     protected override void RegisterEvents()
     {
+        On<FocusChangedEvent>(e => IsViewportFocused = e.NewContext is EditorFocusContext.Viewport);
         On<EditorStateChangedEvent>(OnEditorStateChanged);
         On<SceneLoadedEvent>(OnSceneLoaded);
         On<BuildOutputLineEvent>(OnBuildOutputLine);
