@@ -18,3 +18,7 @@ global using MonoGame.Editor.Maui.Controls;
 global using MonoGame.Editor.Maui.Views.Dialogs;
 global using MonoGame.Editor.Maui.Rendering;
 global using MonoGame.Editor.Maui.Views;
+global using MonoGame.Editor.Maui.ViewModels;
+global using MonoGame.Editor.Maui.ViewModels.Panels;
+global using MonoGame.Editor.Maui.ViewModels.Dialogs;
+global using MonoGame.Editor.Maui.Services;

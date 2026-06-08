@@ -1,8 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentPage x:Class="MonoGame.Editor.Maui.Views.EditorWindow"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:panels="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels"
+             x:DataType="vm:EditorWindowViewModel"
+             Title="{Binding Title}"
              BackgroundColor="{StaticResource BgWindow}"
              Padding="0">
 
@@ -45,30 +48,78 @@
                                    Padding="8,0">
 
                 <!-- Gizmo tools -->
-                <Button x:Name="SelectBtn" Text="↖"
-                        ToolTipProperties.Text="Select (Q)"
-                        Style="{StaticResource ActiveToolButton}"
-                        Clicked="OnToolClicked" CommandParameter="Select"/>
-                <Button x:Name="MoveBtn" Text="✥"
-                        ToolTipProperties.Text="Move (W)"
+                <Button Text="↖" ToolTipProperties.Text="Select (Q)"
                         Style="{StaticResource ToolButton}"
-                        Clicked="OnToolClicked" CommandParameter="Move"/>
-                <Button x:Name="RotateBtn" Text="↺"
-                        ToolTipProperties.Text="Rotate (E)"
+                        Command="{Binding ActivateToolCommand}" CommandParameter="Select"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="Transparent" TextColor="#9A9AA2">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ActiveTool}" Value="Select">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="✥" ToolTipProperties.Text="Move (W)"
                         Style="{StaticResource ToolButton}"
-                        Clicked="OnToolClicked" CommandParameter="Rotate"/>
-                <Button x:Name="ScaleBtn" Text="⤡"
-                        ToolTipProperties.Text="Scale (R)"
+                        Command="{Binding ActivateToolCommand}" CommandParameter="Move"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="Transparent" TextColor="#9A9AA2">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ActiveTool}" Value="Move">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="↺" ToolTipProperties.Text="Rotate (E)"
                         Style="{StaticResource ToolButton}"
-                        Clicked="OnToolClicked" CommandParameter="Scale"/>
-                <Button x:Name="RectBtn" Text="▭"
-                        ToolTipProperties.Text="Rect Transform (T)"
+                        Command="{Binding ActivateToolCommand}" CommandParameter="Rotate"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="Transparent" TextColor="#9A9AA2">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ActiveTool}" Value="Rotate">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="⤡" ToolTipProperties.Text="Scale (R)"
                         Style="{StaticResource ToolButton}"
-                        Clicked="OnToolClicked" CommandParameter="Rect"/>
-                <Button x:Name="PanBtn" Text="✋"
-                        ToolTipProperties.Text="Pan (H)"
+                        Command="{Binding ActivateToolCommand}" CommandParameter="Scale"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="Transparent" TextColor="#9A9AA2">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ActiveTool}" Value="Scale">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="▭" ToolTipProperties.Text="Rect Transform (T)"
                         Style="{StaticResource ToolButton}"
-                        Clicked="OnToolClicked" CommandParameter="Pan"/>
+                        Command="{Binding ActivateToolCommand}" CommandParameter="Rect"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="Transparent" TextColor="#9A9AA2">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ActiveTool}" Value="Rect">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="✋" ToolTipProperties.Text="Pan (H)"
+                        Style="{StaticResource ToolButton}"
+                        Command="{Binding ActivateToolCommand}" CommandParameter="Pan"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="Transparent" TextColor="#9A9AA2">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ActiveTool}" Value="Pan">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
 
                 <!-- Separator -->
                 <BoxView WidthRequest="1" HeightRequest="24"
@@ -76,12 +127,45 @@
                          Margin="6,0" VerticalOptions="Center"/>
 
                 <!-- Mode toggles -->
-                <Button x:Name="ToggleSnapBtn" Text="SNAP" Style="{StaticResource PillButton}"       Clicked="OnToggleSnap"
-                        ToolTipProperties.Text="Snap to Grid (G)"/>
-                <Button x:Name="ToggleNavBtn"  Text="NAV"  Style="{StaticResource PillButton}"       Clicked="OnToggleNav"
-                        ToolTipProperties.Text="Navigate Mode"/>
-                <Button x:Name="ToggleResBtn"  Text="RES"  Style="{StaticResource PillButton}"       Clicked="OnToggleRes"
-                        ToolTipProperties.Text="Resolution Mode"/>
+                <Button Text="SNAP" ToolTipProperties.Text="Snap to Grid (G)"
+                        Style="{StaticResource PillButton}"
+                        Command="{Binding ToggleSnapCommand}"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="#252528" TextColor="#9A9AA2" BorderColor="#34343A">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsSnap}" Value="True">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                            <Setter Property="BorderColor" Value="#4A9EFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="NAV" ToolTipProperties.Text="Navigate Mode"
+                        Style="{StaticResource PillButton}"
+                        Command="{Binding ToggleNavCommand}"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="#252528" TextColor="#9A9AA2" BorderColor="#34343A">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsNav}" Value="True">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                            <Setter Property="BorderColor" Value="#4A9EFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="RES" ToolTipProperties.Text="Resolution Mode"
+                        Style="{StaticResource PillButton}"
+                        Command="{Binding ToggleResCommand}"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="#252528" TextColor="#9A9AA2" BorderColor="#34343A">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsRes}" Value="True">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                            <Setter Property="BorderColor" Value="#4A9EFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
 
                 <!-- Separator -->
                 <BoxView WidthRequest="1" HeightRequest="24"
@@ -89,16 +173,18 @@
                          Margin="6,0" VerticalOptions="Center"/>
 
                 <!-- Transport -->
-                <Button x:Name="PlayBtn" Text="▶"
+                <Button Text="{Binding PlayButtonText}"
                         ToolTipProperties.Text="Play (F5)"
                         Style="{StaticResource PlayButton}"
-                        IsEnabled="False"
-                        Clicked="OnPlayClicked"/>
-                <Button x:Name="StopBtn" Text="■"
+                        Command="{Binding PlayCommand}"
+                        IsEnabled="{Binding CanPlay}"/>
+                <Button Text="■"
                         ToolTipProperties.Text="Stop (Shift+F5)"
                         Style="{StaticResource StopButton}"
-                        IsEnabled="False"
-                        Clicked="OnStopClicked"/>
+                        Command="{Binding StopCommand}"
+                        IsEnabled="{Binding CanStop}"
+                        BackgroundColor="{Binding StopBackground}"
+                        TextColor="{Binding StopForeground}"/>
 
             </HorizontalStackLayout>
         </Border>
@@ -107,11 +193,6 @@
                  HeightRequest="1" Color="{StaticResource BorderColor}"/>
 
         <!-- ── Row 2: Center body ────────────────────────────────── -->
-        <!--   Col 0 (268) — Hierarchy
-               Col 1 (1)   — separator
-               Col 2 (*)   — Viewport
-               Col 3 (1)   — separator
-               Col 4 (362) — Inspector   -->
         <Grid x:Name="BodyGrid"
               Grid.Row="2"
               ColumnDefinitions="268,4,*,4,362"
@@ -139,8 +220,6 @@
             <panels:InspectorView Grid.Column="4"/>
         </Grid>
 
-        <!-- Body top separator (between toolbar and body) handled by toolbar's BoxView -->
-
         <!-- ── Row 3: Dock bar ───────────────────────────────────── -->
         <Grid x:Name="DockRow" Grid.Row="3" RowDefinitions="4,*" RowSpacing="0">
             <BoxView x:Name="DockSep" Grid.Row="0" Color="{StaticResource BorderColor}"/>
@@ -156,12 +235,11 @@
 
                 <!-- Build status segment -->
                 <Border Grid.Column="0"
-                        x:Name="BuildStatusSegment"
-                        BackgroundColor="{StaticResource BgChrome}"
+                        BackgroundColor="{Binding BuildStatusBackground}"
                         StrokeThickness="0"
                         Padding="8,0">
-                    <Label x:Name="BuildStatusLabel"
-                           Text="Ready"
+                    <Label Text="{Binding BuildStatusText}"
+                           TextColor="{Binding BuildStatusColor}"
                            Style="{StaticResource DimLabel}"
                            VerticalOptions="Center"/>
                 </Border>
@@ -171,8 +249,7 @@
 
                 <!-- Scene object count -->
                 <Label Grid.Column="2"
-                       x:Name="ObjectCountLabel"
-                       Text=""
+                       Text="{Binding ObjectCountText}"
                        Style="{StaticResource DimLabel}"
                        Margin="8,0"
                        VerticalOptions="Center"/>
@@ -186,8 +263,7 @@
 
                 <!-- FPS counter -->
                 <Label Grid.Column="4"
-                       x:Name="FpsLabel"
-                       Text="-- FPS"
+                       Text="{Binding FpsText}"
                        Style="{StaticResource MonoLabel}"
                        Margin="8,0"
                        VerticalOptions="Center"/>
@@ -198,7 +274,6 @@
                  HeightRequest="1" Color="{StaticResource BorderColor}"/>
 
         <!-- ── Dropdown menu overlay ─────────────────────────────────── -->
-        <!--   Spans all rows; rendered on top. Tap outside dropdown to close. -->
         <Grid x:Name="MenuOverlay"
               Grid.RowSpan="5"
               IsVisible="False">

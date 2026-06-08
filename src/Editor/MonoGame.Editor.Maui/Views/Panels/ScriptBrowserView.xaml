@@ -1,8 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.ScriptBrowserView"
+             x:Name="Root"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             x:DataType="vm:ScriptBrowserViewModel"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,1,*" RowSpacing="0">
@@ -15,53 +18,42 @@
                 <Button Grid.Column="0"
                         Text="⟳ Rescan"
                         Style="{StaticResource SmallIconButton}"
-                        Clicked="OnRescanClicked"/>
+                        Command="{Binding RescanCommand}"/>
                 <Button Grid.Column="1"
-                        x:Name="NewFolderBtn"
                         Text="📁"
                         ToolTipProperties.Text="New folder"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnNewFolderClicked"/>
+                        Command="{Binding NewFolderCommand}"/>
                 <Button Grid.Column="2"
-                        x:Name="FolderRenameBtn"
                         Text="✎"
                         ToolTipProperties.Text="Rename folder"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnFolderRenameClicked"/>
+                        Command="{Binding FolderRenameCommand}"/>
                 <Button Grid.Column="3"
-                        x:Name="FolderDeleteBtn"
                         Text="🗑"
                         ToolTipProperties.Text="Delete folder"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnFolderDeleteClicked"/>
+                        Command="{Binding FolderDeleteCommand}"/>
                 <BoxView Grid.Column="4"
                          Color="{StaticResource BorderColor}"
                          VerticalOptions="Fill"
                          Margin="2,2"/>
                 <Button Grid.Column="5"
-                        x:Name="ScriptRenameBtn"
                         Text="✎"
                         ToolTipProperties.Text="Rename script"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnScriptRenameClicked"/>
+                        Command="{Binding ScriptRenameCommand}"/>
                 <Button Grid.Column="6"
-                        x:Name="ScriptDeleteBtn"
                         Text="🗑"
                         ToolTipProperties.Text="Delete script"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnScriptDeleteClicked"/>
+                        Command="{Binding ScriptDeleteCommand}"/>
                 <BoxView Grid.Column="7"
                          Color="{StaticResource BorderColor}"
                          VerticalOptions="Fill"
                          Margin="2,2"/>
                 <Label Grid.Column="8"
-                       x:Name="ScriptCountLabel"
-                       Text="0 scripts"
+                       Text="{Binding ScriptCountText}"
                        Style="{StaticResource DimLabel}"
                        VerticalOptions="Center"
                        Margin="4,0"/>
@@ -74,15 +66,15 @@
 
             <!-- Folder tree -->
             <CollectionView Grid.Column="0"
-                            x:Name="FolderTree"
+                            ItemsSource="{Binding FolderItems}"
                             SelectionMode="None"
                             BackgroundColor="{StaticResource BgPanel}">
                 <FlyoutBase.ContextFlyout>
                     <MenuFlyout>
                         <MenuFlyoutItem Text="📁 New folder"
-                                        Clicked="OnNewFolderClicked"/>
+                                        Command="{Binding NewFolderCommand}"/>
                         <MenuFlyoutItem Text="New script"
-                                        Clicked="OnNewScriptClicked"/>
+                                        Command="{Binding NewScriptCommand}"/>
                     </MenuFlyout>
                 </FlyoutBase.ContextFlyout>
                 <CollectionView.ItemTemplate>
@@ -91,9 +83,9 @@
                             <FlyoutBase.ContextFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem Text="📁 New folder"
-                                                    Clicked="OnNewFolderClicked"/>
+                                                    Command="{Binding Vm.NewFolderCommand, Source={x:Reference Root}}"/>
                                     <MenuFlyoutItem Text="New script"
-                                                    Clicked="OnNewScriptClicked"/>
+                                                    Command="{Binding Vm.NewScriptCommand, Source={x:Reference Root}}"/>
                                     <MenuFlyoutSeparator/>
                                     <MenuFlyoutItem Text="✎ Rename folder"
                                                     IsEnabled="{Binding IsNotRoot}"
@@ -129,15 +121,15 @@
 
             <!-- Script file list -->
             <CollectionView Grid.Column="2"
-                            x:Name="ScriptList"
+                            ItemsSource="{Binding ScriptItems}"
                             SelectionMode="None"
                             BackgroundColor="{StaticResource BgPanel}">
                 <FlyoutBase.ContextFlyout>
                     <MenuFlyout>
                         <MenuFlyoutItem Text="📁 New folder"
-                                        Clicked="OnNewFolderClicked"/>
+                                        Command="{Binding NewFolderCommand}"/>
                         <MenuFlyoutItem Text="New script"
-                                        Clicked="OnNewScriptClicked"/>
+                                        Command="{Binding NewScriptCommand}"/>
                     </MenuFlyout>
                 </FlyoutBase.ContextFlyout>
                 <CollectionView.ItemTemplate>
@@ -148,9 +140,9 @@
                             <FlyoutBase.ContextFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem Text="📁 New folder"
-                                                    Clicked="OnNewFolderClicked"/>
+                                                    Command="{Binding Vm.NewFolderCommand, Source={x:Reference Root}}"/>
                                     <MenuFlyoutItem Text="New script"
-                                                    Clicked="OnNewScriptClicked"/>
+                                                    Command="{Binding Vm.NewScriptCommand, Source={x:Reference Root}}"/>
                                     <MenuFlyoutSeparator/>
                                     <MenuFlyoutItem Text="✎ Rename script"
                                                     Command="{Binding RenameCommand}"/>

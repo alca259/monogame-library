@@ -1,8 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.SceneManagerView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             x:DataType="vm:SceneManagerViewModel"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,1,*,1,24" RowSpacing="0">
@@ -14,26 +16,20 @@
             <Grid ColumnDefinitions="Auto,Auto,Auto,1,*" ColumnSpacing="2" Padding="4,2">
 
                 <Button Grid.Column="0"
-                        x:Name="NewSceneBtn"
                         Text="+"
                         ToolTipProperties.Text="New scene"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnNewSceneClicked"/>
+                        Command="{Binding NewSceneCommand}"/>
                 <Button Grid.Column="1"
-                        x:Name="SceneRenameBtn"
                         Text="✎"
                         ToolTipProperties.Text="Rename scene"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnRenameSceneClicked"/>
+                        Command="{Binding RenameSceneCommand}"/>
                 <Button Grid.Column="2"
-                        x:Name="DeleteSceneBtn"
                         Text="🗑"
                         ToolTipProperties.Text="Delete scene"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnDeleteSceneClicked"/>
+                        Command="{Binding DeleteSceneCommand}"/>
 
                 <BoxView Grid.Column="3"
                          Color="{StaticResource BorderColor}"
@@ -41,8 +37,7 @@
                          Margin="2,2"/>
 
                 <Label Grid.Column="4"
-                       x:Name="SceneCountLabel"
-                       Text="0 scenes"
+                       Text="{Binding SceneCountText}"
                        Style="{StaticResource DimLabel}"
                        VerticalOptions="Center"
                        Margin="4,0"/>
@@ -52,7 +47,8 @@
 
         <!-- ── Scene list ────────────────────────────────────────── -->
         <CollectionView Grid.Row="2"
-                        x:Name="SceneList"
+                        ItemsSource="{Binding Items}"
+                        SelectedItem="{Binding SelectedScene}"
                         SelectionMode="Single"
                         BackgroundColor="{StaticResource BgPanel}">
             <CollectionView.ItemTemplate>
@@ -82,8 +78,7 @@
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0"
                 Padding="8,0">
-            <Label x:Name="ActiveSceneLabel"
-                   Text="No active scene"
+            <Label Text="{Binding ActiveSceneText}"
                    Style="{StaticResource DimLabel}"
                    VerticalOptions="Center"/>
         </Border>

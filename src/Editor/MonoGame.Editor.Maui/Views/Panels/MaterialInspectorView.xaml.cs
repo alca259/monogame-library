@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Maui.Controls.Shapes;
 using MonoGame.Editor.Maui.Controls;
 using MonoGame.Editor.Maui.Rendering;
@@ -24,15 +24,13 @@ public sealed partial class MaterialInspectorView : ContentView
         "Shaders/Vignette",
     ];
 
-    private readonly IEditorEventBus _bus = EditorContext.Instance.EventBus;
+    private readonly MaterialInspectorViewModel _vm = new();
 
     // Getters keyed by property name; each returns the current EditorMaterialProperty from the UI.
     private readonly Dictionary<string, Func<EditorMaterialProperty>> _propGetters =
         new(StringComparer.Ordinal);
 
     private EditorMaterial? _material;
-    private Action<AssetSelectedEvent>? _onAssetSelected;
-    private Action<ProjectOpenedEvent>? _onProjectOpened;
     private string _currentFilePath      = string.Empty;
     private string _projectContentRoot   = string.Empty;
     private bool   _suppressShaderChange = false;
@@ -44,6 +42,9 @@ public sealed partial class MaterialInspectorView : ContentView
     public MaterialInspectorView()
     {
         InitializeComponent();
+        BindingContext = _vm;
+        _vm.AssetSelected += OnAssetSelected;
+        _vm.ProjectOpened += OnProjectOpened;
     }
 
     #endregion
@@ -53,22 +54,8 @@ public sealed partial class MaterialInspectorView : ContentView
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
-        if (Handler is not null) Subscribe();
-        else Unsubscribe();
-    }
-
-    private void Subscribe()
-    {
-        _onAssetSelected = e => MainThread.BeginInvokeOnMainThread(() => OnAssetSelected(e));
-        _onProjectOpened = e => MainThread.BeginInvokeOnMainThread(() => OnProjectOpened(e));
-        _bus.Subscribe(_onAssetSelected);
-        _bus.Subscribe(_onProjectOpened);
-    }
-
-    private void Unsubscribe()
-    {
-        if (_onAssetSelected is not null) _bus.Unsubscribe(_onAssetSelected);
-        if (_onProjectOpened is not null) _bus.Unsubscribe(_onProjectOpened);
+        if (Handler is not null) _vm.Attach();
+        else _vm.Detach();
     }
 
     #endregion

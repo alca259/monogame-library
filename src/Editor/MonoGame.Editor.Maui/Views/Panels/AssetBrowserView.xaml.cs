@@ -1,179 +1,48 @@
-using System.Collections.ObjectModel;
-
-namespace MonoGame.Editor.Maui.Views.Panels;
+﻿namespace MonoGame.Editor.Maui.Views.Panels;
 
 /// <summary>
-/// Pestaña Assets del dock inferior. Árbol de carpetas (izquierda) + lista de assets con
-/// breadcrumb, cabeceras de columna y filtro de texto (derecha).
+/// Pestaña Assets del dock inferior. La lógica vive en <see cref="AssetBrowserViewModel"/>;
+/// el code-behind enlaza la VM, la expone como <see cref="Vm"/> para los menús contextuales
+/// de las plantillas, y construye el breadcrumb (UI dinámica) al recibir
+/// <see cref="AssetBrowserViewModel.FolderChanged"/>.
 /// </summary>
 public sealed partial class AssetBrowserView : ContentView
 {
-    private readonly IEditorEventBus _bus = EditorContext.Instance.EventBus;
-    private readonly ObservableCollection<FolderItem> _folderItems = [];
-    private readonly ObservableCollection<AssetItem>  _assetItems  = [];
-    private readonly HashSet<string> _expandedFolders = [];
+    private readonly AssetBrowserViewModel _vm = new();
 
-    private string _contentRoot      = string.Empty;
-    private string _currentFolderPath = string.Empty;
-    private string _filterText        = string.Empty;
-    private string _selectedFolderPath = string.Empty;
-
-    private Action<ProjectOpenedEvent>? _onProjectOpened;
-    private Action<AssetImportedEvent>? _onAssetImported;
+    /// <summary>VM tipada, referenciada desde los <c>MenuFlyout</c> de las plantillas.</summary>
+    public AssetBrowserViewModel Vm => _vm;
 
     public AssetBrowserView()
     {
         InitializeComponent();
-        FolderTree.ItemsSource = _folderItems;
-        AssetList.ItemsSource  = _assetItems;
+        BindingContext = _vm;
+        _vm.FolderChanged += BuildBreadcrumb;
     }
 
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
-        if (Handler is not null) Subscribe();
-        else Unsubscribe();
+        if (Handler is not null) _vm.Attach();
+        else _vm.Detach();
     }
 
-    // ── EventBus ─────────────────────────────────────────────────────────────
+    // ── Breadcrumb (UI dinámica dependiente de la ruta actual) ──────────────────
 
-    private void Subscribe()
-    {
-        _onProjectOpened = e => MainThread.BeginInvokeOnMainThread(() => OnProjectOpened(e));
-        _onAssetImported = _ => MainThread.BeginInvokeOnMainThread(() => LoadAssetsFromFolder());
-        _bus.Subscribe(_onProjectOpened);
-        _bus.Subscribe(_onAssetImported);
-    }
-
-    private void Unsubscribe()
-    {
-        if (_onProjectOpened is not null) _bus.Unsubscribe(_onProjectOpened);
-        if (_onAssetImported is not null)  _bus.Unsubscribe(_onAssetImported);
-    }
-
-    // ── Project opened ────────────────────────────────────────────────────────
-
-    private void OnProjectOpened(ProjectOpenedEvent e)
-    {
-        _folderItems.Clear();
-        _assetItems.Clear();
-        _expandedFolders.Clear();
-        BreadcrumbLayout.Children.Clear();
-        AssetPathLabel.Text      = string.Empty;
-        AssetCountLabel.Text     = "0 assets";
-        AssetRenameBtn.IsEnabled = false;
-        AssetDeleteBtn.IsEnabled = false;
-
-        if (e.Project is null)
-        {
-            _contentRoot       = string.Empty;
-            _currentFolderPath = string.Empty;
-            NewFolderBtn.IsEnabled = false;
-            return;
-        }
-
-        _contentRoot       = e.Project.ContentPath;
-        _currentFolderPath = _contentRoot;
-        _expandedFolders.Add(_contentRoot);
-        NewFolderBtn.IsEnabled = true;
-
-        BuildFolderTree();
-        BuildBreadcrumb(_currentFolderPath);
-        LoadAssetsFromFolder();
-    }
-
-    // ── Folder tree ───────────────────────────────────────────────────────────
-
-    private void BuildFolderTree()
-    {
-        _folderItems.Clear();
-        if (!Directory.Exists(_contentRoot)) return;
-        FlattenFolders(_contentRoot, 0);
-    }
-
-    private void FlattenFolders(string dir, int depth)
-    {
-        if (!Directory.Exists(dir)) return;
-
-        string[] subdirs     = Directory.GetDirectories(dir);
-        bool     hasChildren = subdirs.Length > 0;
-        bool     isExpanded  = _expandedFolders.Contains(dir);
-        bool     isRoot      = string.Equals(dir, _contentRoot, StringComparison.OrdinalIgnoreCase);
-
-        FolderItem item = null!;
-        item = new FolderItem(dir, depth, hasChildren, isExpanded, isRoot,
-            onToggle: () =>
-            {
-                if (item.IsExpanded)
-                    _expandedFolders.Add(dir);
-                else
-                    _expandedFolders.Remove(dir);
-
-                BuildFolderTree();
-
-                if (item.IsExpanded)
-                {
-                    _currentFolderPath = dir;
-                    BuildBreadcrumb(dir);
-                    LoadAssetsFromFolder();
-                }
-            },
-            onRename: () =>
-            {
-                _selectedFolderPath = dir;
-                _ = OnFolderRenameAsync();
-            },
-            onDelete: () =>
-            {
-                _selectedFolderPath = dir;
-                _ = OnFolderDeleteAsync();
-            });
-
-        _folderItems.Add(item);
-
-        if (isExpanded)
-        {
-            foreach (string sub in subdirs.OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
-                FlattenFolders(sub, depth + 1);
-        }
-    }
-
-    // ── Asset list ────────────────────────────────────────────────────────────
-
-    private void LoadAssetsFromFolder()
-    {
-        _assetItems.Clear();
-        if (!Directory.Exists(_currentFolderPath)) return;
-
-        int count = 0;
-        foreach (string file in Directory.GetFiles(_currentFolderPath)
-                                         .OrderBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase))
-        {
-            AssetInfo info = AssetClassifier.CreateInfo(file, _contentRoot);
-            if (!string.IsNullOrEmpty(_filterText) &&
-                !info.Name.Contains(_filterText, StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            _assetItems.Add(new AssetItem(info));
-            count++;
-        }
-
-        AssetCountLabel.Text = count == 1 ? "1 asset" : $"{count} assets";
-    }
-
-    // ── Breadcrumb ────────────────────────────────────────────────────────────
-
-    private void BuildBreadcrumb(string folderPath)
+    private void BuildBreadcrumb()
     {
         BreadcrumbLayout.Children.Clear();
-        if (string.IsNullOrEmpty(_contentRoot)) return;
 
-        var segments = new List<(string Label, string Path)> { ("Content", _contentRoot) };
+        string contentRoot = _vm.ContentRoot;
+        string folderPath  = _vm.CurrentFolderPath;
+        if (string.IsNullOrEmpty(contentRoot)) return;
 
-        string relative = Path.GetRelativePath(_contentRoot, folderPath);
+        var segments = new List<(string Label, string Path)> { ("Content", contentRoot) };
+
+        string relative = Path.GetRelativePath(contentRoot, folderPath);
         if (relative != ".")
         {
-            string accumulated = _contentRoot;
+            string accumulated = contentRoot;
             foreach (string part in relative.Split(Path.DirectorySeparatorChar))
             {
                 accumulated = Path.Combine(accumulated, part);
@@ -217,258 +86,9 @@ public sealed partial class AssetBrowserView : ContentView
                     TextColor       = Color.FromArgb("#9A9AA2"),
                     VerticalOptions = LayoutOptions.Center,
                 };
-                btn.Clicked += (_, _) => NavigateToFolder(captured);
+                btn.Clicked += (_, _) => _vm.NavigateToFolderCommand.Execute(captured);
                 BreadcrumbLayout.Children.Add(btn);
             }
         }
     }
-
-    // ── Navigation ────────────────────────────────────────────────────────────
-
-    private void NavigateToFolder(string path)
-    {
-        _currentFolderPath = path;
-
-        string current = path;
-        while (!string.IsNullOrEmpty(current) &&
-               current.StartsWith(_contentRoot, StringComparison.OrdinalIgnoreCase))
-        {
-            _expandedFolders.Add(current);
-            string parent = Path.GetDirectoryName(current) ?? string.Empty;
-            if (string.IsNullOrEmpty(parent) || parent == current) break;
-            current = parent;
-        }
-
-        BuildFolderTree();
-        BuildBreadcrumb(path);
-        LoadAssetsFromFolder();
-    }
-
-    // ── Event handlers ────────────────────────────────────────────────────────
-
-    private void OnFilterChanged(object sender, TextChangedEventArgs e)
-    {
-        _filterText = e.NewTextValue ?? string.Empty;
-        LoadAssetsFromFolder();
-    }
-
-    private void OnAssetSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (e.CurrentSelection.FirstOrDefault() is not AssetItem item)
-        {
-            AssetPathLabel.Text       = string.Empty;
-            AssetRenameBtn.IsEnabled  = false;
-            AssetDeleteBtn.IsEnabled  = false;
-            AssetCtxRenameItem.IsEnabled = false;
-            AssetCtxDeleteItem.IsEnabled = false;
-            return;
-        }
-
-        AssetPathLabel.Text          = item.Info.RelativePath;
-        AssetRenameBtn.IsEnabled     = true;
-        AssetDeleteBtn.IsEnabled     = true;
-        AssetCtxRenameItem.IsEnabled = true;
-        AssetCtxDeleteItem.IsEnabled = true;
-        EditorContext.Instance.EventBus.Publish(new AssetSelectedEvent(item.Info));
-    }
-
-    private async void OnImportAssetClicked(object sender, EventArgs e)
-    {
-        if (string.IsNullOrEmpty(_currentFolderPath)) return;
-
-        FileResult? picked = await FilePicker.PickAsync().ConfigureAwait(true);
-        if (picked is null) return;
-
-        string dest = Path.Combine(_currentFolderPath, picked.FileName);
-        try
-        {
-            File.Copy(picked.FullPath, dest, overwrite: false);
-        }
-        catch (Exception ex) { Log($"[AssetBrowser] Failed to import asset: {ex.Message}", LogLevel.Error); return; }
-
-        AssetInfo info = AssetClassifier.CreateInfo(dest, _contentRoot);
-        _bus.Publish(new AssetImportedEvent(info));
-    }
-
-    private async void OnRenameAssetClicked(object sender, EventArgs e)
-    {
-        if (AssetList.SelectedItem is not AssetItem item) return;
-
-        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
-        if (page is null) return;
-
-        string? newName = await page.DisplayPromptAsync(
-            "Rename asset",
-            "Enter new file name:",
-            initialValue: item.Info.Name,
-            maxLength: 256,
-            keyboard: Keyboard.Text);
-
-        if (string.IsNullOrWhiteSpace(newName) || newName == item.Info.Name) return;
-
-        string newPath = Path.Combine(_currentFolderPath, newName);
-        try { File.Move(item.Info.AbsolutePath, newPath); }
-        catch (Exception ex) { Log($"[AssetBrowser] Failed to rename asset: {ex.Message}", LogLevel.Error); return; }
-
-        LoadAssetsFromFolder();
-    }
-
-    private async void OnDeleteAssetClicked(object sender, EventArgs e)
-    {
-        if (AssetList.SelectedItem is not AssetItem item) return;
-
-        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
-        if (page is null) return;
-
-        bool confirmed = await page.DisplayAlertAsync(
-            "Delete asset",
-            $"Delete '{item.Info.Name}'? This cannot be undone.",
-            "Delete", "Cancel");
-
-        if (!confirmed) return;
-
-        try { File.Delete(item.Info.AbsolutePath); }
-        catch (Exception ex) { Log($"[AssetBrowser] Failed to delete asset: {ex.Message}", LogLevel.Error); return; }
-
-        LoadAssetsFromFolder();
-    }
-
-    // ── Folder selection ──────────────────────────────────────────────────────
-
-    private void OnFolderSelectionChanged(object sender, SelectionChangedEventArgs e) { }
-
-    // ── Folder management ─────────────────────────────────────────────────────
-
-    private async void OnNewFolderClicked(object sender, EventArgs e)
-    {
-        if (string.IsNullOrEmpty(_currentFolderPath)) return;
-
-        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
-        if (page is null) return;
-
-        string? name = await page.DisplayPromptAsync(
-            "New folder",
-            "Enter folder name:",
-            maxLength: 128,
-            keyboard: Keyboard.Text);
-
-        if (string.IsNullOrWhiteSpace(name)) return;
-
-        string newPath = Path.Combine(_currentFolderPath, name);
-        try { Directory.CreateDirectory(newPath); }
-        catch (Exception ex) { Log($"[AssetBrowser] Failed to create folder: {ex.Message}", LogLevel.Error); return; }
-
-        _expandedFolders.Add(_currentFolderPath);
-        BuildFolderTree();
-        LoadAssetsFromFolder();
-    }
-
-    private async Task OnFolderRenameAsync()
-    {
-        if (string.IsNullOrEmpty(_selectedFolderPath)) return;
-
-        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
-        if (page is null) return;
-
-        string? newName = await page.DisplayPromptAsync(
-            "Rename folder",
-            "Enter new folder name:",
-            initialValue: Path.GetFileName(_selectedFolderPath),
-            maxLength: 128,
-            keyboard: Keyboard.Text);
-
-        if (string.IsNullOrWhiteSpace(newName) || newName == Path.GetFileName(_selectedFolderPath)) return;
-
-        string parent  = Path.GetDirectoryName(_selectedFolderPath) ?? _contentRoot;
-        string newPath = Path.Combine(parent, newName);
-        try { Directory.Move(_selectedFolderPath, newPath); }
-        catch (Exception ex) { Log($"[AssetBrowser] Failed to rename folder: {ex.Message}", LogLevel.Error); return; }
-
-        if (_currentFolderPath.StartsWith(_selectedFolderPath, StringComparison.OrdinalIgnoreCase))
-            _currentFolderPath = _currentFolderPath.Replace(_selectedFolderPath, newPath, StringComparison.OrdinalIgnoreCase);
-
-        _expandedFolders.Remove(_selectedFolderPath);
-        _expandedFolders.Add(newPath);
-        _selectedFolderPath = string.Empty;
-
-        BuildFolderTree();
-        BuildBreadcrumb(_currentFolderPath);
-        LoadAssetsFromFolder();
-    }
-
-    private async Task OnFolderDeleteAsync()
-    {
-        if (string.IsNullOrEmpty(_selectedFolderPath)) return;
-
-        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
-        if (page is null) return;
-
-        string folderName = Path.GetFileName(_selectedFolderPath);
-        bool confirmed = await page.DisplayAlertAsync(
-            "Delete folder",
-            $"Delete '{folderName}' and all its contents? This cannot be undone.",
-            "Delete", "Cancel");
-
-        if (!confirmed) return;
-
-        try { Directory.Delete(_selectedFolderPath, recursive: true); }
-        catch (Exception ex) { Log($"[AssetBrowser] Failed to delete folder: {ex.Message}", LogLevel.Error); return; }
-
-        if (_currentFolderPath.StartsWith(_selectedFolderPath, StringComparison.OrdinalIgnoreCase))
-            _currentFolderPath = _contentRoot;
-
-        _expandedFolders.Remove(_selectedFolderPath);
-        _selectedFolderPath = string.Empty;
-
-        BuildFolderTree();
-        BuildBreadcrumb(_currentFolderPath);
-        LoadAssetsFromFolder();
-    }
-
-    // ── New asset creation ────────────────────────────────────────────────────
-
-    private async void OnNewMaterialClicked(object sender, EventArgs e)
-        => await CreateAssetFileAsync(".mat.json",
-            """{"ShaderPath":"","Properties":{}}""",
-            "New Material", "Enter material name:");
-
-    private async void OnNewUIThemeClicked(object sender, EventArgs e)
-        => await CreateAssetFileAsync(".uitheme.json",
-            """{"Controls":{}}""",
-            "New UI Theme", "Enter UI theme name:");
-
-    private async void OnNewSpriteClicked(object sender, EventArgs e)
-        => await CreateAssetFileAsync(".sprite.json",
-            """{"TexturePath":"","NineSliceBorders":{"Left":0,"Right":0,"Top":0,"Bottom":0}}""",
-            "New Sprite NineSlice", "Enter sprite name:");
-
-    private async Task CreateAssetFileAsync(string suffix, string defaultContent,
-                                             string title, string prompt)
-    {
-        if (string.IsNullOrEmpty(_currentFolderPath)) return;
-
-        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
-        if (page is null) return;
-
-        string? name = await page.DisplayPromptAsync(title, prompt,
-            maxLength: 128, keyboard: Keyboard.Text);
-        if (string.IsNullOrWhiteSpace(name)) return;
-
-        if (name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-            name = name[..^suffix.Length];
-
-        string filePath = Path.Combine(_currentFolderPath, name + suffix);
-        try
-        {
-            await File.WriteAllTextAsync(filePath, defaultContent);
-            AssetInfo info = AssetClassifier.CreateInfo(filePath, _contentRoot);
-            _bus.Publish(new AssetImportedEvent(info));
-        }
-        catch (Exception ex) { Log($"[AssetBrowser] Failed to create asset file: {ex.Message}", LogLevel.Error); }
-    }
-
-    // ── Logging ───────────────────────────────────────────────────────────────
-
-    private void Log(string message, LogLevel level = LogLevel.Info)
-        => _bus.Publish(new LogEntryAddedEvent(new LogEntry(DateTime.UtcNow, level, message)));
 }

@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentPage x:Class="MonoGame.Editor.Maui.Views.Dialogs.ProjectSettingsDialog"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Dialogs"
+             x:DataType="vm:ProjectSettingsViewModel"
              BackgroundColor="#80000000"
              Title="Project Settings">
 
@@ -27,32 +29,61 @@
                 <Border BackgroundColor="{StaticResource BgPanel}"
                         StrokeThickness="0">
                     <HorizontalStackLayout Spacing="0">
-                        <Button x:Name="GeneralTabBtn"
-                                Text="General"
+                        <Button Text="General"
                                 Style="{StaticResource TabButton}"
-                                Clicked="OnTabClicked"
-                                CommandParameter="General"/>
-                        <Button x:Name="ContentTabBtn"
-                                Text="Content"
+                                Command="{Binding SelectTabCommand}"
+                                CommandParameter="General"
+                                TextColor="#9A9AA2" BackgroundColor="Transparent">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="General">
+                                    <Setter Property="TextColor" Value="#E6E6E8"/>
+                                    <Setter Property="BackgroundColor" Value="#2D2D33"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Content"
                                 Style="{StaticResource TabButton}"
-                                Clicked="OnTabClicked"
-                                CommandParameter="Content"/>
-                        <Button x:Name="LocalizationTabBtn"
-                                Text="Localization"
+                                Command="{Binding SelectTabCommand}"
+                                CommandParameter="Content"
+                                TextColor="#9A9AA2" BackgroundColor="Transparent">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Content">
+                                    <Setter Property="TextColor" Value="#E6E6E8"/>
+                                    <Setter Property="BackgroundColor" Value="#2D2D33"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Localization"
                                 Style="{StaticResource TabButton}"
-                                Clicked="OnTabClicked"
-                                CommandParameter="Localization"/>
-                        <Button x:Name="CodeGenTabBtn"
-                                Text="Code Gen"
+                                Command="{Binding SelectTabCommand}"
+                                CommandParameter="Localization"
+                                TextColor="#9A9AA2" BackgroundColor="Transparent">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Localization">
+                                    <Setter Property="TextColor" Value="#E6E6E8"/>
+                                    <Setter Property="BackgroundColor" Value="#2D2D33"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Code Gen"
                                 Style="{StaticResource TabButton}"
-                                Clicked="OnTabClicked"
-                                CommandParameter="CodeGen"/>
+                                Command="{Binding SelectTabCommand}"
+                                CommandParameter="CodeGen"
+                                TextColor="#9A9AA2" BackgroundColor="Transparent">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="CodeGen">
+                                    <Setter Property="TextColor" Value="#E6E6E8"/>
+                                    <Setter Property="BackgroundColor" Value="#2D2D33"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
                     </HorizontalStackLayout>
                 </Border>
                 <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
 
                 <!-- ── General tab ── -->
-                <ScrollView x:Name="GeneralPanel" HeightRequest="320">
+                <ScrollView HeightRequest="320"
+                            IsVisible="{Binding ActiveTab, Converter={StaticResource Equals}, ConverterParameter=General}">
                     <Grid Padding="20,16"
                           RowDefinitions="Auto,Auto,Auto,Auto,Auto"
                           ColumnDefinitions="140,*"
@@ -64,7 +95,8 @@
                                Style="{StaticResource DimLabel}"
                                VerticalOptions="Center"/>
                         <Picker Grid.Row="0" Grid.Column="1"
-                                x:Name="BuildConfigPicker"
+                                ItemsSource="{Binding BuildConfigs}"
+                                SelectedItem="{Binding BuildConfiguration}"
                                 BackgroundColor="{StaticResource BgPanel}"
                                 TextColor="{StaticResource PrimaryLabel}"/>
 
@@ -73,7 +105,7 @@
                                Style="{StaticResource DimLabel}"
                                VerticalOptions="Center"/>
                         <Entry Grid.Row="1" Grid.Column="1"
-                               x:Name="VirtualWidthEntry"
+                               Text="{Binding VirtualWidth}"
                                Keyboard="Numeric"
                                BackgroundColor="{StaticResource BgPanel}"
                                TextColor="{StaticResource PrimaryLabel}"/>
@@ -83,7 +115,7 @@
                                Style="{StaticResource DimLabel}"
                                VerticalOptions="Center"/>
                         <Entry Grid.Row="2" Grid.Column="1"
-                               x:Name="VirtualHeightEntry"
+                               Text="{Binding VirtualHeight}"
                                Keyboard="Numeric"
                                BackgroundColor="{StaticResource BgPanel}"
                                TextColor="{StaticResource PrimaryLabel}"/>
@@ -95,14 +127,14 @@
                         <Grid Grid.Row="3" Grid.Column="1"
                               ColumnDefinitions="*,Auto" ColumnSpacing="4">
                             <Entry Grid.Column="0"
-                                   x:Name="GameAppCsprojEntry"
+                                   Text="{Binding GameAppCsproj}"
                                    BackgroundColor="{StaticResource BgPanel}"
                                    TextColor="{StaticResource PrimaryLabel}"/>
                             <Button Grid.Column="1"
                                     Text="…"
                                     WidthRequest="32"
                                     Style="{StaticResource FlatButton}"
-                                    Clicked="OnBrowseCsprojClicked"/>
+                                    Command="{Binding BrowseCsprojCommand}"/>
                         </Grid>
 
                         <Label Grid.Row="4" Grid.Column="0"
@@ -112,21 +144,22 @@
                         <Grid Grid.Row="4" Grid.Column="1"
                               ColumnDefinitions="*,Auto" ColumnSpacing="4">
                             <Entry Grid.Column="0"
-                                   x:Name="GameScriptsCsprojEntry"
+                                   Text="{Binding GameScriptsCsproj}"
                                    BackgroundColor="{StaticResource BgPanel}"
                                    TextColor="{StaticResource PrimaryLabel}"/>
                             <Button Grid.Column="1"
                                     Text="…"
                                     WidthRequest="32"
                                     Style="{StaticResource FlatButton}"
-                                    Clicked="OnBrowseScriptsCsprojClicked"/>
+                                    Command="{Binding BrowseScriptsCsprojCommand}"/>
                         </Grid>
 
                     </Grid>
                 </ScrollView>
 
                 <!-- ── Content tab ── -->
-                <ScrollView x:Name="ContentPanel" HeightRequest="320" IsVisible="False">
+                <ScrollView HeightRequest="320"
+                            IsVisible="{Binding ActiveTab, Converter={StaticResource Equals}, ConverterParameter=Content}">
                     <Grid Padding="20,16"
                           RowDefinitions="Auto,Auto"
                           ColumnDefinitions="140,*"
@@ -138,7 +171,7 @@
                                Style="{StaticResource DimLabel}"
                                VerticalOptions="Center"/>
                         <Entry Grid.Row="0" Grid.Column="1"
-                               x:Name="ContentRelPathEntry"
+                               Text="{Binding ContentRelPath}"
                                BackgroundColor="{StaticResource BgPanel}"
                                TextColor="{StaticResource PrimaryLabel}"/>
 
@@ -149,21 +182,22 @@
                         <Grid Grid.Row="1" Grid.Column="1"
                               ColumnDefinitions="*,Auto" ColumnSpacing="4">
                             <Entry Grid.Column="0"
-                                   x:Name="LocalizationRelPathEntry"
+                                   Text="{Binding LocalizationRelPath}"
                                    BackgroundColor="{StaticResource BgPanel}"
                                    TextColor="{StaticResource PrimaryLabel}"/>
                             <Button Grid.Column="1"
                                     Text="…"
                                     WidthRequest="32"
                                     Style="{StaticResource FlatButton}"
-                                    Clicked="OnBrowseLocalizationFolderClicked"/>
+                                    Command="{Binding BrowseLocalizationFolderCommand}"/>
                         </Grid>
 
                     </Grid>
                 </ScrollView>
 
                 <!-- ── Localization tab ── -->
-                <ScrollView x:Name="LocalizationPanel" HeightRequest="320" IsVisible="False">
+                <ScrollView HeightRequest="320"
+                            IsVisible="{Binding ActiveTab, Converter={StaticResource Equals}, ConverterParameter=Localization}">
                     <Grid Padding="20,16"
                           RowDefinitions="Auto,Auto"
                           ColumnDefinitions="140,*"
@@ -175,7 +209,7 @@
                                Style="{StaticResource DimLabel}"
                                VerticalOptions="Center"/>
                         <Entry Grid.Row="0" Grid.Column="1"
-                               x:Name="DefaultLocaleEntry"
+                               Text="{Binding DefaultLocale}"
                                Placeholder="en-US"
                                BackgroundColor="{StaticResource BgPanel}"
                                TextColor="{StaticResource PrimaryLabel}"
@@ -187,7 +221,7 @@
                                VerticalOptions="Start"
                                Margin="0,6,0,0"/>
                         <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4">
-                            <Entry x:Name="SupportedLocalesEntry"
+                            <Entry Text="{Binding SupportedLocales}"
                                    Placeholder="en-US, es-ES, fr-FR (comma-separated)"
                                    BackgroundColor="{StaticResource BgPanel}"
                                    TextColor="{StaticResource PrimaryLabel}"
@@ -201,7 +235,8 @@
                 </ScrollView>
 
                 <!-- ── Code Gen tab ── -->
-                <ScrollView x:Name="CodeGenPanel" HeightRequest="320" IsVisible="False">
+                <ScrollView HeightRequest="320"
+                            IsVisible="{Binding ActiveTab, Converter={StaticResource Equals}, ConverterParameter=CodeGen}">
                     <Grid Padding="20,16"
                           RowDefinitions="Auto,Auto,Auto"
                           ColumnDefinitions="160,*"
@@ -213,7 +248,7 @@
                                Style="{StaticResource DimLabel}"
                                VerticalOptions="Center"/>
                         <Entry Grid.Row="0" Grid.Column="1"
-                               x:Name="RootNamespaceEntry"
+                               Text="{Binding RootNamespace}"
                                BackgroundColor="{StaticResource BgPanel}"
                                TextColor="{StaticResource PrimaryLabel}"/>
 
@@ -222,7 +257,7 @@
                                Style="{StaticResource DimLabel}"
                                VerticalOptions="Center"/>
                         <Entry Grid.Row="1" Grid.Column="1"
-                               x:Name="GeneratedCodeFolderEntry"
+                               Text="{Binding GeneratedCodeFolder}"
                                BackgroundColor="{StaticResource BgPanel}"
                                TextColor="{StaticResource PrimaryLabel}"/>
 
@@ -231,7 +266,7 @@
                                Style="{StaticResource DimLabel}"
                                VerticalOptions="Center"/>
                         <CheckBox Grid.Row="2" Grid.Column="1"
-                                  x:Name="GenerateOnSaveCheck"
+                                  IsChecked="{Binding GenerateOnSave}"
                                   Color="{StaticResource AccentBlue}"
                                   HorizontalOptions="Start"/>
 
@@ -246,10 +281,10 @@
                                        Padding="20,12">
                     <Button Text="Cancel"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnCancel"/>
+                            Command="{Binding CancelCommand}"/>
                     <Button Text="Save"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnSubmit"/>
+                            Command="{Binding SubmitCommand}"/>
                 </HorizontalStackLayout>
 
             </VerticalStackLayout>

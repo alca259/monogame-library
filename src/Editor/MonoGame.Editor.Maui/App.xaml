@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:conv="clr-namespace:MonoGame.Editor.Maui.Converters"
              x:Class="MonoGame.Editor.Maui.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -8,6 +9,10 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml"/>
                 <ResourceDictionary Source="Resources/Styles/ControlStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+            <conv:BoolToColorConverter x:Key="BoolToColor"/>
+            <conv:EqualsConverter x:Key="Equals"/>
+            <conv:InverseBoolConverter x:Key="InverseBool"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

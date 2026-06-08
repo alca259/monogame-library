@@ -1,8 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentPage x:Class="MonoGame.Editor.Maui.Views.Dialogs.AddBehaviourDialog"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Dialogs"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Dialogs"
+             x:DataType="vm:AddBehaviourViewModel"
              BackgroundColor="#80000000"
              Title="Add Behaviour">
 
@@ -25,10 +27,10 @@
                                FontSize="15"
                                VerticalOptions="Center"/>
                         <Button Grid.Column="1"
-                                x:Name="RescanButton"
-                                Text="⟳ Rescan"
+                                Text="{Binding RescanText}"
+                                IsEnabled="{Binding RescanEnabled}"
                                 Style="{StaticResource SmallIconButton}"
-                                Clicked="OnRescanClicked"/>
+                                Command="{Binding RescanCommand}"/>
                     </Grid>
                 </Border>
                 <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
@@ -37,20 +39,19 @@
                 <Border BackgroundColor="{StaticResource BgPanel}"
                         StrokeThickness="0"
                         Padding="12,8">
-                    <Entry x:Name="SearchEntry"
+                    <Entry Text="{Binding SearchFilter}"
                            Placeholder="Search behaviours…"
                            BackgroundColor="{StaticResource BgChrome}"
                            TextColor="{StaticResource PrimaryLabel}"
-                           PlaceholderColor="{StaticResource DimLabel}"
-                           TextChanged="OnSearchChanged"/>
+                           PlaceholderColor="{StaticResource DimLabel}"/>
                 </Border>
                 <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
 
                 <!-- Tree / List -->
-                <CollectionView x:Name="TypeList"
+                <CollectionView ItemsSource="{Binding Filtered}"
+                                SelectedItem="{Binding SelectedNode}"
                                 HeightRequest="320"
-                                SelectionMode="Single"
-                                SelectionChanged="OnTypeSelected">
+                                SelectionMode="Single">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="local:BehaviourTreeNode">
                             <Grid ColumnDefinitions="16,*"
@@ -85,12 +86,10 @@
                                        Padding="20,12">
                     <Button Text="Cancel"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnCancel"/>
-                    <Button x:Name="AddButton"
-                            Text="Add"
+                            Command="{Binding CancelCommand}"/>
+                    <Button Text="Add"
                             Style="{StaticResource SmallIconButton}"
-                            IsEnabled="False"
-                            Clicked="OnSubmit"/>
+                            Command="{Binding SubmitCommand}"/>
                 </HorizontalStackLayout>
 
             </VerticalStackLayout>

@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.TilemapPaletteView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             x:DataType="vm:TilemapPaletteViewModel"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,1,24,1,*" RowSpacing="0">
@@ -12,22 +14,29 @@
                 StrokeThickness="0">
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4" Padding="4,2">
                 <Label Grid.Column="0"
-                       x:Name="TilemapInfoLabel"
-                       Text="No tilemap layer selected"
+                       Text="{Binding TilemapInfoText}"
                        Style="{StaticResource DimLabel}"
                        VerticalOptions="Center"/>
                 <Button Grid.Column="1"
-                        x:Name="PaintModeBtn"
                         Text="Paint"
                         Style="{StaticResource ActivePillButton}"
-                        IsEnabled="False"
-                        Clicked="OnPaintModeClicked"/>
+                        Command="{Binding PaintModeCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsEraseMode}" Value="True">
+                            <Setter Property="Style" Value="{StaticResource PillButton}"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
                 <Button Grid.Column="2"
-                        x:Name="EraseModeBtn"
                         Text="Erase"
                         Style="{StaticResource PillButton}"
-                        IsEnabled="False"
-                        Clicked="OnEraseModeClicked"/>
+                        Command="{Binding EraseModeCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsEraseMode}" Value="True">
+                            <Setter Property="Style" Value="{StaticResource ActivePillButton}"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
             </Grid>
         </Border>
         <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
@@ -37,14 +46,13 @@
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0"
                 Padding="8,0">
-            <Label x:Name="TileCountLabel"
-                   Text="0 tiles"
+            <Label Text="{Binding TileCountText}"
                    Style="{StaticResource DimLabel}"
                    VerticalOptions="Center"/>
         </Border>
         <BoxView Grid.Row="3" Color="{StaticResource BorderColor}"/>
 
-        <!-- ── Palette canvas ───────────────────────────────────── -->
+        <!-- ── Palette canvas (drawn in code-behind) ────────────── -->
         <ScrollView Grid.Row="4" Orientation="Vertical">
             <Grid>
                 <GraphicsView x:Name="PaletteCanvas"
@@ -53,8 +61,8 @@
                         <TapGestureRecognizer Tapped="OnPaletteTapped"/>
                     </GraphicsView.GestureRecognizers>
                 </GraphicsView>
-                <Label x:Name="PalettePlaceholderLabel"
-                       Text="Open a project and select a tilemap layer"
+                <Label Text="Open a project and select a tilemap layer"
+                       IsVisible="{Binding PlaceholderVisible}"
                        Style="{StaticResource PlaceholderLabel}"
                        VerticalOptions="Center"
                        HorizontalOptions="Center"/>

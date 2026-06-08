@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.UndoHistoryView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             x:DataType="vm:UndoHistoryViewModel"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,1,*" RowSpacing="0">
@@ -14,10 +16,9 @@
                 <Button Grid.Column="0"
                         Text="✕ Clear"
                         Style="{StaticResource SmallIconButton}"
-                        Clicked="OnClearClicked"/>
+                        Command="{Binding ClearCommand}"/>
                 <Label Grid.Column="1"
-                       x:Name="HistorySummaryLabel"
-                       Text="0 / 100"
+                       Text="{Binding SummaryText}"
                        Style="{StaticResource DimLabel}"
                        VerticalOptions="Center"
                        Margin="4,0"/>
@@ -25,9 +26,35 @@
         </Border>
         <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
 
-        <!-- ── History rows (built in code-behind) ──────────────── -->
+        <!-- ── History rows (undo bright, divider, redo dimmed) ──── -->
         <ScrollView Grid.Row="2">
-            <VerticalStackLayout x:Name="HistoryStack" Spacing="0"/>
+            <VerticalStackLayout Spacing="0">
+                <VerticalStackLayout Spacing="0"
+                                     BindableLayout.ItemsSource="{Binding UndoEntries}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Label Text="{Binding .}"
+                                   TextColor="#E6E6E8"
+                                   FontSize="11"
+                                   Padding="10,3"/>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <BoxView Color="#3A7BCC" HeightRequest="2" Margin="0,2"/>
+
+                <VerticalStackLayout Spacing="0"
+                                     BindableLayout.ItemsSource="{Binding RedoEntries}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Label Text="{Binding .}"
+                                   TextColor="#6A6A72"
+                                   FontSize="11"
+                                   Padding="10,3"/>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
         </ScrollView>
 
     </Grid>

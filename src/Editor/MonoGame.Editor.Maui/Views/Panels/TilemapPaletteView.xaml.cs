@@ -1,102 +1,40 @@
-namespace MonoGame.Editor.Maui.Views.Panels;
+﻿namespace MonoGame.Editor.Maui.Views.Panels;
 
 /// <summary>
-/// Dock tab "Tilemap". Tile palette for painting/erasing tiles in the active tilemap layer.
-/// Subscribes to <see cref="TilemapLayerSelectedEvent"/> to refresh the palette grid.
+/// Dock tab "Tilemap". El estado del toolbar (info, modo pintar/borrar) vive en
+/// <see cref="TilemapPaletteViewModel"/>; el dibujado del canvas de tiles y la selección
+/// por tap se mantienen en el code-behind (acoplados al <see cref="GraphicsView"/>).
 /// </summary>
 public sealed partial class TilemapPaletteView : ContentView
 {
-    private readonly IEditorEventBus _bus = EditorContext.Instance.EventBus;
+    internal const float CellSize = 32f;
+
+    private readonly TilemapPaletteViewModel _vm = new();
 
     private EditorTileset? _tileset;
     private int _selectedTileId = -1;
-#pragma warning disable CS0414
-    private bool _eraseMode;
-#pragma warning restore CS0414
-
-    private Action<ProjectOpenedEvent>?        _onProjectOpened;
-    private Action<TilemapLayerSelectedEvent>? _onLayerSelected;
 
     public TilemapPaletteView()
     {
         InitializeComponent();
+        BindingContext = _vm;
         PaletteCanvas.Drawable = new TilePaletteDrawable(this);
+        _vm.TilesetChanged += OnTilesetChanged;
     }
 
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
-        if (Handler is not null) Subscribe();
-        else Unsubscribe();
+        if (Handler is not null) _vm.Attach();
+        else _vm.Detach();
     }
 
-    private void Subscribe()
+    private void OnTilesetChanged(EditorTileset? tileset)
     {
-        _onProjectOpened = e => MainThread.BeginInvokeOnMainThread(() => OnProjectOpened(e));
-        _onLayerSelected = e => MainThread.BeginInvokeOnMainThread(() => OnLayerSelected(e));
-        _bus.Subscribe(_onProjectOpened);
-        _bus.Subscribe(_onLayerSelected);
-    }
-
-    private void Unsubscribe()
-    {
-        if (_onProjectOpened is not null) _bus.Unsubscribe(_onProjectOpened);
-        if (_onLayerSelected is not null) _bus.Unsubscribe(_onLayerSelected);
-    }
-
-    // ── Event handlers ────────────────────────────────────────────────────────
-
-    private void OnProjectOpened(ProjectOpenedEvent e)
-    {
-        _tileset       = null;
-        _selectedTileId = -1;
-        _eraseMode     = false;
-        TilemapInfoLabel.Text           = "No tilemap layer selected";
-        TileCountLabel.Text             = "0 tiles";
-        PalettePlaceholderLabel.IsVisible = true;
-        PaintModeBtn.IsEnabled           = false;
-        EraseModeBtn.IsEnabled           = false;
+        _tileset        = tileset;
+        _selectedTileId = tileset?.FirstGid ?? -1;
         ResizePaletteCanvas();
         PaletteCanvas.Invalidate();
-    }
-
-    private void OnLayerSelected(TilemapLayerSelectedEvent e)
-    {
-        _tileset        = e.Layer is not null ? e.Tilemap.Tilesets.FirstOrDefault() : null;
-        _selectedTileId = _tileset is not null ? _tileset.FirstGid : -1;
-        _eraseMode      = false;
-
-        bool hasLayer = e.Layer is not null && _tileset is not null;
-
-        TilemapInfoLabel.Text = hasLayer
-            ? $"{Path.GetFileNameWithoutExtension(e.Tilemap.FilePath)} › {e.Layer!.Name}"
-            : "No tilemap layer selected";
-
-        int count = _tileset?.TileCount ?? 0;
-        TileCountLabel.Text = count == 1 ? "1 tile" : $"{count} tiles";
-
-        PalettePlaceholderLabel.IsVisible = !hasLayer;
-        PaintModeBtn.IsEnabled            = hasLayer;
-        EraseModeBtn.IsEnabled            = hasLayer;
-
-        ResizePaletteCanvas();
-        PaletteCanvas.Invalidate();
-    }
-
-    // ── Mode buttons ──────────────────────────────────────────────────────────
-
-    private void OnPaintModeClicked(object sender, EventArgs e)
-    {
-        _eraseMode = false;
-        PaintModeBtn.Style = (Style)Application.Current!.Resources["ActivePillButton"];
-        EraseModeBtn.Style = (Style)Application.Current!.Resources["PillButton"];
-    }
-
-    private void OnEraseModeClicked(object sender, EventArgs e)
-    {
-        _eraseMode = true;
-        PaintModeBtn.Style = (Style)Application.Current!.Resources["PillButton"];
-        EraseModeBtn.Style = (Style)Application.Current!.Resources["ActivePillButton"];
     }
 
     // ── Palette tap ───────────────────────────────────────────────────────────
@@ -136,21 +74,15 @@ public sealed partial class TilemapPaletteView : ContentView
 
     // ── Drawable ──────────────────────────────────────────────────────────────
 
-    internal const float CellSize = 32f;
-
-    private sealed class TilePaletteDrawable : IDrawable
+    private sealed class TilePaletteDrawable(TilemapPaletteView owner) : IDrawable
     {
-        private readonly TilemapPaletteView _owner;
-
-        public TilePaletteDrawable(TilemapPaletteView owner) => _owner = owner;
-
         public void Draw(ICanvas canvas, RectF dirtyRect)
         {
             // Background
             canvas.FillColor = Color.FromArgb("#1E1E20");
             canvas.FillRectangle(dirtyRect);
 
-            EditorTileset? tileset = _owner._tileset;
+            EditorTileset? tileset = owner._tileset;
             if (tileset is null || tileset.Columns <= 0 || tileset.TileCount <= 0)
             {
                 DrawGrid(canvas, dirtyRect);
@@ -170,7 +102,7 @@ public sealed partial class TilemapPaletteView : ContentView
                 float y = row * CellSize;
 
                 int gid = tileset.FirstGid + i;
-                bool selected = gid == _owner._selectedTileId;
+                bool selected = gid == owner._selectedTileId;
 
                 canvas.FillColor = selected
                     ? Color.FromArgb("#2A4A7F")
@@ -194,9 +126,9 @@ public sealed partial class TilemapPaletteView : ContentView
                 canvas.DrawLine(0, row * CellSize, cols * CellSize, row * CellSize);
 
             // Selection highlight border
-            if (_owner._selectedTileId >= tileset.FirstGid)
+            if (owner._selectedTileId >= tileset.FirstGid)
             {
-                int localId = _owner._selectedTileId - tileset.FirstGid;
+                int localId = owner._selectedTileId - tileset.FirstGid;
                 if (localId >= 0 && localId < count)
                 {
                     int sc = localId % cols;

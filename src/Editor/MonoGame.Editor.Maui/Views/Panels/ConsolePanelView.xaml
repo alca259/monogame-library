@@ -1,8 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.ConsolePanelView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:MonoGame.Editor.Maui.Controls"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             x:DataType="vm:ConsolePanelViewModel"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,1,*" RowSpacing="0">
@@ -14,23 +16,23 @@
             <Grid ColumnDefinitions="Auto,Auto,Auto,1,Auto,*" ColumnSpacing="2" Padding="4,2">
 
                 <Button Grid.Column="0"
-                        x:Name="FilterInfoBtn"
                         Text="ℹ"
                         ToolTipProperties.Text="Toggle Info"
                         Style="{StaticResource SmallIconButton}"
-                        Clicked="OnFilterInfoClicked"/>
+                        TextColor="{Binding ShowInfo, Converter={StaticResource BoolToColor}, ConverterParameter='#E6E6E8|#6A6A72'}"
+                        Command="{Binding ToggleInfoCommand}"/>
                 <Button Grid.Column="1"
-                        x:Name="FilterWarnBtn"
                         Text="⚠"
                         ToolTipProperties.Text="Toggle Warnings"
                         Style="{StaticResource SmallIconButton}"
-                        Clicked="OnFilterWarnClicked"/>
+                        TextColor="{Binding ShowWarn, Converter={StaticResource BoolToColor}, ConverterParameter='#E6E6E8|#6A6A72'}"
+                        Command="{Binding ToggleWarnCommand}"/>
                 <Button Grid.Column="2"
-                        x:Name="FilterErrorBtn"
                         Text="✕"
                         ToolTipProperties.Text="Toggle Errors"
                         Style="{StaticResource SmallIconButton}"
-                        Clicked="OnFilterErrorClicked"/>
+                        TextColor="{Binding ShowError, Converter={StaticResource BoolToColor}, ConverterParameter='#E6E6E8|#6A6A72'}"
+                        Command="{Binding ToggleErrorCommand}"/>
 
                 <BoxView Grid.Column="3"
                          Color="{StaticResource BorderColor}"
@@ -41,13 +43,13 @@
                         Text="📋"
                         ToolTipProperties.Text="Copy all visible log lines"
                         Style="{StaticResource SmallIconButton}"
-                        Clicked="OnCopyAllClicked"/>
+                        Command="{Binding CopyAllCommand}"/>
 
                 <Button Grid.Column="5"
                         Text="Clear"
                         Style="{StaticResource SmallIconButton}"
                         HorizontalOptions="End"
-                        Clicked="OnClearClicked"/>
+                        Command="{Binding ClearCommand}"/>
             </Grid>
         </Border>
         <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
@@ -55,6 +57,7 @@
         <!-- ── Log entries ───────────────────────────────────────── -->
         <CollectionView Grid.Row="2"
                         x:Name="LogList"
+                        ItemsSource="{Binding VisibleEntries}"
                         SelectionMode="None"
                         BackgroundColor="{StaticResource BgPanel}">
             <CollectionView.ItemTemplate>

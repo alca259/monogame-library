@@ -1,3 +1,4 @@
+﻿using System.ComponentModel;
 using System.Reflection;
 using MauiShapes = Microsoft.Maui.Controls.Shapes;
 using System.Text.Json;
@@ -5,224 +6,105 @@ using System.Text.Json;
 namespace MonoGame.Editor.Maui.Views.Panels;
 
 /// <summary>
-/// Panel derecho: muestra las propiedades del objeto seleccionado (cabecera, Transform, behaviours dinámicos).
-/// Se comunica a través de <see cref="IEditorEventBus"/>; sin MVVM.
+/// Panel derecho (Inspector). El estado, la selección, las pestañas y los comandos viven en
+/// <see cref="InspectorViewModel"/>. La construcción dinámica de las tarjetas de behaviour y
+/// el cableado de los <see cref="AxisStepper"/> de Transform se mantienen aquí (acoplados a
+/// controles concretos), reaccionando a <see cref="InspectorViewModel.RefreshRequested"/>.
 /// </summary>
 public sealed partial class InspectorView : ContentView
 {
-    private readonly IEditorEventBus _bus = EditorContext.Instance.EventBus;
-    private EditorGameObject? _selected;
+    private readonly InspectorViewModel _vm = new();
     private bool _suppressTransformEvents;
     private readonly HashSet<string> _collapsedBehaviours = [];
-    private readonly GameObjectRegistry _registry = new();
-    private bool _registryReady;
-
-    private Action<GameObjectSelectedEvent>? _onObjectSelected;
-    private Action<UndoPerformedEvent>?      _onUndo;
-    private Action<RedoPerformedEvent>?      _onRedo;
-    private Action<EditorStateChangedEvent>? _onStateChanged;
-    private Action<ProjectOpenedEvent>?      _onProjectOpened;
-
-    private static readonly Color ActiveTabFg   = Color.FromArgb("#E6E6E8");
-    private static readonly Color InactiveTabFg = Color.FromArgb("#9A9AA2");
 
     public InspectorView()
     {
         InitializeComponent();
+        BindingContext = _vm;
         WireTransformCommands();
-        SetActiveInspectorTab(InspectorTabBtn);
+        _vm.RefreshRequested += RefreshInspector;
+        _vm.PropertyChanged  += OnViewModelPropertyChanged;
+        UpdateTabContent();
     }
 
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
-        if (Handler is not null)
-        {
-            Subscribe();
-            _registry.Scan();
-            if (EditorContext.Instance.ActiveProject is not null)
-                _ = ScanProjectAsync();
-        }
-        else
-        {
-            Unsubscribe();
-        }
+        if (Handler is not null) _vm.Attach();
+        else _vm.Detach();
     }
 
-    // ── EventBus ─────────────────────────────────────────────────────────────
-
-    private void Subscribe()
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        _onObjectSelected = e => MainThread.BeginInvokeOnMainThread(() => { _selected = e.GameObject; RefreshInspector(); });
-        _onUndo           = _ => MainThread.BeginInvokeOnMainThread(() => RefreshInspector());
-        _onRedo           = _ => MainThread.BeginInvokeOnMainThread(() => RefreshInspector());
-        _onStateChanged   = e => MainThread.BeginInvokeOnMainThread(() =>
-            InspectorContent.IsEnabled = e.NewState is EditorState.Editing);
-        _onProjectOpened  = evt => MainThread.BeginInvokeOnMainThread(() => _ = ScanProjectAsync());
-
-        _bus.Subscribe(_onObjectSelected);
-        _bus.Subscribe(_onUndo);
-        _bus.Subscribe(_onRedo);
-        _bus.Subscribe(_onStateChanged);
-        _bus.Subscribe(_onProjectOpened);
+        if (e.PropertyName == nameof(InspectorViewModel.ActiveTab))
+            UpdateTabContent();
     }
 
-    private void Unsubscribe()
+    private void UpdateTabContent()
     {
-        if (_onObjectSelected is not null) _bus.Unsubscribe(_onObjectSelected);
-        if (_onUndo           is not null) _bus.Unsubscribe(_onUndo);
-        if (_onRedo           is not null) _bus.Unsubscribe(_onRedo);
-        if (_onStateChanged   is not null) _bus.Unsubscribe(_onStateChanged);
-        if (_onProjectOpened  is not null) _bus.Unsubscribe(_onProjectOpened);
+        string tab = _vm.ActiveTab;
+        InspectorContent.IsVisible    = tab == "Inspector";
+        MaterialContent.IsVisible     = tab == "Material";
+        UIThemeContent.IsVisible      = tab == "UITheme";
+        SpriteEditorContent.IsVisible = tab == "Sprite";
     }
 
-    // ── Transform command wiring ──────────────────────────────────────────────
+    // ── Transform command wiring (commit semantics preserved) ───────────────────
 
     private void WireTransformCommands()
     {
-        PosXStepper.ValueCommitted += (_, v) =>
-        {
-            if (_selected is null) return;
-            EditorContext.Instance.Commands.Execute(
-                new MoveEntityCommand(_selected, new EditorVector2((float)v, _selected.Position.Y)));
-        };
-
-        PosYStepper.ValueCommitted += (_, v) =>
-        {
-            if (_selected is null) return;
-            EditorContext.Instance.Commands.Execute(
-                new MoveEntityCommand(_selected, new EditorVector2(_selected.Position.X, (float)v)));
-        };
-
-        RotZStepper.ValueCommitted += (_, v) =>
-        {
-            if (_selected is null) return;
-            EditorContext.Instance.Commands.Execute(
-                new RotateEntityCommand(_selected, _selected.Rotation, (float)v));
-        };
-
-        ScaleXStepper.ValueCommitted += (_, v) =>
-        {
-            if (_selected is null) return;
-            EditorContext.Instance.Commands.Execute(
-                new ScaleEntityCommand(_selected, new EditorVector2((float)v, _selected.Scale.Y)));
-        };
-
-        ScaleYStepper.ValueCommitted += (_, v) =>
-        {
-            if (_selected is null) return;
-            EditorContext.Instance.Commands.Execute(
-                new ScaleEntityCommand(_selected, new EditorVector2(_selected.Scale.X, (float)v)));
-        };
-
-        DepthStepper.ValueCommitted += (_, v) =>
-        {
-            if (_selected is null) return;
-            EditorContext.Instance.Commands.Execute(
-                new MoveEntityZCommand(_selected, _selected.PositionZ, (float)v));
-        };
+        PosXStepper.ValueCommitted   += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyPosX(v); };
+        PosYStepper.ValueCommitted   += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyPosY(v); };
+        RotZStepper.ValueCommitted   += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyRotZ(v); };
+        ScaleXStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyScaleX(v); };
+        ScaleYStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyScaleY(v); };
+        DepthStepper.ValueCommitted  += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyDepth(v); };
     }
 
-    // ── Refresh ───────────────────────────────────────────────────────────────
+    private void OnObjectActiveChanged(object sender, CheckedChangedEventArgs e)
+    {
+        if (_suppressTransformEvents) return;
+        _vm.SetActive(e.Value);
+    }
+
+    // ── Refresh (Transform values + behaviour cards) ────────────────────────────
 
     private void RefreshInspector()
     {
-        bool hasSelection = _selected is not null;
-        NoSelectionLabel.IsVisible    = !hasSelection;
-        ObjectHeader.IsVisible        = hasSelection;
-        TransformSection.IsVisible    = hasSelection;
-        BehaviourCardsStack.IsVisible = hasSelection;
-        AddBehaviourBtn.IsVisible     = hasSelection;
-
-        if (_selected is null) return;
-
-        ObjectNameLabel.Text = _selected.Name;
-        ObjectIdLabel.Text   = _selected.Id.ToString()[..8];
+        EditorGameObject? selected = _vm.Selected;
+        if (selected is null)
+        {
+            BehaviourCardsStack.Children.Clear();
+            return;
+        }
 
         _suppressTransformEvents = true;
-        ObjectActiveCheck.IsChecked = _selected.Active;
-        PosXStepper.Value   = _selected.Position.X;
-        PosYStepper.Value   = _selected.Position.Y;
-        RotZStepper.Value   = _selected.Rotation;
-        ScaleXStepper.Value = _selected.Scale.X;
-        ScaleYStepper.Value = _selected.Scale.Y;
-        DepthStepper.Value  = _selected.PositionZ;
+        ObjectActiveCheck.IsChecked = selected.Active;
+        PosXStepper.Value   = selected.Position.X;
+        PosYStepper.Value   = selected.Position.Y;
+        RotZStepper.Value   = selected.Rotation;
+        ScaleXStepper.Value = selected.Scale.X;
+        ScaleYStepper.Value = selected.Scale.Y;
+        DepthStepper.Value  = selected.PositionZ;
         _suppressTransformEvents = false;
 
         BuildBehaviourCards();
     }
 
-    // ── Registry scanning ─────────────────────────────────────────────────────
-
-    private async Task ScanProjectAsync()
-    {
-        _registryReady = false;
-        _registry.Scan();
-
-        EditorProject? project = EditorContext.Instance.ActiveProject;
-        if (project is null) { _registryReady = true; return; }
-
-        try
-        {
-            ProjectSettings settings = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
-            bool isDebug = settings.BuildConfiguration.Equals("Debug", StringComparison.OrdinalIgnoreCase);
-
-            if (isDebug)
-            {
-                await ScanProjectAssembliesAsync(project, settings).ConfigureAwait(true);
-
-                string sourceRoot = string.IsNullOrEmpty(project.GameSourcePath)
-                    ? project.RootPath
-                    : project.GameSourcePath;
-                await _registry.ScanSourceAsync(sourceRoot).ConfigureAwait(true);
-            }
-        }
-        catch (Exception) { }
-
-        _registryReady = true;
-        if (_selected is not null)
-            BuildBehaviourCards();
-    }
-
-    private async Task ScanProjectAssembliesAsync(EditorProject project, ProjectSettings settings)
-    {
-        try
-        {
-            string[] csprojFiles = Directory.GetFiles(project.RootPath, "*.csproj",
-                SearchOption.AllDirectories);
-
-            List<Task> tasks = [];
-            foreach (string csproj in csprojFiles)
-            {
-                string dir     = Path.GetDirectoryName(csproj) ?? string.Empty;
-                string dllName = Path.GetFileNameWithoutExtension(csproj) + ".dll";
-                string binDir  = Path.Combine(dir, "bin", settings.BuildConfiguration);
-                if (!Directory.Exists(binDir)) continue;
-
-                string? dllPath = Directory.GetFiles(binDir, dllName, SearchOption.AllDirectories)
-                    .FirstOrDefault();
-                if (dllPath is not null)
-                    tasks.Add(_registry.ScanFromAssemblyAsync(dllPath));
-            }
-
-            await Task.WhenAll(tasks).ConfigureAwait(false);
-        }
-        catch (IOException) { }
-    }
-
-    // ── Behaviour cards ───────────────────────────────────────────────────────
+    // ── Behaviour cards (dynamic UI) ────────────────────────────────────────────
 
     private void BuildBehaviourCards()
     {
         BehaviourCardsStack.Children.Clear();
 
-        if (_selected is null) return;
+        EditorGameObject? selected = _vm.Selected;
+        if (selected is null) return;
 
-        foreach (EditorBehaviour behaviour in _selected.Behaviours)
+        foreach (EditorBehaviour behaviour in selected.Behaviours)
         {
-            if (_registry.RegisteredTypes.TryGetValue(behaviour.TypeName, out Type? type))
+            if (_vm.Registry.RegisteredTypes.TryGetValue(behaviour.TypeName, out Type? type))
                 EnsurePropertiesPopulated(behaviour, type);
-            BehaviourCardsStack.Children.Add(BuildBehaviourCard(behaviour, _selected));
+            BehaviourCardsStack.Children.Add(BuildBehaviourCard(behaviour, selected));
         }
     }
 
@@ -274,7 +156,7 @@ public sealed partial class InspectorView : ContentView
             body.Children.Add(BuildPropertyRow(behaviour, prop.Key, prop.Value));
         body.IsVisible = !collapsed;
 
-        // Header — chevron / type name / enabled switch / remove button
+        // Header — chevron / type name / remove button
         Button chevron = new()
         {
             Text            = collapsed ? "▶" : "▼",
@@ -439,11 +321,9 @@ public sealed partial class InspectorView : ContentView
         TapGestureRecognizer tap = new();
         tap.Tapped += async (_, _) =>
         {
-            Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
-            if (page is null) return;
+            if (DialogService.Navigation is not { } navigation) return;
 
-            Color? picked = await RgbaColorPickerDialog.ShowAsync(
-                page.Navigation, swatch.BackgroundColor);
+            Color? picked = await RgbaColorPickerDialog.ShowAsync(navigation, swatch.BackgroundColor);
             if (picked is null) return;
 
             swatch.BackgroundColor = picked;
@@ -519,81 +399,6 @@ public sealed partial class InspectorView : ContentView
         if (comma >= 0) span = span[..comma];
         int dot = span.LastIndexOf('.');
         return (dot >= 0 ? span[(dot + 1)..] : span).ToString();
-    }
-
-    // ── Tab switching ─────────────────────────────────────────────────────────
-
-    private void OnInspectorTabClicked(object sender, EventArgs e)
-    {
-        SetActiveInspectorTab(InspectorTabBtn);
-        InspectorContent.IsVisible    = true;
-        MaterialContent.IsVisible     = false;
-        UIThemeContent.IsVisible      = false;
-        SpriteEditorContent.IsVisible = false;
-    }
-
-    private void OnMaterialTabClicked(object sender, EventArgs e)
-    {
-        SetActiveInspectorTab(MaterialTabBtn);
-        InspectorContent.IsVisible    = false;
-        MaterialContent.IsVisible     = true;
-        UIThemeContent.IsVisible      = false;
-        SpriteEditorContent.IsVisible = false;
-    }
-
-    private void OnUIThemeTabClicked(object sender, EventArgs e)
-    {
-        SetActiveInspectorTab(UIThemeTabBtn);
-        InspectorContent.IsVisible    = false;
-        MaterialContent.IsVisible     = false;
-        UIThemeContent.IsVisible      = true;
-        SpriteEditorContent.IsVisible = false;
-    }
-
-    private void OnSpriteEditorTabClicked(object sender, EventArgs e)
-    {
-        SetActiveInspectorTab(SpriteEditorTabBtn);
-        InspectorContent.IsVisible    = false;
-        MaterialContent.IsVisible     = false;
-        UIThemeContent.IsVisible      = false;
-        SpriteEditorContent.IsVisible = true;
-    }
-
-    private void SetActiveInspectorTab(Button active)
-    {
-        foreach (Button btn in new[] { InspectorTabBtn, MaterialTabBtn, UIThemeTabBtn, SpriteEditorTabBtn })
-            btn.TextColor = btn == active ? ActiveTabFg : InactiveTabFg;
-    }
-
-    // ── Object header events ──────────────────────────────────────────────────
-
-    private void OnObjectActiveChanged(object sender, CheckedChangedEventArgs e)
-    {
-        if (_selected is null || _suppressTransformEvents) return;
-        bool prev = _selected.Active;
-        bool next = e.Value;
-        if (prev == next) return;
-        EditorContext.Instance.Commands.Execute(
-            new SetPropertyCommand<bool>("Set Active", prev, next, v => _selected.Active = v));
-    }
-
-    private async void OnAddBehaviourClicked(object sender, EventArgs e)
-    {
-        if (_selected is null) return;
-        Page? page = Application.Current?.Windows.FirstOrDefault()?.Page;
-        if (page is null) return;
-
-        if (!_registryReady)
-            await ScanProjectAsync().ConfigureAwait(true);
-
-        string? typeName = await AddBehaviourDialog.ShowAsync(
-            page.Navigation, _registry,
-            async () => await ScanProjectAsync().ConfigureAwait(true));
-        if (string.IsNullOrEmpty(typeName)) return;
-
-        EditorContext.Instance.Commands.Execute(
-            new AddBehaviourCommand(_selected, new EditorBehaviour { TypeName = typeName }));
-        BuildBehaviourCards();
     }
 
     // ── Logging ───────────────────────────────────────────────────────────────

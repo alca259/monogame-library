@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentPage x:Class="MonoGame.Editor.Maui.Views.Dialogs.NewProjectDialog"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Dialogs"
+             x:DataType="vm:NewProjectViewModel"
              BackgroundColor="#80000000"
              Title="New Project">
 
@@ -35,7 +37,7 @@
                            Style="{StaticResource DimLabel}"
                            VerticalOptions="Center"/>
                     <Entry Grid.Row="0" Grid.Column="1"
-                           x:Name="ProjectNameEntry"
+                           Text="{Binding ProjectName}"
                            Placeholder="MyGame"
                            BackgroundColor="{StaticResource BgPanel}"
                            TextColor="{StaticResource PrimaryLabel}"
@@ -49,7 +51,7 @@
                           ColumnDefinitions="*,Auto"
                           ColumnSpacing="4">
                         <Entry Grid.Column="0"
-                               x:Name="ParentPathEntry"
+                               Text="{Binding ParentPath}"
                                Placeholder="C:\Projects"
                                BackgroundColor="{StaticResource BgPanel}"
                                TextColor="{StaticResource PrimaryLabel}"
@@ -58,7 +60,7 @@
                                 Text="…"
                                 Style="{StaticResource SmallIconButton}"
                                 WidthRequest="32"
-                                Clicked="OnBrowseParentClicked"/>
+                                Command="{Binding BrowseParentCommand}"/>
                     </Grid>
 
                     <Label Grid.Row="2" Grid.Column="0"
@@ -69,7 +71,7 @@
                           ColumnDefinitions="*,Auto"
                           ColumnSpacing="4">
                         <Entry Grid.Column="0"
-                               x:Name="GameCsprojEntry"
+                               Text="{Binding GameCsproj}"
                                Placeholder="Relative path to Game.csproj"
                                BackgroundColor="{StaticResource BgPanel}"
                                TextColor="{StaticResource PrimaryLabel}"
@@ -78,14 +80,15 @@
                                 Text="…"
                                 Style="{StaticResource SmallIconButton}"
                                 WidthRequest="32"
-                                Clicked="OnBrowseCsprojClicked"/>
+                                Command="{Binding BrowseCsprojCommand}"/>
                     </Grid>
 
                 </Grid>
 
                 <!-- Validation -->
-                <Label x:Name="ValidationLabel"
-                       IsVisible="False"
+                <Label Text="{Binding ValidationMessage}"
+                       IsVisible="{Binding HasValidationError}"
+                       TextColor="#E85050"
                        FontSize="11"
                        Margin="20,0,20,8"/>
 
@@ -97,10 +100,10 @@
                                        Padding="20,12">
                     <Button Text="Cancel"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnCancel"/>
+                            Command="{Binding CancelCommand}"/>
                     <Button Text="Create"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnSubmit"/>
+                            Command="{Binding SubmitCommand}"/>
                 </HorizontalStackLayout>
 
             </VerticalStackLayout>

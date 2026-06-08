@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.InputMapEditorView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             x:DataType="vm:InputMapEditorViewModel"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,1,28,1,*" RowSpacing="0">
@@ -12,18 +14,16 @@
                 StrokeThickness="0">
             <Grid ColumnDefinitions="*,Auto" Padding="4,2">
                 <Picker Grid.Column="0"
-                        x:Name="FilePickerControl"
                         Title="Select input map…"
-                        SelectedIndexChanged="OnFilePicked"
+                        ItemsSource="{Binding FileNames}"
+                        SelectedIndex="{Binding SelectedFileIndex}"
                         BackgroundColor="Transparent"
                         TextColor="{StaticResource TextPrimary}"
                         VerticalOptions="Center"/>
                 <Button Grid.Column="1"
-                        x:Name="SaveButton"
                         Text="Save"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnSaveClicked"/>
+                        Command="{Binding SaveCommand}"/>
             </Grid>
         </Border>
         <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
@@ -38,11 +38,11 @@
                     <Button Text="+"
                             ToolTipProperties.Text="Add action"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnAddActionClicked"/>
+                            Command="{Binding AddActionCommand}"/>
                     <Button Text="🗑"
                             ToolTipProperties.Text="Remove action"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnRemoveActionClicked"/>
+                            Command="{Binding RemoveActionCommand}"/>
                     <Label Text="Actions"
                            Style="{StaticResource DimLabel}"
                            VerticalOptions="Center"
@@ -54,11 +54,11 @@
                     <Button Text="+"
                             ToolTipProperties.Text="Add binding"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnAddBindingClicked"/>
+                            Command="{Binding AddBindingCommand}"/>
                     <Button Text="🗑"
                             ToolTipProperties.Text="Remove binding"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnRemoveBindingClicked"/>
+                            Command="{Binding RemoveBindingCommand}"/>
                     <Label Text="Bindings"
                            Style="{StaticResource DimLabel}"
                            VerticalOptions="Center"
@@ -72,10 +72,10 @@
         <Grid Grid.Row="4" ColumnDefinitions="180,1,*" ColumnSpacing="0">
 
             <CollectionView Grid.Column="0"
-                            x:Name="ActionsList"
+                            ItemsSource="{Binding ActionItems}"
+                            SelectedItem="{Binding SelectedAction}"
                             SelectionMode="Single"
-                            BackgroundColor="{StaticResource BgPanel}"
-                            SelectionChanged="OnActionSelected">
+                            BackgroundColor="{StaticResource BgPanel}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="x:String">
                         <Label Text="{Binding .}"
@@ -93,7 +93,8 @@
             <BoxView Grid.Column="1" Color="{StaticResource BorderColor}"/>
 
             <CollectionView Grid.Column="2"
-                            x:Name="BindingsList"
+                            ItemsSource="{Binding BindingItems}"
+                            SelectedItem="{Binding SelectedBinding}"
                             SelectionMode="Single"
                             BackgroundColor="{StaticResource BgPanel}">
                 <CollectionView.ItemTemplate>

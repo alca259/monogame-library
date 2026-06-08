@@ -23,11 +23,11 @@ public static class MaterialPreviewRenderer
 
     #region Static fields
 
-    private static readonly Vector3 LightDir = Vector3.Normalize(new Vector3(0.6f, 0.8f, 0.5f));
-    private static readonly Vector3 ViewDir  = new(0f, 0f, 1f);
-    private static readonly Vector3 BgColor  = new(0.22f, 0.22f, 0.22f);
-    private static readonly Vector3 Ambient  = new(0.18f, 0.18f, 0.22f);
-    private static readonly Vector3 F0Base   = new(0.04f);
+    private static readonly Vector3 _lightDir = Vector3.Normalize(new Vector3(0.6f, 0.8f, 0.5f));
+    private static readonly Vector3 _viewDir  = new(0f, 0f, 1f);
+    private static readonly Vector3 _bgColor  = new(0.22f, 0.22f, 0.22f);
+    private static readonly Vector3 _ambient  = new(0.18f, 0.18f, 0.22f);
+    private static readonly Vector3 _f0Base   = new(0.04f);
 
     #endregion
 
@@ -76,7 +76,7 @@ public static class MaterialPreviewRenderer
                 Vector3 col;
                 if (d2 > r2)
                 {
-                    col = BgColor;
+                    col = _bgColor;
                 }
                 else
                 {
@@ -88,16 +88,16 @@ public static class MaterialPreviewRenderer
                         ? SampleTexels(texels, tw, th, N) * diffuseColor
                         : diffuseColor;
 
-                    Vector3 f0 = Vector3.Lerp(F0Base, albedo, metallic);
+                    Vector3 f0 = Vector3.Lerp(_f0Base, albedo, metallic);
 
-                    float ndotl = MathF.Max(0f, Vector3.Dot(N, LightDir));
+                    float ndotl = MathF.Max(0f, Vector3.Dot(N, _lightDir));
                     Vector3 diffuse = albedo * (1f - metallic) * ndotl;
 
-                    Vector3 H     = Vector3.Normalize(LightDir + ViewDir);
+                    Vector3 H     = Vector3.Normalize(_lightDir + _viewDir);
                     float   ndoth = MathF.Max(0f, Vector3.Dot(N, H));
                     Vector3 specular = f0 * MathF.Pow(ndoth, shininess);
 
-                    col = Ambient * albedo + diffuse + specular;
+                    col = _ambient * albedo + diffuse + specular;
                     col = Vector3.Clamp(col, Vector3.Zero, Vector3.One);
                     col = GammaCorrect(col);
                 }

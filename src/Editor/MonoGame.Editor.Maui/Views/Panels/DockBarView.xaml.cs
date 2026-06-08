@@ -1,49 +1,47 @@
+﻿using System.ComponentModel;
+
 namespace MonoGame.Editor.Maui.Views.Panels;
 
 /// <summary>
-/// Dock inferior: barra de 9 pestañas con su contenido correspondiente.
-/// Fase 0: Assets, Console y Scenes funcionales. Resto son placeholders (Fase 7).
+/// Dock inferior: barra de pestañas. La pestaña activa la decide
+/// <see cref="DockBarViewModel"/>; la vista aplica la visibilidad del contenido,
+/// ya que cada panel hijo tiene su propio BindingContext.
 /// </summary>
 public sealed partial class DockBarView : ContentView
 {
-    private static readonly Color ActiveTabFg   = Color.FromArgb("#E6E6E8");
-    private static readonly Color InactiveTabFg = Color.FromArgb("#9A9AA2");
-
-    private string _activeTab = "Scenes";
+    private readonly DockBarViewModel _vm = new();
 
     public DockBarView()
     {
         InitializeComponent();
-        SetActiveTab(ScenesTabBtn);
-    }
-
-    private void OnDockTabClicked(object sender, EventArgs e)
-    {
-        if (sender is not Button btn) return;
-        _activeTab = btn.CommandParameter as string ?? "Assets";
-        SetActiveTab(btn);
+        BindingContext = _vm;
+        _vm.PropertyChanged += OnViewModelPropertyChanged;
         UpdateTabContent();
     }
 
-    private void SetActiveTab(Button active)
+    protected override void OnHandlerChanged()
     {
-        foreach (Button btn in new[]
-        {
-            AssetsTabBtn, ConsoleTabBtn, ScenesTabBtn, LocalizationTabBtn,
-            InputMapsTabBtn, TilemapTabBtn, HistoryTabBtn, ScriptsTabBtn
-        })
-            btn.TextColor = btn == active ? ActiveTabFg : InactiveTabFg;
+        base.OnHandlerChanged();
+        if (Handler is not null) _vm.Attach();
+        else _vm.Detach();
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DockBarViewModel.ActiveTab))
+            UpdateTabContent();
     }
 
     private void UpdateTabContent()
     {
-        AssetsContent.IsVisible       = _activeTab == "Assets";
-        ConsoleContent.IsVisible      = _activeTab == "Console";
-        ScenesContent.IsVisible       = _activeTab == "Scenes";
-        LocalizationContent.IsVisible = _activeTab == "Localization";
-        InputMapsContent.IsVisible    = _activeTab == "InputMaps";
-        TilemapContent.IsVisible      = _activeTab == "Tilemap";
-        HistoryContent.IsVisible      = _activeTab == "History";
-        ScriptsContent.IsVisible      = _activeTab == "Scripts";
+        string tab = _vm.ActiveTab;
+        ScenesContent.IsVisible       = tab == "Scenes";
+        AssetsContent.IsVisible       = tab == "Assets";
+        ConsoleContent.IsVisible      = tab == "Console";
+        LocalizationContent.IsVisible = tab == "Localization";
+        InputMapsContent.IsVisible    = tab == "InputMaps";
+        TilemapContent.IsVisible      = tab == "Tilemap";
+        HistoryContent.IsVisible      = tab == "History";
+        ScriptsContent.IsVisible      = tab == "Scripts";
     }
 }

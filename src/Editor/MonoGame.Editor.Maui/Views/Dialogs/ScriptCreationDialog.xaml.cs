@@ -1,21 +1,25 @@
-namespace MonoGame.Editor.Maui.Views.Dialogs;
+﻿namespace MonoGame.Editor.Maui.Views.Dialogs;
 
 public sealed record ScriptCreationResult(string ClassName, string NamespaceName, string RelativeFolder);
 
+/// <summary>Diálogo modal "New Script". La lógica vive en <see cref="ScriptCreationViewModel"/>.</summary>
 public sealed partial class ScriptCreationDialog : ContentPage
 {
-    private static readonly Color ErrorColor = Color.FromArgb("#E85050");
-
+    private readonly ScriptCreationViewModel _vm = new();
     private readonly TaskCompletionSource<ScriptCreationResult?> _tcs = new();
 
-    private ScriptCreationDialog() => InitializeComponent();
+    private ScriptCreationDialog()
+    {
+        InitializeComponent();
+        BindingContext = _vm;
+        _vm.CloseRequested += OnClose;
+    }
 
-    public static async Task<ScriptCreationResult?> ShowAsync(INavigation navigation,
-                                                               string defaultNamespace = "")
+    public static async Task<ScriptCreationResult?> ShowAsync(INavigation navigation, string defaultNamespace = "")
     {
         var dialog = new ScriptCreationDialog();
         if (!string.IsNullOrEmpty(defaultNamespace))
-            dialog.NamespaceEntry.Text = defaultNamespace;
+            dialog._vm.NamespaceName = defaultNamespace;
         await navigation.PushModalAsync(dialog);
         return await dialog._tcs.Task;
     }
@@ -26,49 +30,9 @@ public sealed partial class ScriptCreationDialog : ContentPage
         return base.OnBackButtonPressed();
     }
 
-    private void OnCancel(object sender, EventArgs e)
+    private void OnClose(ScriptCreationResult? result)
     {
-        _tcs.TrySetResult(null);
+        _tcs.TrySetResult(result);
         _ = Navigation.PopModalAsync();
-    }
-
-    private void OnSubmit(object sender, EventArgs e)
-    {
-        string className  = ClassNameEntry.Text?.Trim()        ?? string.Empty;
-        string ns         = NamespaceEntry.Text?.Trim()        ?? string.Empty;
-        string folder     = RelativeFolderEntry.Text?.Trim()   ?? string.Empty;
-
-        if (string.IsNullOrEmpty(className))
-        {
-            ShowError("Class name is required.");
-            return;
-        }
-
-        if (!IsValidIdentifier(className))
-        {
-            ShowError("Class name must be a valid C# identifier.");
-            return;
-        }
-
-        _tcs.TrySetResult(new ScriptCreationResult(className, ns, folder));
-        _ = Navigation.PopModalAsync();
-    }
-
-    private void ShowError(string message)
-    {
-        ValidationLabel.Text      = message;
-        ValidationLabel.TextColor = ErrorColor;
-        ValidationLabel.IsVisible = true;
-    }
-
-    private static bool IsValidIdentifier(string name)
-    {
-        if (string.IsNullOrEmpty(name)) return false;
-        if (!char.IsLetter(name[0]) && name[0] != '_') return false;
-        foreach (char c in name)
-        {
-            if (!char.IsLetterOrDigit(c) && c != '_') return false;
-        }
-        return true;
     }
 }

@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.LocalizationBrowserView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             x:DataType="vm:LocalizationBrowserViewModel"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,1,*,1,24" RowSpacing="0">
@@ -14,35 +16,32 @@
                 <Button Grid.Column="0"
                         Text="+ Key"
                         Style="{StaticResource SmallIconButton}"
-                        Clicked="OnAddKeyClicked"/>
+                        Command="{Binding AddKeyCommand}"/>
                 <Button Grid.Column="1"
                         Text="+ Locale"
                         Style="{StaticResource SmallIconButton}"
-                        Clicked="OnAddLocaleClicked"/>
+                        Command="{Binding AddLocaleCommand}"/>
                 <Button Grid.Column="2"
                         Text="🗑 Key"
                         Style="{StaticResource SmallIconButton}"
-                        Clicked="OnRemoveKeyClicked"/>
+                        Command="{Binding RemoveKeyCommand}"/>
                 <Button Grid.Column="3"
                         Text="🗑 Locale"
                         Style="{StaticResource SmallIconButton}"
-                        Clicked="OnRemoveLocaleClicked"/>
+                        Command="{Binding RemoveLocaleCommand}"/>
                 <BoxView Grid.Column="4"
                          Color="{StaticResource BorderColor}"
                          VerticalOptions="Fill"
                          Margin="2,2"/>
                 <Label Grid.Column="5"
-                       x:Name="LocaleCountLabel"
-                       Text="0 locales"
+                       Text="{Binding LocaleCountText}"
                        Style="{StaticResource DimLabel}"
                        VerticalOptions="Center"
                        Margin="4,0"/>
                 <Button Grid.Column="6"
                         Text="Save"
                         Style="{StaticResource SmallIconButton}"
-                        x:Name="LocaleSaveButton"
-                        IsEnabled="False"
-                        Clicked="OnSaveClicked"/>
+                        Command="{Binding SaveCommand}"/>
             </Grid>
         </Border>
         <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
@@ -52,10 +51,10 @@
 
             <!-- Keys list -->
             <CollectionView Grid.Column="0"
-                            x:Name="KeysList"
+                            ItemsSource="{Binding KeyItems}"
+                            SelectedItem="{Binding SelectedKey}"
                             SelectionMode="Single"
-                            BackgroundColor="{StaticResource BgPanel}"
-                            SelectionChanged="OnKeySelected">
+                            BackgroundColor="{StaticResource BgPanel}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="x:String">
                         <Label Text="{Binding .}"
@@ -72,11 +71,22 @@
 
             <BoxView Grid.Column="1" Color="{StaticResource BorderColor}"/>
 
-            <!-- Translation entries (built in code-behind) -->
+            <!-- Translation entries (one editable field per locale) -->
             <ScrollView Grid.Column="2">
-                <VerticalStackLayout x:Name="TranslationStack"
-                                     Padding="10,8"
-                                     Spacing="6"/>
+                <VerticalStackLayout Padding="10,8" Spacing="6"
+                                     BindableLayout.ItemsSource="{Binding Translations}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LocaleValueItem">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding Locale}"
+                                       FontSize="11"
+                                       TextColor="#9A9AA2"/>
+                                <Entry Text="{Binding Value}"
+                                       Style="{StaticResource InputEntry}"/>
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
             </ScrollView>
 
         </Grid>
@@ -88,8 +98,7 @@
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0"
                 Padding="8,0">
-            <Label x:Name="LocalizationStatusLabel"
-                   Text=""
+            <Label Text="{Binding StatusText}"
                    Style="{StaticResource DimLabel}"
                    VerticalOptions="Center"/>
         </Border>

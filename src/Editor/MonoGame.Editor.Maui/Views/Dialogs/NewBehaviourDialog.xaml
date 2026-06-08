@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentPage x:Class="MonoGame.Editor.Maui.Views.Dialogs.NewBehaviourDialog"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Dialogs"
+             x:DataType="vm:NewBehaviourViewModel"
              BackgroundColor="#80000000"
              Title="New Behaviour">
 
@@ -35,7 +37,7 @@
                            Style="{StaticResource DimLabel}"
                            VerticalOptions="Center"/>
                     <Entry Grid.Row="0" Grid.Column="1"
-                           x:Name="ClassNameEntry"
+                           Text="{Binding ClassName}"
                            Placeholder="MyBehaviour"
                            BackgroundColor="{StaticResource BgPanel}"
                            TextColor="{StaticResource PrimaryLabel}"
@@ -49,12 +51,12 @@
                           ColumnDefinitions="*,Auto"
                           ColumnSpacing="4">
                         <Picker Grid.Column="0"
-                                x:Name="NamespacePicker"
+                                ItemsSource="{Binding KnownNamespaces}"
+                                SelectedIndex="{Binding SelectedNamespaceIndex}"
                                 BackgroundColor="{StaticResource BgPanel}"
-                                TextColor="{StaticResource PrimaryLabel}"
-                                SelectedIndexChanged="OnNamespacePickerChanged"/>
+                                TextColor="{StaticResource PrimaryLabel}"/>
                         <Entry Grid.Column="1"
-                               x:Name="NamespaceCustomEntry"
+                               Text="{Binding NamespaceName}"
                                Placeholder="or type…"
                                WidthRequest="130"
                                BackgroundColor="{StaticResource BgPanel}"
@@ -67,7 +69,7 @@
                            Style="{StaticResource DimLabel}"
                            VerticalOptions="Center"/>
                     <Entry Grid.Row="2" Grid.Column="1"
-                           x:Name="RelativeFolderEntry"
+                           Text="{Binding RelativeFolder}"
                            Placeholder="Relative to GameScripts root"
                            BackgroundColor="{StaticResource BgPanel}"
                            TextColor="{StaticResource PrimaryLabel}"
@@ -85,23 +87,23 @@
                                FontSize="11"/>
                         <HorizontalStackLayout Spacing="16">
                             <HorizontalStackLayout Spacing="6">
-                                <CheckBox x:Name="AwakeCheck" Color="{StaticResource AccentBlue}"/>
+                                <CheckBox IsChecked="{Binding OverrideAwake}" Color="{StaticResource AccentBlue}"/>
                                 <Label Text="Awake" Style="{StaticResource DimLabel}" VerticalOptions="Center"/>
                             </HorizontalStackLayout>
                             <HorizontalStackLayout Spacing="6">
-                                <CheckBox x:Name="StartCheck" Color="{StaticResource AccentBlue}"/>
+                                <CheckBox IsChecked="{Binding OverrideStart}" Color="{StaticResource AccentBlue}"/>
                                 <Label Text="Start" Style="{StaticResource DimLabel}" VerticalOptions="Center"/>
                             </HorizontalStackLayout>
                             <HorizontalStackLayout Spacing="6">
-                                <CheckBox x:Name="UpdateCheck" Color="{StaticResource AccentBlue}" IsChecked="True"/>
+                                <CheckBox IsChecked="{Binding OverrideUpdate}" Color="{StaticResource AccentBlue}"/>
                                 <Label Text="Update" Style="{StaticResource DimLabel}" VerticalOptions="Center"/>
                             </HorizontalStackLayout>
                             <HorizontalStackLayout Spacing="6">
-                                <CheckBox x:Name="DrawCheck" Color="{StaticResource AccentBlue}"/>
+                                <CheckBox IsChecked="{Binding OverrideDraw}" Color="{StaticResource AccentBlue}"/>
                                 <Label Text="Draw" Style="{StaticResource DimLabel}" VerticalOptions="Center"/>
                             </HorizontalStackLayout>
                             <HorizontalStackLayout Spacing="6">
-                                <CheckBox x:Name="OnDestroyCheck" Color="{StaticResource AccentBlue}"/>
+                                <CheckBox IsChecked="{Binding OverrideOnDestroy}" Color="{StaticResource AccentBlue}"/>
                                 <Label Text="OnDestroy" Style="{StaticResource DimLabel}" VerticalOptions="Center"/>
                             </HorizontalStackLayout>
                         </HorizontalStackLayout>
@@ -109,8 +111,9 @@
                 </Border>
 
                 <!-- Validation -->
-                <Label x:Name="ValidationLabel"
-                       IsVisible="False"
+                <Label Text="{Binding ValidationMessage}"
+                       IsVisible="{Binding HasValidationError}"
+                       TextColor="#E85050"
                        FontSize="11"
                        Margin="20,0,20,8"/>
 
@@ -122,10 +125,10 @@
                                        Padding="20,12">
                     <Button Text="Cancel"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnCancel"/>
+                            Command="{Binding CancelCommand}"/>
                     <Button Text="Create"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnSubmit"/>
+                            Command="{Binding SubmitCommand}"/>
                 </HorizontalStackLayout>
 
             </VerticalStackLayout>

@@ -1,9 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.InspectorView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:MonoGame.Editor.Maui.Controls"
              xmlns:panels="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             x:DataType="vm:InspectorViewModel"
              BackgroundColor="{StaticResource PanelBackground}">
 
     <Grid RowDefinitions="30,*" RowSpacing="0">
@@ -13,22 +15,50 @@
                 BackgroundColor="{StaticResource PanelBackgroundAlt}"
                 StrokeThickness="0">
             <HorizontalStackLayout Spacing="0">
-                <Button x:Name="InspectorTabBtn"
-                        Text="Inspector"
+                <Button Text="Inspector"
                         Style="{StaticResource InspectorTabButton}"
-                        Clicked="OnInspectorTabClicked"/>
-                <Button x:Name="MaterialTabBtn"
-                        Text="Material Editor"
+                        CommandParameter="Inspector"
+                        Command="{Binding SelectTabCommand}"
+                        TextColor="#9A9AA2">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Inspector">
+                            <Setter Property="TextColor" Value="#E6E6E8"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Material Editor"
                         Style="{StaticResource InspectorTabButton}"
-                        Clicked="OnMaterialTabClicked"/>
-                <Button x:Name="UIThemeTabBtn"
-                        Text="UI Theme Editor"
+                        CommandParameter="Material"
+                        Command="{Binding SelectTabCommand}"
+                        TextColor="#9A9AA2">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Material">
+                            <Setter Property="TextColor" Value="#E6E6E8"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="UI Theme Editor"
                         Style="{StaticResource InspectorTabButton}"
-                        Clicked="OnUIThemeTabClicked"/>
-                <Button x:Name="SpriteEditorTabBtn"
-                        Text="Sprite Editor"
+                        CommandParameter="UITheme"
+                        Command="{Binding SelectTabCommand}"
+                        TextColor="#9A9AA2">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="UITheme">
+                            <Setter Property="TextColor" Value="#E6E6E8"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Sprite Editor"
                         Style="{StaticResource InspectorTabButton}"
-                        Clicked="OnSpriteEditorTabClicked"/>
+                        CommandParameter="Sprite"
+                        Command="{Binding SelectTabCommand}"
+                        TextColor="#9A9AA2">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Sprite">
+                            <Setter Property="TextColor" Value="#E6E6E8"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
             </HorizontalStackLayout>
         </Border>
         <BoxView Grid.Row="0" VerticalOptions="End"
@@ -39,12 +69,13 @@
 
             <!-- ── Inspector tab content ─────────────────────────────── -->
             <ScrollView x:Name="InspectorContent"
+                        IsEnabled="{Binding ContentEnabled}"
                         BackgroundColor="{StaticResource PanelBackground}">
                 <VerticalStackLayout Spacing="0">
 
                     <!-- No selection placeholder -->
-                    <Label x:Name="NoSelectionLabel"
-                           Text="No object selected"
+                    <Label Text="No object selected"
+                           IsVisible="{Binding HasSelection, Converter={StaticResource InverseBool}}"
                            Style="{StaticResource PlaceholderLabel}"
                            Margin="0,48"/>
 
@@ -53,15 +84,14 @@
                             BackgroundColor="{StaticResource PanelBackgroundAlt}"
                             StrokeThickness="0"
                             Padding="10,8"
-                            IsVisible="False">
+                            IsVisible="{Binding HasSelection}">
                         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                             <CheckBox Grid.Column="0"
                                       x:Name="ObjectActiveCheck"
                                       Color="{StaticResource AccentBlue}"
                                       CheckedChanged="OnObjectActiveChanged"/>
                             <Label Grid.Column="1"
-                                   x:Name="ObjectNameLabel"
-                                   Text="GameObject"
+                                   Text="{Binding ObjectName}"
                                    Style="{StaticResource SectionTitle}"
                                    FontSize="15"
                                    VerticalOptions="Center"/>
@@ -72,8 +102,7 @@
                                     <Label Text="ID"
                                            Style="{StaticResource LabelSecondary}"
                                            FontSize="10"/>
-                                    <Label x:Name="ObjectIdLabel"
-                                           Text="--------"
+                                    <Label Text="{Binding ObjectIdShort}"
                                            Style="{StaticResource MonoLabel}"
                                            VerticalOptions="Center"/>
                                 </HorizontalStackLayout>
@@ -85,7 +114,7 @@
                     <Border x:Name="TransformSection"
                             BackgroundColor="{StaticResource PanelBackground}"
                             StrokeThickness="0"
-                            IsVisible="False">
+                            IsVisible="{Binding HasSelection}">
                         <VerticalStackLayout Spacing="0">
 
                             <!-- Section header -->
@@ -93,7 +122,6 @@
                                   BackgroundColor="{StaticResource PanelBackgroundAlt}"
                                   Padding="8,4">
                                 <Label Grid.Column="0"
-                                       x:Name="TransformChevron"
                                        Text="▼"
                                        TextColor="{StaticResource TextMuted}"
                                        FontSize="10"
@@ -150,15 +178,14 @@
                     <!-- Behaviour cards (built dynamically in code-behind) -->
                     <VerticalStackLayout x:Name="BehaviourCardsStack"
                                          Spacing="0"
-                                         IsVisible="False"/>
+                                         IsVisible="{Binding HasSelection}"/>
 
                     <!-- Add Behaviour -->
-                    <Button x:Name="AddBehaviourBtn"
-                            Text="+ Add Behaviour"
+                    <Button Text="+ Add Behaviour"
                             Style="{StaticResource AddButton}"
                             Margin="10,8"
-                            IsVisible="False"
-                            Clicked="OnAddBehaviourClicked"/>
+                            IsVisible="{Binding HasSelection}"
+                            Command="{Binding AddBehaviourCommand}"/>
 
                 </VerticalStackLayout>
             </ScrollView>

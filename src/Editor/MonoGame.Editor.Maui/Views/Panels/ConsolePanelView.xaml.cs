@@ -1,150 +1,34 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.Specialized;
 
 namespace MonoGame.Editor.Maui.Views.Panels;
 
 /// <summary>
-/// Pestaña Console del dock inferior. Muestra entradas de log y salida de build.
-/// Fase 0: log plano con colores por nivel. Fase 6: filtros activos + límite de líneas.
+/// Pestaña Console del dock inferior. La lógica de filtrado y acumulación vive en
+/// <see cref="ConsolePanelViewModel"/>; el code-behind enlaza la VM, gestiona su ciclo
+/// de vida y mantiene el auto-scroll al final (responsabilidad de la vista).
 /// </summary>
 public sealed partial class ConsolePanelView : ContentView
 {
-    private const int MaxLogEntries = 1000;
-
-    private readonly IEditorEventBus _bus = EditorContext.Instance.EventBus;
-    private readonly ObservableCollection<string> _allEntries  = [];
-    private readonly ObservableCollection<string> _visible = [];
-
-    private bool _showInfo  = true;
-    private bool _showWarn  = true;
-    private bool _showError = true;
-
-    private Action<LogEntryAddedEvent>?  _onLogEntry;
-    private Action<BuildOutputLineEvent>? _onBuildOutput;
-
-    private static readonly Color ActiveFilterFg   = Color.FromArgb("#E6E6E8");
-    private static readonly Color InactiveFilterFg = Color.FromArgb("#6A6A72");
+    private readonly ConsolePanelViewModel _vm = new();
 
     public ConsolePanelView()
     {
         InitializeComponent();
-        LogList.ItemsSource = _visible;
+        BindingContext = _vm;
+        _vm.VisibleEntries.CollectionChanged += OnVisibleEntriesChanged;
     }
 
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
-        if (Handler is not null) Subscribe();
-        else Unsubscribe();
+        if (Handler is not null) _vm.Attach();
+        else _vm.Detach();
     }
 
-    private void Subscribe()
+    private void OnVisibleEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        _onLogEntry    = e => MainThread.BeginInvokeOnMainThread(() => OnLogEntry(e));
-        _onBuildOutput = e => MainThread.BeginInvokeOnMainThread(() => OnBuildOutput(e));
-        _bus.Subscribe(_onLogEntry);
-        _bus.Subscribe(_onBuildOutput);
-    }
-
-    private void Unsubscribe()
-    {
-        if (_onLogEntry is not null)    _bus.Unsubscribe(_onLogEntry);
-        if (_onBuildOutput is not null) _bus.Unsubscribe(_onBuildOutput);
-    }
-
-    private void OnLogEntry(LogEntryAddedEvent e)
-    {
-        string prefix = e.Entry.Level switch
-        {
-            LogLevel.Warning => "[WARN] ",
-            LogLevel.Error   => "[ERR]  ",
-            LogLevel.Debug   => "[DBG]  ",
-            _                => "[INFO] "
-        };
-
-        string line = $"{e.Entry.Timestamp:HH:mm:ss} {prefix}{e.Entry.Message}";
-        if (_allEntries.Count >= MaxLogEntries) _allEntries.RemoveAt(0);
-        _allEntries.Add(line);
-
-        bool show = e.Entry.Level switch
-        {
-            LogLevel.Warning => _showWarn,
-            LogLevel.Error   => _showError,
-            _                => _showInfo
-        };
-
-        if (show) AddVisible(line);
-    }
-
-    private void OnBuildOutput(BuildOutputLineEvent e)
-    {
-        string prefix = e.IsError ? "[ERR]  " : "[BLD]  ";
-        string line = $"{DateTime.Now:HH:mm:ss} {prefix}{e.Line}";
-        if (_allEntries.Count >= MaxLogEntries) _allEntries.RemoveAt(0);
-        _allEntries.Add(line);
-        if (_showInfo) AddVisible(line);
-    }
-
-    private void OnFilterInfoClicked(object sender, EventArgs e)
-    {
-        _showInfo = !_showInfo;
-        FilterInfoBtn.TextColor = _showInfo ? ActiveFilterFg : InactiveFilterFg;
-        RebuildVisible();
-    }
-
-    private void OnFilterWarnClicked(object sender, EventArgs e)
-    {
-        _showWarn = !_showWarn;
-        FilterWarnBtn.TextColor = _showWarn ? ActiveFilterFg : InactiveFilterFg;
-        RebuildVisible();
-    }
-
-    private void OnFilterErrorClicked(object sender, EventArgs e)
-    {
-        _showError = !_showError;
-        FilterErrorBtn.TextColor = _showError ? ActiveFilterFg : InactiveFilterFg;
-        RebuildVisible();
-    }
-
-    private void OnClearClicked(object sender, EventArgs e)
-    {
-        _allEntries.Clear();
-        _visible.Clear();
-    }
-
-    private void OnCopyAllClicked(object sender, EventArgs e)
-    {
-        if (_visible.Count == 0) return;
-        _ = Clipboard.SetTextAsync(string.Join(Environment.NewLine, _visible));
-    }
-
-    private void RebuildVisible()
-    {
-        _visible.Clear();
-        foreach (string entry in _allEntries)
-        {
-            bool isBuild = entry.Contains("[BLD]");
-            bool isWarn  = entry.Contains("[WARN]");
-            bool isError = entry.Contains("[ERR]");
-
-            bool show = (isError && _showError)
-                     || (isWarn  && _showWarn)
-                     || (!isError && !isWarn && _showInfo);
-
-            if (show) _visible.Add(entry);
-        }
-
-        ScrollToEnd();
-    }
-
-    private void AddVisible(string line)
-    {
-        _visible.Add(line);
-        ScrollToEnd();
-    }
-
-    private void ScrollToEnd()
-    {
-        if (_visible.Count == 0) return;
-        LogList.ScrollTo(_visible.Count - 1, ScrollToPosition.End, animate: false);
+        int count = _vm.VisibleEntries.Count;
+        if (count == 0) return;
+        LogList.ScrollTo(count - 1, position: ScrollToPosition.End, animate: false);
     }
 }

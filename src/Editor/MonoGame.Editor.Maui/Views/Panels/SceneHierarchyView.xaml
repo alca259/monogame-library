@@ -1,8 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.SceneHierarchyView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             x:DataType="vm:SceneHierarchyViewModel"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,*,24" RowSpacing="0">
@@ -14,36 +16,28 @@
             <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,1,*,Auto" ColumnSpacing="2" Padding="4,2">
 
                 <Button Grid.Column="0"
-                        x:Name="AddEntityBtn"
                         Text="+"
                         ToolTipProperties.Text="Create empty entity"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnAddClicked"/>
+                        Command="{Binding AddEntityCommand}"/>
 
                 <Button Grid.Column="1"
-                        x:Name="DeleteEntityBtn"
                         Text="🗑"
                         ToolTipProperties.Text="Delete selected entity"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnDeleteClicked"/>
+                        Command="{Binding DeleteEntityCommand}"/>
 
                 <Button Grid.Column="2"
-                        x:Name="RenameBtn"
                         Text="✎"
                         ToolTipProperties.Text="Rename selected entity"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnRenameClicked"/>
+                        Command="{Binding RenameCommand}"/>
 
                 <Button Grid.Column="3"
-                        x:Name="ReparentBtn"
                         Text="↑"
                         ToolTipProperties.Text="Reparent selected entity"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnReparentClicked"/>
+                        Command="{Binding ReparentCommand}"/>
 
                 <BoxView Grid.Column="4"
                          Color="{StaticResource BorderColor}"
@@ -51,14 +45,12 @@
                          Margin="2,2"/>
 
                 <Entry Grid.Column="5"
-                       x:Name="SearchEntry"
                        Placeholder="Search…"
                        Style="{StaticResource InputEntry}"
-                       TextChanged="OnSearchTextChanged"/>
+                       Text="{Binding SearchFilter}"/>
 
                 <Label Grid.Column="6"
-                       x:Name="CountLabel"
-                       Text="0 entities"
+                       Text="{Binding CountText}"
                        Style="{StaticResource DimLabel}"
                        VerticalOptions="Center"
                        Margin="4,0"/>
@@ -70,9 +62,9 @@
 
         <!-- ── Entity tree ───────────────────────────────────────── -->
         <CollectionView Grid.Row="1"
-                        x:Name="HierarchyList"
+                        ItemsSource="{Binding Items}"
+                        SelectedItem="{Binding SelectedItem}"
                         SelectionMode="Single"
-                        SelectionChanged="OnSelectionChanged"
                         BackgroundColor="{StaticResource BgPanel}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="local:HierarchyItem">
@@ -121,8 +113,7 @@
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0"
                 Padding="8,0">
-            <Label x:Name="StatusLabel"
-                   Text="0 objects in scene"
+            <Label Text="{Binding StatusText}"
                    Style="{StaticResource DimLabel}"
                    VerticalOptions="Center"/>
         </Border>

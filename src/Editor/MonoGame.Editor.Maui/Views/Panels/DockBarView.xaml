@@ -1,8 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.DockBarView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:panels="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             x:DataType="vm:DockBarViewModel"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="26,*" RowSpacing="0">
@@ -13,46 +15,103 @@
                 StrokeThickness="0">
             <ScrollView Orientation="Horizontal">
                 <HorizontalStackLayout Spacing="0" x:Name="TabBar">
-                    <Button x:Name="ScenesTabBtn"
-                            Text="Scenes"
+
+                    <Button Text="Scenes"
                             CommandParameter="Scenes"
+                            Command="{Binding SelectTabCommand}"
                             Style="{StaticResource TabButton}"
-                            Clicked="OnDockTabClicked"/>
-                    <Button x:Name="AssetsTabBtn"
-                            Text="Assets"
+                            TextColor="#9A9AA2">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Scenes">
+                                <Setter Property="TextColor" Value="#E6E6E8"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <Button Text="Assets"
                             CommandParameter="Assets"
+                            Command="{Binding SelectTabCommand}"
                             Style="{StaticResource TabButton}"
-                            Clicked="OnDockTabClicked"/>
-                    <Button x:Name="ConsoleTabBtn"
-                            Text="Console"
+                            TextColor="#9A9AA2">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Assets">
+                                <Setter Property="TextColor" Value="#E6E6E8"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <Button Text="Console"
                             CommandParameter="Console"
+                            Command="{Binding SelectTabCommand}"
                             Style="{StaticResource TabButton}"
-                            Clicked="OnDockTabClicked"/>
-                    <Button x:Name="LocalizationTabBtn"
-                            Text="Localization"
+                            TextColor="#9A9AA2">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Console">
+                                <Setter Property="TextColor" Value="#E6E6E8"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <Button Text="Localization"
                             CommandParameter="Localization"
+                            Command="{Binding SelectTabCommand}"
                             Style="{StaticResource TabButton}"
-                            Clicked="OnDockTabClicked"/>
-                    <Button x:Name="InputMapsTabBtn"
-                            Text="Input Maps"
+                            TextColor="#9A9AA2">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Localization">
+                                <Setter Property="TextColor" Value="#E6E6E8"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <Button Text="Input Maps"
                             CommandParameter="InputMaps"
+                            Command="{Binding SelectTabCommand}"
                             Style="{StaticResource TabButton}"
-                            Clicked="OnDockTabClicked"/>
-                    <Button x:Name="TilemapTabBtn"
-                            Text="Tilemap"
+                            TextColor="#9A9AA2">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="InputMaps">
+                                <Setter Property="TextColor" Value="#E6E6E8"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <Button Text="Tilemap"
                             CommandParameter="Tilemap"
+                            Command="{Binding SelectTabCommand}"
                             Style="{StaticResource TabButton}"
-                            Clicked="OnDockTabClicked"/>
-                    <Button x:Name="HistoryTabBtn"
-                            Text="History"
+                            TextColor="#9A9AA2">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Tilemap">
+                                <Setter Property="TextColor" Value="#E6E6E8"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <Button Text="History"
                             CommandParameter="History"
+                            Command="{Binding SelectTabCommand}"
                             Style="{StaticResource TabButton}"
-                            Clicked="OnDockTabClicked"/>
-                    <Button x:Name="ScriptsTabBtn"
-                            Text="Scripts"
+                            TextColor="#9A9AA2">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="History">
+                                <Setter Property="TextColor" Value="#E6E6E8"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <Button Text="Scripts"
                             CommandParameter="Scripts"
+                            Command="{Binding SelectTabCommand}"
                             Style="{StaticResource TabButton}"
-                            Clicked="OnDockTabClicked"/>
+                            TextColor="#9A9AA2">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Scripts">
+                                <Setter Property="TextColor" Value="#E6E6E8"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
                 </HorizontalStackLayout>
             </ScrollView>
         </Border>

@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.SpriteInspectorView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             x:DataType="vm:SpriteInspectorViewModel"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,1,*,1,24" RowSpacing="0">
@@ -11,17 +13,14 @@
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0">
             <Grid ColumnDefinitions="*,Auto" Padding="8,2">
-                <Label x:Name="SpriteNameLabel"
-                       Grid.Column="0"
-                       Text="No sprite selected"
+                <Label Grid.Column="0"
+                       Text="{Binding SpriteName}"
                        Style="{StaticResource DimLabel}"
                        VerticalOptions="Center"/>
                 <Button Grid.Column="1"
-                        x:Name="SaveButton"
                         Text="Save"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnSaveClicked"/>
+                        Command="{Binding SaveCommand}"/>
             </Grid>
         </Border>
         <BoxView Grid.Row="1" Color="{StaticResource BorderColor}"/>
@@ -31,7 +30,7 @@
             <VerticalStackLayout Padding="10,8" Spacing="6">
 
                 <Label Text="Texture Path" Style="{StaticResource DimLabel}"/>
-                <Entry x:Name="TexturePathEntry"
+                <Entry Text="{Binding TexturePath}"
                        Placeholder="relative/path/texture.png"/>
 
                 <BoxView Color="{StaticResource BorderColor}" HeightRequest="1" Margin="0,4"/>
@@ -50,13 +49,11 @@
                            Style="{StaticResource DimLabel}"
                            FontSize="10"/>
                     <Entry Grid.Row="1" Grid.Column="0"
-                           x:Name="BorderLeftEntry"
                            Keyboard="Numeric"
-                           Text="0"/>
+                           Text="{Binding BorderLeft}"/>
                     <Entry Grid.Row="1" Grid.Column="1"
-                           x:Name="BorderRightEntry"
                            Keyboard="Numeric"
-                           Text="0"/>
+                           Text="{Binding BorderRight}"/>
                     <Label Grid.Row="2" Grid.Column="0"
                            Text="Top"
                            Style="{StaticResource DimLabel}"
@@ -66,26 +63,24 @@
                            Style="{StaticResource DimLabel}"
                            FontSize="10"/>
                     <Entry Grid.Row="3" Grid.Column="0"
-                           x:Name="BorderTopEntry"
                            Keyboard="Numeric"
-                           Text="0"/>
+                           Text="{Binding BorderTop}"/>
                     <Entry Grid.Row="3" Grid.Column="1"
-                           x:Name="BorderBottomEntry"
                            Keyboard="Numeric"
-                           Text="0"/>
+                           Text="{Binding BorderBottom}"/>
                 </Grid>
 
                 <BoxView Color="{StaticResource BorderColor}" HeightRequest="1" Margin="0,4"/>
 
                 <Label Text="Tile Options" Style="{StaticResource DimLabel}"/>
                 <HorizontalStackLayout Spacing="8">
-                    <CheckBox x:Name="TileEdgesCheck" Color="{StaticResource AccentBlue}"/>
+                    <CheckBox IsChecked="{Binding TileEdges}" Color="{StaticResource AccentBlue}"/>
                     <Label Text="Tile Edges"
                            Style="{StaticResource PrimaryLabel}"
                            VerticalOptions="Center"/>
                 </HorizontalStackLayout>
                 <HorizontalStackLayout Spacing="8">
-                    <CheckBox x:Name="TileCenterCheck" Color="{StaticResource AccentBlue}"/>
+                    <CheckBox IsChecked="{Binding TileCenter}" Color="{StaticResource AccentBlue}"/>
                     <Label Text="Tile Center"
                            Style="{StaticResource PrimaryLabel}"
                            VerticalOptions="Center"/>
@@ -101,8 +96,7 @@
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0"
                 Padding="8,0">
-            <Label x:Name="SpriteStatusLabel"
-                   Text=""
+            <Label Text="{Binding StatusText}"
                    Style="{StaticResource DimLabel}"
                    VerticalOptions="Center"/>
         </Border>

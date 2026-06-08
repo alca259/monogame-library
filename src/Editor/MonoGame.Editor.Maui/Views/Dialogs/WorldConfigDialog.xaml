@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentPage x:Class="MonoGame.Editor.Maui.Views.Dialogs.WorldConfigDialog"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Dialogs"
+             x:DataType="vm:WorldConfigViewModel"
              BackgroundColor="#80000000"
              Title="World Configuration">
 
@@ -32,26 +34,23 @@
                                 Padding="20,10,20,0">
                             <VerticalStackLayout Spacing="8">
                                 <HorizontalStackLayout Spacing="8">
-                                    <CheckBox x:Name="Physics2DCheck"
-                                              Color="{StaticResource AccentBlue}"
-                                              CheckedChanged="OnPhysics2DToggled"/>
+                                    <CheckBox IsChecked="{Binding UsePhysics2D}"
+                                              Color="{StaticResource AccentBlue}"/>
                                     <Label Text="Physics 2D"
                                            Style="{StaticResource PrimaryLabel}"
                                            VerticalOptions="Center"/>
                                 </HorizontalStackLayout>
-                                <Grid x:Name="PhysicsFields"
-                                      RowDefinitions="Auto"
+                                <Grid RowDefinitions="Auto"
                                       ColumnDefinitions="100,80,100,80"
                                       ColumnSpacing="8"
-                                      IsVisible="False"
+                                      IsVisible="{Binding UsePhysics2D}"
                                       Margin="28,0,0,0">
                                     <Label Grid.Column="0"
                                            Text="Gravity X"
                                            Style="{StaticResource DimLabel}"
                                            VerticalOptions="Center"/>
                                     <Entry Grid.Column="1"
-                                           x:Name="GravityXEntry"
-                                           Text="0"
+                                           Text="{Binding GravityX}"
                                            Keyboard="Numeric"
                                            BackgroundColor="{StaticResource BgChrome}"
                                            TextColor="{StaticResource PrimaryLabel}"/>
@@ -60,8 +59,7 @@
                                            Style="{StaticResource DimLabel}"
                                            VerticalOptions="Center"/>
                                     <Entry Grid.Column="3"
-                                           x:Name="GravityYEntry"
-                                           Text="-9.8"
+                                           Text="{Binding GravityY}"
                                            Keyboard="Numeric"
                                            BackgroundColor="{StaticResource BgChrome}"
                                            TextColor="{StaticResource PrimaryLabel}"/>
@@ -76,44 +74,38 @@
                                 Padding="20,10,20,0">
                             <VerticalStackLayout Spacing="8">
                                 <HorizontalStackLayout Spacing="8">
-                                    <CheckBox x:Name="LightingCheck"
-                                              Color="{StaticResource AccentBlue}"
-                                              CheckedChanged="OnLightingToggled"/>
+                                    <CheckBox IsChecked="{Binding UseLighting}"
+                                              Color="{StaticResource AccentBlue}"/>
                                     <Label Text="Lighting"
                                            Style="{StaticResource PrimaryLabel}"
                                            VerticalOptions="Center"/>
                                 </HorizontalStackLayout>
-                                <Grid x:Name="LightingFields"
-                                      RowDefinitions="Auto"
+                                <Grid RowDefinitions="Auto"
                                       ColumnDefinitions="80,56,56,56,56"
                                       ColumnSpacing="6"
-                                      IsVisible="False"
+                                      IsVisible="{Binding UseLighting}"
                                       Margin="28,0,0,0">
                                     <Label Grid.Column="0"
                                            Text="Ambient RGBA"
                                            Style="{StaticResource DimLabel}"
                                            VerticalOptions="Center"/>
                                     <Entry Grid.Column="1"
-                                           x:Name="AmbientREntry"
-                                           Text="255"
+                                           Text="{Binding AmbientR}"
                                            Keyboard="Numeric"
                                            BackgroundColor="{StaticResource BgChrome}"
                                            TextColor="{StaticResource PrimaryLabel}"/>
                                     <Entry Grid.Column="2"
-                                           x:Name="AmbientGEntry"
-                                           Text="255"
+                                           Text="{Binding AmbientG}"
                                            Keyboard="Numeric"
                                            BackgroundColor="{StaticResource BgChrome}"
                                            TextColor="{StaticResource PrimaryLabel}"/>
                                     <Entry Grid.Column="3"
-                                           x:Name="AmbientBEntry"
-                                           Text="255"
+                                           Text="{Binding AmbientB}"
                                            Keyboard="Numeric"
                                            BackgroundColor="{StaticResource BgChrome}"
                                            TextColor="{StaticResource PrimaryLabel}"/>
                                     <Entry Grid.Column="4"
-                                           x:Name="AmbientAEntry"
-                                           Text="255"
+                                           Text="{Binding AmbientA}"
                                            Keyboard="Numeric"
                                            BackgroundColor="{StaticResource BgChrome}"
                                            TextColor="{StaticResource PrimaryLabel}"/>
@@ -128,27 +120,24 @@
                                 Padding="20,10,20,0">
                             <VerticalStackLayout Spacing="8">
                                 <HorizontalStackLayout Spacing="8">
-                                    <CheckBox x:Name="NavigationCheck"
-                                              Color="{StaticResource AccentBlue}"
-                                              CheckedChanged="OnNavigationToggled"/>
+                                    <CheckBox IsChecked="{Binding UseNavigation}"
+                                              Color="{StaticResource AccentBlue}"/>
                                     <Label Text="Navigation (NavMesh)"
                                            Style="{StaticResource PrimaryLabel}"
                                            VerticalOptions="Center"/>
                                 </HorizontalStackLayout>
-                                <Grid x:Name="NavigationFields"
-                                      RowDefinitions="Auto,Auto,Auto"
+                                <Grid RowDefinitions="Auto,Auto,Auto"
                                       ColumnDefinitions="90,80,90,80"
                                       ColumnSpacing="8"
                                       RowSpacing="6"
-                                      IsVisible="False"
+                                      IsVisible="{Binding UseNavigation}"
                                       Margin="28,0,0,0">
                                     <Label Grid.Row="0" Grid.Column="0"
                                            Text="Grid width"
                                            Style="{StaticResource DimLabel}"
                                            VerticalOptions="Center"/>
                                     <Entry Grid.Row="0" Grid.Column="1"
-                                           x:Name="NavWidthEntry"
-                                           Text="64"
+                                           Text="{Binding NavWidth}"
                                            Keyboard="Numeric"
                                            BackgroundColor="{StaticResource BgChrome}"
                                            TextColor="{StaticResource PrimaryLabel}"/>
@@ -157,8 +146,7 @@
                                            Style="{StaticResource DimLabel}"
                                            VerticalOptions="Center"/>
                                     <Entry Grid.Row="0" Grid.Column="3"
-                                           x:Name="NavHeightEntry"
-                                           Text="64"
+                                           Text="{Binding NavHeight}"
                                            Keyboard="Numeric"
                                            BackgroundColor="{StaticResource BgChrome}"
                                            TextColor="{StaticResource PrimaryLabel}"/>
@@ -167,8 +155,7 @@
                                            Style="{StaticResource DimLabel}"
                                            VerticalOptions="Center"/>
                                     <Entry Grid.Row="1" Grid.Column="1"
-                                           x:Name="NavCellSizeEntry"
-                                           Text="32"
+                                           Text="{Binding NavCellSize}"
                                            Keyboard="Numeric"
                                            BackgroundColor="{StaticResource BgChrome}"
                                            TextColor="{StaticResource PrimaryLabel}"/>
@@ -177,8 +164,7 @@
                                            Style="{StaticResource DimLabel}"
                                            VerticalOptions="Center"/>
                                     <Entry Grid.Row="2" Grid.Column="1"
-                                           x:Name="NavOriginXEntry"
-                                           Text="0"
+                                           Text="{Binding NavOriginX}"
                                            Keyboard="Numeric"
                                            BackgroundColor="{StaticResource BgChrome}"
                                            TextColor="{StaticResource PrimaryLabel}"/>
@@ -187,8 +173,7 @@
                                            Style="{StaticResource DimLabel}"
                                            VerticalOptions="Center"/>
                                     <Entry Grid.Row="2" Grid.Column="3"
-                                           x:Name="NavOriginYEntry"
-                                           Text="0"
+                                           Text="{Binding NavOriginY}"
                                            Keyboard="Numeric"
                                            BackgroundColor="{StaticResource BgChrome}"
                                            TextColor="{StaticResource PrimaryLabel}"/>
@@ -202,7 +187,7 @@
                                 StrokeThickness="0"
                                 Padding="20,10,20,10">
                             <HorizontalStackLayout Spacing="8">
-                                <CheckBox x:Name="AudioCheck"
+                                <CheckBox IsChecked="{Binding UseAudio}"
                                           Color="{StaticResource AccentBlue}"/>
                                 <Label Text="Audio"
                                        Style="{StaticResource PrimaryLabel}"
@@ -221,10 +206,10 @@
                                        Padding="20,12">
                     <Button Text="Cancel"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnCancel"/>
+                            Command="{Binding CancelCommand}"/>
                     <Button Text="Apply"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnSubmit"/>
+                            Command="{Binding SubmitCommand}"/>
                 </HorizontalStackLayout>
 
             </VerticalStackLayout>

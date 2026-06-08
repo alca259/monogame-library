@@ -1,8 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentView x:Class="MonoGame.Editor.Maui.Views.Panels.AssetBrowserView"
+             x:Name="Root"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             x:DataType="vm:AssetBrowserViewModel"
              BackgroundColor="{StaticResource BgPanel}">
 
     <Grid RowDefinitions="28,1,*,1,24" RowSpacing="0">
@@ -17,21 +20,17 @@
                         Text="⬆"
                         ToolTipProperties.Text="Import asset"
                         Style="{StaticResource SmallIconButton}"
-                        Clicked="OnImportAssetClicked"/>
+                        Command="{Binding ImportAssetCommand}"/>
                 <Button Grid.Column="1"
-                        x:Name="AssetRenameBtn"
                         Text="✎"
                         ToolTipProperties.Text="Rename selected"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnRenameAssetClicked"/>
+                        Command="{Binding AssetRenameCommand}"/>
                 <Button Grid.Column="2"
-                        x:Name="AssetDeleteBtn"
                         Text="🗑"
                         ToolTipProperties.Text="Delete selected"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnDeleteAssetClicked"/>
+                        Command="{Binding AssetDeleteCommand}"/>
 
                 <BoxView Grid.Column="3"
                          Color="{StaticResource BorderColor}"
@@ -39,12 +38,10 @@
                          Margin="2,2"/>
 
                 <Button Grid.Column="4"
-                        x:Name="NewFolderBtn"
                         Text="📁"
                         ToolTipProperties.Text="New folder"
                         Style="{StaticResource SmallIconButton}"
-                        IsEnabled="False"
-                        Clicked="OnNewFolderClicked"/>
+                        Command="{Binding NewFolderCommand}"/>
 
                 <BoxView Grid.Column="5"
                          Color="{StaticResource BorderColor}"
@@ -52,14 +49,12 @@
                          Margin="2,2"/>
 
                 <Entry Grid.Column="6"
-                       x:Name="AssetSearchEntry"
                        Placeholder="Filter assets…"
                        Style="{StaticResource InputEntry}"
-                       TextChanged="OnFilterChanged"/>
+                       Text="{Binding FilterText}"/>
 
                 <Label Grid.Column="7"
-                       x:Name="AssetCountLabel"
-                       Text="0 assets"
+                       Text="{Binding AssetCountText}"
                        Style="{StaticResource DimLabel}"
                        VerticalOptions="Center"
                        Margin="4,0"/>
@@ -74,21 +69,21 @@
 
             <!-- Folder tree -->
             <CollectionView Grid.Column="0"
-                            x:Name="FolderTree"
+                            ItemsSource="{Binding FolderItems}"
                             SelectionMode="None"
                             BackgroundColor="{StaticResource BgPanel}">
                 <FlyoutBase.ContextFlyout>
                     <MenuFlyout>
                         <MenuFlyoutItem Text="📁 New folder"
-                                        Clicked="OnNewFolderClicked"/>
+                                        Command="{Binding NewFolderCommand}"/>
                         <MenuFlyoutSeparator/>
                         <MenuFlyoutSubItem Text="New asset">
                             <MenuFlyoutItem Text="◈ Material"
-                                            Clicked="OnNewMaterialClicked"/>
+                                            Command="{Binding NewMaterialCommand}"/>
                             <MenuFlyoutItem Text="◧ UI Theme"
-                                            Clicked="OnNewUIThemeClicked"/>
+                                            Command="{Binding NewUIThemeCommand}"/>
                             <MenuFlyoutItem Text="✦ Sprite NineSlice"
-                                            Clicked="OnNewSpriteClicked"/>
+                                            Command="{Binding NewSpriteCommand}"/>
                         </MenuFlyoutSubItem>
                     </MenuFlyout>
                 </FlyoutBase.ContextFlyout>
@@ -100,15 +95,15 @@
                             <FlyoutBase.ContextFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem Text="📁 New folder"
-                                                    Clicked="OnNewFolderClicked"/>
+                                                    Command="{Binding Vm.NewFolderCommand, Source={x:Reference Root}}"/>
                                     <MenuFlyoutSeparator/>
                                     <MenuFlyoutSubItem Text="New asset">
                                         <MenuFlyoutItem Text="◈ Material"
-                                                        Clicked="OnNewMaterialClicked"/>
+                                                        Command="{Binding Vm.NewMaterialCommand, Source={x:Reference Root}}"/>
                                         <MenuFlyoutItem Text="◧ UI Theme"
-                                                        Clicked="OnNewUIThemeClicked"/>
+                                                        Command="{Binding Vm.NewUIThemeCommand, Source={x:Reference Root}}"/>
                                         <MenuFlyoutItem Text="✦ Sprite NineSlice"
-                                                        Clicked="OnNewSpriteClicked"/>
+                                                        Command="{Binding Vm.NewSpriteCommand, Source={x:Reference Root}}"/>
                                     </MenuFlyoutSubItem>
                                     <MenuFlyoutSeparator/>
                                     <MenuFlyoutItem Text="✎ Rename folder"
@@ -154,7 +149,7 @@
                   RowDefinitions="Auto,1,24,1,*"
                   RowSpacing="0">
 
-                <!-- Breadcrumb -->
+                <!-- Breadcrumb (built in code-behind from VM.CurrentFolderPath) -->
                 <ScrollView Grid.Row="0"
                             Orientation="Horizontal"
                             HeightRequest="26"
@@ -180,32 +175,28 @@
 
                 <!-- Asset list -->
                 <CollectionView Grid.Row="4"
-                                x:Name="AssetList"
+                                ItemsSource="{Binding AssetItems}"
+                                SelectedItem="{Binding SelectedAsset}"
                                 SelectionMode="Single"
-                                SelectionChanged="OnAssetSelectionChanged"
                                 BackgroundColor="{StaticResource BgPanel}">
                     <FlyoutBase.ContextFlyout>
                         <MenuFlyout>
                             <MenuFlyoutItem Text="📁 New folder"
-                                            Clicked="OnNewFolderClicked"/>
+                                            Command="{Binding NewFolderCommand}"/>
                             <MenuFlyoutSeparator/>
                             <MenuFlyoutSubItem Text="New asset">
                                 <MenuFlyoutItem Text="◈ Material"
-                                                Clicked="OnNewMaterialClicked"/>
+                                                Command="{Binding NewMaterialCommand}"/>
                                 <MenuFlyoutItem Text="◧ UI Theme"
-                                                Clicked="OnNewUIThemeClicked"/>
+                                                Command="{Binding NewUIThemeCommand}"/>
                                 <MenuFlyoutItem Text="✦ Sprite NineSlice"
-                                                Clicked="OnNewSpriteClicked"/>
+                                                Command="{Binding NewSpriteCommand}"/>
                             </MenuFlyoutSubItem>
                             <MenuFlyoutSeparator/>
-                            <MenuFlyoutItem x:Name="AssetCtxRenameItem"
-                                            Text="✎ Rename"
-                                            IsEnabled="False"
-                                            Clicked="OnRenameAssetClicked"/>
-                            <MenuFlyoutItem x:Name="AssetCtxDeleteItem"
-                                            Text="🗑 Delete"
-                                            IsEnabled="False"
-                                            Clicked="OnDeleteAssetClicked"/>
+                            <MenuFlyoutItem Text="✎ Rename"
+                                            Command="{Binding AssetRenameCommand}"/>
+                            <MenuFlyoutItem Text="🗑 Delete"
+                                            Command="{Binding AssetDeleteCommand}"/>
                         </MenuFlyout>
                     </FlyoutBase.ContextFlyout>
                     <CollectionView.ItemTemplate>
@@ -250,8 +241,7 @@
                 BackgroundColor="{StaticResource BgChrome}"
                 StrokeThickness="0"
                 Padding="8,0">
-            <Label x:Name="AssetPathLabel"
-                   Text=""
+            <Label Text="{Binding AssetPathText}"
                    Style="{StaticResource DimLabel}"
                    VerticalOptions="Center"/>
         </Border>

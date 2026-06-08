@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ContentPage x:Class="MonoGame.Editor.Maui.Views.Dialogs.ScriptCreationDialog"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Dialogs"
+             x:DataType="vm:ScriptCreationViewModel"
              BackgroundColor="#80000000"
              Title="New Script">
 
@@ -35,7 +37,7 @@
                            Style="{StaticResource DimLabel}"
                            VerticalOptions="Center"/>
                     <Entry Grid.Row="0" Grid.Column="1"
-                           x:Name="ClassNameEntry"
+                           Text="{Binding ClassName}"
                            Placeholder="MyBehaviour"
                            BackgroundColor="{StaticResource BgPanel}"
                            TextColor="{StaticResource PrimaryLabel}"
@@ -46,7 +48,7 @@
                            Style="{StaticResource DimLabel}"
                            VerticalOptions="Center"/>
                     <Entry Grid.Row="1" Grid.Column="1"
-                           x:Name="NamespaceEntry"
+                           Text="{Binding NamespaceName}"
                            Placeholder="MyGame.Scripts"
                            BackgroundColor="{StaticResource BgPanel}"
                            TextColor="{StaticResource PrimaryLabel}"
@@ -57,7 +59,7 @@
                            Style="{StaticResource DimLabel}"
                            VerticalOptions="Center"/>
                     <Entry Grid.Row="2" Grid.Column="1"
-                           x:Name="RelativeFolderEntry"
+                           Text="{Binding RelativeFolder}"
                            Placeholder="Scripts/ (relative to GameScripts root)"
                            BackgroundColor="{StaticResource BgPanel}"
                            TextColor="{StaticResource PrimaryLabel}"
@@ -66,8 +68,9 @@
                 </Grid>
 
                 <!-- Validation -->
-                <Label x:Name="ValidationLabel"
-                       IsVisible="False"
+                <Label Text="{Binding ValidationMessage}"
+                       IsVisible="{Binding HasValidationError}"
+                       TextColor="#E85050"
                        FontSize="11"
                        Margin="20,0,20,8"/>
 
@@ -79,10 +82,10 @@
                                        Padding="20,12">
                     <Button Text="Cancel"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnCancel"/>
+                            Command="{Binding CancelCommand}"/>
                     <Button Text="Create"
                             Style="{StaticResource SmallIconButton}"
-                            Clicked="OnSubmit"/>
+                            Command="{Binding SubmitCommand}"/>
                 </HorizontalStackLayout>
 
             </VerticalStackLayout>
