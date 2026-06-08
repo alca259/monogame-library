@@ -15,6 +15,8 @@ public sealed partial class SceneHierarchyViewModel : ViewModelBase
     private readonly HashSet<Guid> _expandedIds = [];
     private bool _syncingSelection;
 
+    protected override EditorFocusContext? FocusContext => EditorFocusContext.Hierarchy;
+
     public ObservableCollection<HierarchyItem> Items { get; } = [];
 
     [ObservableProperty]

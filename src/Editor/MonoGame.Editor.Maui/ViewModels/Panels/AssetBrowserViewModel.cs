@@ -14,6 +14,8 @@ public sealed partial class AssetBrowserViewModel : ViewModelBase
 {
     private readonly HashSet<string> _expandedFolders = [];
 
+    protected override EditorFocusContext? FocusContext => EditorFocusContext.Assets;
+
     private string _contentRoot        = string.Empty;
     private string _selectedFolderPath = string.Empty;
 

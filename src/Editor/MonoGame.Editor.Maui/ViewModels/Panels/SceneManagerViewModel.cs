@@ -14,6 +14,8 @@ public sealed partial class SceneManagerViewModel : ViewModelBase
     private string _scenesPath = string.Empty;
     private string _activeScenePath = string.Empty;
 
+    protected override EditorFocusContext? FocusContext => EditorFocusContext.Scenes;
+
     public ObservableCollection<SceneItem> Items { get; } = [];
 
     [ObservableProperty]

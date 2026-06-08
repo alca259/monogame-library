@@ -16,6 +16,20 @@ public abstract class ViewModelBase : ObservableObject
 {
     private readonly List<Action> _unsubscribers = [];
     private bool _attached;
+    private bool _isFocused;
+
+    /// <summary>
+    /// Contexto de foco que representa este panel. Si se sobrescribe, la base mantiene
+    /// <see cref="IsFocused"/> sincronizado con <see cref="EditorContext.ActiveFocus"/>.
+    /// </summary>
+    protected virtual EditorFocusContext? FocusContext => null;
+
+    /// <summary><c>true</c> cuando este panel es el contexto de foco activo (para resaltar su borde).</summary>
+    public bool IsFocused
+    {
+        get => _isFocused;
+        private set => SetProperty(ref _isFocused, value);
+    }
 
     /// <summary>Bus de eventos compartido del editor.</summary>
     protected static IEditorEventBus Bus => EditorContext.Instance.EventBus;
@@ -39,6 +53,11 @@ public abstract class ViewModelBase : ObservableObject
     {
         if (_attached) return;
         _attached = true;
+        if (FocusContext is { } ctx)
+        {
+            On<FocusChangedEvent>(e => IsFocused = e.NewContext == ctx);
+            IsFocused = Context.ActiveFocus == ctx;
+        }
         RegisterEvents();
         OnAttached();
     }

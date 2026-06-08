@@ -13,6 +13,7 @@
         <controls:FocusOnClickBehavior Context="Assets"/>
     </ContentView.Behaviors>
 
+    <Grid>
     <Grid RowDefinitions="28,1,*,1,24" RowSpacing="0">
 
         <!-- ── Toolbar ──────────────────────────────────────────── -->
@@ -251,5 +252,10 @@
                    VerticalOptions="Center"/>
         </Border>
 
+    </Grid>
+
+        <!-- Resaltado del panel activo (overlay, sin afectar al layout) -->
+        <Border InputTransparent="True" BackgroundColor="Transparent" StrokeThickness="1"
+                Stroke="{Binding IsFocused, Converter={StaticResource BoolToColor}, ConverterParameter='#4A9EFF|#00000000'}"/>
     </Grid>
 </ContentView>

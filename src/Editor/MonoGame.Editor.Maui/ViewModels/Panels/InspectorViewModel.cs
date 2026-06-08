@@ -14,6 +14,8 @@ public sealed partial class InspectorViewModel : ViewModelBase
     private readonly GameObjectRegistry _registry = new();
     private bool _registryReady;
 
+    protected override EditorFocusContext? FocusContext => EditorFocusContext.Inspector;
+
     /// <summary>Registro de tipos de behaviour (lo consume la vista para construir tarjetas).</summary>
     public GameObjectRegistry Registry => _registry;
 

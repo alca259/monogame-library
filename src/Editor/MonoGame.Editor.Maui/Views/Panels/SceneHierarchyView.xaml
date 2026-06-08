@@ -12,6 +12,7 @@
         <controls:FocusOnClickBehavior Context="Hierarchy"/>
     </ContentView.Behaviors>
 
+    <Grid>
     <Grid RowDefinitions="28,*,24" RowSpacing="0">
 
         <!-- ── Toolbar ──────────────────────────────────────────── -->
@@ -126,5 +127,10 @@
         <BoxView Grid.Row="2" VerticalOptions="Start"
                  HeightRequest="1" Color="{StaticResource BorderColor}"/>
 
+    </Grid>
+
+        <!-- Resaltado del panel activo (overlay, sin afectar al layout) -->
+        <Border InputTransparent="True" BackgroundColor="Transparent" StrokeThickness="1"
+                Stroke="{Binding IsFocused, Converter={StaticResource BoolToColor}, ConverterParameter='#4A9EFF|#00000000'}"/>
     </Grid>
 </ContentView>

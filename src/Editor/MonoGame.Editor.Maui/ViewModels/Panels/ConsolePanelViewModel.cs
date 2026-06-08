@@ -15,6 +15,8 @@ public sealed partial class ConsolePanelViewModel : ViewModelBase
 
     private readonly List<string> _allEntries = [];
 
+    protected override EditorFocusContext? FocusContext => EditorFocusContext.Console;
+
     /// <summary>Entradas actualmente visibles según los filtros activos.</summary>
     public ObservableCollection<string> VisibleEntries { get; } = [];
 
