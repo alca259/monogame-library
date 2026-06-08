@@ -7,6 +7,10 @@
              x:DataType="vm:ConsolePanelViewModel"
              BackgroundColor="{StaticResource BgPanel}">
 
+    <ContentView.Behaviors>
+        <controls:FocusOnClickBehavior Context="Console"/>
+    </ContentView.Behaviors>
+
     <Grid RowDefinitions="28,1,*" RowSpacing="0">
 
         <!-- ── Toolbar ──────────────────────────────────────────── -->

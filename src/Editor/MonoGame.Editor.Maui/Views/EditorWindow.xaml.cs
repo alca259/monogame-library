@@ -130,6 +130,11 @@ public sealed partial class EditorWindow : ContentPage
         bool shift = Microsoft.UI.Input.InputKeyboardSource
             .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift)
             .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+        bool alt = Microsoft.UI.Input.InputKeyboardSource
+            .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Menu)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+
+        EditorFocusContext focus = EditorContext.Instance.ActiveFocus;
 
         switch (e.Key)
         {
@@ -164,8 +169,36 @@ public sealed partial class EditorWindow : ContentPage
                 return;
         }
 
-        // Viewport shortcuts — skip when a text input is focused
-        if (textFocused) return;
+        // Menu mnemonics (Alt+letter) — only when no specific panel holds focus.
+        if (alt && focus is EditorFocusContext.Global)
+        {
+            switch (e.Key)
+            {
+                case Windows.System.VirtualKey.F:
+                    MainThread.BeginInvokeOnMainThread(() => OnFileMenuClicked(this, EventArgs.Empty));
+                    e.Handled = true;
+                    return;
+                case Windows.System.VirtualKey.E:
+                    MainThread.BeginInvokeOnMainThread(() => OnEditMenuClicked(this, EventArgs.Empty));
+                    e.Handled = true;
+                    return;
+                case Windows.System.VirtualKey.P:
+                    MainThread.BeginInvokeOnMainThread(() => OnProjectMenuClicked(this, EventArgs.Empty));
+                    e.Handled = true;
+                    return;
+                case Windows.System.VirtualKey.D:
+                    MainThread.BeginInvokeOnMainThread(() => OnDebugMenuClicked(this, EventArgs.Empty));
+                    e.Handled = true;
+                    return;
+                case Windows.System.VirtualKey.V:
+                    MainThread.BeginInvokeOnMainThread(() => OnViewMenuClicked(this, EventArgs.Empty));
+                    e.Handled = true;
+                    return;
+            }
+        }
+
+        // Viewport shortcuts — only when the viewport holds focus and no text input is focused.
+        if (textFocused || focus is not EditorFocusContext.Viewport) return;
 
         switch (e.Key)
         {
@@ -368,6 +401,7 @@ public sealed partial class EditorWindow : ContentPage
     private void ShowDropdown(string tag, int offsetX,
                               IEnumerable<(string Label, bool IsSeparator, Action? Action)> items)
     {
+        EditorContext.Instance.SetFocus(EditorFocusContext.Global);
         _openMenuTag = tag;
         DropdownStack.Children.Clear();
 
@@ -535,6 +569,8 @@ public sealed partial class EditorWindow : ContentPage
 
     private void OnViewportTapped(object sender, TappedEventArgs e)
     {
+        EditorContext.Instance.SetFocus(EditorFocusContext.Viewport);
+
         Point? tapPos = e.GetPosition(Viewport);
         if (tapPos is null) return;
 
@@ -794,6 +830,7 @@ public sealed partial class EditorWindow : ContentPage
             (kind == Microsoft.UI.Input.PointerUpdateKind.MiddleButtonPressed ||
              kind == Microsoft.UI.Input.PointerUpdateKind.RightButtonPressed))
         {
+            EditorContext.Instance.SetFocus(EditorFocusContext.Viewport);
             _nativeViewportPanActive = true;
             _nativeViewportPanLastX  = pt.Position.X;
             _nativeViewportPanLastY  = pt.Position.Y;

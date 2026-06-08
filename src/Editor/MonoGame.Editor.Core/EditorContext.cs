@@ -19,6 +19,7 @@ public sealed class EditorContext
     private bool _isSceneDirty;
     private string? _playSnapshot;
     private EditorGameObject? _clipboardEntity;
+    private EditorFocusContext _activeFocus = EditorFocusContext.Global;
 
     #region Singleton
 
@@ -86,6 +87,9 @@ public sealed class EditorContext
 
     /// <summary>Entidad copiada en el portapapeles del editor para operaciones Cut/Copy/Paste.</summary>
     public EditorGameObject? ClipboardEntity { get { lock (_stateLock) return _clipboardEntity; } }
+
+    /// <summary>Panel/área del editor con el foco de entrada actual. Determina el enrutado de atajos de teclado.</summary>
+    public EditorFocusContext ActiveFocus { get { lock (_stateLock) return _activeFocus; } }
 
     #endregion
 
@@ -212,6 +216,23 @@ public sealed class EditorContext
     {
         lock (_stateLock)
             _clipboardEntity = entity;
+    }
+
+    /// <summary>
+    /// Establece el panel/área con el foco de entrada y publica <see cref="FocusChangedEvent"/>.
+    /// No hace nada si el contexto no cambia (evita ruido en el bus).
+    /// </summary>
+    public void SetFocus(EditorFocusContext context)
+    {
+        EditorFocusContext old;
+        lock (_stateLock)
+        {
+            if (_activeFocus == context) return;
+            old = _activeFocus;
+            _activeFocus = context;
+        }
+
+        EventBus.Publish(new FocusChangedEvent(old, context));
     }
 
     #endregion

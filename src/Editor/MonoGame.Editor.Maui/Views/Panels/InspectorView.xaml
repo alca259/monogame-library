@@ -8,6 +8,10 @@
              x:DataType="vm:InspectorViewModel"
              BackgroundColor="{StaticResource PanelBackground}">
 
+    <ContentView.Behaviors>
+        <controls:FocusOnClickBehavior Context="Inspector"/>
+    </ContentView.Behaviors>
+
     <Grid RowDefinitions="30,*" RowSpacing="0">
 
         <!-- ── Inspector tabs ───────────────────────────────────────── -->

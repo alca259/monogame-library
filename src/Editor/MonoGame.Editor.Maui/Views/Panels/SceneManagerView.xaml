@@ -4,8 +4,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Panels"
              xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Panels"
+             xmlns:controls="clr-namespace:MonoGame.Editor.Maui.Controls"
              x:DataType="vm:SceneManagerViewModel"
              BackgroundColor="{StaticResource BgPanel}">
+
+    <ContentView.Behaviors>
+        <controls:FocusOnClickBehavior Context="Scenes"/>
+    </ContentView.Behaviors>
 
     <Grid RowDefinitions="28,1,*,1,24" RowSpacing="0">
 
