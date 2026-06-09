@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MonoGame.Editor.Maui.Views.Dialogs;
 
 namespace MonoGame.Editor.Maui.ViewModels.Dialogs;
 

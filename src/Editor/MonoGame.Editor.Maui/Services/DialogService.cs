@@ -25,7 +25,7 @@ public static class DialogService
     }
 
     /// <summary>Muestra una alerta informativa con un único botón.</summary>
-    public static Task AlertAsync(string title, string message, string cancel = "OK")
+    public static Task AlertAsync(string title, string message, string cancel = "Ok")
     {
         Page? page = CurrentPage;
         return page is null ? Task.CompletedTask : page.DisplayAlertAsync(title, message, cancel);

@@ -1,8 +1,5 @@
 ﻿using System.Text.Json;
 using Microsoft.Maui.Controls.Shapes;
-using MonoGame.Editor.Maui.Controls;
-using MonoGame.Editor.Maui.Rendering;
-using MonoGame.Editor.Maui.Views.Dialogs;
 using SysPath = System.IO.Path;
 
 namespace MonoGame.Editor.Maui.Views.Panels;

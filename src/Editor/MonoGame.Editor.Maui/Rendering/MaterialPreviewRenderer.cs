@@ -3,7 +3,6 @@ using System.Drawing.Imaging;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using MonoGame.Editor.Core.Models;
 
 namespace MonoGame.Editor.Maui.Rendering;
 

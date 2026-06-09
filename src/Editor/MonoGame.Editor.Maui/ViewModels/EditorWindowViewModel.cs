@@ -314,7 +314,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
             EditorProject? project = await Task.Run(() => ProjectManager.Load(path)).ConfigureAwait(true);
             if (project is null)
             {
-                Log($"[Editor] No valid project found at: {path}", LogLevel.Warning);
+                await DialogService.AlertAsync(title: "Invalid project", message: $"No valid project found at: {path}");
                 return;
             }
 
