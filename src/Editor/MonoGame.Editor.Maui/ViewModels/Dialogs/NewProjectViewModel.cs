@@ -26,7 +26,23 @@ public sealed partial class NewProjectViewModel : DialogViewModel<NewProjectResu
     [RelayCommand]
     private async Task BrowseCsprojAsync()
     {
-        string? picked = await DialogService.PickFileAsync(new PickOptions { PickerTitle = "Select .csproj file" });
+        INavigation? nav = DialogService.Navigation;
+        if (nav is null) return;
+
+        string baseFolder = ParentPath?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(baseFolder))
+        {
+            ShowError("Set the parent folder first.");
+            return;
+        }
+
+        string? picked = await RelativePathPickerDialog.ShowAsync(
+            nav,
+            baseFolder,
+            filesMode: true,
+            extensions: [".csproj"],
+            title: "Select Game .csproj");
+
         if (picked is not null) GameCsproj = picked;
     }
 

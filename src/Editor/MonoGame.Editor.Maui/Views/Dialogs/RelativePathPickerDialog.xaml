@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage x:Class="MonoGame.Editor.Maui.Views.Dialogs.RelativePathPickerDialog"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:MonoGame.Editor.Maui.Views.Dialogs"
+             xmlns:vm="clr-namespace:MonoGame.Editor.Maui.ViewModels.Dialogs"
+             x:DataType="vm:RelativePathPickerViewModel"
+             BackgroundColor="#80000000"
+             Title="Select Path">
+
+    <Grid>
+        <Border BackgroundColor="{StaticResource BgChrome}"
+                StrokeThickness="0"
+                WidthRequest="520"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+            <VerticalStackLayout Spacing="0">
+
+                <!-- Header -->
+                <Border BackgroundColor="{StaticResource BgPanel}"
+                        StrokeThickness="0"
+                        Padding="20,14">
+                    <Label Text="{Binding DialogTitle}"
+                           Style="{StaticResource PrimaryLabel}"
+                           FontSize="15"/>
+                </Border>
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- Breadcrumb: ruta relativa seleccionada -->
+                <Border BackgroundColor="{StaticResource BgPanel}"
+                        StrokeThickness="0"
+                        Padding="12,6">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                        <Label Grid.Column="0"
+                               Text="▸"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1"
+                               Text="{Binding RelativePathDisplay}"
+                               Style="{StaticResource MonoLabel}"
+                               FontSize="11"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- Árbol de ficheros -->
+                <CollectionView ItemsSource="{Binding Nodes}"
+                                SelectedItem="{Binding SelectedNode}"
+                                SelectionMode="Single"
+                                HeightRequest="300">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="local:FileSystemNode">
+                            <Grid ColumnDefinitions="16,*"
+                                  Padding="{Binding LeftPadding}"
+                                  ColumnSpacing="4"
+                                  BackgroundColor="Transparent">
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup Name="CommonStates">
+                                        <VisualState Name="Normal">
+                                            <VisualState.Setters>
+                                                <Setter Property="BackgroundColor" Value="Transparent"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState Name="Selected">
+                                            <VisualState.Setters>
+                                                <Setter Property="BackgroundColor" Value="{StaticResource RowSelected}"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+
+                                <Label Grid.Column="0"
+                                       Text="{Binding ExpandIcon}"
+                                       Style="{StaticResource DimLabel}"
+                                       FontSize="10"
+                                       VerticalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                                <Label Grid.Column="1"
+                                       Text="{Binding DisplayName}"
+                                       TextColor="{Binding TextColor}"
+                                       FontSize="13"
+                                       VerticalOptions="Center"/>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                    <CollectionView.EmptyView>
+                        <Label Text="{Binding EmptyMessage}"
+                               Style="{StaticResource PlaceholderLabel}"
+                               Margin="0,24"/>
+                    </CollectionView.EmptyView>
+                </CollectionView>
+                <BoxView Color="{StaticResource BorderColor}" HeightRequest="1"/>
+
+                <!-- Footer -->
+                <HorizontalStackLayout HorizontalOptions="End"
+                                       Spacing="8"
+                                       Padding="20,12">
+                    <Button Text="Cancel"
+                            Style="{StaticResource LargeIconButton}"
+                            Command="{Binding CancelCommand}"/>
+                    <Button Text="Select"
+                            Style="{StaticResource LargeIconButtonSuccess}"
+                            Command="{Binding SubmitCommand}"/>
+                </HorizontalStackLayout>
+
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+
+</ContentPage>
