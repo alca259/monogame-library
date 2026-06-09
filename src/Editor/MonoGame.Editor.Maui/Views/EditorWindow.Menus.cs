@@ -25,8 +25,16 @@ public sealed partial class EditorWindow
     #endregion
 
     #region Dropdown state
+    private enum EditorMenu
+    {
+        File,
+        Edit,
+        Project,
+        Debug,
+        View
+    }
 
-    private string? _openMenuTag;
+    private EditorMenu? _openMenu;
 
     #endregion
 
@@ -34,36 +42,36 @@ public sealed partial class EditorWindow
 
     private void OnFileMenuClicked(object sender, EventArgs e)
     {
-        if (_openMenuTag == "File") { HideDropdown(); return; }
-        ShowDropdown("File", 4, BuildFileMenuItems());
+        if (_openMenu == EditorMenu.File) { HideDropdown(); return; }
+        ShowDropdown(EditorMenu.File, 4, BuildFileMenuItems());
     }
 
     private void OnEditMenuClicked(object sender, EventArgs e)
     {
-        if (_openMenuTag == "Edit") { HideDropdown(); return; }
+        if (_openMenu == EditorMenu.Edit) { HideDropdown(); return; }
         int offsetX = (int)(FileMenuBtn.Width + 4);
-        ShowDropdown("Edit", offsetX, BuildEditMenuItems());
+        ShowDropdown(EditorMenu.Edit, offsetX, BuildEditMenuItems());
     }
 
     private void OnProjectMenuClicked(object sender, EventArgs e)
     {
-        if (_openMenuTag == "Project") { HideDropdown(); return; }
+        if (_openMenu == EditorMenu.Project) { HideDropdown(); return; }
         int offsetX = (int)(FileMenuBtn.Width + EditMenuBtn.Width + 4);
-        ShowDropdown("Project", offsetX, BuildProjectMenuItems());
+        ShowDropdown(EditorMenu.Project, offsetX, BuildProjectMenuItems());
     }
 
     private void OnDebugMenuClicked(object sender, EventArgs e)
     {
-        if (_openMenuTag == "Debug") { HideDropdown(); return; }
+        if (_openMenu == EditorMenu.Debug) { HideDropdown(); return; }
         int offsetX = (int)(FileMenuBtn.Width + EditMenuBtn.Width + ProjectMenuBtn.Width + 4);
-        ShowDropdown("Debug", offsetX, BuildDebugMenuItems());
+        ShowDropdown(EditorMenu.Debug, offsetX, BuildDebugMenuItems());
     }
 
     private void OnViewMenuClicked(object sender, EventArgs e)
     {
-        if (_openMenuTag == "View") { HideDropdown(); return; }
+        if (_openMenu == EditorMenu.View) { HideDropdown(); return; }
         int offsetX = (int)(FileMenuBtn.Width + EditMenuBtn.Width + ProjectMenuBtn.Width + DebugMenuBtn.Width + 4);
-        ShowDropdown("View", offsetX, BuildViewMenuItems());
+        ShowDropdown(EditorMenu.View, offsetX, BuildViewMenuItems());
     }
 
     private void OnMenuOverlayTapped(object? sender, TappedEventArgs e) => HideDropdown();
@@ -72,10 +80,10 @@ public sealed partial class EditorWindow
     private const double DropdownSepHeight = 5;   // HeightRequest=1 + Margin top/bottom=2+2
     private const double DropdownTopMargin = 28;
 
-    private void ShowDropdown(string tag, int offsetX, IEnumerable<DropdownItem> items)
+    private void ShowDropdown(EditorMenu tag, int offsetX, IEnumerable<DropdownItem> items)
     {
         EditorContext.Instance.SetFocus(EditorFocusContext.Global);
-        _openMenuTag = tag;
+        _openMenu = tag;
         DropdownStack.Children.Clear();
         HideSubDropdown();
 
@@ -222,7 +230,7 @@ public sealed partial class EditorWindow
     {
         HideSubDropdown();
         MenuOverlay.IsVisible = false;
-        _openMenuTag = null;
+        _openMenu = null;
     }
 
     #endregion

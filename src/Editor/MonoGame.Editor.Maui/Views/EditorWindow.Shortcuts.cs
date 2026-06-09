@@ -1,58 +1,64 @@
 namespace MonoGame.Editor.Maui.Views;
 
+using Microsoft.UI.Input;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Controls;
+using Windows.UI.Core;
+using Windows.System;
+
 public sealed partial class EditorWindow
 {
     #region Keyboard shortcuts
 
-    private void OnNativeKeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    private void OnNativeKeyDown(object sender, KeyRoutedEventArgs e)
     {
         Microsoft.UI.Xaml.Window? win = Application.Current?.Windows.FirstOrDefault()
             ?.Handler?.PlatformView as Microsoft.UI.Xaml.Window;
 
         bool textFocused = win?.Content?.XamlRoot is { } root &&
-            Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root)
-                is Microsoft.UI.Xaml.Controls.TextBox or Microsoft.UI.Xaml.Controls.PasswordBox;
+            FocusManager.GetFocusedElement(root)
+                is TextBox or PasswordBox;
 
-        bool ctrl = Microsoft.UI.Input.InputKeyboardSource
-            .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
-            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
-        bool shift = Microsoft.UI.Input.InputKeyboardSource
-            .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift)
-            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
-        bool alt = Microsoft.UI.Input.InputKeyboardSource
-            .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Menu)
-            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+        bool ctrl = InputKeyboardSource
+            .GetKeyStateForCurrentThread(VirtualKey.Control)
+            .HasFlag(CoreVirtualKeyStates.Down);
+        bool shift = InputKeyboardSource
+            .GetKeyStateForCurrentThread(VirtualKey.Shift)
+            .HasFlag(CoreVirtualKeyStates.Down);
+        bool alt = InputKeyboardSource
+            .GetKeyStateForCurrentThread(VirtualKey.Menu)
+            .HasFlag(CoreVirtualKeyStates.Down);
 
         EditorFocusContext focus = EditorContext.Instance.ActiveFocus;
 
         switch (e.Key)
         {
             // Global shortcuts — always active
-            case Windows.System.VirtualKey.Z when ctrl && !shift:
+            case VirtualKey.Z when ctrl && !shift:
                 MainThread.BeginInvokeOnMainThread(() => _vm.UndoCommand.Execute(null));
                 e.Handled = true;
                 return;
-            case Windows.System.VirtualKey.Y when ctrl && !shift:
+            case VirtualKey.Y when ctrl && !shift:
                 MainThread.BeginInvokeOnMainThread(() => _vm.RedoCommand.Execute(null));
                 e.Handled = true;
                 return;
-            case Windows.System.VirtualKey.S when ctrl && !shift:
+            case VirtualKey.S when ctrl && !shift:
                 MainThread.BeginInvokeOnMainThread(() => _ = _vm.SaveSceneAsync());
                 e.Handled = true;
                 return;
-            case Windows.System.VirtualKey.S when ctrl && shift:
+            case VirtualKey.S when ctrl && shift:
                 MainThread.BeginInvokeOnMainThread(() => _ = _vm.SaveSceneAsAsync());
                 e.Handled = true;
                 return;
-            case Windows.System.VirtualKey.B when ctrl && !shift:
+            case VirtualKey.B when ctrl && !shift:
                 MainThread.BeginInvokeOnMainThread(() => _ = _vm.BuildSolutionAsync());
                 e.Handled = true;
                 return;
-            case Windows.System.VirtualKey.F5 when ctrl:
+            case VirtualKey.F5 when ctrl:
                 MainThread.BeginInvokeOnMainThread(_vm.Play);
                 e.Handled = true;
                 return;
-            case Windows.System.VirtualKey.G when ctrl && !shift:
+            case VirtualKey.G when ctrl && !shift:
                 MainThread.BeginInvokeOnMainThread(() => _ = _vm.GenerateCodeAsync());
                 e.Handled = true;
                 return;
@@ -63,23 +69,23 @@ public sealed partial class EditorWindow
         {
             switch (e.Key)
             {
-                case Windows.System.VirtualKey.F:
+                case VirtualKey.F:
                     MainThread.BeginInvokeOnMainThread(() => OnFileMenuClicked(this, EventArgs.Empty));
                     e.Handled = true;
                     return;
-                case Windows.System.VirtualKey.E:
+                case VirtualKey.E:
                     MainThread.BeginInvokeOnMainThread(() => OnEditMenuClicked(this, EventArgs.Empty));
                     e.Handled = true;
                     return;
-                case Windows.System.VirtualKey.P:
+                case VirtualKey.P:
                     MainThread.BeginInvokeOnMainThread(() => OnProjectMenuClicked(this, EventArgs.Empty));
                     e.Handled = true;
                     return;
-                case Windows.System.VirtualKey.D:
+                case VirtualKey.D:
                     MainThread.BeginInvokeOnMainThread(() => OnDebugMenuClicked(this, EventArgs.Empty));
                     e.Handled = true;
                     return;
-                case Windows.System.VirtualKey.V:
+                case VirtualKey.V:
                     MainThread.BeginInvokeOnMainThread(() => OnViewMenuClicked(this, EventArgs.Empty));
                     e.Handled = true;
                     return;
@@ -91,39 +97,39 @@ public sealed partial class EditorWindow
 
         switch (e.Key)
         {
-            case Windows.System.VirtualKey.Q:
-                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool("Select"));
+            case VirtualKey.Q:
+                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool(EditorWindowViewModel.SceneTools.Select));
                 e.Handled = true;
                 break;
-            case Windows.System.VirtualKey.W:
-                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool("Move"));
+            case VirtualKey.W:
+                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool(EditorWindowViewModel.SceneTools.Move));
                 e.Handled = true;
                 break;
-            case Windows.System.VirtualKey.E:
-                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool("Rotate"));
+            case VirtualKey.E:
+                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool(EditorWindowViewModel.SceneTools.Rotate));
                 e.Handled = true;
                 break;
-            case Windows.System.VirtualKey.R:
-                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool("Scale"));
+            case VirtualKey.R:
+                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool(EditorWindowViewModel.SceneTools.Scale));
                 e.Handled = true;
                 break;
-            case Windows.System.VirtualKey.T:
-                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool("Rect"));
+            case VirtualKey.T:
+                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool(EditorWindowViewModel.SceneTools.Rect));
                 e.Handled = true;
                 break;
-            case Windows.System.VirtualKey.H:
-                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool("Pan"));
+            case VirtualKey.H:
+                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool(EditorWindowViewModel.SceneTools.Pan));
                 e.Handled = true;
                 break;
-            case Windows.System.VirtualKey.G:
+            case VirtualKey.G:
                 MainThread.BeginInvokeOnMainThread(_vm.ToggleSnap);
                 e.Handled = true;
                 break;
-            case Windows.System.VirtualKey.Delete:
+            case VirtualKey.Delete:
                 MainThread.BeginInvokeOnMainThread(_vm.DeleteSelected);
                 e.Handled = true;
                 break;
-            case Windows.System.VirtualKey.F:
+            case VirtualKey.F:
                 MainThread.BeginInvokeOnMainThread(FocusOnSelected);
                 e.Handled = true;
                 break;

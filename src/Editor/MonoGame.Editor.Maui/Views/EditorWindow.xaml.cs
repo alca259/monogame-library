@@ -291,7 +291,7 @@ public sealed partial class EditorWindow : ContentPage
                     _gizmoDragging = false;
 
                     EditorGameObject? sel = EditorContext.Instance.SelectedObject;
-                    if (sel is not null && _vm.ActiveTool is not "Select" and not "Pan")
+                    if (sel is not null && _vm.ActiveTool is not EditorWindowViewModel.SceneTools.Select and not EditorWindowViewModel.SceneTools.Pan)
                     {
                         SizeF vs = new((float)Viewport.Width, (float)Viewport.Height);
                         Microsoft.Maui.Graphics.PointF clickWorld = _viewportRenderer.Camera.ScreenToWorld(
@@ -332,7 +332,7 @@ public sealed partial class EditorWindow : ContentPage
                             Viewport.Invalidate();
                         }
                     }
-                    else if (_vm.ActiveTool == "Pan")
+                    else if (_vm.ActiveTool == EditorWindowViewModel.SceneTools.Pan)
                     {
                         float zoom = _viewportRenderer.Camera.Zoom;
                         _viewportRenderer.Camera.Pan(

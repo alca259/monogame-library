@@ -42,8 +42,18 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
 
     #region Observable state
 
+    public enum SceneTools
+    {
+        Select,
+        Move,
+        Rotate,
+        Scale,
+        Rect,
+        Pan
+    }
+
     [ObservableProperty]
-    private string _activeTool = "Select";
+    private SceneTools _activeTool = SceneTools.Select;
 
     [ObservableProperty]
     private bool _isSnap;
@@ -695,15 +705,15 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     #region Toolbar — gizmo tools & toggles
 
     [RelayCommand]
-    public void ActivateTool(string? tool)
+    public void ActivateTool(SceneTools? tool)
     {
-        ActiveTool = tool ?? "Select";
+        ActiveTool = tool ?? SceneTools.Select;
         Context.Gizmos.Mode = ActiveTool switch
         {
-            "Move" => GizmoMode.Move,
-            "Rotate" => GizmoMode.Rotate,
-            "Scale" => GizmoMode.Scale,
-            "Rect" => GizmoMode.Rect,
+            SceneTools.Move => GizmoMode.Move,
+            SceneTools.Rotate => GizmoMode.Rotate,
+            SceneTools.Scale => GizmoMode.Scale,
+            SceneTools.Rect => GizmoMode.Rect,
             _ => GizmoMode.Select,
         };
         ViewportInvalidateRequested?.Invoke();
