@@ -252,6 +252,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
                 .ConfigureAwait(true);
 
             Context.SetActiveProject(project);
+            Context.SetActiveScene(null);
             _preferences.LastProjectPath = project.RootPath;
             _preferences.AddRecentProject(project.RootPath);
             Log($"[Editor] Project '{project.Name}' created.");
@@ -260,6 +261,22 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
         {
             Log($"[Editor] Failed to create project: {ex.Message}", LogLevel.Error);
         }
+    }
+
+    [RelayCommand]
+    private void CloseProject()
+    {
+        EditorProject? project = Context.ActiveProject;
+
+        Context.SetActiveScene(null);
+
+        if (project is not null)
+            _ = Task.Run(() => ProjectManager.SaveLastOpenedScene(project, string.Empty));
+
+        Context.SetActiveProject(null);
+        _preferences.LastProjectPath = string.Empty;
+        _preferences.Save();
+        Log("[Editor] Project closed.");
     }
 
     [RelayCommand]
@@ -302,6 +319,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
             }
 
             Context.SetActiveProject(project);
+            Context.SetActiveScene(null);
             _preferences.LastProjectPath = path;
             _preferences.AddRecentProject(path);
             Log($"[Editor] Project '{project.Name}' opened.");

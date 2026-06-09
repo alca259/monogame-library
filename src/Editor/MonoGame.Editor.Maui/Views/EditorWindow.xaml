@@ -296,6 +296,17 @@
                     MinimumWidthRequest="200">
                 <VerticalStackLayout x:Name="DropdownStack" Spacing="0"/>
             </Border>
+
+            <Border x:Name="SubDropdownPanel"
+                    BackgroundColor="{StaticResource BgChrome}"
+                    Stroke="{StaticResource BorderColor}"
+                    StrokeThickness="1"
+                    HorizontalOptions="Start"
+                    VerticalOptions="Start"
+                    MinimumWidthRequest="200"
+                    IsVisible="False">
+                <VerticalStackLayout x:Name="SubDropdownStack" Spacing="0"/>
+            </Border>
         </Grid>
 
     </Grid>

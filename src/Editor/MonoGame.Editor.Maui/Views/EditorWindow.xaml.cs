@@ -11,10 +11,23 @@ public sealed partial class EditorWindow : ContentPage
 {
     #region Dropdown colors
 
-    private static readonly Color DropdownItemFg      = Color.FromArgb("#E6E6E8");
-    private static readonly Color DropdownItemBg      = Colors.Transparent;
-    private static readonly Color DropdownItemHoverBg = Color.FromArgb("#2E2E34");
+    private static readonly Color DropdownItemFg        = Color.FromArgb("#E6E6E8");
+    private static readonly Color DropdownItemBg        = Colors.Transparent;
+    private static readonly Color DropdownItemHoverBg   = Color.FromArgb("#2E2E34");
     private static readonly Color DropdownSeparatorColor = Color.FromArgb("#34343A");
+
+    #endregion
+
+    #region Dropdown item model
+
+    private sealed record DropdownItem(
+        string Label,
+        bool IsSeparator = false,
+        Action? Action = null,
+        IReadOnlyList<DropdownItem>? Children = null)
+    {
+        public bool HasChildren => Children is { Count: > 0 };
+    }
 
     #endregion
 
@@ -398,17 +411,24 @@ public sealed partial class EditorWindow : ContentPage
 
     private void OnMenuOverlayTapped(object? sender, TappedEventArgs e) => HideDropdown();
 
-    private void ShowDropdown(string tag, int offsetX,
-                              IEnumerable<(string Label, bool IsSeparator, Action? Action)> items)
+    private const double DropdownRowHeight = 32;
+    private const double DropdownSepHeight = 5;   // HeightRequest=1 + Margin top/bottom=2+2
+    private const double DropdownTopMargin = 28;
+
+    private void ShowDropdown(string tag, int offsetX, IEnumerable<DropdownItem> items)
     {
         EditorContext.Instance.SetFocus(EditorFocusContext.Global);
         _openMenuTag = tag;
         DropdownStack.Children.Clear();
+        HideSubDropdown();
 
-        foreach (var (label, isSep, action) in items)
+        double cumulativeY = DropdownTopMargin;
+
+        foreach (DropdownItem item in items)
         {
-            if (isSep)
+            if (item.IsSeparator)
             {
+                cumulativeY += DropdownSepHeight;
                 DropdownStack.Children.Add(new BoxView
                 {
                     HeightRequest = 1,
@@ -418,18 +438,96 @@ public sealed partial class EditorWindow : ContentPage
                 continue;
             }
 
-            bool isDisabled = action is null;
+            bool isDisabled = item.Action is null && !item.HasChildren;
+            double rowY = cumulativeY;
+            cumulativeY += DropdownRowHeight;
 
             var row = new Grid
             {
-                BackgroundColor = DropdownItemBg,
-                Padding         = new Thickness(16, 6),
+                BackgroundColor      = DropdownItemBg,
+                Padding              = new Thickness(16, 6),
+                MinimumHeightRequest = DropdownRowHeight,
+            };
+
+            if (item.HasChildren)
+            {
+                row.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                row.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(24, GridUnitType.Absolute)));
+            }
+
+            row.Add(new Label
+            {
+                Text                    = item.Label,
+                TextColor               = isDisabled ? Color.FromArgb("#6A6A72") : DropdownItemFg,
+                FontSize                = 13,
+                VerticalTextAlignment   = TextAlignment.Center,
+                HorizontalTextAlignment = TextAlignment.Start,
+                VerticalOptions         = LayoutOptions.Fill,
+            }, 0, 0);
+
+            if (item.HasChildren)
+            {
+                row.Add(new Label
+                {
+                    Text                    = "›",
+                    TextColor               = Color.FromArgb("#9A9AA2"),
+                    FontSize                = 14,
+                    VerticalTextAlignment   = TextAlignment.Center,
+                    HorizontalTextAlignment = TextAlignment.Center,
+                    VerticalOptions         = LayoutOptions.Fill,
+                }, 1, 0);
+
+                var capturedChildren = item.Children!;
+                double capturedY = rowY;
+                var pointer = new PointerGestureRecognizer();
+                pointer.PointerEntered += (_, _) =>
+                {
+                    row.BackgroundColor = DropdownItemHoverBg;
+                    ShowSubDropdown(capturedChildren, offsetX + DropdownPanel.Width, capturedY);
+                };
+                row.GestureRecognizers.Add(pointer);
+            }
+            else
+            {
+                if (!isDisabled)
+                {
+                    var captured = item.Action!;
+                    var tap = new TapGestureRecognizer();
+                    tap.Tapped += (_, _) => { HideDropdown(); captured(); };
+                    row.GestureRecognizers.Add(tap);
+                }
+
+                var pointer = new PointerGestureRecognizer();
+                pointer.PointerEntered += (_, _) => { row.BackgroundColor = DropdownItemHoverBg; HideSubDropdown(); };
+                pointer.PointerExited  += (_, _) => row.BackgroundColor = DropdownItemBg;
+                row.GestureRecognizers.Add(pointer);
+            }
+
+            DropdownStack.Children.Add(row);
+        }
+
+        DropdownPanel.Margin = new Thickness(offsetX, DropdownTopMargin, 0, 0);
+        MenuOverlay.IsVisible = true;
+    }
+
+    private void ShowSubDropdown(IReadOnlyList<DropdownItem> items, double x, double y)
+    {
+        SubDropdownStack.Children.Clear();
+
+        foreach (DropdownItem item in items)
+        {
+            bool isDisabled = item.Action is null;
+
+            var row = new Grid
+            {
+                BackgroundColor      = DropdownItemBg,
+                Padding              = new Thickness(16, 6),
                 MinimumHeightRequest = 32,
             };
 
             row.Add(new Label
             {
-                Text                    = label,
+                Text                    = item.Label,
                 TextColor               = isDisabled ? Color.FromArgb("#6A6A72") : DropdownItemFg,
                 FontSize                = 13,
                 VerticalTextAlignment   = TextAlignment.Center,
@@ -439,7 +537,7 @@ public sealed partial class EditorWindow : ContentPage
 
             if (!isDisabled)
             {
-                var captured = action!;
+                var captured = item.Action!;
                 var tap = new TapGestureRecognizer();
                 tap.Tapped += (_, _) => { HideDropdown(); captured(); };
                 row.GestureRecognizers.Add(tap);
@@ -450,15 +548,22 @@ public sealed partial class EditorWindow : ContentPage
                 row.GestureRecognizers.Add(pointer);
             }
 
-            DropdownStack.Children.Add(row);
+            SubDropdownStack.Children.Add(row);
         }
 
-        DropdownPanel.Margin = new Thickness(offsetX, 28, 0, 0);
-        MenuOverlay.IsVisible = true;
+        SubDropdownPanel.Margin = new Thickness(x, y, 0, 0);
+        SubDropdownPanel.IsVisible = true;
+    }
+
+    private void HideSubDropdown()
+    {
+        SubDropdownStack.Children.Clear();
+        SubDropdownPanel.IsVisible = false;
     }
 
     private void HideDropdown()
     {
+        HideSubDropdown();
         MenuOverlay.IsVisible = false;
         _openMenuTag = null;
     }
@@ -467,86 +572,88 @@ public sealed partial class EditorWindow : ContentPage
 
     #region Menu item builders
 
-    private IEnumerable<(string, bool, Action?)> BuildFileMenuItems()
+    private IEnumerable<DropdownItem> BuildFileMenuItems()
     {
         bool hasProject = EditorContext.Instance.ActiveProject is not null;
         bool hasScene   = EditorContext.Instance.ActiveScene is not null;
 
-        yield return ("New Project…",   false, () => _vm.NewProjectCommand.Execute(null));
-        yield return ("Open Project…",  false, () => _vm.OpenProjectCommand.Execute(null));
+        yield return new DropdownItem("New Project…",  Action: () => _vm.NewProjectCommand.Execute(null));
+        yield return new DropdownItem("Open Project…", Action: () => _vm.OpenProjectCommand.Execute(null));
 
         if (_vm.Preferences.RecentProjects.Count > 0)
         {
-            yield return ("---", true, null);
-            yield return ("Recent Projects", false, null);
+            List<DropdownItem> recentItems = [];
             foreach (string path in _vm.Preferences.RecentProjects)
             {
                 string captured = path;
-                string label    = $"  {Path.GetFileName(captured)}";
-                yield return (label, false, () => _ = _vm.OpenProjectByPathAsync(captured));
+                string label    = Path.GetFileName(captured.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                recentItems.Add(new DropdownItem(label, Action: () => _ = _vm.OpenProjectByPathAsync(captured)));
             }
+            yield return new DropdownItem("Recent Projects", Children: recentItems);
         }
 
-        yield return ("---",            true,  null);
-        yield return ("New Scene",      false, hasProject ? () => _vm.NewSceneCommand.Execute(null)    : null);
-        yield return ("Save Scene",     false, hasScene   ? () => _ = _vm.SaveSceneAsync()             : null);
-        yield return ("Save Scene As…", false, hasScene   ? () => _ = _vm.SaveSceneAsAsync()           : null);
-        yield return ("---",            true,  null);
-        yield return ("Exit",           false, () => _vm.ExitCommand.Execute(null));
+        yield return new DropdownItem("---",            IsSeparator: true);
+        yield return new DropdownItem("Close Project",  Action: hasProject ? () => _vm.CloseProjectCommand.Execute(null) : null);
+        yield return new DropdownItem("---",            IsSeparator: true);
+        yield return new DropdownItem("New Scene",      Action: hasProject ? () => _vm.NewSceneCommand.Execute(null)    : null);
+        yield return new DropdownItem("Save Scene",     Action: hasScene   ? () => _ = _vm.SaveSceneAsync()             : null);
+        yield return new DropdownItem("Save Scene As…", Action: hasScene   ? () => _ = _vm.SaveSceneAsAsync()           : null);
+        yield return new DropdownItem("---",            IsSeparator: true);
+        yield return new DropdownItem("Exit",           Action: () => _vm.ExitCommand.Execute(null));
     }
 
-    private IEnumerable<(string, bool, Action?)> BuildEditMenuItems()
+    private IEnumerable<DropdownItem> BuildEditMenuItems()
     {
         bool hasScene     = EditorContext.Instance.ActiveScene is not null;
         bool hasSelection = EditorContext.Instance.SelectedObject is not null;
         bool hasClipboard = EditorContext.Instance.ClipboardEntity is not null;
 
-        yield return ("Undo",       false, hasScene                 ? () => _vm.UndoCommand.Execute(null)              : null);
-        yield return ("Redo",       false, hasScene                 ? () => _vm.RedoCommand.Execute(null)              : null);
-        yield return ("---",        true,  null);
-        yield return ("Cut",        false, hasSelection             ? () => _vm.CutCommand.Execute(null)               : null);
-        yield return ("Copy",       false, hasSelection             ? () => _vm.CopyCommand.Execute(null)              : null);
-        yield return ("Paste",      false, hasScene && hasClipboard ? () => _vm.PasteCommand.Execute(null)             : null);
-        yield return ("Duplicate",  false, hasSelection             ? () => _vm.DuplicateSelectedCommand.Execute(null) : null);
-        yield return ("Delete",     false, hasSelection             ? () => _vm.DeleteSelectedCommand.Execute(null)    : null);
-        yield return ("---",        true,  null);
-        yield return ("Select All", false, hasScene                 ? () => _vm.SelectAllCommand.Execute(null)         : null);
+        yield return new DropdownItem("Undo",       Action: hasScene                 ? () => _vm.UndoCommand.Execute(null)              : null);
+        yield return new DropdownItem("Redo",       Action: hasScene                 ? () => _vm.RedoCommand.Execute(null)              : null);
+        yield return new DropdownItem("---",        IsSeparator: true);
+        yield return new DropdownItem("Cut",        Action: hasSelection             ? () => _vm.CutCommand.Execute(null)               : null);
+        yield return new DropdownItem("Copy",       Action: hasSelection             ? () => _vm.CopyCommand.Execute(null)              : null);
+        yield return new DropdownItem("Paste",      Action: hasScene && hasClipboard ? () => _vm.PasteCommand.Execute(null)             : null);
+        yield return new DropdownItem("Duplicate",  Action: hasSelection             ? () => _vm.DuplicateSelectedCommand.Execute(null) : null);
+        yield return new DropdownItem("Delete",     Action: hasSelection             ? () => _vm.DeleteSelectedCommand.Execute(null)    : null);
+        yield return new DropdownItem("---",        IsSeparator: true);
+        yield return new DropdownItem("Select All", Action: hasScene                 ? () => _vm.SelectAllCommand.Execute(null)         : null);
     }
 
-    private IEnumerable<(string, bool, Action?)> BuildProjectMenuItems()
+    private IEnumerable<DropdownItem> BuildProjectMenuItems()
     {
         bool hasProject = EditorContext.Instance.ActiveProject is not null;
         bool hasScene   = EditorContext.Instance.ActiveScene is not null;
 
-        yield return ("Project Settings…", false, hasProject             ? () => _vm.OpenProjectSettingsCommand.Execute(null) : null);
-        yield return ("---",               true,  null);
-        yield return ("Build Content",     false, hasProject             ? () => _ = _vm.BuildContentAsync()                  : null);
-        yield return ("Build Solution",    false, hasProject             ? () => _ = _vm.BuildSolutionAsync()                 : null);
-        yield return ("Generate Code",     false, hasProject && hasScene ? () => _ = _vm.GenerateCodeAsync()                  : null);
-        yield return ("---",               true,  null);
-        yield return ("Run",               false, hasProject             ? () => _vm.RunGameCommand.Execute(null)             : null);
+        yield return new DropdownItem("Project Settings…", Action: hasProject             ? () => _vm.OpenProjectSettingsCommand.Execute(null) : null);
+        yield return new DropdownItem("---",               IsSeparator: true);
+        yield return new DropdownItem("Build Content",     Action: hasProject             ? () => _ = _vm.BuildContentAsync()                  : null);
+        yield return new DropdownItem("Build Solution",    Action: hasProject             ? () => _ = _vm.BuildSolutionAsync()                 : null);
+        yield return new DropdownItem("Generate Code",     Action: hasProject && hasScene ? () => _ = _vm.GenerateCodeAsync()                  : null);
+        yield return new DropdownItem("---",               IsSeparator: true);
+        yield return new DropdownItem("Run",               Action: hasProject             ? () => _vm.RunGameCommand.Execute(null)             : null);
     }
 
-    private IEnumerable<(string, bool, Action?)> BuildDebugMenuItems()
+    private IEnumerable<DropdownItem> BuildDebugMenuItems()
     {
         bool hasScene  = EditorContext.Instance.ActiveScene is not null;
         bool isPlaying = EditorContext.Instance.State is EditorState.Playing;
 
-        yield return ("Play", false, hasScene && !isPlaying ? _vm.Play : null);
-        yield return ("Stop", false, isPlaying              ? _vm.Stop : null);
+        yield return new DropdownItem("Play", Action: hasScene && !isPlaying ? _vm.Play : null);
+        yield return new DropdownItem("Stop", Action: isPlaying              ? _vm.Stop : null);
     }
 
-    private IEnumerable<(string, bool, Action?)> BuildViewMenuItems()
+    private IEnumerable<DropdownItem> BuildViewMenuItems()
     {
         string hPfx = _hierarchyVisible ? "✓ " : "  ";
         string iPfx = _inspectorVisible ? "✓ " : "  ";
         string dPfx = _dockVisible      ? "✓ " : "  ";
 
-        yield return ($"{hPfx}Hierarchy",   false, ToggleHierarchy);
-        yield return ($"{iPfx}Inspector",   false, ToggleInspector);
-        yield return ($"{dPfx}Bottom Dock", false, ToggleDock);
-        yield return ("---",                true,  null);
-        yield return ("Reset Layout",       false, ResetLayout);
+        yield return new DropdownItem($"{hPfx}Hierarchy",   Action: ToggleHierarchy);
+        yield return new DropdownItem($"{iPfx}Inspector",   Action: ToggleInspector);
+        yield return new DropdownItem($"{dPfx}Bottom Dock", Action: ToggleDock);
+        yield return new DropdownItem("---",                IsSeparator: true);
+        yield return new DropdownItem("Reset Layout",       Action: ResetLayout);
     }
 
     #endregion
