@@ -16,7 +16,7 @@
     <Color x:Key="InputBackground">#2A2A2E</Color>
     <Color x:Key="InputBackgroundHover">#323237</Color>
     <Color x:Key="RowSelected">#2D4A6B</Color>
-    <!-- Alias de fondo en uso (mismo valor que los canónicos de arriba) -->
+    <!-- Alias de fondo -->
     <Color x:Key="BgWindow">#1A1A1B</Color>
     <Color x:Key="BgPanel">#1E1E20</Color>
     <Color x:Key="BgChrome">#252528</Color>
@@ -52,6 +52,9 @@
     <Color x:Key="TextSecondary">#9A9AA2</Color>
     <Color x:Key="TextMuted">#6A6A72</Color>
     <Color x:Key="TextDim">#6A6A72</Color>
+    
+    <!-- Buttons -->
+    <Color x:Key="BtnSuccessBg">#388E3C</Color>
 
     <!-- Special -->
     <Color x:Key="MaterialIcon">#E5484D</Color>
