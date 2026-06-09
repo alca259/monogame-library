@@ -84,15 +84,15 @@ public sealed class EditorProject
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(rootPath);
 
-        Name           = name;
-        RootPath       = rootPath;
-        BaseNamespace  = baseNamespace;
-        SolutionPath   = solutionPath;
-        EditorPath     = Path.Combine(rootPath, ".editor");
-        ConfigPath     = Path.Combine(EditorPath, "config");
-        LogsPath       = Path.Combine(EditorPath, "logs");
-        ScenesPath     = Path.Combine(EditorPath, "scenes");
-        PrefabsPath    = Path.Combine(EditorPath, "prefabs");
+        Name = name;
+        RootPath = rootPath;
+        BaseNamespace = baseNamespace;
+        SolutionPath = solutionPath;
+        EditorPath = Path.Combine(rootPath, ".editor");
+        ConfigPath = Path.Combine(EditorPath, "config");
+        LogsPath = Path.Combine(EditorPath, "logs");
+        ScenesPath = Path.Combine(EditorPath, "scenes");
+        PrefabsPath = Path.Combine(EditorPath, "prefabs");
         GameCsprojPath = gameCsprojPath ?? string.Empty;
         GameSourcePath = string.IsNullOrWhiteSpace(GameCsprojPath)
                              ? string.Empty
@@ -100,7 +100,7 @@ public sealed class EditorProject
         GameScriptsPath = Path.Combine(rootPath, "src", "GameScripts");
 
         string baseForPaths = string.IsNullOrWhiteSpace(GameSourcePath) ? rootPath : GameSourcePath;
-        ContentPath      = Path.Combine(baseForPaths, contentRelativePath);
+        ContentPath = Path.Combine(baseForPaths, contentRelativePath);
         LocalizationPath = Path.Combine(baseForPaths, localizationRelativePath);
     }
 }

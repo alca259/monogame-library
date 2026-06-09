@@ -10,7 +10,7 @@ public sealed class SetTagsCommand : IEditorCommand
     /// <summary>Crea un comando para reemplazar las etiquetas de <paramref name="obj"/> con <paramref name="newTags"/>.</summary>
     public SetTagsCommand(EditorGameObject obj, IEnumerable<string> newTags)
     {
-        _obj     = obj;
+        _obj = obj;
         _oldTags = [.. obj.Tags];
         _newTags = [.. newTags];
     }

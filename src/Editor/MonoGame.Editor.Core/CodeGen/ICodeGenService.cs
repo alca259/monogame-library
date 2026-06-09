@@ -8,17 +8,17 @@ public interface ICodeGenService
     /// Salida: <c>{GameSourcePath}/{GeneratedFolder}/Scenes/{SceneName}Scene.Generated.cs</c>
     /// </summary>
     Task<CodeGenResult> GenerateSceneAsync(
-        EditorScene     scene,
-        EditorProject   project,
+        EditorScene scene,
+        EditorProject project,
         ProjectSettings settings,
         CancellationToken cancellationToken = default);
 
     /// <summary>Genera el esqueleto de un nuevo archivo de subclase de <c>GameBehaviour</c>.</summary>
     Task<CodeGenResult> GenerateBehaviourSkeletonAsync(
-        string                  className,
-        string                  namespaceName,
-        string                  relativeFolder,
-        IReadOnlyList<string>   lifecycleMethodsToOverride,
-        EditorProject           project,
-        CancellationToken       cancellationToken = default);
+        string className,
+        string namespaceName,
+        string relativeFolder,
+        IReadOnlyList<string> lifecycleMethodsToOverride,
+        EditorProject project,
+        CancellationToken cancellationToken = default);
 }

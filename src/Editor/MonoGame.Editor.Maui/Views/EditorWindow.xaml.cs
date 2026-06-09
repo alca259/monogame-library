@@ -16,31 +16,31 @@ public sealed partial class EditorWindow : ContentPage
 
     private bool _hierarchyVisible = true;
     private bool _inspectorVisible = true;
-    private bool _dockVisible      = true;
+    private bool _dockVisible = true;
     private const double HierarchyWidth = 268;
     private const double InspectorWidth = 362;
-    private const double DockHeight     = 266;
+    private const double DockHeight = 266;
 
-    private double  _panLastX;
-    private double  _panLastY;
-    private float   _lastPointerScreenX;
-    private float   _lastPointerScreenY;
-    private float   _panStartScreenX;
-    private float   _panStartScreenY;
-    private bool    _gizmoDragging;
+    private double _panLastX;
+    private double _panLastY;
+    private float _lastPointerScreenX;
+    private float _lastPointerScreenY;
+    private float _panStartScreenX;
+    private float _panStartScreenY;
+    private bool _gizmoDragging;
 
-    private bool   _pointerOverViewport;
-    private bool   _nativeViewportPanActive;
+    private bool _pointerOverViewport;
+    private bool _nativeViewportPanActive;
     private double _nativeViewportPanLastX;
     private double _nativeViewportPanLastY;
-    private double _hierPanelWidth  = HierarchyWidth;
-    private double _inspPanelWidth  = InspectorWidth;
+    private double _hierPanelWidth = HierarchyWidth;
+    private double _inspPanelWidth = InspectorWidth;
     private double _dockPanelHeight = DockHeight;
 
     private Action<double, double>? _activeSepOnDrag;
-    private Action?                 _activeSepOnDragEnd;
-    private double                  _sepDragLastX;
-    private double                  _sepDragLastY;
+    private Action? _activeSepOnDragEnd;
+    private double _sepDragLastX;
+    private double _sepDragLastY;
 
     // Populated by AddSeparatorDrag; used for hit-testing at window root level.
     private readonly List<(BoxView Sep, Action<double, double> OnDrag, Action OnDragEnd)> _sepEntries = [];
@@ -85,8 +85,8 @@ public sealed partial class EditorWindow : ContentPage
                     new Microsoft.UI.Xaml.Input.PointerEventHandler(OnNativeSepDragStarted),
                     handledEventsToo: true);
                 win.Content.PointerWheelChanged += OnNativePointerWheelChanged;
-                win.Content.PointerMoved        += OnNativeSepDragMoved;
-                win.Content.PointerReleased     += OnNativeSepDragReleased;
+                win.Content.PointerMoved += OnNativeSepDragMoved;
+                win.Content.PointerReleased += OnNativeSepDragReleased;
                 win.Closed += (_, _) => SavePreferences();
             }
 
@@ -117,7 +117,7 @@ public sealed partial class EditorWindow : ContentPage
         if (delta == 0) return;
 
         float factor = delta > 0 ? 1.1f : 1f / 1.1f;
-        SizeF vs     = new((float)Viewport.Width, (float)Viewport.Height);
+        SizeF vs = new((float)Viewport.Width, (float)Viewport.Height);
         Microsoft.Maui.Graphics.PointF focus = new(_lastPointerScreenX, _lastPointerScreenY);
 
         MainThread.BeginInvokeOnMainThread(() =>
@@ -130,7 +130,7 @@ public sealed partial class EditorWindow : ContentPage
     }
 
     private void OnViewportPointerEntered(object sender, PointerEventArgs e) => _pointerOverViewport = true;
-    private void OnViewportPointerExited(object sender, PointerEventArgs e)  => _pointerOverViewport = false;
+    private void OnViewportPointerExited(object sender, PointerEventArgs e) => _pointerOverViewport = false;
 
     #endregion
 
@@ -142,38 +142,38 @@ public sealed partial class EditorWindow : ContentPage
 
         _hierarchyVisible = prefs.HierarchyVisible;
         _inspectorVisible = prefs.InspectorVisible;
-        _dockVisible      = prefs.AssetBrowserVisible;
+        _dockVisible = prefs.AssetBrowserVisible;
 
-        _hierPanelWidth  = prefs.LeftPanelWidth;
-        _inspPanelWidth  = prefs.RightPanelWidth;
+        _hierPanelWidth = prefs.LeftPanelWidth;
+        _inspPanelWidth = prefs.RightPanelWidth;
         _dockPanelHeight = prefs.ConsolePanelHeight;
 
-        BodyGrid.ColumnDefinitions[0].Width = new GridLength(_hierarchyVisible ? _hierPanelWidth  : 0);
-        BodyGrid.ColumnDefinitions[4].Width = new GridLength(_inspectorVisible ? _inspPanelWidth  : 0);
-        MainGrid.RowDefinitions[3].Height   = new GridLength(_dockVisible      ? _dockPanelHeight : 0);
+        BodyGrid.ColumnDefinitions[0].Width = new GridLength(_hierarchyVisible ? _hierPanelWidth : 0);
+        BodyGrid.ColumnDefinitions[4].Width = new GridLength(_inspectorVisible ? _inspPanelWidth : 0);
+        MainGrid.RowDefinitions[3].Height = new GridLength(_dockVisible ? _dockPanelHeight : 0);
         HierarchySep.IsVisible = _hierarchyVisible;
         InspectorSep.IsVisible = _inspectorVisible;
-        DockRow.IsVisible      = _dockVisible;
+        DockRow.IsVisible = _dockVisible;
 
-        _viewportRenderer.GridCellSize             = prefs.GridCellSize;
-        EditorContext.Instance.Gizmos.GridCellSize        = prefs.GridCellSize;
+        _viewportRenderer.GridCellSize = prefs.GridCellSize;
+        EditorContext.Instance.Gizmos.GridCellSize = prefs.GridCellSize;
         EditorContext.Instance.Gizmos.SnapRotationDegrees = prefs.SnapRotationDegrees;
-        EditorContext.Instance.Gizmos.SnapScaleStep       = prefs.SnapScaleStep;
+        EditorContext.Instance.Gizmos.SnapScaleStep = prefs.SnapScaleStep;
     }
 
     private void SavePreferences()
     {
         EditorPreferences prefs = _vm.Preferences;
 
-        prefs.HierarchyVisible    = _hierarchyVisible;
-        prefs.InspectorVisible    = _inspectorVisible;
+        prefs.HierarchyVisible = _hierarchyVisible;
+        prefs.InspectorVisible = _inspectorVisible;
         prefs.AssetBrowserVisible = _dockVisible;
-        prefs.LeftPanelWidth      = (int)_hierPanelWidth;
-        prefs.RightPanelWidth     = (int)_inspPanelWidth;
-        prefs.ConsolePanelHeight  = (int)_dockPanelHeight;
-        prefs.GridCellSize        = _viewportRenderer.GridCellSize;
+        prefs.LeftPanelWidth = (int)_hierPanelWidth;
+        prefs.RightPanelWidth = (int)_inspPanelWidth;
+        prefs.ConsolePanelHeight = (int)_dockPanelHeight;
+        prefs.GridCellSize = _viewportRenderer.GridCellSize;
         prefs.SnapRotationDegrees = EditorContext.Instance.Gizmos.SnapRotationDegrees;
-        prefs.SnapScaleStep       = EditorContext.Instance.Gizmos.SnapScaleStep;
+        prefs.SnapScaleStep = EditorContext.Instance.Gizmos.SnapScaleStep;
         prefs.Save();
     }
 
@@ -208,16 +208,16 @@ public sealed partial class EditorWindow : ContentPage
     {
         _hierarchyVisible = true;
         _inspectorVisible = true;
-        _dockVisible      = true;
-        _hierPanelWidth   = HierarchyWidth;
-        _inspPanelWidth   = InspectorWidth;
-        _dockPanelHeight  = DockHeight;
+        _dockVisible = true;
+        _hierPanelWidth = HierarchyWidth;
+        _inspPanelWidth = InspectorWidth;
+        _dockPanelHeight = DockHeight;
         BodyGrid.ColumnDefinitions[0].Width = new GridLength(HierarchyWidth);
         BodyGrid.ColumnDefinitions[4].Width = new GridLength(InspectorWidth);
-        MainGrid.RowDefinitions[3].Height   = new GridLength(DockHeight);
+        MainGrid.RowDefinitions[3].Height = new GridLength(DockHeight);
         HierarchySep.IsVisible = true;
         InspectorSep.IsVisible = true;
-        DockRow.IsVisible      = true;
+        DockRow.IsVisible = true;
         SavePreferences();
     }
 
@@ -231,9 +231,9 @@ public sealed partial class EditorWindow : ContentPage
         if (sel is null) return;
         Microsoft.Maui.Graphics.PointF pos = _viewportRenderer.Orientation switch
         {
-            ViewOrientation.Top   => new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.PositionZ),
-            ViewOrientation.Right => new Microsoft.Maui.Graphics.PointF(sel.PositionZ,  sel.Position.Y),
-            _                     => new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y),
+            ViewOrientation.Top => new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.PositionZ),
+            ViewOrientation.Right => new Microsoft.Maui.Graphics.PointF(sel.PositionZ, sel.Position.Y),
+            _ => new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y),
         };
         _viewportRenderer.Camera.Position = pos;
         Viewport.Invalidate();
@@ -248,7 +248,7 @@ public sealed partial class EditorWindow : ContentPage
 
         // Orientation gizmo click — consumes the event before any selection logic
         Microsoft.Maui.Graphics.PointF tapPtF = new((float)tapPos.Value.X, (float)tapPos.Value.Y);
-        Microsoft.Maui.Graphics.RectF  vpRect  = new(0, 0, (float)Viewport.Width, (float)Viewport.Height);
+        Microsoft.Maui.Graphics.RectF vpRect = new(0, 0, (float)Viewport.Width, (float)Viewport.Height);
         ViewOrientation? newOrientation = _viewportRenderer.OrientationGizmoHitTest(tapPtF, vpRect);
         if (newOrientation.HasValue)
         {
@@ -283,86 +283,86 @@ public sealed partial class EditorWindow : ContentPage
         switch (e.StatusType)
         {
             case GestureStatus.Started:
-            {
-                _panLastX        = 0;
-                _panLastY        = 0;
-                _panStartScreenX = _lastPointerScreenX;
-                _panStartScreenY = _lastPointerScreenY;
-                _gizmoDragging   = false;
-
-                EditorGameObject? sel = EditorContext.Instance.SelectedObject;
-                if (sel is not null && _vm.ActiveTool is not "Select" and not "Pan")
                 {
-                    SizeF vs = new((float)Viewport.Width, (float)Viewport.Height);
-                    Microsoft.Maui.Graphics.PointF clickWorld = _viewportRenderer.Camera.ScreenToWorld(
-                        new Microsoft.Maui.Graphics.PointF(_panStartScreenX, _panStartScreenY), vs);
-                    Microsoft.Maui.Graphics.PointF objScreen = _viewportRenderer.Camera.WorldToScreen(
-                        new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y), vs);
+                    _panLastX = 0;
+                    _panLastY = 0;
+                    _panStartScreenX = _lastPointerScreenX;
+                    _panStartScreenY = _lastPointerScreenY;
+                    _gizmoDragging = false;
 
-                    _gizmoDragging = EditorContext.Instance.Gizmos.BeginDrag(
-                        _panStartScreenX, _panStartScreenY,
-                        objScreen.X,     objScreen.Y,
-                        clickWorld.X,    clickWorld.Y,
-                        sel);
+                    EditorGameObject? sel = EditorContext.Instance.SelectedObject;
+                    if (sel is not null && _vm.ActiveTool is not "Select" and not "Pan")
+                    {
+                        SizeF vs = new((float)Viewport.Width, (float)Viewport.Height);
+                        Microsoft.Maui.Graphics.PointF clickWorld = _viewportRenderer.Camera.ScreenToWorld(
+                            new Microsoft.Maui.Graphics.PointF(_panStartScreenX, _panStartScreenY), vs);
+                        Microsoft.Maui.Graphics.PointF objScreen = _viewportRenderer.Camera.WorldToScreen(
+                            new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y), vs);
+
+                        _gizmoDragging = EditorContext.Instance.Gizmos.BeginDrag(
+                            _panStartScreenX, _panStartScreenY,
+                            objScreen.X, objScreen.Y,
+                            clickWorld.X, clickWorld.Y,
+                            sel);
+                    }
+                    break;
                 }
-                break;
-            }
 
             case GestureStatus.Running:
-            {
-                double dx = e.TotalX - _panLastX;
-                double dy = e.TotalY - _panLastY;
-                _panLastX = e.TotalX;
-                _panLastY = e.TotalY;
-
-                if (_gizmoDragging)
                 {
-                    EditorGameObject? sel = EditorContext.Instance.SelectedObject;
-                    if (sel is not null)
+                    double dx = e.TotalX - _panLastX;
+                    double dy = e.TotalY - _panLastY;
+                    _panLastX = e.TotalX;
+                    _panLastY = e.TotalY;
+
+                    if (_gizmoDragging)
                     {
-                        SizeF vs      = new((float)Viewport.Width, (float)Viewport.Height);
-                        float screenX = _panStartScreenX + (float)e.TotalX;
-                        float screenY = _panStartScreenY + (float)e.TotalY;
-                        Microsoft.Maui.Graphics.PointF world  = _viewportRenderer.Camera.ScreenToWorld(
-                            new Microsoft.Maui.Graphics.PointF(screenX, screenY), vs);
-                        Microsoft.Maui.Graphics.PointF objSc = _viewportRenderer.Camera.WorldToScreen(
-                            new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y), vs);
-                        EditorContext.Instance.Gizmos.UpdateDrag(
-                            world.X, world.Y, screenX, screenY, objSc.X, objSc.Y, sel);
+                        EditorGameObject? sel = EditorContext.Instance.SelectedObject;
+                        if (sel is not null)
+                        {
+                            SizeF vs = new((float)Viewport.Width, (float)Viewport.Height);
+                            float screenX = _panStartScreenX + (float)e.TotalX;
+                            float screenY = _panStartScreenY + (float)e.TotalY;
+                            Microsoft.Maui.Graphics.PointF world = _viewportRenderer.Camera.ScreenToWorld(
+                                new Microsoft.Maui.Graphics.PointF(screenX, screenY), vs);
+                            Microsoft.Maui.Graphics.PointF objSc = _viewportRenderer.Camera.WorldToScreen(
+                                new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y), vs);
+                            EditorContext.Instance.Gizmos.UpdateDrag(
+                                world.X, world.Y, screenX, screenY, objSc.X, objSc.Y, sel);
+                            Viewport.Invalidate();
+                        }
+                    }
+                    else if (_vm.ActiveTool == "Pan")
+                    {
+                        float zoom = _viewportRenderer.Camera.Zoom;
+                        _viewportRenderer.Camera.Pan(
+                            new Microsoft.Maui.Graphics.PointF((float)(-dx / zoom), (float)(-dy / zoom)));
                         Viewport.Invalidate();
                     }
+                    break;
                 }
-                else if (_vm.ActiveTool == "Pan")
-                {
-                    float zoom = _viewportRenderer.Camera.Zoom;
-                    _viewportRenderer.Camera.Pan(
-                        new Microsoft.Maui.Graphics.PointF((float)(-dx / zoom), (float)(-dy / zoom)));
-                    Viewport.Invalidate();
-                }
-                break;
-            }
 
             case GestureStatus.Completed:
             case GestureStatus.Canceled:
-            {
-                if (_gizmoDragging)
                 {
-                    IEditorCommand? cmd = EditorContext.Instance.Gizmos.EndDrag(
-                        EditorContext.Instance.SelectedObject, ctrlHeld: false);
-                    if (cmd is not null)
+                    if (_gizmoDragging)
                     {
-                        EditorContext.Instance.Commands.Execute(cmd);
-                        EditorGameObject? dragSel = EditorContext.Instance.SelectedObject;
-                        if (dragSel is not null)
-                            EditorContext.Instance.EventBus.Publish(new GameObjectSelectedEvent(dragSel));
+                        IEditorCommand? cmd = EditorContext.Instance.Gizmos.EndDrag(
+                            EditorContext.Instance.SelectedObject, ctrlHeld: false);
+                        if (cmd is not null)
+                        {
+                            EditorContext.Instance.Commands.Execute(cmd);
+                            EditorGameObject? dragSel = EditorContext.Instance.SelectedObject;
+                            if (dragSel is not null)
+                                EditorContext.Instance.EventBus.Publish(new GameObjectSelectedEvent(dragSel));
+                        }
+                        Viewport.Invalidate();
                     }
-                    Viewport.Invalidate();
+                    _gizmoDragging = false;
+                    _panLastX = 0;
+                    _panLastY = 0;
+                    break;
                 }
-                _gizmoDragging = false;
-                _panLastX      = 0;
-                _panLastY      = 0;
-                break;
-            }
         }
     }
 
@@ -455,12 +455,12 @@ public sealed partial class EditorWindow : ContentPage
     private void AddSeparatorDrag(BoxView sep, bool isVertical,
                                    Action<double, double> onDrag, Action onDragEnd)
     {
-        Color idle  = Color.FromArgb("#34343A");
+        Color idle = Color.FromArgb("#34343A");
         Color hover = Color.FromArgb("#4A9EFF");
 
         PointerGestureRecognizer ptr = new();
         ptr.PointerEntered += (_, _) => sep.Color = hover;
-        ptr.PointerExited  += (_, _) => sep.Color = idle;
+        ptr.PointerExited += (_, _) => sep.Color = idle;
         sep.GestureRecognizers.Add(ptr);
 
         // Store so the window-level PointerPressed handler can hit-test against it.
@@ -504,8 +504,8 @@ public sealed partial class EditorWindow : ContentPage
         {
             EditorContext.Instance.SetFocus(EditorFocusContext.Viewport);
             _nativeViewportPanActive = true;
-            _nativeViewportPanLastX  = pt.Position.X;
-            _nativeViewportPanLastY  = pt.Position.Y;
+            _nativeViewportPanLastX = pt.Position.X;
+            _nativeViewportPanLastY = pt.Position.Y;
             e.Handled = true;
             return;
         }
@@ -525,10 +525,10 @@ public sealed partial class EditorWindow : ContentPage
             {
                 if (ReferenceEquals(current, sepEl))
                 {
-                    _activeSepOnDrag    = onDrag;
+                    _activeSepOnDrag = onDrag;
                     _activeSepOnDragEnd = onDragEnd;
-                    _sepDragLastX       = pt.Position.X;
-                    _sepDragLastY       = pt.Position.Y;
+                    _sepDragLastX = pt.Position.X;
+                    _sepDragLastY = pt.Position.Y;
                     return;
                 }
                 current = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(current);
@@ -570,7 +570,7 @@ public sealed partial class EditorWindow : ContentPage
         if (!pt.Properties.IsLeftButtonPressed)
         {
             var endAction = _activeSepOnDragEnd;
-            _activeSepOnDrag    = null;
+            _activeSepOnDrag = null;
             _activeSepOnDragEnd = null;
             Dispatcher.Dispatch(() => endAction?.Invoke());
             return;
@@ -582,7 +582,7 @@ public sealed partial class EditorWindow : ContentPage
         _sepDragLastY = pt.Position.Y;
         if (Math.Abs(dx) < 0.5 && Math.Abs(dy) < 0.5) return;
 
-        var action     = _activeSepOnDrag;
+        var action = _activeSepOnDrag;
         var capturedDx = dx;
         var capturedDy = dy;
         Dispatcher.Dispatch(() => action(capturedDx, capturedDy));
@@ -598,8 +598,8 @@ public sealed partial class EditorWindow : ContentPage
         }
 
         if (_activeSepOnDrag is null) return;
-        var endAction   = _activeSepOnDragEnd;
-        _activeSepOnDrag    = null;
+        var endAction = _activeSepOnDragEnd;
+        _activeSepOnDrag = null;
         _activeSepOnDragEnd = null;
         Dispatcher.Dispatch(() => endAction?.Invoke());
     }

@@ -13,7 +13,7 @@ public sealed partial class EditorWindow
             Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root)
                 is Microsoft.UI.Xaml.Controls.TextBox or Microsoft.UI.Xaml.Controls.PasswordBox;
 
-        bool ctrl  = Microsoft.UI.Input.InputKeyboardSource
+        bool ctrl = Microsoft.UI.Input.InputKeyboardSource
             .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
             .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
         bool shift = Microsoft.UI.Input.InputKeyboardSource

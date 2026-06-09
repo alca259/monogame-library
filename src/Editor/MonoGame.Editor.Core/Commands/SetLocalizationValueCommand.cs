@@ -17,9 +17,9 @@ public sealed class SetLocalizationValueCommand : IEditorCommand
         string oldValue,
         string newValue)
     {
-        _model    = model;
-        _locale   = locale;
-        _key      = key;
+        _model = model;
+        _locale = locale;
+        _key = key;
         _oldValue = oldValue;
         _newValue = newValue;
     }

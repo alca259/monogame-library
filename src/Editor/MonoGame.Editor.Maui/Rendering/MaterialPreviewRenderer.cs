@@ -23,10 +23,10 @@ public static class MaterialPreviewRenderer
     #region Static fields
 
     private static readonly Vector3 _lightDir = Vector3.Normalize(new Vector3(0.6f, 0.8f, 0.5f));
-    private static readonly Vector3 _viewDir  = new(0f, 0f, 1f);
-    private static readonly Vector3 _bgColor  = new(0.22f, 0.22f, 0.22f);
-    private static readonly Vector3 _ambient  = new(0.18f, 0.18f, 0.22f);
-    private static readonly Vector3 _f0Base   = new(0.04f);
+    private static readonly Vector3 _viewDir = new(0f, 0f, 1f);
+    private static readonly Vector3 _bgColor = new(0.22f, 0.22f, 0.22f);
+    private static readonly Vector3 _ambient = new(0.18f, 0.18f, 0.22f);
+    private static readonly Vector3 _f0Base = new(0.04f);
 
     #endregion
 
@@ -41,7 +41,7 @@ public static class MaterialPreviewRenderer
     public static byte[] Render(EditorMaterial? material, string projectContentRoot)
     {
         Vector3 diffuseColor = Vector3.One;
-        float metallic   = 0f;
+        float metallic = 0f;
         float smoothness = 0.5f;
         int tw = 0, th = 0;
         byte[]? texels = null;
@@ -49,14 +49,14 @@ public static class MaterialPreviewRenderer
         if (material is not null)
         {
             diffuseColor = ReadColor(material, "AlbedoColor", "TintColor");
-            metallic     = Math.Clamp(ReadFloat(material, "Metallic"),        0f, 1f);
-            smoothness   = Math.Clamp(ReadFloat(material, "Smoothness", 0.5f), 0f, 1f);
+            metallic = Math.Clamp(ReadFloat(material, "Metallic"), 0f, 1f);
+            smoothness = Math.Clamp(ReadFloat(material, "Smoothness", 0.5f), 0f, 1f);
             (tw, th, texels) = TryLoadTexels(material, "AlbedoTexture", projectContentRoot);
         }
 
-        float r2        = R * R;
+        float r2 = R * R;
         float shininess = 4f + smoothness * 124f;
-        var   rowBuffer = new byte[Size * 4];
+        var rowBuffer = new byte[Size * 4];
 
         using var bmp = new Bitmap(Size, Size, PixelFormat.Format32bppArgb);
         BitmapData bd = bmp.LockBits(
@@ -92,8 +92,8 @@ public static class MaterialPreviewRenderer
                     float ndotl = MathF.Max(0f, Vector3.Dot(N, _lightDir));
                     Vector3 diffuse = albedo * (1f - metallic) * ndotl;
 
-                    Vector3 H     = Vector3.Normalize(_lightDir + _viewDir);
-                    float   ndoth = MathF.Max(0f, Vector3.Dot(N, H));
+                    Vector3 H = Vector3.Normalize(_lightDir + _viewDir);
+                    float ndoth = MathF.Max(0f, Vector3.Dot(N, H));
                     Vector3 specular = f0 * MathF.Pow(ndoth, shininess);
 
                     col = _ambient * albedo + diffuse + specular;

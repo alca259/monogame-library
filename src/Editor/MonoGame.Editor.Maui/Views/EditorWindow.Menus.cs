@@ -4,9 +4,9 @@ public sealed partial class EditorWindow
 {
     #region Dropdown colors
 
-    private static readonly Color DropdownItemFg         = Color.FromArgb("#E6E6E8");
-    private static readonly Color DropdownItemBg         = Colors.Transparent;
-    private static readonly Color DropdownItemHoverBg    = Color.FromArgb("#2E2E34");
+    private static readonly Color DropdownItemFg = Color.FromArgb("#E6E6E8");
+    private static readonly Color DropdownItemBg = Colors.Transparent;
+    private static readonly Color DropdownItemHoverBg = Color.FromArgb("#2E2E34");
     private static readonly Color DropdownSeparatorColor = Color.FromArgb("#34343A");
 
     #endregion
@@ -89,8 +89,8 @@ public sealed partial class EditorWindow
                 DropdownStack.Children.Add(new BoxView
                 {
                     HeightRequest = 1,
-                    Color         = DropdownSeparatorColor,
-                    Margin        = new Thickness(8, 2),
+                    Color = DropdownSeparatorColor,
+                    Margin = new Thickness(8, 2),
                 });
                 continue;
             }
@@ -101,8 +101,8 @@ public sealed partial class EditorWindow
 
             var row = new Grid
             {
-                BackgroundColor      = DropdownItemBg,
-                Padding              = new Thickness(16, 6),
+                BackgroundColor = DropdownItemBg,
+                Padding = new Thickness(16, 6),
                 MinimumHeightRequest = DropdownRowHeight,
             };
 
@@ -114,24 +114,24 @@ public sealed partial class EditorWindow
 
             row.Add(new Label
             {
-                Text                    = item.Label,
-                TextColor               = isDisabled ? Color.FromArgb("#6A6A72") : DropdownItemFg,
-                FontSize                = 13,
-                VerticalTextAlignment   = TextAlignment.Center,
+                Text = item.Label,
+                TextColor = isDisabled ? Color.FromArgb("#6A6A72") : DropdownItemFg,
+                FontSize = 13,
+                VerticalTextAlignment = TextAlignment.Center,
                 HorizontalTextAlignment = TextAlignment.Start,
-                VerticalOptions         = LayoutOptions.Fill,
+                VerticalOptions = LayoutOptions.Fill,
             }, 0, 0);
 
             if (item.HasChildren)
             {
                 row.Add(new Label
                 {
-                    Text                    = "›",
-                    TextColor               = Color.FromArgb("#9A9AA2"),
-                    FontSize                = 14,
-                    VerticalTextAlignment   = TextAlignment.Center,
+                    Text = "›",
+                    TextColor = Color.FromArgb("#9A9AA2"),
+                    FontSize = 14,
+                    VerticalTextAlignment = TextAlignment.Center,
                     HorizontalTextAlignment = TextAlignment.Center,
-                    VerticalOptions         = LayoutOptions.Fill,
+                    VerticalOptions = LayoutOptions.Fill,
                 }, 1, 0);
 
                 var capturedChildren = item.Children!;
@@ -156,7 +156,7 @@ public sealed partial class EditorWindow
 
                 var pointer = new PointerGestureRecognizer();
                 pointer.PointerEntered += (_, _) => { row.BackgroundColor = DropdownItemHoverBg; HideSubDropdown(); };
-                pointer.PointerExited  += (_, _) => row.BackgroundColor = DropdownItemBg;
+                pointer.PointerExited += (_, _) => row.BackgroundColor = DropdownItemBg;
                 row.GestureRecognizers.Add(pointer);
             }
 
@@ -177,19 +177,19 @@ public sealed partial class EditorWindow
 
             var row = new Grid
             {
-                BackgroundColor      = DropdownItemBg,
-                Padding              = new Thickness(16, 6),
+                BackgroundColor = DropdownItemBg,
+                Padding = new Thickness(16, 6),
                 MinimumHeightRequest = 32,
             };
 
             row.Add(new Label
             {
-                Text                    = item.Label,
-                TextColor               = isDisabled ? Color.FromArgb("#6A6A72") : DropdownItemFg,
-                FontSize                = 13,
-                VerticalTextAlignment   = TextAlignment.Center,
+                Text = item.Label,
+                TextColor = isDisabled ? Color.FromArgb("#6A6A72") : DropdownItemFg,
+                FontSize = 13,
+                VerticalTextAlignment = TextAlignment.Center,
                 HorizontalTextAlignment = TextAlignment.Start,
-                VerticalOptions         = LayoutOptions.Fill,
+                VerticalOptions = LayoutOptions.Fill,
             });
 
             if (!isDisabled)
@@ -201,7 +201,7 @@ public sealed partial class EditorWindow
 
                 var pointer = new PointerGestureRecognizer();
                 pointer.PointerEntered += (_, _) => row.BackgroundColor = DropdownItemHoverBg;
-                pointer.PointerExited  += (_, _) => row.BackgroundColor = DropdownItemBg;
+                pointer.PointerExited += (_, _) => row.BackgroundColor = DropdownItemBg;
                 row.GestureRecognizers.Add(pointer);
             }
 
@@ -232,9 +232,9 @@ public sealed partial class EditorWindow
     private IEnumerable<DropdownItem> BuildFileMenuItems()
     {
         bool hasProject = EditorContext.Instance.ActiveProject is not null;
-        bool hasScene   = EditorContext.Instance.ActiveScene is not null;
+        bool hasScene = EditorContext.Instance.ActiveScene is not null;
 
-        yield return new DropdownItem("New Project…",  Action: () => _vm.NewProjectCommand.Execute(null));
+        yield return new DropdownItem("New Project…", Action: () => _vm.NewProjectCommand.Execute(null));
         yield return new DropdownItem("Open Project…", Action: () => _vm.OpenProjectCommand.Execute(null));
 
         if (_vm.Preferences.RecentProjects.Count > 0)
@@ -243,74 +243,74 @@ public sealed partial class EditorWindow
             foreach (string path in _vm.Preferences.RecentProjects)
             {
                 string captured = path;
-                string label    = Path.GetFileName(captured.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                string label = Path.GetFileName(captured.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
                 recentItems.Add(new DropdownItem(label, Action: () => _ = _vm.OpenProjectByPathAsync(captured)));
             }
             yield return new DropdownItem("Recent Projects", Children: recentItems);
         }
 
-        yield return new DropdownItem("---",            IsSeparator: true);
-        yield return new DropdownItem("Close Project",  Action: hasProject ? () => _vm.CloseProjectCommand.Execute(null) : null);
-        yield return new DropdownItem("---",            IsSeparator: true);
-        yield return new DropdownItem("New Scene",      Action: hasProject ? () => _vm.NewSceneCommand.Execute(null)    : null);
-        yield return new DropdownItem("Save Scene",     Action: hasScene   ? () => _ = _vm.SaveSceneAsync()             : null);
-        yield return new DropdownItem("Save Scene As…", Action: hasScene   ? () => _ = _vm.SaveSceneAsAsync()           : null);
-        yield return new DropdownItem("---",            IsSeparator: true);
-        yield return new DropdownItem("Exit",           Action: () => _vm.ExitCommand.Execute(null));
+        yield return new DropdownItem("---", IsSeparator: true);
+        yield return new DropdownItem("Close Project", Action: hasProject ? () => _vm.CloseProjectCommand.Execute(null) : null);
+        yield return new DropdownItem("---", IsSeparator: true);
+        yield return new DropdownItem("New Scene", Action: hasProject ? () => _vm.NewSceneCommand.Execute(null) : null);
+        yield return new DropdownItem("Save Scene", Action: hasScene ? () => _ = _vm.SaveSceneAsync() : null);
+        yield return new DropdownItem("Save Scene As…", Action: hasScene ? () => _ = _vm.SaveSceneAsAsync() : null);
+        yield return new DropdownItem("---", IsSeparator: true);
+        yield return new DropdownItem("Exit", Action: () => _vm.ExitCommand.Execute(null));
     }
 
     private IEnumerable<DropdownItem> BuildEditMenuItems()
     {
-        bool hasScene     = EditorContext.Instance.ActiveScene is not null;
+        bool hasScene = EditorContext.Instance.ActiveScene is not null;
         bool hasSelection = EditorContext.Instance.SelectedObject is not null;
         bool hasClipboard = EditorContext.Instance.ClipboardEntity is not null;
 
-        yield return new DropdownItem("Undo",       Action: hasScene                 ? () => _vm.UndoCommand.Execute(null)              : null);
-        yield return new DropdownItem("Redo",       Action: hasScene                 ? () => _vm.RedoCommand.Execute(null)              : null);
-        yield return new DropdownItem("---",        IsSeparator: true);
-        yield return new DropdownItem("Cut",        Action: hasSelection             ? () => _vm.CutCommand.Execute(null)               : null);
-        yield return new DropdownItem("Copy",       Action: hasSelection             ? () => _vm.CopyCommand.Execute(null)              : null);
-        yield return new DropdownItem("Paste",      Action: hasScene && hasClipboard ? () => _vm.PasteCommand.Execute(null)             : null);
-        yield return new DropdownItem("Duplicate",  Action: hasSelection             ? () => _vm.DuplicateSelectedCommand.Execute(null) : null);
-        yield return new DropdownItem("Delete",     Action: hasSelection             ? () => _vm.DeleteSelectedCommand.Execute(null)    : null);
-        yield return new DropdownItem("---",        IsSeparator: true);
-        yield return new DropdownItem("Select All", Action: hasScene                 ? () => _vm.SelectAllCommand.Execute(null)         : null);
+        yield return new DropdownItem("Undo", Action: hasScene ? () => _vm.UndoCommand.Execute(null) : null);
+        yield return new DropdownItem("Redo", Action: hasScene ? () => _vm.RedoCommand.Execute(null) : null);
+        yield return new DropdownItem("---", IsSeparator: true);
+        yield return new DropdownItem("Cut", Action: hasSelection ? () => _vm.CutCommand.Execute(null) : null);
+        yield return new DropdownItem("Copy", Action: hasSelection ? () => _vm.CopyCommand.Execute(null) : null);
+        yield return new DropdownItem("Paste", Action: hasScene && hasClipboard ? () => _vm.PasteCommand.Execute(null) : null);
+        yield return new DropdownItem("Duplicate", Action: hasSelection ? () => _vm.DuplicateSelectedCommand.Execute(null) : null);
+        yield return new DropdownItem("Delete", Action: hasSelection ? () => _vm.DeleteSelectedCommand.Execute(null) : null);
+        yield return new DropdownItem("---", IsSeparator: true);
+        yield return new DropdownItem("Select All", Action: hasScene ? () => _vm.SelectAllCommand.Execute(null) : null);
     }
 
     private IEnumerable<DropdownItem> BuildProjectMenuItems()
     {
         bool hasProject = EditorContext.Instance.ActiveProject is not null;
-        bool hasScene   = EditorContext.Instance.ActiveScene is not null;
+        bool hasScene = EditorContext.Instance.ActiveScene is not null;
 
-        yield return new DropdownItem("Project Settings…", Action: hasProject             ? () => _vm.OpenProjectSettingsCommand.Execute(null) : null);
-        yield return new DropdownItem("---",               IsSeparator: true);
-        yield return new DropdownItem("Build Content",     Action: hasProject             ? () => _ = _vm.BuildContentAsync()                  : null);
-        yield return new DropdownItem("Build Solution",    Action: hasProject             ? () => _ = _vm.BuildSolutionAsync()                 : null);
-        yield return new DropdownItem("Generate Code",     Action: hasProject && hasScene ? () => _ = _vm.GenerateCodeAsync()                  : null);
-        yield return new DropdownItem("---",               IsSeparator: true);
-        yield return new DropdownItem("Run",               Action: hasProject             ? () => _vm.RunGameCommand.Execute(null)             : null);
+        yield return new DropdownItem("Project Settings…", Action: hasProject ? () => _vm.OpenProjectSettingsCommand.Execute(null) : null);
+        yield return new DropdownItem("---", IsSeparator: true);
+        yield return new DropdownItem("Build Content", Action: hasProject ? () => _ = _vm.BuildContentAsync() : null);
+        yield return new DropdownItem("Build Solution", Action: hasProject ? () => _ = _vm.BuildSolutionAsync() : null);
+        yield return new DropdownItem("Generate Code", Action: hasProject && hasScene ? () => _ = _vm.GenerateCodeAsync() : null);
+        yield return new DropdownItem("---", IsSeparator: true);
+        yield return new DropdownItem("Run", Action: hasProject ? () => _vm.RunGameCommand.Execute(null) : null);
     }
 
     private IEnumerable<DropdownItem> BuildDebugMenuItems()
     {
-        bool hasScene  = EditorContext.Instance.ActiveScene is not null;
+        bool hasScene = EditorContext.Instance.ActiveScene is not null;
         bool isPlaying = EditorContext.Instance.State is EditorState.Playing;
 
         yield return new DropdownItem("Play", Action: hasScene && !isPlaying ? _vm.Play : null);
-        yield return new DropdownItem("Stop", Action: isPlaying              ? _vm.Stop : null);
+        yield return new DropdownItem("Stop", Action: isPlaying ? _vm.Stop : null);
     }
 
     private IEnumerable<DropdownItem> BuildViewMenuItems()
     {
         string hPfx = _hierarchyVisible ? "✓ " : "  ";
         string iPfx = _inspectorVisible ? "✓ " : "  ";
-        string dPfx = _dockVisible      ? "✓ " : "  ";
+        string dPfx = _dockVisible ? "✓ " : "  ";
 
-        yield return new DropdownItem($"{hPfx}Hierarchy",   Action: ToggleHierarchy);
-        yield return new DropdownItem($"{iPfx}Inspector",   Action: ToggleInspector);
+        yield return new DropdownItem($"{hPfx}Hierarchy", Action: ToggleHierarchy);
+        yield return new DropdownItem($"{iPfx}Inspector", Action: ToggleInspector);
         yield return new DropdownItem($"{dPfx}Bottom Dock", Action: ToggleDock);
-        yield return new DropdownItem("---",                IsSeparator: true);
-        yield return new DropdownItem("Reset Layout",       Action: ResetLayout);
+        yield return new DropdownItem("---", IsSeparator: true);
+        yield return new DropdownItem("Reset Layout", Action: ResetLayout);
     }
 
     #endregion

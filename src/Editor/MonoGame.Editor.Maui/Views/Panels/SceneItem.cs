@@ -5,9 +5,9 @@ public sealed class SceneItem
 {
     private readonly Func<SceneItem, Task> _onLoad;
 
-    public string Name     { get; }
+    public string Name { get; }
     public string FilePath { get; }
-    public bool   IsDirty  { get; init; }
+    public bool IsDirty { get; init; }
 
     public string DisplayName => IsDirty ? $"{Name} ●" : Name;
 
@@ -16,8 +16,8 @@ public sealed class SceneItem
     public SceneItem(string filePath, Func<SceneItem, Task> onLoad, bool isDirty = false)
     {
         FilePath = filePath;
-        IsDirty  = isDirty;
-        _onLoad  = onLoad;
+        IsDirty = isDirty;
+        _onLoad = onLoad;
 
         string fn = Path.GetFileName(filePath);
         Name = fn.EndsWith(".scene.json", StringComparison.OrdinalIgnoreCase)

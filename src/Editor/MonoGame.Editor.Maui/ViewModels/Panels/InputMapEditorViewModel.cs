@@ -1,6 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 
 namespace MonoGame.Editor.Maui.ViewModels.Panels;
 
@@ -14,8 +14,8 @@ public sealed partial class InputMapEditorViewModel : ViewModelBase
     private readonly List<string> _filePaths = [];
     private InputEditorModel? _model;
 
-    public ObservableCollection<string> FileNames    { get; } = [];
-    public ObservableCollection<string> ActionItems  { get; } = [];
+    public ObservableCollection<string> FileNames { get; } = [];
+    public ObservableCollection<string> ActionItems { get; } = [];
     public ObservableCollection<string> BindingItems { get; } = [];
 
     [ObservableProperty]
@@ -52,8 +52,8 @@ public sealed partial class InputMapEditorViewModel : ViewModelBase
         _filePaths.Clear();
         FileNames.Clear();
         SelectedFileIndex = -1;
-        SelectedAction    = null;
-        CanSave           = false;
+        SelectedAction = null;
+        CanSave = false;
 
         if (e.Project is null || !Directory.Exists(e.Project.ContentPath)) return;
 

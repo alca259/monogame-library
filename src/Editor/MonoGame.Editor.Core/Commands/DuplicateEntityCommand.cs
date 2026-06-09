@@ -50,14 +50,14 @@ public sealed class DuplicateEntityCommand : IEditorCommand
     {
         EditorGameObject clone = new()
         {
-            Name      = source.Name + " (copy)",
-            Active    = source.Active,
-            Position  = source.Position,
+            Name = source.Name + " (copy)",
+            Active = source.Active,
+            Position = source.Position,
             PositionZ = source.PositionZ,
-            Rotation  = source.Rotation,
-            Scale     = source.Scale,
+            Rotation = source.Rotation,
+            Scale = source.Scale,
             PrefabPath = source.PrefabPath,
-            Parent    = parent,
+            Parent = parent,
         };
 
         foreach (string tag in source.Tags)
@@ -68,7 +68,7 @@ public sealed class DuplicateEntityCommand : IEditorCommand
             EditorBehaviour cloned = new()
             {
                 TypeName = behaviour.TypeName,
-                Enabled  = behaviour.Enabled,
+                Enabled = behaviour.Enabled,
             };
             foreach (KeyValuePair<string, JsonElement> prop in behaviour.Properties)
                 cloned.Properties[prop.Key] = prop.Value;

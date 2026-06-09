@@ -10,20 +10,20 @@ public sealed class TitleBarView : TitleBar
 
     private string? _projectName;
     private string? _sceneName;
-    private bool    _isDirty;
+    private bool _isDirty;
 
     private readonly Action<SceneDirtyChangedEvent> _onDirtyChanged;
-    private readonly Action<ProjectOpenedEvent>     _onProjectOpened;
-    private readonly Action<SceneLoadedEvent>       _onSceneLoaded;
+    private readonly Action<ProjectOpenedEvent> _onProjectOpened;
+    private readonly Action<SceneLoadedEvent> _onSceneLoaded;
 
     public TitleBarView()
     {
         BackgroundColor = Color.FromArgb("#1A1A1B");
         ForegroundColor = Color.FromArgb("#E6E6E8");
 
-        _onDirtyChanged  = e => MainThread.BeginInvokeOnMainThread(() => { _isDirty = e.IsDirty; Refresh(); });
+        _onDirtyChanged = e => MainThread.BeginInvokeOnMainThread(() => { _isDirty = e.IsDirty; Refresh(); });
         _onProjectOpened = e => MainThread.BeginInvokeOnMainThread(() => { _projectName = e.Project?.Name; _sceneName = null; Refresh(); });
-        _onSceneLoaded   = e => MainThread.BeginInvokeOnMainThread(() => { _sceneName = e.Scene?.Name; Refresh(); });
+        _onSceneLoaded = e => MainThread.BeginInvokeOnMainThread(() => { _sceneName = e.Scene?.Name; Refresh(); });
 
         _bus.Subscribe(_onDirtyChanged);
         _bus.Subscribe(_onProjectOpened);
@@ -36,8 +36,8 @@ public sealed class TitleBarView : TitleBar
     {
         string text = "MonoGame Editor";
         if (_projectName is not null) text = $"MonoGame Editor — {_projectName}";
-        if (_sceneName   is not null) text = $"{text} — {_sceneName}";
-        if (_isDirty)                 text = $"● {text}";
+        if (_sceneName is not null) text = $"{text} — {_sceneName}";
+        if (_isDirty) text = $"● {text}";
         Title = text;
     }
 }

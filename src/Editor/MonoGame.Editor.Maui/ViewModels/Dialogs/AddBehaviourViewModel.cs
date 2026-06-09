@@ -1,6 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 
 namespace MonoGame.Editor.Maui.ViewModels.Dialogs;
 
@@ -38,7 +38,7 @@ public sealed partial class AddBehaviourViewModel : DialogViewModel<string>
     /// <summary>Inicializa el diálogo con el registro de tipos y un callback opcional de rescan.</summary>
     public void Initialize(GameObjectRegistry registry, Func<Task>? rescanCallback)
     {
-        _registry       = registry;
+        _registry = registry;
         _rescanCallback = rescanCallback;
         BuildTree();
     }
@@ -77,7 +77,7 @@ public sealed partial class AddBehaviourViewModel : DialogViewModel<string>
         if (_rescanCallback is null) return;
 
         RescanEnabled = false;
-        RescanText    = "⟳ …";
+        RescanText = "⟳ …";
         try
         {
             await _rescanCallback().ConfigureAwait(true);
@@ -85,7 +85,7 @@ public sealed partial class AddBehaviourViewModel : DialogViewModel<string>
         finally
         {
             RescanEnabled = true;
-            RescanText    = "⟳ Rescan";
+            RescanText = "⟳ Rescan";
         }
 
         _expandedNamespaces.Clear();
@@ -189,9 +189,9 @@ public sealed partial class AddBehaviourViewModel : DialogViewModel<string>
 
         foreach (KeyValuePair<string, NamespaceNode> kv in nodes.OrderBy(k => k.Key, StringComparer.Ordinal))
         {
-            NamespaceNode node        = kv.Value;
-            bool          isExpanded  = _expandedNamespaces.Contains(node.FullPath);
-            bool          hasChildren = node.Children.Count > 0 || node.Types.Count > 0;
+            NamespaceNode node = kv.Value;
+            bool isExpanded = _expandedNamespaces.Contains(node.FullPath);
+            bool hasChildren = node.Children.Count > 0 || node.Types.Count > 0;
 
             output.Add(new BehaviourTreeNode(kv.Key, node.FullPath, hasChildren, isExpanded, depth));
 

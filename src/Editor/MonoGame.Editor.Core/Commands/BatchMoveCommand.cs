@@ -11,7 +11,7 @@ public sealed class BatchMoveCommand : IEditorCommand
     public BatchMoveCommand(IReadOnlyList<EditorGameObject> targets, EditorVector2 delta)
     {
         _targets = targets;
-        _delta   = delta;
+        _delta = delta;
     }
 
     /// <inheritdoc/>

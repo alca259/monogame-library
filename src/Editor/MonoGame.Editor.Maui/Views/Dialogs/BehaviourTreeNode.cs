@@ -16,11 +16,11 @@ public sealed class BehaviourTreeNode
     /// </summary>
     public string FullKey { get; }
 
-    public bool IsLeaf      { get; }
-    public bool IsPending   { get; }
-    public bool IsExpanded  { get; set; }
+    public bool IsLeaf { get; }
+    public bool IsPending { get; }
+    public bool IsExpanded { get; set; }
     public bool HasChildren { get; }
-    public int  Depth       { get; }
+    public int Depth { get; }
 
     public Thickness LeftPadding => new(Depth * 14 + 4, 3, 4, 3);
 
@@ -36,25 +36,25 @@ public sealed class BehaviourTreeNode
     public BehaviourTreeNode(string displayName, string namespacePath,
                               bool hasChildren, bool isExpanded, int depth)
     {
-        DisplayName  = displayName;
-        FullKey      = namespacePath;
-        IsLeaf       = false;
-        IsPending    = false;
-        HasChildren  = hasChildren;
-        IsExpanded   = isExpanded;
-        Depth        = depth;
+        DisplayName = displayName;
+        FullKey = namespacePath;
+        IsLeaf = false;
+        IsPending = false;
+        HasChildren = hasChildren;
+        IsExpanded = isExpanded;
+        Depth = depth;
     }
 
     /// <summary>Crea un nodo hoja (tipo concreto).</summary>
     public BehaviourTreeNode(string displayName, string fullTypeName,
                               bool isPending, int depth)
     {
-        DisplayName  = displayName;
-        FullKey      = fullTypeName;
-        IsLeaf       = true;
-        IsPending    = isPending;
-        HasChildren  = false;
-        IsExpanded   = false;
-        Depth        = depth;
+        DisplayName = displayName;
+        FullKey = fullTypeName;
+        IsLeaf = true;
+        IsPending = isPending;
+        HasChildren = false;
+        IsExpanded = false;
+        Depth = depth;
     }
 }

@@ -15,7 +15,7 @@ public sealed partial class LocaleCreationViewModel : DialogViewModel<LocaleCrea
     [RelayCommand]
     private void Submit()
     {
-        string code        = LocaleCode?.Trim()  ?? string.Empty;
+        string code = LocaleCode?.Trim() ?? string.Empty;
         string displayName = DisplayName?.Trim() ?? string.Empty;
 
         if (string.IsNullOrEmpty(code))

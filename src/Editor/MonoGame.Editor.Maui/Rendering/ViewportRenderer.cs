@@ -10,8 +10,8 @@ public sealed class ViewportRenderer : IDrawable
     // ── Layout constants del gizmo de orientación ────────────────────────────
     private const float OGizmoCenterOffsetX = 52f; // desde rect.Right
     private const float OGizmoCenterOffsetY = 52f; // desde rect.Top
-    private const float OGizmoSpokeRadius   = 28f;
-    private const float OGizmoHitRadius     = 12f;
+    private const float OGizmoSpokeRadius = 28f;
+    private const float OGizmoHitRadius = 12f;
 
     public EditorCamera2D Camera { get; } = new();
 
@@ -47,11 +47,11 @@ public sealed class ViewportRenderer : IDrawable
         if (step < 6) return;
 
         canvas.StrokeColor = ResolveColor("Border").WithAlpha(0.35f);
-        canvas.StrokeSize  = 1;
+        canvas.StrokeSize = 1;
 
-        SizeF  size = new(rect.Width, rect.Height);
-        PointF tl   = Camera.ScreenToWorld(new PointF(rect.Left, rect.Top),     size);
-        PointF br   = Camera.ScreenToWorld(new PointF(rect.Right, rect.Bottom), size);
+        SizeF size = new(rect.Width, rect.Height);
+        PointF tl = Camera.ScreenToWorld(new PointF(rect.Left, rect.Top), size);
+        PointF br = Camera.ScreenToWorld(new PointF(rect.Right, rect.Bottom), size);
 
         float startX = MathF.Floor(tl.X / GridCellSize) * GridCellSize;
         for (float wx = startX; wx <= br.X + GridCellSize; wx += GridCellSize)
@@ -76,9 +76,9 @@ public sealed class ViewportRenderer : IDrawable
     /// </summary>
     private PointF GetWorldCenter(EditorGameObject obj) => Orientation switch
     {
-        ViewOrientation.Top   => new PointF(obj.Position.X, obj.PositionZ),
-        ViewOrientation.Right => new PointF(obj.PositionZ,  obj.Position.Y),
-        _                     => new PointF(obj.Position.X, obj.Position.Y),
+        ViewOrientation.Top => new PointF(obj.Position.X, obj.PositionZ),
+        ViewOrientation.Right => new PointF(obj.PositionZ, obj.Position.Y),
+        _ => new PointF(obj.Position.X, obj.Position.Y),
     };
 
     // ── Scene objects (placeholder rects) ────────────────────────────────────
@@ -110,8 +110,8 @@ public sealed class ViewportRenderer : IDrawable
         float halfW = defaultHalfSize * obj.Scale.X;
         float halfH = defaultHalfSize * obj.Scale.Y;
 
-        PointF wc       = GetWorldCenter(obj);
-        PointF topLeft  = Camera.WorldToScreen(new PointF(wc.X - halfW, wc.Y - halfH), viewSize);
+        PointF wc = GetWorldCenter(obj);
+        PointF topLeft = Camera.WorldToScreen(new PointF(wc.X - halfW, wc.Y - halfH), viewSize);
         PointF botRight = Camera.WorldToScreen(new PointF(wc.X + halfW, wc.Y + halfH), viewSize);
 
         if (topLeft.X > clipRect.Right || botRight.X < clipRect.Left) return;
@@ -119,9 +119,9 @@ public sealed class ViewportRenderer : IDrawable
 
         RectF bounds = new(topLeft.X, topLeft.Y, botRight.X - topLeft.X, botRight.Y - topLeft.Y);
 
-        canvas.FillColor   = ResolveColor("AccentBlue").WithAlpha(0.08f);
+        canvas.FillColor = ResolveColor("AccentBlue").WithAlpha(0.08f);
         canvas.StrokeColor = ResolveColor("AccentBlue").WithAlpha(0.5f);
-        canvas.StrokeSize  = 1;
+        canvas.StrokeSize = 1;
         canvas.FillRectangle(bounds);
         canvas.DrawRectangle(bounds);
     }
@@ -134,7 +134,7 @@ public sealed class ViewportRenderer : IDrawable
         float halfW = defaultHalfSize * obj.Scale.X;
         float halfH = defaultHalfSize * obj.Scale.Y;
 
-        SizeF  viewSize = new(rect.Width, rect.Height);
+        SizeF viewSize = new(rect.Width, rect.Height);
         PointF wc = GetWorldCenter(obj);
         PointF tl = Camera.WorldToScreen(new PointF(wc.X - halfW, wc.Y - halfH), viewSize);
         PointF br = Camera.WorldToScreen(new PointF(wc.X + halfW, wc.Y + halfH), viewSize);
@@ -147,7 +147,7 @@ public sealed class ViewportRenderer : IDrawable
         RectF b = sel.ScreenBounds;
 
         canvas.StrokeColor = ResolveColor("AccentBlue");
-        canvas.StrokeSize  = 1;
+        canvas.StrokeSize = 1;
         canvas.DrawRectangle(b);
 
         const float h = 6f, hh = h / 2f;
@@ -160,7 +160,7 @@ public sealed class ViewportRenderer : IDrawable
             new(b.Left,  b.Bottom), new(midX, b.Bottom), new(b.Right, b.Bottom),
         ];
 
-        canvas.FillColor   = Colors.White;
+        canvas.FillColor = Colors.White;
         canvas.StrokeColor = ResolveColor("AccentBlue");
         foreach (PointF p in pts)
         {
@@ -172,7 +172,7 @@ public sealed class ViewportRenderer : IDrawable
         float rotY = b.Top - 18f;
         canvas.StrokeColor = ResolveColor("AccentBlue");
         canvas.DrawLine(midX, b.Top, midX, rotY);
-        canvas.FillColor   = Colors.White;
+        canvas.FillColor = Colors.White;
         canvas.FillCircle(midX, rotY, 4f);
         canvas.StrokeColor = ResolveColor("AccentBlue");
         canvas.DrawCircle(midX, rotY, 4f);
@@ -185,99 +185,99 @@ public sealed class ViewportRenderer : IDrawable
         GizmoMode mode = EditorContext.Instance.Gizmos.Mode;
         if (mode is GizmoMode.Select or GizmoMode.Rect) return;
 
-        SizeF  viewSize = new(rect.Width, rect.Height);
-        PointF o  = Camera.WorldToScreen(GetWorldCenter(selected), viewSize);
-        float  ox = o.X, oy = o.Y;
-        float  len = GizmoController.ArrowLength;
+        SizeF viewSize = new(rect.Width, rect.Height);
+        PointF o = Camera.WorldToScreen(GetWorldCenter(selected), viewSize);
+        float ox = o.X, oy = o.Y;
+        float len = GizmoController.ArrowLength;
 
-        Color axisX  = ResolveColor("AxisRed");
-        Color axisY  = ResolveColor("AxisGreen");
+        Color axisX = ResolveColor("AxisRed");
+        Color axisY = ResolveColor("AxisGreen");
         Color accent = ResolveColor("AccentBlue");
 
         // Determine labels for the two visible axes based on orientation
         (string labelX, string labelY) = Orientation switch
         {
-            ViewOrientation.Top   => ("x", "z"),
+            ViewOrientation.Top => ("x", "z"),
             ViewOrientation.Right => ("z", "y"),
-            _                     => ("x", "y"),
+            _ => ("x", "y"),
         };
 
         switch (mode)
         {
             case GizmoMode.Move:
-            {
-                // X arm (red)
-                canvas.StrokeColor = axisX;
-                canvas.StrokeSize  = 2;
-                canvas.DrawLine(ox, oy, ox + len, oy);
-                canvas.FillColor = axisX;
-                canvas.FillRectangle(ox + len, oy - 6, 12, 12);
-                canvas.FontColor = axisX;
-                canvas.FontSize  = 9;
-                canvas.DrawString(labelX, ox + len + 14, oy, HorizontalAlignment.Left);
+                {
+                    // X arm (red)
+                    canvas.StrokeColor = axisX;
+                    canvas.StrokeSize = 2;
+                    canvas.DrawLine(ox, oy, ox + len, oy);
+                    canvas.FillColor = axisX;
+                    canvas.FillRectangle(ox + len, oy - 6, 12, 12);
+                    canvas.FontColor = axisX;
+                    canvas.FontSize = 9;
+                    canvas.DrawString(labelX, ox + len + 14, oy, HorizontalAlignment.Left);
 
-                // Y arm (green, screen-Y up)
-                canvas.StrokeColor = axisY;
-                canvas.StrokeSize  = 2;
-                canvas.DrawLine(ox, oy, ox, oy - len);
-                canvas.FillColor = axisY;
-                canvas.FillRectangle(ox - 6, oy - len - 12, 12, 12);
-                canvas.FontColor = axisY;
-                canvas.DrawString(labelY, ox, oy - len - 22, HorizontalAlignment.Center);
+                    // Y arm (green, screen-Y up)
+                    canvas.StrokeColor = axisY;
+                    canvas.StrokeSize = 2;
+                    canvas.DrawLine(ox, oy, ox, oy - len);
+                    canvas.FillColor = axisY;
+                    canvas.FillRectangle(ox - 6, oy - len - 12, 12, 12);
+                    canvas.FontColor = axisY;
+                    canvas.DrawString(labelY, ox, oy - len - 22, HorizontalAlignment.Center);
 
-                // Free-move square (yellow)
-                Color yellow = Color.FromArgb("#FFEE44");
-                canvas.FillColor   = yellow.WithAlpha(0.55f);
-                canvas.FillRectangle(ox + 12, oy - 28, 16, 16);
-                canvas.StrokeColor = yellow;
-                canvas.StrokeSize  = 1;
-                canvas.DrawRectangle(ox + 12, oy - 28, 16, 16);
+                    // Free-move square (yellow)
+                    Color yellow = Color.FromArgb("#FFEE44");
+                    canvas.FillColor = yellow.WithAlpha(0.55f);
+                    canvas.FillRectangle(ox + 12, oy - 28, 16, 16);
+                    canvas.StrokeColor = yellow;
+                    canvas.StrokeSize = 1;
+                    canvas.DrawRectangle(ox + 12, oy - 28, 16, 16);
 
-                break;
-            }
+                    break;
+                }
 
             case GizmoMode.Rotate:
-            {
-                float r = GizmoController.RotateRadius;
-                canvas.StrokeColor = accent;
-                canvas.StrokeSize  = 2;
-                canvas.DrawCircle(ox, oy, r);
+                {
+                    float r = GizmoController.RotateRadius;
+                    canvas.StrokeColor = accent;
+                    canvas.StrokeSize = 2;
+                    canvas.DrawCircle(ox, oy, r);
 
-                float rad  = selected.Rotation * MathF.PI / 180f;
-                float endX = ox + r * MathF.Cos(rad);
-                float endY = oy + r * MathF.Sin(rad);
-                canvas.StrokeColor = accent;
-                canvas.DrawLine(ox, oy, endX, endY);
-                canvas.FillColor = Colors.White;
-                canvas.FillCircle(endX, endY, 4f);
-                canvas.StrokeColor = accent;
-                canvas.DrawCircle(endX, endY, 4f);
-                break;
-            }
+                    float rad = selected.Rotation * MathF.PI / 180f;
+                    float endX = ox + r * MathF.Cos(rad);
+                    float endY = oy + r * MathF.Sin(rad);
+                    canvas.StrokeColor = accent;
+                    canvas.DrawLine(ox, oy, endX, endY);
+                    canvas.FillColor = Colors.White;
+                    canvas.FillCircle(endX, endY, 4f);
+                    canvas.StrokeColor = accent;
+                    canvas.DrawCircle(endX, endY, 4f);
+                    break;
+                }
 
             case GizmoMode.Scale:
-            {
-                float sh  = GizmoController.ScaleHandleSize;
-                float hsh = sh / 2f;
+                {
+                    float sh = GizmoController.ScaleHandleSize;
+                    float hsh = sh / 2f;
 
-                canvas.StrokeColor = axisX;
-                canvas.StrokeSize  = 2;
-                canvas.DrawLine(ox, oy, ox + len, oy);
-                canvas.FillColor = axisX;
-                canvas.FillRectangle(ox + len - hsh, oy - hsh, sh, sh);
+                    canvas.StrokeColor = axisX;
+                    canvas.StrokeSize = 2;
+                    canvas.DrawLine(ox, oy, ox + len, oy);
+                    canvas.FillColor = axisX;
+                    canvas.FillRectangle(ox + len - hsh, oy - hsh, sh, sh);
 
-                canvas.StrokeColor = axisY;
-                canvas.DrawLine(ox, oy, ox, oy - len);
-                canvas.FillColor = axisY;
-                canvas.FillRectangle(ox - hsh, oy - len - hsh, sh, sh);
+                    canvas.StrokeColor = axisY;
+                    canvas.DrawLine(ox, oy, ox, oy - len);
+                    canvas.FillColor = axisY;
+                    canvas.FillRectangle(ox - hsh, oy - len - hsh, sh, sh);
 
-                canvas.FillColor   = Colors.White;
-                canvas.StrokeColor = Colors.Gray;
-                canvas.StrokeSize  = 1;
-                canvas.FillRectangle(ox - hsh, oy - hsh, sh, sh);
-                canvas.DrawRectangle(ox - hsh, oy - hsh, sh, sh);
-                break;
-            }
+                    canvas.FillColor = Colors.White;
+                    canvas.StrokeColor = Colors.Gray;
+                    canvas.StrokeSize = 1;
+                    canvas.FillRectangle(ox - hsh, oy - hsh, sh, sh);
+                    canvas.DrawRectangle(ox - hsh, oy - hsh, sh, sh);
+                    break;
+                }
         }
     }
 
@@ -293,15 +293,15 @@ public sealed class ViewportRenderer : IDrawable
 
         (string labelX, string labelY) = Orientation switch
         {
-            ViewOrientation.Top   => ("x", "z"),
+            ViewOrientation.Top => ("x", "z"),
             ViewOrientation.Right => ("z", "y"),
-            _                     => ("x", "y"),
+            _ => ("x", "y"),
         };
 
         canvas.StrokeColor = axisX;
         canvas.DrawLine(ox, oy, ox + len, oy);
         canvas.FontColor = axisX;
-        canvas.FontSize  = 10;
+        canvas.FontSize = 10;
         canvas.DrawString(labelX, ox + len + 4, oy, HorizontalAlignment.Left);
 
         canvas.StrokeColor = axisY;
@@ -321,18 +321,18 @@ public sealed class ViewportRenderer : IDrawable
     /// </summary>
     private void DrawOrientationGizmo(ICanvas canvas, RectF rect)
     {
-        float gcx = rect.Right  - OGizmoCenterOffsetX;
-        float gcy = rect.Top    + OGizmoCenterOffsetY;
-        float r   = OGizmoSpokeRadius;
+        float gcx = rect.Right - OGizmoCenterOffsetX;
+        float gcy = rect.Top + OGizmoCenterOffsetY;
+        float r = OGizmoSpokeRadius;
 
         Color cX = ResolveColor("AxisRed");
         Color cY = ResolveColor("AxisGreen");
         Color cZ = Color.FromArgb("#4488FF");     // azul para Z
 
         // Posiciones de las puntas de los tres spokes (X, Y, Z)
-        PointF tipX = new(gcx + r,          gcy);
-        PointF tipY = new(gcx,              gcy - r);
-        PointF tipZ = new(gcx - r * 0.65f,  gcy + r * 0.65f); // diagonal inferior-izquierda
+        PointF tipX = new(gcx + r, gcy);
+        PointF tipY = new(gcx, gcy - r);
+        PointF tipZ = new(gcx - r * 0.65f, gcy + r * 0.65f); // diagonal inferior-izquierda
 
         // El eje "mirando hacia la cámara" se muestra como círculo; los demás como flecha
         bool xIsEye = Orientation == ViewOrientation.Right;
@@ -352,12 +352,12 @@ public sealed class ViewportRenderer : IDrawable
         // Etiqueta de vista activa
         string viewLabel = Orientation switch
         {
-            ViewOrientation.Top   => "Top",
+            ViewOrientation.Top => "Top",
             ViewOrientation.Right => "Right",
-            _                     => "Front",
+            _ => "Front",
         };
         canvas.FontColor = ResolveColor("Border").WithAlpha(0.9f);
-        canvas.FontSize  = 10;
+        canvas.FontSize = 10;
         canvas.DrawString(viewLabel, gcx, gcy + r + 12, HorizontalAlignment.Center);
     }
 
@@ -382,7 +382,7 @@ public sealed class ViewportRenderer : IDrawable
         }
 
         canvas.FontColor = color;
-        canvas.FontSize  = 10;
+        canvas.FontSize = 10;
         float labelX = tip.X + (tip.X > cx ? 8f : tip.X < cx ? -8f : 0f);
         float labelY = tip.Y + (tip.Y > cy ? 6f : -14f);
         canvas.DrawString(label, labelX, labelY, HorizontalAlignment.Center);
@@ -396,13 +396,13 @@ public sealed class ViewportRenderer : IDrawable
     /// </summary>
     public ViewOrientation? OrientationGizmoHitTest(PointF click, RectF viewportRect)
     {
-        float gcx = viewportRect.Right  - OGizmoCenterOffsetX;
-        float gcy = viewportRect.Top    + OGizmoCenterOffsetY;
-        float r   = OGizmoSpokeRadius;
+        float gcx = viewportRect.Right - OGizmoCenterOffsetX;
+        float gcy = viewportRect.Top + OGizmoCenterOffsetY;
+        float r = OGizmoSpokeRadius;
 
-        PointF tipX = new(gcx + r,          gcy);
-        PointF tipY = new(gcx,              gcy - r);
-        PointF tipZ = new(gcx - r * 0.65f,  gcy + r * 0.65f);
+        PointF tipX = new(gcx + r, gcy);
+        PointF tipY = new(gcx, gcy - r);
+        PointF tipZ = new(gcx - r * 0.65f, gcy + r * 0.65f);
 
         if (DistSq(click, tipX) <= OGizmoHitRadius * OGizmoHitRadius) return ViewOrientation.Right;
         if (DistSq(click, tipY) <= OGizmoHitRadius * OGizmoHitRadius) return ViewOrientation.Top;

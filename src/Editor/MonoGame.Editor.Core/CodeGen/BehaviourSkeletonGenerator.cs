@@ -9,12 +9,12 @@ public sealed class BehaviourSkeletonGenerator : ICodeGenService
 
     /// <inheritdoc/>
     public async Task<CodeGenResult> GenerateBehaviourSkeletonAsync(
-        string                  className,
-        string                  namespaceName,
-        string                  relativeFolder,
-        IReadOnlyList<string>   lifecycleMethodsToOverride,
-        EditorProject           project,
-        CancellationToken       cancellationToken = default)
+        string className,
+        string namespaceName,
+        string relativeFolder,
+        IReadOnlyList<string> lifecycleMethodsToOverride,
+        EditorProject project,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(project.GameSourcePath))
             return new CodeGenResult(false, string.Empty, "GameSourcePath is not configured.");
@@ -40,16 +40,16 @@ public sealed class BehaviourSkeletonGenerator : ICodeGenService
 
     /// <inheritdoc/>
     public Task<CodeGenResult> GenerateSceneAsync(
-        EditorScene     scene,
-        EditorProject   project,
+        EditorScene scene,
+        EditorProject project,
         ProjectSettings settings,
         CancellationToken cancellationToken = default)
         => Task.FromResult(new CodeGenResult(false, string.Empty,
             "Use SceneCodeGenerator for scene generation."));
 
     private static string BuildSkeletonSource(
-        string                className,
-        string                namespaceName,
+        string className,
+        string namespaceName,
         IReadOnlyList<string> methods)
     {
         bool includesDraw = false;

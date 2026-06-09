@@ -1,7 +1,7 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MonoGame.Editor.Maui.Views.Panels;
+using System.Collections.ObjectModel;
 
 namespace MonoGame.Editor.Maui.ViewModels.Panels;
 
@@ -48,15 +48,15 @@ public sealed partial class SceneManagerViewModel : ViewModelBase
     private void OnProjectOpened(ProjectOpenedEvent e)
     {
         Items.Clear();
-        SelectedScene    = null;
+        SelectedScene = null;
         _activeScenePath = string.Empty;
-        ActiveSceneText  = "No active scene";
+        ActiveSceneText = "No active scene";
 
         HasProject = e.Project is not null;
 
         if (e.Project is null)
         {
-            _scenesPath    = string.Empty;
+            _scenesPath = string.Empty;
             SceneCountText = "0 scenes";
             return;
         }
@@ -147,7 +147,7 @@ public sealed partial class SceneManagerViewModel : ViewModelBase
 
         EditorScene scene = new()
         {
-            Name      = result.SceneName,
+            Name = result.SceneName,
             WorldSize = new EditorVector2(result.WorldWidth, result.WorldHeight),
         };
 

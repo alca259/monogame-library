@@ -18,7 +18,7 @@ public sealed class EditorCamera2D
     /// <summary>Convierte un punto de espacio mundo a coordenadas de pantalla.</summary>
     public PointF WorldToScreen(PointF worldPos, SizeF viewportSize)
     {
-        float x = (worldPos.X - Position.X) * Zoom + viewportSize.Width  * 0.5f;
+        float x = (worldPos.X - Position.X) * Zoom + viewportSize.Width * 0.5f;
         float y = (worldPos.Y - Position.Y) * Zoom + viewportSize.Height * 0.5f;
         return new PointF(x, y);
     }
@@ -26,7 +26,7 @@ public sealed class EditorCamera2D
     /// <summary>Convierte un punto de pantalla a coordenadas de espacio mundo.</summary>
     public PointF ScreenToWorld(PointF screenPos, SizeF viewportSize)
     {
-        float x = (screenPos.X - viewportSize.Width  * 0.5f) / Zoom + Position.X;
+        float x = (screenPos.X - viewportSize.Width * 0.5f) / Zoom + Position.X;
         float y = (screenPos.Y - viewportSize.Height * 0.5f) / Zoom + Position.Y;
         return new PointF(x, y);
     }

@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using Microsoft.Maui.Controls.Shapes;
+﻿using Microsoft.Maui.Controls.Shapes;
+using System.Text.Json;
 using SysPath = System.IO.Path;
 
 namespace MonoGame.Editor.Maui.Views.Panels;
@@ -28,9 +28,9 @@ public sealed partial class MaterialInspectorView : ContentView
         new(StringComparer.Ordinal);
 
     private EditorMaterial? _material;
-    private string _currentFilePath      = string.Empty;
-    private string _projectContentRoot   = string.Empty;
-    private bool   _suppressShaderChange = false;
+    private string _currentFilePath = string.Empty;
+    private string _projectContentRoot = string.Empty;
+    private bool _suppressShaderChange = false;
 
     #endregion
 
@@ -78,8 +78,8 @@ public sealed partial class MaterialInspectorView : ContentView
         _material = LoadOrCreate(_currentFilePath, SysPath.GetFileNameWithoutExtension(name));
         PopulateForm(_material, name);
         MaterialSaveButton.IsEnabled = true;
-        RenderButton.IsEnabled       = true;
-        PreviewBorder.IsVisible      = true;
+        RenderButton.IsEnabled = true;
+        PreviewBorder.IsVisible = true;
         _ = UpdatePreviewAsync();
     }
 
@@ -99,7 +99,7 @@ public sealed partial class MaterialInspectorView : ContentView
         CollectFormIntoMaterial();
         SaveMaterialToDisk();
 
-        RenderButton.IsEnabled   = false;
+        RenderButton.IsEnabled = false;
         MaterialStatusLabel.Text = "Rendering…";
 
         try
@@ -132,7 +132,7 @@ public sealed partial class MaterialInspectorView : ContentView
     {
         if (_material is null) return;
 
-        _material.ShaderPath    = ShaderPicker.SelectedItem as string ?? string.Empty;
+        _material.ShaderPath = ShaderPicker.SelectedItem as string ?? string.Empty;
         _material.RenderingMode = RenderingModePicker.SelectedIndex switch
         {
             1 => "Cutout",
@@ -209,10 +209,10 @@ public sealed partial class MaterialInspectorView : ContentView
 
         RenderingModePicker.SelectedIndex = mat.RenderingMode switch
         {
-            "Cutout"      => 1,
-            "Fade"        => 2,
+            "Cutout" => 1,
+            "Fade" => 2,
             "Transparent" => 3,
-            _             => 0,
+            _ => 0,
         };
 
         RebuildShaderSections();
@@ -222,18 +222,18 @@ public sealed partial class MaterialInspectorView : ContentView
     private void ClearForm()
     {
         _currentFilePath = string.Empty;
-        _material        = null;
-        MaterialFileLabel.Text             = "(no material)";
-        _suppressShaderChange              = true;
-        ShaderPicker.SelectedIndex         = -1;
-        _suppressShaderChange              = false;
-        RenderingModePicker.SelectedIndex  = 0;
+        _material = null;
+        MaterialFileLabel.Text = "(no material)";
+        _suppressShaderChange = true;
+        ShaderPicker.SelectedIndex = -1;
+        _suppressShaderChange = false;
+        RenderingModePicker.SelectedIndex = 0;
         ShaderSections.Children.Clear();
         _propGetters.Clear();
         _uvSet = 0;
         MaterialSaveButton.IsEnabled = false;
-        RenderButton.IsEnabled       = false;
-        PreviewBorder.IsVisible      = false;
+        RenderButton.IsEnabled = false;
+        PreviewBorder.IsVisible = false;
         MaterialStatusLabel.Text = string.Empty;
     }
 
@@ -419,7 +419,7 @@ public sealed partial class MaterialInspectorView : ContentView
                 {
                     EditorMaterialPropertyType.Vector2 => 2,
                     EditorMaterialPropertyType.Vector3 => 3,
-                    _                                  => 4,
+                    _ => 4,
                 };
                 ShaderSections.Children.Add(
                     MakeRow(hasDot: false, name,
@@ -442,18 +442,18 @@ public sealed partial class MaterialInspectorView : ContentView
         {
             BackgroundColor = (Color)Application.Current!.Resources["PanelBackgroundAlt"],
             StrokeThickness = 0,
-            Padding         = new Thickness(10, 4),
+            Padding = new Thickness(10, 4),
         };
         header.Content = new Label
         {
-            Text  = title,
+            Text = title,
             Style = (Style)Application.Current.Resources["SectionTitle"],
         };
 
         stack.Children.Add(header);
         stack.Children.Add(new BoxView
         {
-            Color         = (Color)Application.Current.Resources["Border"],
+            Color = (Color)Application.Current.Resources["Border"],
             HeightRequest = 1,
         });
         return stack;
@@ -471,20 +471,20 @@ public sealed partial class MaterialInspectorView : ContentView
                 new ColumnDefinition(GridLength.Star),
             },
             ColumnSpacing = 0,
-            Padding       = new Thickness(10, 3, 10, 3),
+            Padding = new Thickness(10, 3, 10, 3),
         };
 
         if (hasDot)
         {
             var dot = new Border
             {
-                WidthRequest    = 7,
-                HeightRequest   = 7,
+                WidthRequest = 7,
+                HeightRequest = 7,
                 BackgroundColor = (Color)Application.Current!.Resources["TextSecondary"],
                 StrokeThickness = 0,
-                StrokeShape     = new Ellipse(),
+                StrokeShape = new Ellipse(),
                 HorizontalOptions = LayoutOptions.Center,
-                VerticalOptions   = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
             };
             Grid.SetColumn(dot, 0);
             grid.Children.Add(dot);
@@ -492,7 +492,7 @@ public sealed partial class MaterialInspectorView : ContentView
 
         var label = new Label
         {
-            Text  = labelText,
+            Text = labelText,
             Style = (Style)Application.Current!.Resources["LabelSecondary"],
         };
         Grid.SetColumn(label, 1);
@@ -542,7 +542,7 @@ public sealed partial class MaterialInspectorView : ContentView
         var controls = new HorizontalStackLayout { Spacing = 4, VerticalOptions = LayoutOptions.Center };
         controls.Children.Add(new Label
         {
-            Text    = "X",
+            Text = "X",
             TextColor = (Color)Application.Current!.Resources["TextSecondary"],
             FontSize = 11,
             VerticalOptions = LayoutOptions.Center,
@@ -550,7 +550,7 @@ public sealed partial class MaterialInspectorView : ContentView
         controls.Children.Add(xStepper);
         controls.Children.Add(new Label
         {
-            Text    = "Y",
+            Text = "Y",
             TextColor = (Color)Application.Current!.Resources["TextSecondary"],
             FontSize = 11,
             VerticalOptions = LayoutOptions.Center,
@@ -581,7 +581,7 @@ public sealed partial class MaterialInspectorView : ContentView
         ShaderSections.Children.Add(new BoxView
         {
             HeightRequest = height,
-            Color         = Colors.Transparent,
+            Color = Colors.Transparent,
         });
     }
 
@@ -591,7 +591,7 @@ public sealed partial class MaterialInspectorView : ContentView
 
     private View MakeTextureColorControls(string texKey, string colorKey, float[] defaultRgba)
     {
-        var texSlot   = MakeTextureSlot(texKey);
+        var texSlot = MakeTextureSlot(texKey);
         var colorSwatch = MakeColorSwatch(colorKey, defaultRgba);
 
         var panel = new HorizontalStackLayout { Spacing = 6, VerticalOptions = LayoutOptions.Center };
@@ -623,7 +623,7 @@ public sealed partial class MaterialInspectorView : ContentView
                 new ColumnDefinition(new GridLength(36)),
                 new ColumnDefinition(GridLength.Star),
             },
-            ColumnSpacing   = 6,
+            ColumnSpacing = 6,
             VerticalOptions = LayoutOptions.Center,
         };
         Grid.SetColumn(texSlot, 0);
@@ -656,9 +656,9 @@ public sealed partial class MaterialInspectorView : ContentView
         string texKey, string colorKey, string stepKey,
         float[] defaultRgba, float defaultIntensity)
     {
-        var texSlot     = MakeTextureSlot(texKey);
+        var texSlot = MakeTextureSlot(texKey);
         var colorSwatch = MakeColorSwatch(colorKey, defaultRgba);
-        var stepper     = MakeStepper(GetPropFloat(stepKey, defaultIntensity), 0.001);
+        var stepper = MakeStepper(GetPropFloat(stepKey, defaultIntensity), 0.001);
 
         _propGetters[stepKey] = () => new EditorMaterialProperty
         {
@@ -687,24 +687,24 @@ public sealed partial class MaterialInspectorView : ContentView
 
         var slider = new Slider
         {
-            Minimum         = min,
-            Maximum         = max,
-            Value           = current,
-            HeightRequest   = 20,
+            Minimum = min,
+            Maximum = max,
+            Value = current,
+            HeightRequest = 20,
             VerticalOptions = LayoutOptions.Center,
-            ThumbColor        = (Color)Application.Current!.Resources["AccentBlue"],
+            ThumbColor = (Color)Application.Current!.Resources["AccentBlue"],
             MinimumTrackColor = (Color)Application.Current!.Resources["AccentBlue"],
             MaximumTrackColor = (Color)Application.Current!.Resources["Border"],
         };
 
         var valueLabel = new Label
         {
-            Text                  = current.ToString("F2"),
-            TextColor             = (Color)Application.Current.Resources["TextSecondary"],
-            FontSize              = 11,
-            WidthRequest          = 34,
+            Text = current.ToString("F2"),
+            TextColor = (Color)Application.Current.Resources["TextSecondary"],
+            FontSize = 11,
+            WidthRequest = 34,
             HorizontalTextAlignment = TextAlignment.End,
-            VerticalOptions       = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Center,
         };
 
         slider.ValueChanged += (_, e) => valueLabel.Text = ((float)e.NewValue).ToString("F2");
@@ -723,7 +723,7 @@ public sealed partial class MaterialInspectorView : ContentView
                 new ColumnDefinition(GridLength.Star),
                 new ColumnDefinition(new GridLength(38)),
             },
-            ColumnSpacing   = 4,
+            ColumnSpacing = 4,
             VerticalOptions = LayoutOptions.Center,
         };
         Grid.SetColumn(slider, 0);
@@ -765,11 +765,11 @@ public sealed partial class MaterialInspectorView : ContentView
 
         var slot = new Border
         {
-            WidthRequest    = 32,
-            HeightRequest   = 32,
+            WidthRequest = 32,
+            HeightRequest = 32,
             StrokeThickness = 1,
-            Stroke          = new SolidColorBrush((Color)Application.Current!.Resources["Border"]),
-            StrokeShape     = new RoundRectangle { CornerRadius = 2 },
+            Stroke = new SolidColorBrush((Color)Application.Current!.Resources["Border"]),
+            StrokeShape = new RoundRectangle { CornerRadius = 2 },
             VerticalOptions = LayoutOptions.Center,
             BackgroundColor = string.IsNullOrEmpty(texPath)
                 ? Color.FromArgb("#111113")
@@ -778,8 +778,8 @@ public sealed partial class MaterialInspectorView : ContentView
 
         _propGetters[propKey] = () => new EditorMaterialProperty
         {
-            Name        = propKey,
-            Type        = EditorMaterialPropertyType.Texture2D,
+            Name = propKey,
+            Type = EditorMaterialPropertyType.Texture2D,
             TexturePath = texPath,
         };
 
@@ -789,13 +789,13 @@ public sealed partial class MaterialInspectorView : ContentView
             var result = await FilePicker.Default.PickAsync(new PickOptions
             {
                 PickerTitle = "Select Texture",
-                FileTypes   = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
                 {
                     [DevicePlatform.WinUI] = ["*.png", "*.jpg", "*.jpeg", "*.bmp", "*.dds"],
                 }),
             });
             if (result is null) return;
-            texPath             = result.FullPath;
+            texPath = result.FullPath;
             slot.BackgroundColor = (Color)Application.Current!.Resources["AccentBlueDim"];
         };
         slot.GestureRecognizers.Add(tap);
@@ -809,11 +809,11 @@ public sealed partial class MaterialInspectorView : ContentView
 
         var swatch = new Border
         {
-            WidthRequest    = 42,
-            HeightRequest   = 22,
+            WidthRequest = 42,
+            HeightRequest = 22,
             StrokeThickness = 1,
-            Stroke          = new SolidColorBrush((Color)Application.Current!.Resources["Border"]),
-            StrokeShape     = new RoundRectangle { CornerRadius = 2 },
+            Stroke = new SolidColorBrush((Color)Application.Current!.Resources["Border"]),
+            StrokeShape = new RoundRectangle { CornerRadius = 2 },
             BackgroundColor = Color.FromRgba(rgba[0], rgba[1], rgba[2], rgba[3]),
             VerticalOptions = LayoutOptions.Center,
         };
@@ -832,7 +832,7 @@ public sealed partial class MaterialInspectorView : ContentView
             if (page is null) return;
 
             var current = Color.FromRgba(rgba[0], rgba[1], rgba[2], rgba[3]);
-            var picked  = await RgbaColorPickerDialog.ShowAsync(page.Navigation, current);
+            var picked = await RgbaColorPickerDialog.ShowAsync(page.Navigation, current);
             if (picked is null) return;
 
             rgba[0] = picked.Red;
@@ -850,10 +850,10 @@ public sealed partial class MaterialInspectorView : ContentView
     {
         return new AxisStepper
         {
-            ShowAxisTag     = false,
-            Value           = initialValue,
-            Step            = step,
-            WidthRequest    = 80,
+            ShowAxisTag = false,
+            Value = initialValue,
+            Step = step,
+            WidthRequest = 80,
             VerticalOptions = LayoutOptions.Center,
         };
     }

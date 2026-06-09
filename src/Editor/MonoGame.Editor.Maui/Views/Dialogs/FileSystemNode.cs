@@ -38,10 +38,10 @@ public sealed class FileSystemNode
                           int depth, bool isExpanded, bool hasChildren)
     {
         DisplayName = displayName;
-        FullPath    = fullPath;
+        FullPath = fullPath;
         IsDirectory = isDirectory;
-        Depth       = depth;
-        IsExpanded  = isExpanded;
+        Depth = depth;
+        IsExpanded = isExpanded;
         HasChildren = hasChildren;
     }
 }

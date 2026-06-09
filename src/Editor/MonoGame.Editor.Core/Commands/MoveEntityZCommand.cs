@@ -10,9 +10,9 @@ public sealed class MoveEntityZCommand : IEditorCommand
     /// <summary>Inicializa una nueva instancia de <see cref="MoveEntityZCommand"/>.</summary>
     public MoveEntityZCommand(EditorGameObject target, float previousZ, float newZ)
     {
-        _target    = target;
+        _target = target;
         _previousZ = previousZ;
-        _newZ      = newZ;
+        _newZ = newZ;
     }
 
     /// <inheritdoc/>

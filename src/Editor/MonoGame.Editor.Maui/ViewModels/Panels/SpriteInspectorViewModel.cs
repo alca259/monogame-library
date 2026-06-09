@@ -1,6 +1,6 @@
-﻿using System.Text.Json;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Text.Json;
 
 namespace MonoGame.Editor.Maui.ViewModels.Panels;
 
@@ -57,7 +57,7 @@ public sealed partial class SpriteInspectorViewModel : ViewModelBase
         }
 
         _currentFilePath = e.Asset.AbsolutePath;
-        SpriteName       = e.Asset.Name;
+        SpriteName = e.Asset.Name;
 
         PopulateForm(LoadOrCreate(_currentFilePath));
         CanSave = true;
@@ -79,29 +79,29 @@ public sealed partial class SpriteInspectorViewModel : ViewModelBase
 
     private void PopulateForm(EditorSpriteMetadata meta)
     {
-        TexturePath  = meta.TextureRelativePath;
-        BorderLeft   = meta.BorderLeft.ToString();
-        BorderRight  = meta.BorderRight.ToString();
-        BorderTop    = meta.BorderTop.ToString();
+        TexturePath = meta.TextureRelativePath;
+        BorderLeft = meta.BorderLeft.ToString();
+        BorderRight = meta.BorderRight.ToString();
+        BorderTop = meta.BorderTop.ToString();
         BorderBottom = meta.BorderBottom.ToString();
-        TileEdges    = meta.TileEdges;
-        TileCenter   = meta.TileCenter;
-        StatusText   = string.Empty;
+        TileEdges = meta.TileEdges;
+        TileCenter = meta.TileCenter;
+        StatusText = string.Empty;
     }
 
     private void ClearForm()
     {
         _currentFilePath = string.Empty;
-        SpriteName   = "No sprite selected";
-        CanSave      = false;
-        TexturePath  = string.Empty;
-        BorderLeft   = "0";
-        BorderRight  = "0";
-        BorderTop    = "0";
+        SpriteName = "No sprite selected";
+        CanSave = false;
+        TexturePath = string.Empty;
+        BorderLeft = "0";
+        BorderRight = "0";
+        BorderTop = "0";
         BorderBottom = "0";
-        TileEdges    = false;
-        TileCenter   = false;
-        StatusText   = string.Empty;
+        TileEdges = false;
+        TileCenter = false;
+        StatusText = string.Empty;
     }
 
     [RelayCommand(CanExecute = nameof(CanSave))]
@@ -112,12 +112,12 @@ public sealed partial class SpriteInspectorViewModel : ViewModelBase
         var meta = new EditorSpriteMetadata
         {
             TextureRelativePath = TexturePath,
-            BorderLeft   = ParseInt(BorderLeft),
-            BorderRight  = ParseInt(BorderRight),
-            BorderTop    = ParseInt(BorderTop),
+            BorderLeft = ParseInt(BorderLeft),
+            BorderRight = ParseInt(BorderRight),
+            BorderTop = ParseInt(BorderTop),
             BorderBottom = ParseInt(BorderBottom),
-            TileEdges    = TileEdges,
-            TileCenter   = TileCenter,
+            TileEdges = TileEdges,
+            TileCenter = TileCenter,
         };
 
         try

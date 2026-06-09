@@ -6,21 +6,21 @@ public static class AssetClassifier
     private static readonly Dictionary<string, AssetType> ExtensionMap =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            [".png"]         = AssetType.Texture,
-            [".jpg"]         = AssetType.Texture,
-            [".jpeg"]        = AssetType.Texture,
-            [".bmp"]         = AssetType.Texture,
-            [".gif"]         = AssetType.Texture,
-            [".tga"]         = AssetType.Texture,
-            [".wav"]         = AssetType.Audio,
-            [".mp3"]         = AssetType.Audio,
-            [".ogg"]         = AssetType.Audio,
-            [".wma"]         = AssetType.Audio,
-            [".spritefont"]  = AssetType.Font,
-            [".fnt"]         = AssetType.Font,
-            [".tmx"]         = AssetType.TiledMap,
-            [".tsx"]         = AssetType.TiledMap,
-            [".cs"]          = AssetType.Script,
+            [".png"] = AssetType.Texture,
+            [".jpg"] = AssetType.Texture,
+            [".jpeg"] = AssetType.Texture,
+            [".bmp"] = AssetType.Texture,
+            [".gif"] = AssetType.Texture,
+            [".tga"] = AssetType.Texture,
+            [".wav"] = AssetType.Audio,
+            [".mp3"] = AssetType.Audio,
+            [".ogg"] = AssetType.Audio,
+            [".wma"] = AssetType.Audio,
+            [".spritefont"] = AssetType.Font,
+            [".fnt"] = AssetType.Font,
+            [".tmx"] = AssetType.TiledMap,
+            [".tsx"] = AssetType.TiledMap,
+            [".cs"] = AssetType.Script,
         };
 
     // Sufijos compuestos resueltos antes de la búsqueda por extensión simple (primero el más largo)
@@ -54,11 +54,11 @@ public static class AssetClassifier
     /// <summary>Crea un <see cref="AssetInfo"/> para <paramref name="absolutePath"/> relativo a <paramref name="rootPath"/>.</summary>
     public static AssetInfo CreateInfo(string absolutePath, string rootPath)
     {
-        string relative  = Path.GetRelativePath(rootPath, absolutePath);
-        string name      = GetDisplayName(absolutePath);
+        string relative = Path.GetRelativePath(rootPath, absolutePath);
+        string name = GetDisplayName(absolutePath);
         string extension = Path.GetExtension(absolutePath).ToLowerInvariant();
-        AssetType type   = Classify(absolutePath);
-        long size        = File.Exists(absolutePath) ? new FileInfo(absolutePath).Length : 0L;
+        AssetType type = Classify(absolutePath);
+        long size = File.Exists(absolutePath) ? new FileInfo(absolutePath).Length : 0L;
 
         return new AssetInfo(absolutePath, relative, name, type, extension, size);
     }

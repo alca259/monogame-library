@@ -18,9 +18,9 @@ public sealed partial class ScriptCreationViewModel : DialogViewModel<ScriptCrea
     [RelayCommand]
     private void Submit()
     {
-        string className = ClassName?.Trim()      ?? string.Empty;
-        string ns        = NamespaceName?.Trim()  ?? string.Empty;
-        string folder    = RelativeFolder?.Trim() ?? string.Empty;
+        string className = ClassName?.Trim() ?? string.Empty;
+        string ns = NamespaceName?.Trim() ?? string.Empty;
+        string folder = RelativeFolder?.Trim() ?? string.Empty;
 
         if (string.IsNullOrEmpty(className))
         {

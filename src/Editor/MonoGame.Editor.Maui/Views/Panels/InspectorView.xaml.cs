@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
-using MauiShapes = Microsoft.Maui.Controls.Shapes;
 using System.Text.Json;
+using MauiShapes = Microsoft.Maui.Controls.Shapes;
 
 namespace MonoGame.Editor.Maui.Views.Panels;
 
@@ -23,7 +23,7 @@ public sealed partial class InspectorView : ContentView
         BindingContext = _vm;
         WireTransformCommands();
         _vm.RefreshRequested += RefreshInspector;
-        _vm.PropertyChanged  += OnViewModelPropertyChanged;
+        _vm.PropertyChanged += OnViewModelPropertyChanged;
         UpdateTabContent();
     }
 
@@ -43,9 +43,9 @@ public sealed partial class InspectorView : ContentView
     private void UpdateTabContent()
     {
         string tab = _vm.ActiveTab;
-        InspectorContent.IsVisible    = tab == "Inspector";
-        MaterialContent.IsVisible     = tab == "Material";
-        UIThemeContent.IsVisible      = tab == "UITheme";
+        InspectorContent.IsVisible = tab == "Inspector";
+        MaterialContent.IsVisible = tab == "Material";
+        UIThemeContent.IsVisible = tab == "UITheme";
         SpriteEditorContent.IsVisible = tab == "Sprite";
     }
 
@@ -53,12 +53,12 @@ public sealed partial class InspectorView : ContentView
 
     private void WireTransformCommands()
     {
-        PosXStepper.ValueCommitted   += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyPosX(v); };
-        PosYStepper.ValueCommitted   += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyPosY(v); };
-        RotZStepper.ValueCommitted   += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyRotZ(v); };
+        PosXStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyPosX(v); };
+        PosYStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyPosY(v); };
+        RotZStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyRotZ(v); };
         ScaleXStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyScaleX(v); };
         ScaleYStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyScaleY(v); };
-        DepthStepper.ValueCommitted  += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyDepth(v); };
+        DepthStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyDepth(v); };
     }
 
     private void OnObjectActiveChanged(object sender, CheckedChangedEventArgs e)
@@ -80,12 +80,12 @@ public sealed partial class InspectorView : ContentView
 
         _suppressTransformEvents = true;
         ObjectActiveCheck.IsChecked = selected.Active;
-        PosXStepper.Value   = selected.Position.X;
-        PosYStepper.Value   = selected.Position.Y;
-        RotZStepper.Value   = selected.Rotation;
+        PosXStepper.Value = selected.Position.X;
+        PosYStepper.Value = selected.Position.Y;
+        RotZStepper.Value = selected.Rotation;
         ScaleXStepper.Value = selected.Scale.X;
         ScaleYStepper.Value = selected.Scale.Y;
-        DepthStepper.Value  = selected.PositionZ;
+        DepthStepper.Value = selected.PositionZ;
         _suppressTransformEvents = false;
 
         BuildBehaviourCards();
@@ -135,7 +135,7 @@ public sealed partial class InspectorView : ContentView
 
     private static JsonElement GetDefaultJsonElement(Type type)
     {
-        if (type == typeof(bool))   return JsonSerializer.SerializeToElement(false);
+        if (type == typeof(bool)) return JsonSerializer.SerializeToElement(false);
         if (type == typeof(string)) return JsonSerializer.SerializeToElement(string.Empty);
         if (type.IsValueType)
         {
@@ -148,7 +148,7 @@ public sealed partial class InspectorView : ContentView
     private View BuildBehaviourCard(EditorBehaviour behaviour, EditorGameObject owner)
     {
         string shortName = GetShortTypeName(behaviour.TypeName);
-        bool collapsed   = _collapsedBehaviours.Contains(behaviour.TypeName);
+        bool collapsed = _collapsedBehaviours.Contains(behaviour.TypeName);
 
         // Body — property rows
         VerticalStackLayout body = new() { Spacing = 0 };
@@ -159,35 +159,35 @@ public sealed partial class InspectorView : ContentView
         // Header — chevron / type name / remove button
         Button chevron = new()
         {
-            Text            = collapsed ? "▶" : "▼",
-            TextColor       = Color.FromArgb("#6A6A72"),
-            FontSize        = 10,
-            WidthRequest    = 20,
-            HeightRequest   = 20,
+            Text = collapsed ? "▶" : "▼",
+            TextColor = Color.FromArgb("#6A6A72"),
+            FontSize = 10,
+            WidthRequest = 20,
+            HeightRequest = 20,
             BackgroundColor = Colors.Transparent,
-            BorderWidth     = 0,
-            Padding         = Thickness.Zero,
-            CornerRadius    = 0,
+            BorderWidth = 0,
+            Padding = Thickness.Zero,
+            CornerRadius = 0,
             VerticalOptions = LayoutOptions.Center,
         };
         chevron.Clicked += (_, _) =>
         {
             bool nowCollapsed = !_collapsedBehaviours.Contains(behaviour.TypeName);
             if (nowCollapsed) _collapsedBehaviours.Add(behaviour.TypeName);
-            else              _collapsedBehaviours.Remove(behaviour.TypeName);
+            else _collapsedBehaviours.Remove(behaviour.TypeName);
             BuildBehaviourCards();
         };
 
         Button removeBtn = new()
         {
-            Text            = "✕",
-            FontSize        = 10,
-            WidthRequest    = 20,
-            HeightRequest   = 20,
-            Padding         = new Thickness(0),
-            CornerRadius    = 4,
+            Text = "✕",
+            FontSize = 10,
+            WidthRequest = 20,
+            HeightRequest = 20,
+            Padding = new Thickness(0),
+            CornerRadius = 4,
             BackgroundColor = Colors.Transparent,
-            TextColor       = Color.FromArgb("#9A9AA2"),
+            TextColor = Color.FromArgb("#9A9AA2"),
             VerticalOptions = LayoutOptions.Center,
         };
         removeBtn.Clicked += (_, _) =>
@@ -205,20 +205,20 @@ public sealed partial class InspectorView : ContentView
                 new ColumnDefinition(new GridLength(24, GridUnitType.Absolute)),
             },
             BackgroundColor = Color.FromArgb("#252528"),
-            Padding         = new Thickness(8, 4),
+            Padding = new Thickness(8, 4),
         };
         header.Add(chevron, 0, 0);
         header.Add(new Label
         {
-            Text            = shortName,
-            Style           = (Style)Application.Current!.Resources["SectionTitle"],
+            Text = shortName,
+            Style = (Style)Application.Current!.Resources["SectionTitle"],
             VerticalOptions = LayoutOptions.Center,
         }, 1, 0);
         header.Add(removeBtn, 2, 0);
 
         return new VerticalStackLayout
         {
-            Spacing  = 0,
+            Spacing = 0,
             Children =
             {
                 new Border
@@ -260,13 +260,13 @@ public sealed partial class InspectorView : ContentView
                 new ColumnDefinition(new GridLength(90, GridUnitType.Absolute)),
                 new ColumnDefinition(GridLength.Star),
             },
-            Padding       = new Thickness(10, 4),
+            Padding = new Thickness(10, 4),
             ColumnSpacing = 6,
         };
         row.Add(new Label
         {
-            Text            = key,
-            Style           = (Style)Application.Current!.Resources["LabelSecondary"],
+            Text = key,
+            Style = (Style)Application.Current!.Resources["LabelSecondary"],
             VerticalOptions = LayoutOptions.Center,
         }, 0, 0);
         row.Add(control, 1, 0);
@@ -292,17 +292,17 @@ public sealed partial class InspectorView : ContentView
         Border swatch = new()
         {
             BackgroundColor = initialColor,
-            WidthRequest    = 32,
-            HeightRequest   = 20,
+            WidthRequest = 32,
+            HeightRequest = 20,
             StrokeThickness = 1,
-            Stroke          = Color.FromArgb("#505058"),
-            StrokeShape     = new MauiShapes.RoundRectangle { CornerRadius = 3 },
+            Stroke = Color.FromArgb("#505058"),
+            StrokeShape = new MauiShapes.RoundRectangle { CornerRadius = 3 },
         };
 
         Label hexLabel = new()
         {
-            Text            = ColorToHex(r, g, b, a),
-            Style           = (Style)Application.Current!.Resources["LabelSecondary"],
+            Text = ColorToHex(r, g, b, a),
+            Style = (Style)Application.Current!.Resources["LabelSecondary"],
             VerticalOptions = LayoutOptions.Center,
         };
 
@@ -315,8 +315,8 @@ public sealed partial class InspectorView : ContentView
             },
             ColumnSpacing = 6,
         };
-        container.Add(swatch,    0, 0);
-        container.Add(hexLabel,  1, 0);
+        container.Add(swatch, 0, 0);
+        container.Add(hexLabel, 1, 0);
 
         TapGestureRecognizer tap = new();
         tap.Tapped += async (_, _) =>
@@ -328,9 +328,9 @@ public sealed partial class InspectorView : ContentView
 
             swatch.BackgroundColor = picked;
 
-            int nr = (int)(picked.Red   * 255);
+            int nr = (int)(picked.Red * 255);
             int ng = (int)(picked.Green * 255);
-            int nb = (int)(picked.Blue  * 255);
+            int nb = (int)(picked.Blue * 255);
             int na = (int)(picked.Alpha * 255);
             hexLabel.Text = ColorToHex(nr, ng, nb, na);
 
@@ -338,7 +338,7 @@ public sealed partial class InspectorView : ContentView
             var colorData = new { R = (byte)nr, G = (byte)ng, B = (byte)nb, A = (byte)na, PackedValue = packed };
 
             JsonElement previous = behaviour.Properties[key];
-            JsonElement next     = JsonSerializer.SerializeToElement(colorData);
+            JsonElement next = JsonSerializer.SerializeToElement(colorData);
             EditorContext.Instance.Commands.Execute(
                 new SetPropertyCommand<JsonElement>($"Set {key}", previous, next,
                     v => behaviour.Properties[key] = v));
@@ -357,7 +357,7 @@ public sealed partial class InspectorView : ContentView
         check.CheckedChanged += (_, e) =>
         {
             JsonElement previous = behaviour.Properties[key];
-            JsonElement next     = JsonSerializer.SerializeToElement(e.Value);
+            JsonElement next = JsonSerializer.SerializeToElement(e.Value);
             EditorContext.Instance.Commands.Execute(
                 new SetPropertyCommand<JsonElement>($"Set {key}", previous, next, v => behaviour.Properties[key] = v));
         };
@@ -370,7 +370,7 @@ public sealed partial class InspectorView : ContentView
         stepper.ValueCommitted += (_, v) =>
         {
             JsonElement previous = behaviour.Properties[key];
-            JsonElement next     = JsonSerializer.SerializeToElement(v);
+            JsonElement next = JsonSerializer.SerializeToElement(v);
             EditorContext.Instance.Commands.Execute(
                 new SetPropertyCommand<JsonElement>($"Set {key}", previous, next, e => behaviour.Properties[key] = e));
         };
@@ -380,11 +380,11 @@ public sealed partial class InspectorView : ContentView
     private static View BuildStringPropertyControl(EditorBehaviour behaviour, string key, string current)
     {
         Border shell = new() { Style = (Style)Application.Current!.Resources["InputShell"] };
-        Entry entry  = new() { Style = (Style)Application.Current!.Resources["InputEntry"], Text = current };
+        Entry entry = new() { Style = (Style)Application.Current!.Resources["InputEntry"], Text = current };
         entry.Completed += (_, _) =>
         {
             JsonElement previous = behaviour.Properties[key];
-            JsonElement next     = JsonSerializer.SerializeToElement(entry.Text ?? string.Empty);
+            JsonElement next = JsonSerializer.SerializeToElement(entry.Text ?? string.Empty);
             EditorContext.Instance.Commands.Execute(
                 new SetPropertyCommand<JsonElement>($"Set {key}", previous, next, v => behaviour.Properties[key] = v));
         };
@@ -394,7 +394,7 @@ public sealed partial class InspectorView : ContentView
 
     private static string GetShortTypeName(string typeName)
     {
-        ReadOnlySpan<char> span  = typeName.AsSpan();
+        ReadOnlySpan<char> span = typeName.AsSpan();
         int comma = span.IndexOf(',');
         if (comma >= 0) span = span[..comma];
         int dot = span.LastIndexOf('.');

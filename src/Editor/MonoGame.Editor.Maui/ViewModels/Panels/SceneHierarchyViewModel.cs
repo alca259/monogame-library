@@ -1,7 +1,7 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MonoGame.Editor.Maui.Views.Panels;
+using System.Collections.ObjectModel;
 
 namespace MonoGame.Editor.Maui.ViewModels.Panels;
 
@@ -75,7 +75,7 @@ public sealed partial class SceneHierarchyViewModel : ViewModelBase
 
         if (scene is null)
         {
-            CountText  = "0 entities";
+            CountText = "0 entities";
             StatusText = "0 objects in scene";
             HasSelection = false;
             return;
@@ -87,8 +87,8 @@ public sealed partial class SceneHierarchyViewModel : ViewModelBase
         foreach (EditorGameObject root in scene.RootGameObjects)
             FlattenInto(root, depth: 0, filtering, ref total);
 
-        CountText  = total == 1 ? "1 entity"          : $"{total} entities";
-        StatusText = total == 1 ? "1 object in scene"  : $"{total} objects in scene";
+        CountText = total == 1 ? "1 entity" : $"{total} entities";
+        StatusText = total == 1 ? "1 object in scene" : $"{total} objects in scene";
 
         SyncSelection(Context.SelectedObject);
     }

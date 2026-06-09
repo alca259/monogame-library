@@ -48,9 +48,9 @@ public sealed partial class NewProjectViewModel : DialogViewModel<NewProjectResu
     [RelayCommand]
     private void Submit()
     {
-        string name   = ProjectName?.Trim() ?? string.Empty;
-        string parent = ParentPath?.Trim()  ?? string.Empty;
-        string csproj = GameCsproj?.Trim()   ?? string.Empty;
+        string name = ProjectName?.Trim() ?? string.Empty;
+        string parent = ParentPath?.Trim() ?? string.Empty;
+        string csproj = GameCsproj?.Trim() ?? string.Empty;
 
         if (string.IsNullOrEmpty(name))
         {

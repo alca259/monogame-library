@@ -7,13 +7,13 @@ namespace MonoGame.Editor.Core.Commands;
 public sealed class GenerateSceneCodeCommand : IEditorCommand
 {
     private readonly ICodeGenService _service;
-    private readonly EditorScene     _scene;
-    private readonly EditorProject   _project;
+    private readonly EditorScene _scene;
+    private readonly EditorProject _project;
     private readonly ProjectSettings _settings;
 
-    private string?  _backupContent;
-    private bool     _wasNew;
-    private string   _outputPath = string.Empty;
+    private string? _backupContent;
+    private bool _wasNew;
+    private string _outputPath = string.Empty;
 
     /// <param name="service">Servicio de generación de código a invocar.</param>
     /// <param name="scene">Escena para la que se generará el código.</param>
@@ -21,13 +21,13 @@ public sealed class GenerateSceneCodeCommand : IEditorCommand
     /// <param name="settings">Configuración del proyecto que contiene el espacio de nombres y la carpeta de salida.</param>
     public GenerateSceneCodeCommand(
         ICodeGenService service,
-        EditorScene     scene,
-        EditorProject   project,
+        EditorScene scene,
+        EditorProject project,
         ProjectSettings settings)
     {
-        _service  = service;
-        _scene    = scene;
-        _project  = project;
+        _service = service;
+        _scene = scene;
+        _project = project;
         _settings = settings;
     }
 
@@ -42,12 +42,12 @@ public sealed class GenerateSceneCodeCommand : IEditorCommand
         if (File.Exists(_outputPath))
         {
             _backupContent = File.ReadAllText(_outputPath);
-            _wasNew        = false;
+            _wasNew = false;
         }
         else
         {
             _backupContent = null;
-            _wasNew        = true;
+            _wasNew = true;
         }
 
         // Bloquear hasta que la generación finalice — aceptable para una acción explícita del usuario

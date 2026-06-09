@@ -1,6 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 
 namespace MonoGame.Editor.Maui.ViewModels.Panels;
 
@@ -40,9 +40,9 @@ public sealed partial class ConsolePanelViewModel : ViewModelBase
         string prefix = e.Entry.Level switch
         {
             LogLevel.Warning => "[WARN] ",
-            LogLevel.Error   => "[ERR]  ",
-            LogLevel.Debug   => "[DBG]  ",
-            _                => "[INFO] "
+            LogLevel.Error => "[ERR]  ",
+            LogLevel.Debug => "[DBG]  ",
+            _ => "[INFO] "
         };
 
         string line = $"{e.Entry.Timestamp:HH:mm:ss} {prefix}{e.Entry.Message}";
@@ -51,8 +51,8 @@ public sealed partial class ConsolePanelViewModel : ViewModelBase
         bool show = e.Entry.Level switch
         {
             LogLevel.Warning => ShowWarn,
-            LogLevel.Error   => ShowError,
-            _                => ShowInfo
+            LogLevel.Error => ShowError,
+            _ => ShowInfo
         };
 
         if (show) VisibleEntries.Add(line);
@@ -112,11 +112,11 @@ public sealed partial class ConsolePanelViewModel : ViewModelBase
         VisibleEntries.Clear();
         foreach (string entry in _allEntries)
         {
-            bool isWarn  = entry.Contains("[WARN]");
+            bool isWarn = entry.Contains("[WARN]");
             bool isError = entry.Contains("[ERR]");
 
             bool show = (isError && ShowError)
-                     || (isWarn  && ShowWarn)
+                     || (isWarn && ShowWarn)
                      || (!isError && !isWarn && ShowInfo);
 
             if (show) VisibleEntries.Add(entry);

@@ -85,7 +85,7 @@ public static class ProjectManager
                 return null;
 
             string gameCsprojAbs = ResolveAbsolutePath(projectPath, data.GameCsprojPath);
-            string solutionAbs   = ResolveAbsolutePath(projectPath, data.SolutionPath);
+            string solutionAbs = ResolveAbsolutePath(projectPath, data.SolutionPath);
 
             return new EditorProject(
                 data.Name,
@@ -264,12 +264,12 @@ public static class ProjectManager
 
         ProjectFileData data = new()
         {
-            Name             = project.Name,
-            BaseNamespace    = project.BaseNamespace,
-            EngineVersion    = "3.8.4",
-            SolutionPath     = solutionRelative,
-            GameCsprojPath   = gameCsprojRelative,
-            ContentPath      = Path.GetRelativePath(baseForPaths, project.ContentPath),
+            Name = project.Name,
+            BaseNamespace = project.BaseNamespace,
+            EngineVersion = "3.8.4",
+            SolutionPath = solutionRelative,
+            GameCsprojPath = gameCsprojRelative,
+            ContentPath = Path.GetRelativePath(baseForPaths, project.ContentPath),
             LocalizationPath = Path.GetRelativePath(baseForPaths, project.LocalizationPath),
         };
 

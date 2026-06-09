@@ -24,11 +24,11 @@ public static class MgcbRunner
 
         ProcessStartInfo psi = new("dotnet", $"mgcb \"{mgcbFilePath}\"")
         {
-            UseShellExecute        = false,
+            UseShellExecute = false,
             RedirectStandardOutput = true,
-            RedirectStandardError  = true,
-            CreateNoWindow         = true,
-            WorkingDirectory       = workingDir,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+            WorkingDirectory = workingDir,
         };
 
         using Process process = new() { StartInfo = psi, EnableRaisingEvents = true };
@@ -74,11 +74,11 @@ public static class MgcbRunner
 
         ProcessStartInfo psi = new("dotnet", args)
         {
-            UseShellExecute        = false,
+            UseShellExecute = false,
             RedirectStandardOutput = true,
-            RedirectStandardError  = true,
-            CreateNoWindow         = true,
-            WorkingDirectory       = workingDir,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+            WorkingDirectory = workingDir,
         };
 
         using Process process = new() { StartInfo = psi, EnableRaisingEvents = true };

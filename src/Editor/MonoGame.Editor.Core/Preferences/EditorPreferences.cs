@@ -141,9 +141,9 @@ public sealed class EditorPreferences
             ScriptsBrowserVisible = loaded.ScriptsBrowserVisible;
             LastProjectPath = loaded.LastProjectPath;
             AssetBrowserSplitterDistance = loaded.AssetBrowserSplitterDistance;
-            GridCellSize         = loaded.GridCellSize;
-            SnapRotationDegrees  = loaded.SnapRotationDegrees;
-            SnapScaleStep        = loaded.SnapScaleStep;
+            GridCellSize = loaded.GridCellSize;
+            SnapRotationDegrees = loaded.SnapRotationDegrees;
+            SnapScaleStep = loaded.SnapScaleStep;
             BehaviourSectionCollapsed.Clear();
             foreach (System.Collections.Generic.KeyValuePair<string, bool> kv in loaded.BehaviourSectionCollapsed)
                 BehaviourSectionCollapsed[kv.Key] = kv.Value;

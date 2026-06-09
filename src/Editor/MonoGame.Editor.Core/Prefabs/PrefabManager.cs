@@ -61,17 +61,17 @@ public sealed class PrefabManager : IPrefabProvider
     {
         EditorGameObject copy = new()
         {
-            Name       = source.Name,
-            Active     = source.Active,
-            Position   = source.Position,
-            Rotation   = source.Rotation,
-            Scale      = source.Scale,
+            Name = source.Name,
+            Active = source.Active,
+            Position = source.Position,
+            Rotation = source.Rotation,
+            Scale = source.Scale,
             PrefabPath = source.PrefabPath,
         };
 
         for (int i = 0; i < source.Behaviours.Count; i++)
         {
-            EditorBehaviour b    = source.Behaviours[i];
+            EditorBehaviour b = source.Behaviours[i];
             EditorBehaviour bCopy = new() { TypeName = b.TypeName, Enabled = b.Enabled };
             foreach (System.Collections.Generic.KeyValuePair<string, System.Text.Json.JsonElement> kv in b.Properties)
                 bCopy.Properties[kv.Key] = kv.Value;

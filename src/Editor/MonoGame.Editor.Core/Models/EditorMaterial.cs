@@ -72,37 +72,37 @@ public sealed class EditorMaterial
     {
         var mat = new EditorMaterial
         {
-            Name          = name,
-            ShaderPath    = "Shaders/StandardEffect",
+            Name = name,
+            ShaderPath = "Shaders/StandardEffect",
             RenderingMode = "Opaque",
-            UVSet         = 0,
+            UVSet = 0,
         };
 
         // Main maps
         mat.SetTexture2D("AlbedoTexture");
-        mat.SetColor("AlbedoColor",           [1f, 1f, 1f, 1f]);
+        mat.SetColor("AlbedoColor", [1f, 1f, 1f, 1f]);
         mat.SetTexture2D("MetallicTexture");
-        mat.SetFloat("Metallic",              0f);
-        mat.SetFloat("Smoothness",            0.5f);
+        mat.SetFloat("Metallic", 0f);
+        mat.SetFloat("Smoothness", 0.5f);
         mat.SetTexture2D("NormalTexture");
-        mat.SetFloat("NormalScale",           1f);
+        mat.SetFloat("NormalScale", 1f);
         mat.SetTexture2D("HeightTexture");
-        mat.SetFloat("HeightScale",           0.02f);
+        mat.SetFloat("HeightScale", 0.02f);
         mat.SetTexture2D("OcclusionTexture");
-        mat.SetFloat("OcclusionStrength",     1f);
+        mat.SetFloat("OcclusionStrength", 1f);
         mat.SetTexture2D("EmissionTexture");
-        mat.SetColor("EmissionColor",         [0f, 0f, 0f, 0f]);
-        mat.SetFloat("EmissionIntensity",     0f);
+        mat.SetColor("EmissionColor", [0f, 0f, 0f, 0f]);
+        mat.SetFloat("EmissionIntensity", 0f);
         mat.SetTexture2D("DetailMaskTexture");
-        mat.SetVector2("Tiling",              [1f, 1f]);
-        mat.SetVector2("Offset",              [0f, 0f]);
+        mat.SetVector2("Tiling", [1f, 1f]);
+        mat.SetVector2("Offset", [0f, 0f]);
 
         // Secondary maps
         mat.SetTexture2D("DetailAlbedoTexture");
         mat.SetTexture2D("DetailNormalTexture");
-        mat.SetFloat("DetailNormalScale",     1f);
-        mat.SetVector2("DetailTiling",        [1f, 1f]);
-        mat.SetVector2("DetailOffset",        [0f, 0f]);
+        mat.SetFloat("DetailNormalScale", 1f);
+        mat.SetVector2("DetailTiling", [1f, 1f]);
+        mat.SetVector2("DetailOffset", [0f, 0f]);
 
         return mat;
     }
@@ -112,7 +112,7 @@ public sealed class EditorMaterial
     {
         var mat = new EditorMaterial
         {
-            Name       = name,
+            Name = name,
             ShaderPath = "Shaders/SpriteTint",
         };
         mat.SetColor("TintColor", [1f, 1f, 1f, 1f]);
@@ -125,7 +125,7 @@ public sealed class EditorMaterial
     {
         var mat = new EditorMaterial
         {
-            Name       = name,
+            Name = name,
             ShaderPath = "Shaders/Grayscale",
         };
         mat.SetFloat("Intensity", 1f);
@@ -137,7 +137,7 @@ public sealed class EditorMaterial
     {
         var mat = new EditorMaterial
         {
-            Name       = name,
+            Name = name,
             ShaderPath = "Shaders/Vignette",
         };
         mat.SetFloat("Intensity", 1f);
@@ -173,8 +173,8 @@ public sealed class EditorMaterial
     private void SetTexture2D(string key) =>
         Properties[key] = new EditorMaterialProperty
         {
-            Name        = key,
-            Type        = EditorMaterialPropertyType.Texture2D,
+            Name = key,
+            Type = EditorMaterialPropertyType.Texture2D,
             TexturePath = string.Empty,
         };
 }

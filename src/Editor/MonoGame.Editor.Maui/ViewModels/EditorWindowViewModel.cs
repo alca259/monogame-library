@@ -15,20 +15,20 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     #region Colors
 
     private static readonly Color BuildSuccessColor = Color.FromArgb("#46C66A");
-    private static readonly Color BuildErrorColor   = Colors.White;
-    private static readonly Color BuildErrorBg      = Color.FromArgb("#C73E3E");
-    private static readonly Color BuildNormalBg     = Color.FromArgb("#252528");
-    private static readonly Color StatusDimColor    = Color.FromArgb("#9A9AA2");
-    private static readonly Color StopActiveBg      = Color.FromArgb("#E5484D");
-    private static readonly Color StopInactiveBg    = Color.FromArgb("#252528");
-    private static readonly Color StopActiveFg       = Colors.White;
-    private static readonly Color StopInactiveFg     = Color.FromArgb("#6A6A72");
+    private static readonly Color BuildErrorColor = Colors.White;
+    private static readonly Color BuildErrorBg = Color.FromArgb("#C73E3E");
+    private static readonly Color BuildNormalBg = Color.FromArgb("#252528");
+    private static readonly Color StatusDimColor = Color.FromArgb("#9A9AA2");
+    private static readonly Color StopActiveBg = Color.FromArgb("#E5484D");
+    private static readonly Color StopInactiveBg = Color.FromArgb("#252528");
+    private static readonly Color StopActiveFg = Colors.White;
+    private static readonly Color StopInactiveFg = Color.FromArgb("#6A6A72");
 
     #endregion
 
     #region Fields
 
-    private readonly EditorPreferences   _preferences      = new();
+    private readonly EditorPreferences _preferences = new();
     private readonly ExternalPlayLauncher _externalLauncher = new();
     private bool _playPendingAfterBuild;
 
@@ -118,22 +118,22 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
 
     private void OnEditorStateChanged(EditorStateChangedEvent e)
     {
-        bool playing  = e.NewState is EditorState.Playing;
+        bool playing = e.NewState is EditorState.Playing;
         bool hasScene = Context.ActiveScene is not null;
 
-        CanPlay      = !playing && hasScene;
-        CanStop      = playing;
+        CanPlay = !playing && hasScene;
+        CanStop = playing;
         ToolsEnabled = !playing;
 
         if (playing)
         {
-            StopActive     = true;
+            StopActive = true;
             StopBackground = StopActiveBg;
             StopForeground = StopActiveFg;
         }
         else
         {
-            StopActive     = false;
+            StopActive = false;
             StopBackground = StopInactiveBg;
             StopForeground = StopInactiveFg;
             Bus.Publish(new FpsUpdatedEvent(0));
@@ -148,7 +148,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
         UpdateTitle();
         ViewportInvalidateRequested?.Invoke();
 
-        bool hasScene  = e.Scene is not null;
+        bool hasScene = e.Scene is not null;
         bool isPlaying = Context.State is EditorState.Playing;
         CanPlay = hasScene && !isPlaying;
 
@@ -163,15 +163,15 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
 
         if (line.Contains("Build succeeded", StringComparison.OrdinalIgnoreCase))
         {
-            BuildStatusText       = "Build succeeded";
-            BuildStatusColor      = BuildSuccessColor;
+            BuildStatusText = "Build succeeded";
+            BuildStatusColor = BuildSuccessColor;
             BuildStatusBackground = BuildNormalBg;
         }
         else if (line.Contains("Build FAILED", StringComparison.OrdinalIgnoreCase)
               || (e.IsError && line.Contains("error", StringComparison.OrdinalIgnoreCase)))
         {
-            BuildStatusText       = "Build failed";
-            BuildStatusColor      = BuildErrorColor;
+            BuildStatusText = "Build failed";
+            BuildStatusColor = BuildErrorColor;
             BuildStatusBackground = BuildErrorBg;
         }
     }
@@ -179,12 +179,12 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     private void UpdateTitle()
     {
         EditorProject? project = Context.ActiveProject;
-        EditorScene?   scene   = Context.ActiveScene;
-        bool           dirty   = Context.IsSceneDirty;
+        EditorScene? scene = Context.ActiveScene;
+        bool dirty = Context.IsSceneDirty;
 
         string projectPart = project?.Name ?? "No Project";
-        string scenePart   = scene?.Name   ?? "No Scene";
-        string dirtyMark   = dirty ? " ●" : string.Empty;
+        string scenePart = scene?.Name ?? "No Scene";
+        string dirtyMark = dirty ? " ●" : string.Empty;
 
         Title = $"MonoGame Editor — {projectPart} — {scenePart}{dirtyMark}";
     }
@@ -343,7 +343,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
 
         EditorScene scene = new()
         {
-            Name      = result.SceneName,
+            Name = result.SceneName,
             WorldSize = new EditorVector2(result.WorldWidth, result.WorldHeight),
         };
 
@@ -352,7 +352,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
             Directory.CreateDirectory(project.ScenesPath);
             string safeName = string.Concat(scene.Name.Split(Path.GetInvalidFileNameChars()));
             string scenePath = Path.Combine(project.ScenesPath, safeName + ".scene.json");
-            scene.ScenePath  = scenePath;
+            scene.ScenePath = scenePath;
             try
             {
                 await SceneSerializer.SaveAsync(scene, scenePath).ConfigureAwait(true);
@@ -371,7 +371,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     [RelayCommand]
     public async Task SaveSceneAsync()
     {
-        EditorScene?   scene   = Context.ActiveScene;
+        EditorScene? scene = Context.ActiveScene;
         EditorProject? project = Context.ActiveProject;
         if (scene is null) return;
 
@@ -386,7 +386,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
         {
             await SceneSerializer.SaveAsync(scene, scenePath).ConfigureAwait(true);
             Context.MarkSceneClean();
-            BuildStatusText  = "Saved";
+            BuildStatusText = "Saved";
             BuildStatusColor = BuildSuccessColor;
             Log($"[Save] Scene saved to {scenePath}");
 
@@ -402,7 +402,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     [RelayCommand]
     public async Task SaveSceneAsAsync()
     {
-        EditorScene?   scene   = Context.ActiveScene;
+        EditorScene? scene = Context.ActiveScene;
         EditorProject? project = Context.ActiveProject;
         if (scene is null) return;
 
@@ -414,7 +414,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
                 path += ".scene.json";
 
             scene.ScenePath = path;
-            scene.Name      = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(path));
+            scene.Name = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(path));
 
             await SceneSerializer.SaveAsync(scene, path).ConfigureAwait(true);
             Context.MarkSceneClean();
@@ -461,8 +461,8 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     [RelayCommand]
     public void DeleteSelected()
     {
-        EditorGameObject? obj   = Context.SelectedObject;
-        EditorScene?      scene = Context.ActiveScene;
+        EditorGameObject? obj = Context.SelectedObject;
+        EditorScene? scene = Context.ActiveScene;
         if (obj is null || scene is null) return;
         Context.Commands.Execute(new DeleteEntityCommand(obj, scene));
     }
@@ -470,8 +470,8 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     [RelayCommand]
     private void DuplicateSelected()
     {
-        EditorGameObject? obj   = Context.SelectedObject;
-        EditorScene?      scene = Context.ActiveScene;
+        EditorGameObject? obj = Context.SelectedObject;
+        EditorScene? scene = Context.ActiveScene;
         if (obj is null || scene is null) return;
         Context.Commands.Execute(new DuplicateEntityCommand(obj, scene));
     }
@@ -497,8 +497,8 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     [RelayCommand]
     private void Cut()
     {
-        EditorGameObject? obj   = Context.SelectedObject;
-        EditorScene?      scene = Context.ActiveScene;
+        EditorGameObject? obj = Context.SelectedObject;
+        EditorScene? scene = Context.ActiveScene;
         if (obj is null || scene is null) return;
         Context.SetClipboard(DuplicateEntityCommand.DeepClone(obj, null));
         Context.Commands.Execute(new DeleteEntityCommand(obj, scene));
@@ -508,10 +508,10 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     private void Paste()
     {
         EditorGameObject? clipboard = Context.ClipboardEntity;
-        EditorScene?      scene     = Context.ActiveScene;
+        EditorScene? scene = Context.ActiveScene;
         if (clipboard is null || scene is null) return;
         EditorGameObject? parent = Context.SelectedObject;
-        EditorGameObject  clone  = DuplicateEntityCommand.DeepClone(clipboard, parent);
+        EditorGameObject clone = DuplicateEntityCommand.DeepClone(clipboard, parent);
         Context.Commands.Execute(new CreateEntityCommand(clone, scene, parent));
     }
 
@@ -553,8 +553,8 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
             Log($"[Build] Created empty Content.mgcb at: {mgcbFile}", LogLevel.Info);
         }
 
-        BuildStatusText       = "Building content…";
-        BuildStatusColor      = StatusDimColor;
+        BuildStatusText = "Building content…";
+        BuildStatusColor = StatusDimColor;
         BuildStatusBackground = BuildNormalBg;
 
         int exit = await MgcbRunner.RunAsync(mgcbFile, line =>
@@ -594,7 +594,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
                 Log($"[Build] CodeGen OK: {Path.GetFileName(genResult.OutputPath)}", LogLevel.Info);
         }
 
-        BuildStatusText  = "Building solution…";
+        BuildStatusText = "Building solution…";
         BuildStatusColor = StatusDimColor;
 
         int exit = await MgcbRunner.RunDotnetBuildAsync(csproj, settings.BuildConfiguration, line =>
@@ -609,7 +609,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     [RelayCommand]
     public async Task GenerateCodeAsync()
     {
-        EditorScene?   scene   = Context.ActiveScene;
+        EditorScene? scene = Context.ActiveScene;
         EditorProject? project = Context.ActiveProject;
         if (scene is null || project is null) return;
         if (DialogService.Navigation is not { } navigation) return;
@@ -658,9 +658,9 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
 
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                FileName         = exePath,
+                FileName = exePath,
                 WorkingDirectory = dir,
-                UseShellExecute  = true,
+                UseShellExecute = true,
             });
             return;
         }
@@ -700,11 +700,11 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
         ActiveTool = tool ?? "Select";
         Context.Gizmos.Mode = ActiveTool switch
         {
-            "Move"   => GizmoMode.Move,
+            "Move" => GizmoMode.Move,
             "Rotate" => GizmoMode.Rotate,
-            "Scale"  => GizmoMode.Scale,
-            "Rect"   => GizmoMode.Rect,
-            _        => GizmoMode.Select,
+            "Scale" => GizmoMode.Scale,
+            "Rect" => GizmoMode.Rect,
+            _ => GizmoMode.Select,
         };
         ViewportInvalidateRequested?.Invoke();
     }
@@ -732,7 +732,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
         if (Context.State is EditorState.Playing) return;
         if (_playPendingAfterBuild) return;
 
-        EditorScene?   scene   = Context.ActiveScene;
+        EditorScene? scene = Context.ActiveScene;
         EditorProject? project = Context.ActiveProject;
         if (scene is null) return;
 
@@ -747,7 +747,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
 
             Log("[Play] Executable not found. Building solution first...");
             _playPendingAfterBuild = true;
-            CanPlay        = false;
+            CanPlay = false;
             PlayButtonText = "⏳";
             _ = BuildSolutionAsync();
             return;
@@ -775,7 +775,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
 
     private static string? FindGameExe(EditorProject project)
     {
-        string dir     = Path.GetDirectoryName(project.GameCsprojPath) ?? string.Empty;
+        string dir = Path.GetDirectoryName(project.GameCsprojPath) ?? string.Empty;
         string exeName = Path.GetFileNameWithoutExtension(project.GameCsprojPath) + ".exe";
         string[] search =
         [
@@ -829,7 +829,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
             return;
         }
 
-        EditorScene?   scene   = Context.ActiveScene;
+        EditorScene? scene = Context.ActiveScene;
         EditorProject? project = Context.ActiveProject;
         if (scene is null || project is null) return;
 

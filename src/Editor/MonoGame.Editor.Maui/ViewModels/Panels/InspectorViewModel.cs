@@ -62,7 +62,7 @@ public sealed partial class InspectorViewModel : ViewModelBase
         HasSelection = Selected is not null;
         if (Selected is not null)
         {
-            ObjectName    = Selected.Name;
+            ObjectName = Selected.Name;
             ObjectIdShort = Selected.Id.ToString()[..8];
         }
         RefreshRequested?.Invoke();
@@ -177,9 +177,9 @@ public sealed partial class InspectorViewModel : ViewModelBase
             List<Task> tasks = [];
             foreach (string csproj in csprojFiles)
             {
-                string dir     = Path.GetDirectoryName(csproj) ?? string.Empty;
+                string dir = Path.GetDirectoryName(csproj) ?? string.Empty;
                 string dllName = Path.GetFileNameWithoutExtension(csproj) + ".dll";
-                string binDir  = Path.Combine(dir, "bin", settings.BuildConfiguration);
+                string binDir = Path.Combine(dir, "bin", settings.BuildConfiguration);
                 if (!Directory.Exists(binDir)) continue;
 
                 string? dllPath = Directory.GetFiles(binDir, dllName, SearchOption.AllDirectories).FirstOrDefault();

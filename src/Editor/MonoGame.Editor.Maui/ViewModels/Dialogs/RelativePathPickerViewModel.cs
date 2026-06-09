@@ -1,6 +1,6 @@
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 
 namespace MonoGame.Editor.Maui.ViewModels.Dialogs;
 
@@ -51,7 +51,7 @@ public sealed partial class RelativePathPickerViewModel : DialogViewModel<string
                            string[]? extensions = null, string title = "Select Path")
     {
         _baseFolder = baseFolder;
-        _filesMode  = filesMode;
+        _filesMode = filesMode;
         _extensions = extensions is { Length: > 0 }
             ? new HashSet<string>(extensions, StringComparer.OrdinalIgnoreCase)
             : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -73,13 +73,13 @@ public sealed partial class RelativePathPickerViewModel : DialogViewModel<string
 
             if (!_filesMode)
             {
-                _selectedPath       = value.FullPath;
+                _selectedPath = value.FullPath;
                 CurrentRelativePath = Path.GetRelativePath(_baseFolder, value.FullPath);
             }
             else
             {
                 // En modo fichero los directorios no son seleccionables
-                _selectedPath       = null;
+                _selectedPath = null;
                 CurrentRelativePath = string.Empty;
             }
 
@@ -88,7 +88,7 @@ public sealed partial class RelativePathPickerViewModel : DialogViewModel<string
         }
 
         // Nodo fichero — solo alcanzable cuando _filesMode == true
-        _selectedPath       = value.FullPath;
+        _selectedPath = value.FullPath;
         CurrentRelativePath = Path.GetRelativePath(_baseFolder, value.FullPath);
     }
 
@@ -142,7 +142,7 @@ public sealed partial class RelativePathPickerViewModel : DialogViewModel<string
             SelectedNode = toSelect;
         else
         {
-            _selectedPath       = null;
+            _selectedPath = null;
             CurrentRelativePath = string.Empty;
         }
     }
@@ -167,7 +167,7 @@ public sealed partial class RelativePathPickerViewModel : DialogViewModel<string
 
         foreach (string dir in subdirs)
         {
-            bool expanded    = _expandedPaths.Contains(dir);
+            bool expanded = _expandedPaths.Contains(dir);
             bool hasChildren = HasVisibleChildren(dir);
             Nodes.Add(new FileSystemNode(Path.GetFileName(dir), dir, true, depth, expanded, hasChildren));
             if (expanded)

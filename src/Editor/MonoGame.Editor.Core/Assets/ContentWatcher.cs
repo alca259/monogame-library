@@ -35,8 +35,8 @@ public sealed class ContentWatcher : IDisposable
         _watcher = new FileSystemWatcher(contentPath)
         {
             IncludeSubdirectories = true,
-            NotifyFilter         = NotifyFilters.FileName | NotifyFilters.LastWrite,
-            EnableRaisingEvents  = true,
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
+            EnableRaisingEvents = true,
         };
         _watcher.Created += OnFileEvent;
         _watcher.Changed += OnFileEvent;
@@ -54,8 +54,8 @@ public sealed class ContentWatcher : IDisposable
         _watcher.Changed -= OnFileEvent;
         _watcher.Renamed -= OnFileRenamed;
         _watcher.Dispose();
-        _watcher   = null;
-        _rootPath  = string.Empty;
+        _watcher = null;
+        _rootPath = string.Empty;
     }
 
     private void OnFileEvent(object sender, FileSystemEventArgs e)
