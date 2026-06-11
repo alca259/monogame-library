@@ -9,7 +9,7 @@ namespace Alca.MonoGame.Kernel.UnitTests.Audio;
 public sealed class SpatialAudioSourceTests
 {
     private static GameWorld CreateWorld()
-        => new GameWorld { AudioController = new AudioController() };
+        => new GameWorld { AudioController = new AudioController(new AudioMixer()) };
 
     [Fact]
     public void DefaultSound_IsNull()
