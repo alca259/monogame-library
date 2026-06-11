@@ -1,3 +1,5 @@
+using Alca.MonoGame.Kernel.Audio.Mixer;
+
 namespace Alca.MonoGame.Kernel.Weather;
 
 /// <summary>
@@ -67,7 +69,7 @@ public sealed class WeatherWorld
     public Audio.AudioController? AudioController { get; set; }
 
     /// <summary>Gets or sets the audio mixer used for channel-based volume routing.</summary>
-    public Audio.AudioMixer? AudioMixer { get; set; }
+    public AudioMixer? AudioMixer { get; set; }
 
     /// <summary>
     /// Gets or sets the scale factor converting km/h to world units per second.

@@ -1,3 +1,5 @@
+using Alca.MonoGame.Kernel.Audio.Mixer;
+
 namespace Alca.MonoGame.Kernel.ECS;
 
 /// <summary>Owns all entities and drives the ECS loop. Equivalent to Unity's Scene.</summary>
@@ -50,8 +52,8 @@ public sealed class GameWorld
     public Navigation.AsyncPathfinder? AsyncPathfinder { get; set; }
 
     /// <summary>
-    /// Gets or sets the audio controller used by <see cref="Audio.SpatialAudioSource"/> and
-    /// <see cref="Audio.SpatialAudioListener"/> components in this world.
+    /// Gets or sets the audio controller used by <see cref="Audio.Spatial.SpatialAudioSourceBehaviour"/> and
+    /// <see cref="Audio.Spatial.SpatialAudioListenerBehaviour"/> components in this world.
     /// Optional — omit for projects that do not use 3D spatial audio.
     /// </summary>
     public Audio.AudioController? AudioController { get; set; }
@@ -60,7 +62,7 @@ public sealed class GameWorld
     /// Gets or sets the audio mixer for channel-based volume routing used by audio components.
     /// Optional — omit for projects that do not use audio mixing.
     /// </summary>
-    public Audio.AudioMixer? AudioMixer { get; set; }
+    public AudioMixer? AudioMixer { get; set; }
 
     /// <summary>
     /// Gets or sets the network server for this world. Set by <see cref="Network.NetworkManagerBehaviour"/>

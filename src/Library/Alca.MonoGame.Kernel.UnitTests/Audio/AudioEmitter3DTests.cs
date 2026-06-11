@@ -1,4 +1,4 @@
-using Alca.MonoGame.Kernel.Audio;
+using Alca.MonoGame.Kernel.Audio.Spatial;
 
 namespace Alca.MonoGame.Kernel.UnitTests.Audio;
 

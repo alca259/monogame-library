@@ -1,4 +1,4 @@
-namespace Alca.MonoGame.Kernel.Audio;
+namespace Alca.MonoGame.Kernel.Audio.Utilities;
 
 /// <summary>Pre-allocated pool of SoundEffectInstances that rotates round-robin to avoid InstancePlayLimitException.</summary>
 public sealed class SoundEffectPool : IDisposable

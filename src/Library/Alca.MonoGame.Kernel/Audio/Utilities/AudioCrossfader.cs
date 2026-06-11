@@ -1,4 +1,4 @@
-namespace Alca.MonoGame.Kernel.Audio;
+namespace Alca.MonoGame.Kernel.Audio.Utilities;
 
 /// <summary>
 /// Smoothly transitions between two audio tracks using a linear crossfade.

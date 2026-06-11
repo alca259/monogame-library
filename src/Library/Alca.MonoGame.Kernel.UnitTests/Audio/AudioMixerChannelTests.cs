@@ -1,4 +1,4 @@
-using Alca.MonoGame.Kernel.Audio;
+using Alca.MonoGame.Kernel.Audio.Mixer;
 
 namespace Alca.MonoGame.Kernel.UnitTests.Audio;
 

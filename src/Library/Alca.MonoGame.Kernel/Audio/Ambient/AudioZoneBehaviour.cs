@@ -1,13 +1,18 @@
+using Alca.MonoGame.Kernel.Audio.Mixer;
 using Alca.MonoGame.Kernel.ECS;
 
-namespace Alca.MonoGame.Kernel.Audio;
+namespace Alca.MonoGame.Kernel.Audio.Ambient;
 
 /// <summary>
 /// GameBehaviour that defines a spherical audio zone for ambient sounds.
 /// All three axes (X, Y, Z) are used to compute distance from the listener.
 /// When the listener enters the zone the sound fades in; when it exits, it fades out.
 /// </summary>
-public sealed class AudioZone : GameBehaviour
+/// <example>
+/// - Una hoguera que crepita, o una cascada en un río.
+/// - Música ambiente de mapa.
+/// </example>
+public sealed class AudioZoneBehaviour : GameBehaviour
 {
     private AudioController? _controller;
     private SoundEffectInstance? _instance;

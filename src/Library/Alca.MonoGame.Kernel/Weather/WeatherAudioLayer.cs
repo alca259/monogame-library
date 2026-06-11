@@ -1,3 +1,6 @@
+using Alca.MonoGame.Kernel.Audio.Mixer;
+using Alca.MonoGame.Kernel.Audio.Spatial;
+
 namespace Alca.MonoGame.Kernel.Weather;
 
 /// <summary>
@@ -15,7 +18,7 @@ public sealed class WeatherAudioLayer : IDisposable
     private SoundEffectInstance? _thunderInstance;
     private SoundEffectInstance[]? _strikePool;
     private int _strikePoolIndex;
-    private readonly Audio.AudioEmitter3D _strikeEmitter = new();
+    private readonly AudioEmitter3D _strikeEmitter = new();
 
     private float _currentRainVolume;
     private float _currentWindVolume;
@@ -29,7 +32,7 @@ public sealed class WeatherAudioLayer : IDisposable
     public float FadeSpeed { get; set; } = 1f;
 
     /// <summary>Gets or sets the mixer channel all weather audio is routed through. Null means no channel routing.</summary>
-    public Audio.AudioMixerChannel? Channel { get; set; }
+    public AudioMixerChannel? Channel { get; set; }
 
     // ── Content loading ───────────────────────────────────────────────────────
 

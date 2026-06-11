@@ -1,4 +1,6 @@
 using Alca.MonoGame.Kernel.Audio;
+using Alca.MonoGame.Kernel.Audio.Mixer;
+using Alca.MonoGame.Kernel.Audio.Spatial;
 using Alca.MonoGame.Kernel.ECS;
 using Microsoft.Xna.Framework.Audio;
 
@@ -14,7 +16,7 @@ public sealed class SpatialAudioSourceTests
     {
         GameWorld world = CreateWorld();
         GameEntity entity = world.CreateEntity("emitter");
-        SpatialAudioSource source = entity.AddComponent<SpatialAudioSource>();
+        SpatialAudioSourceBehaviour source = entity.AddComponent<SpatialAudioSourceBehaviour>();
 
         Assert.Null(source.Sound);
     }
@@ -24,7 +26,7 @@ public sealed class SpatialAudioSourceTests
     {
         GameWorld world = CreateWorld();
         GameEntity entity = world.CreateEntity("emitter");
-        SpatialAudioSource source = entity.AddComponent<SpatialAudioSource>();
+        SpatialAudioSourceBehaviour source = entity.AddComponent<SpatialAudioSourceBehaviour>();
 
         Assert.Equal(1f, source.Volume);
     }
@@ -34,7 +36,7 @@ public sealed class SpatialAudioSourceTests
     {
         GameWorld world = CreateWorld();
         GameEntity entity = world.CreateEntity("emitter");
-        SpatialAudioSource source = entity.AddComponent<SpatialAudioSource>();
+        SpatialAudioSourceBehaviour source = entity.AddComponent<SpatialAudioSourceBehaviour>();
 
         Assert.Equal(0f, source.Pitch);
     }
@@ -44,7 +46,7 @@ public sealed class SpatialAudioSourceTests
     {
         GameWorld world = CreateWorld();
         GameEntity entity = world.CreateEntity("emitter");
-        SpatialAudioSource source = entity.AddComponent<SpatialAudioSource>();
+        SpatialAudioSourceBehaviour source = entity.AddComponent<SpatialAudioSourceBehaviour>();
 
         Assert.False(source.Loop);
     }
@@ -54,7 +56,7 @@ public sealed class SpatialAudioSourceTests
     {
         GameWorld world = CreateWorld();
         GameEntity entity = world.CreateEntity("emitter");
-        SpatialAudioSource source = entity.AddComponent<SpatialAudioSource>();
+        SpatialAudioSourceBehaviour source = entity.AddComponent<SpatialAudioSourceBehaviour>();
 
         Assert.False(source.PlayOnAwake);
     }
@@ -64,7 +66,7 @@ public sealed class SpatialAudioSourceTests
     {
         GameWorld world = CreateWorld();
         GameEntity entity = world.CreateEntity("emitter");
-        SpatialAudioSource source = entity.AddComponent<SpatialAudioSource>();
+        SpatialAudioSourceBehaviour source = entity.AddComponent<SpatialAudioSourceBehaviour>();
 
         Assert.Equal(SoundState.Stopped, source.State);
     }
@@ -74,7 +76,7 @@ public sealed class SpatialAudioSourceTests
     {
         GameWorld world = CreateWorld();
         GameEntity entity = world.CreateEntity("emitter");
-        SpatialAudioSource source = entity.AddComponent<SpatialAudioSource>();
+        SpatialAudioSourceBehaviour source = entity.AddComponent<SpatialAudioSourceBehaviour>();
         AudioMixerChannel channel = new("SFX");
 
         source.MixerChannel = channel;
@@ -87,7 +89,7 @@ public sealed class SpatialAudioSourceTests
     {
         GameWorld world = CreateWorld();
         GameEntity entity = world.CreateEntity("emitter");
-        SpatialAudioSource source = entity.AddComponent<SpatialAudioSource>();
+        SpatialAudioSourceBehaviour source = entity.AddComponent<SpatialAudioSourceBehaviour>();
 
         Exception? ex = Record.Exception(() => source.Play());
 
@@ -99,7 +101,7 @@ public sealed class SpatialAudioSourceTests
     {
         GameWorld world = CreateWorld();
         GameEntity entity = world.CreateEntity("emitter");
-        SpatialAudioSource source = entity.AddComponent<SpatialAudioSource>();
+        SpatialAudioSourceBehaviour source = entity.AddComponent<SpatialAudioSourceBehaviour>();
 
         Exception? ex = Record.Exception(() => source.Stop());
 
@@ -112,7 +114,7 @@ public sealed class SpatialAudioSourceTests
         GameWorld world = new GameWorld();
         GameEntity entity = world.CreateEntity("emitter");
 
-        Exception? ex = Record.Exception(() => entity.AddComponent<SpatialAudioSource>());
+        Exception? ex = Record.Exception(() => entity.AddComponent<SpatialAudioSourceBehaviour>());
 
         Assert.Null(ex);
     }

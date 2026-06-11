@@ -1,4 +1,7 @@
-﻿namespace Alca.MonoGame.Kernel.Audio;
+﻿using Alca.MonoGame.Kernel.Audio.Spatial;
+using Alca.MonoGame.Kernel.Audio.Utilities;
+
+namespace Alca.MonoGame.Kernel.Audio;
 
 public sealed class AudioController : IDisposable
 {

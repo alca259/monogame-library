@@ -1,13 +1,19 @@
+using Alca.MonoGame.Kernel.Audio.Mixer;
 using Alca.MonoGame.Kernel.ECS;
 
-namespace Alca.MonoGame.Kernel.Audio;
+namespace Alca.MonoGame.Kernel.Audio.Spatial;
 
 /// <summary>
 /// GameBehaviour that emits 3D spatial audio from the entity's world-space position.
 /// Syncs <see cref="AudioEmitter3D.Position"/> with <see cref="TransformBehaviour.Position"/> (X, Y, Z)
 /// every frame and applies 3D positioning via <see cref="AudioController"/>.
 /// </summary>
-public sealed class SpatialAudioSource : GameBehaviour
+/// <example>
+/// - Un NPC que habla.
+/// - Un disparo.
+/// - Efectos de entidad.
+/// </example>
+public sealed class SpatialAudioSourceBehaviour : GameBehaviour
 {
     private readonly AudioEmitter3D _emitter = new();
     private AudioController? _controller;

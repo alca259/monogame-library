@@ -1,4 +1,4 @@
-namespace Alca.MonoGame.Kernel.Audio;
+namespace Alca.MonoGame.Kernel.Audio.Spatial;
 
 /// <summary>Wraps AudioEmitter and exposes typed Vector3 properties for 3D positional audio emission.</summary>
 public sealed class AudioEmitter3D
