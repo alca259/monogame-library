@@ -32,12 +32,12 @@ public sealed class FillShaderBufferTests
         var world = CreateWorldWithLighting();
 
         var e1 = world.CreateEntity("p1", Vector2.Zero);
-        var l1 = e1.AddComponent<PointLight2D>();
+        var l1 = e1.AddComponent<PointLight2DBehaviour>();
         l1.Range = 100f;
         l1.Intensity = 1f;
 
         var e2 = world.CreateEntity("p2", new Vector2(50f, 0f));
-        var l2 = e2.AddComponent<PointLight2D>();
+        var l2 = e2.AddComponent<PointLight2DBehaviour>();
         l2.Range = 100f;
         l2.Intensity = 1f;
 
@@ -53,13 +53,13 @@ public sealed class FillShaderBufferTests
         var world = CreateWorldWithLighting();
 
         var eWorld = world.CreateEntity("world", Vector2.Zero);
-        var lWorld = eWorld.AddComponent<PointLight2D>();
+        var lWorld = eWorld.AddComponent<PointLight2DBehaviour>();
         lWorld.Range = 100f;
         lWorld.Intensity = 1f;
         lWorld.LightingLayer = LightingLayer.World;
 
         var eUI = world.CreateEntity("ui", Vector2.Zero);
-        var lUI = eUI.AddComponent<PointLight2D>();
+        var lUI = eUI.AddComponent<PointLight2DBehaviour>();
         lUI.Range = 100f;
         lUI.Intensity = 1f;
         lUI.LightingLayer = LightingLayer.UI;
@@ -77,7 +77,7 @@ public sealed class FillShaderBufferTests
         var world = CreateWorldWithLighting();
 
         var entity = world.CreateEntity("light", Vector2.Zero);
-        var light = entity.AddComponent<PointLight2D>();
+        var light = entity.AddComponent<PointLight2DBehaviour>();
         light.Range = 100f;
         light.Intensity = 1f;
 

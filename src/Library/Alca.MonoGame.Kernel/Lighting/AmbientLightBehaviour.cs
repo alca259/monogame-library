@@ -5,7 +5,7 @@ namespace Alca.MonoGame.Kernel.Lighting;
 /// or distance dependency. Use for background ambient such as day sky, night darkness,
 /// or neutral interior lighting.
 /// </summary>
-public sealed class AmbientLight : LightBehaviour
+public sealed class AmbientLightBehaviour : LightBehaviour
 {
     /// <inheritdoc/>
     public override void Contribute(ref LightContribution accumulator, Vector2 worldPosition)

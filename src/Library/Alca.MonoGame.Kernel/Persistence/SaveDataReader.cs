@@ -18,8 +18,7 @@ public sealed class SaveDataReader
     /// <summary>Gets a value indicating whether the read cursor has reached the end of the data.</summary>
     public bool IsAtEnd => _position >= _buffer.Length;
 
-    // ── Read primitives ──────────────────────────────────────────────────────
-
+    #region Read primitives
     /// <summary>Reads a <see cref="bool"/> (1 byte).</summary>
     public bool ReadBool() => ReadByte() != 0;
 
@@ -74,13 +73,14 @@ public sealed class SaveDataReader
 
     /// <summary>Reads a <see cref="Color"/> (4 bytes: R, G, B, A).</summary>
     public Color ReadColor() => new(ReadByte(), ReadByte(), ReadByte(), ReadByte());
+    #endregion
 
-    // ── Internal ─────────────────────────────────────────────────────────────
-
+    #region Internal
     private void CheckRemaining(int needed)
     {
         if (_position + needed > _buffer.Length)
             throw new InvalidOperationException(
                 $"SaveDataReader: attempted to read {needed} byte(s) beyond end of buffer (position={_position}, length={_buffer.Length}).");
     }
+    #endregion
 }

@@ -15,7 +15,7 @@ public sealed class NetworkReplicator : GameBehaviour
     private const int MaxEntries = 64;
 
     private NetworkIdentity? _identity;
-    private ReplicatedEntry[] _entries = new ReplicatedEntry[MaxEntries];
+    private readonly ReplicatedEntry[] _entries = new ReplicatedEntry[MaxEntries];
     private int _entryCount;
 
     /// <inheritdoc/>
@@ -48,8 +48,7 @@ public sealed class NetworkReplicator : GameBehaviour
             _identity.OnFieldsApplied -= OnFieldsApplied;
     }
 
-    // ── Internal ──────────────────────────────────────────────────────────────
-
+    #region Internal
     private void ScanBehaviours()
     {
         var behaviours = Entity.GetAllComponents();
@@ -124,9 +123,9 @@ public sealed class NetworkReplicator : GameBehaviour
             entry._member.SetValue(entry._owner, value);
         }
     }
+    #endregion
 
-    // ── Internal types ────────────────────────────────────────────────────────
-
+    #region Internal types
     private readonly struct ReplicatedEntry
     {
         internal readonly GameBehaviour _owner;
@@ -162,4 +161,5 @@ public sealed class NetworkReplicator : GameBehaviour
         public object? GetValue(object instance) => _field.GetValue(instance);
         public void SetValue(object instance, object? value) => _field.SetValue(instance, value);
     }
+    #endregion
 }

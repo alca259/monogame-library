@@ -4,7 +4,7 @@ namespace Alca.MonoGame.Kernel.Weather;
 
 /// <summary>
 /// Manages the full lifecycle of lightning strikes: random timing, a pre-allocated
-/// <see cref="Lighting.PointLight2D"/> flash entity, spatial thunder audio, and physics impulse dispatch.
+/// <see cref="Lighting.PointLight2DBehaviour"/> flash entity, spatial thunder audio, and physics impulse dispatch.
 /// Pre-allocates all resources in the constructor; zero heap allocations in <see cref="Update"/>.
 /// Dispose to remove the flash entity and release thunder instances.
 /// </summary>
@@ -13,7 +13,7 @@ public sealed class LightningController : IDisposable
     private readonly WeatherWorld _weatherWorld;
     private readonly GameWorld _gameWorld;
     private readonly GameEntity _flashEntity;
-    private readonly Lighting.PointLight2D _flashLight;
+    private readonly Lighting.PointLight2DBehaviour _flashLight;
 
     private float _strikeTimer;
     private float _nextStrikeInterval;
@@ -21,8 +21,7 @@ public sealed class LightningController : IDisposable
     private bool _isFlashing;
     private bool _disposed;
 
-    // ── Strike geometry ───────────────────────────────────────────────────────
-
+    #region Strike geometry
     /// <summary>Gets or sets the minimum world-space X coordinate at which a strike can occur. Default 0.</summary>
     public float MinX { get; set; } = 0f;
 
@@ -31,10 +30,10 @@ public sealed class LightningController : IDisposable
 
     /// <summary>Gets or sets the world-space Y coordinate where the flash appears (above the screen). Default -80.</summary>
     public float StrikeY { get; set; } = -80f;
+    #endregion
 
-    // ── Flash light ───────────────────────────────────────────────────────────
-
-    /// <summary>Gets or sets the peak intensity of the flash <see cref="Lighting.PointLight2D"/>. Default 8.</summary>
+    #region Flash light
+    /// <summary>Gets or sets the peak intensity of the flash <see cref="Lighting.PointLight2DBehaviour"/>. Default 8.</summary>
     public float FlashIntensity { get; set; } = 8f;
 
     /// <summary>Gets or sets the range of the flash light in world units. Default 600.</summary>
@@ -45,32 +44,32 @@ public sealed class LightningController : IDisposable
 
     /// <summary>Gets or sets the color of the flash light. Default is cool blue-white.</summary>
     public Color FlashColor { get; set; } = new Color(200, 220, 255);
+    #endregion
 
-    // ── Physics impulse ───────────────────────────────────────────────────────
-
+    #region Physics impulse
     /// <summary>Gets or sets the world-unit radius within which nearby <see cref="WeatherBehaviour"/> entities receive an impulse. Default 200.</summary>
     public float ImpulseRadius { get; set; } = 200f;
 
     /// <summary>Gets or sets the peak impulse magnitude at the strike center, falling off linearly to <see cref="ImpulseRadius"/>. Default 350.</summary>
     public float ImpulseStrength { get; set; } = 350f;
+    #endregion
 
-    // ── Audio ─────────────────────────────────────────────────────────────────
-
+    #region Audio
     /// <summary>Gets or sets the audio controller used for spatial thunder playback. Optional.</summary>
     public Audio.AudioController? AudioController { get; set; }
 
     /// <summary>Gets or sets the weather audio layer whose strike pool is used for thunder playback. Optional.</summary>
     public WeatherAudioLayer? AudioLayer { get; set; }
+    #endregion
 
-    // ── State ─────────────────────────────────────────────────────────────────
-
+    #region State
     /// <summary>Gets whether a flash is currently active.</summary>
     public bool IsFlashing => _isFlashing;
+    #endregion
 
-    // ── Construction ──────────────────────────────────────────────────────────
-
+    #region Construction
     /// <summary>
-    /// Creates the controller, a hidden flash entity with a <see cref="Lighting.PointLight2D"/>,
+    /// Creates the controller, a hidden flash entity with a <see cref="Lighting.PointLight2DBehaviour"/>,
     /// and seeds the first strike timer.
     /// </summary>
     /// <param name="weatherWorld">Required — used to raise <see cref="WeatherWorld.LightningStruck"/>.</param>
@@ -83,7 +82,7 @@ public sealed class LightningController : IDisposable
         _flashEntity = gameWorld.CreateEntity("_WeatherLightningFlash", Vector2.Zero);
         _flashEntity.Active = false;
 
-        _flashLight = new Lighting.PointLight2D
+        _flashLight = new Lighting.PointLight2DBehaviour
         {
             Color     = FlashColor,
             Intensity = 0f,
@@ -93,9 +92,9 @@ public sealed class LightningController : IDisposable
 
         _nextStrikeInterval = 10f; // will be updated on first Update with profile data
     }
+    #endregion
 
-    // ── Game loop ─────────────────────────────────────────────────────────────
-
+    #region Game loop
     /// <summary>
     /// Advances the lightning timer, fires a strike when ready, and manages flash decay.
     /// Dispatches impulses to all registered <paramref name="behaviours"/>.
@@ -142,9 +141,9 @@ public sealed class LightningController : IDisposable
         _gameWorld.Destroy(_flashEntity);
         _disposed = true;
     }
+    #endregion
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
+    #region Private helpers
     private void TriggerStrikeAt(Vector2 pos, List<WeatherBehaviour>? behaviours)
     {
         // Flash light
@@ -185,4 +184,5 @@ public sealed class LightningController : IDisposable
     }
 
     private WeatherWorld WeatherWorld => _weatherWorld;
+    #endregion
 }

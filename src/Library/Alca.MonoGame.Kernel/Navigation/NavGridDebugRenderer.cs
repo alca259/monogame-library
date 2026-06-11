@@ -49,8 +49,7 @@ public sealed class NavGridDebugRenderer
             DrawPath(spriteBatch, grid, activePath);
     }
 
-    // ── Internal ───────────────────────────────────────────────────────────────
-
+    #region Internal
     private void DrawGrid(SpriteBatch spriteBatch, NavGrid grid)
     {
         int cellPx = (int)grid.CellSize;
@@ -95,4 +94,5 @@ public sealed class NavGridDebugRenderer
         if (cell.ObstacleHeight > 0f) return ObstacleColor;
         return cell.IsWalkable ? WalkableColor : BlockedColor;
     }
+    #endregion
 }

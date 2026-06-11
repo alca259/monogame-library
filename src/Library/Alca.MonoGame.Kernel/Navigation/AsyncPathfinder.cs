@@ -62,8 +62,7 @@ public sealed class AsyncPathfinder : IDisposable
     public Task<NavPath?> FindPathAsync(NavGrid grid, Vector2 from, Vector2 to,
         NavAgentProfile profile, CancellationToken ct = default)
     {
-        if (_disposed)
-            throw new ObjectDisposedException(nameof(AsyncPathfinder));
+        ObjectDisposedException.ThrowIf(_disposed, nameof(AsyncPathfinder));
 
         var tcs = new TaskCompletionSource<NavPath?>(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -85,8 +84,7 @@ public sealed class AsyncPathfinder : IDisposable
         _workerTask.Wait(TimeSpan.FromSeconds(5));
     }
 
-    // ── Worker ─────────────────────────────────────────────────────────────────
-
+    #region Worker
     private async Task RunWorkerAsync()
     {
         await foreach (PathRequest request in _requestChannel.Reader.ReadAllAsync().ConfigureAwait(false))
@@ -105,9 +103,9 @@ public sealed class AsyncPathfinder : IDisposable
             }
         }
     }
+    #endregion
 
-    // ── Internal types ─────────────────────────────────────────────────────────
-
+    #region Internal types
     private readonly struct PathRequest
     {
         internal readonly NavGrid _grid;
@@ -132,4 +130,5 @@ public sealed class AsyncPathfinder : IDisposable
         internal NavAgentProfile Profile => _profile;
         internal TaskCompletionSource<NavPath?> Tcs => _tcs;
     }
+    #endregion
 }

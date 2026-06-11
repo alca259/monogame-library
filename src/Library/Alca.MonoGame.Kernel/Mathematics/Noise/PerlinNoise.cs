@@ -6,16 +6,15 @@ namespace Alca.MonoGame.Kernel.Mathematics.Noise;
 /// </summary>
 public sealed class PerlinNoise
 {
-    // ── Permutation table ─────────────────────────────────────────────────────
-
+    #region Permutation table
     private readonly int[] _perm = new int[512];
 
     // 16 gradient directions for 2D
-    private static readonly float[] GradX = { 1f, -1f, 1f, -1f, 1f, -1f, 1f, -1f, 0f, 0f, 0f, 0f, 1f, -1f, 0f, 0f };
-    private static readonly float[] GradY = { 1f, 1f, -1f, -1f, 0f, 0f, 0f, 0f, 1f, -1f, 1f, -1f, 0f, 0f, 1f, -1f };
+    private static readonly float[] _gradX = [1f, -1f, 1f, -1f, 1f, -1f, 1f, -1f, 0f, 0f, 0f, 0f, 1f, -1f, 0f, 0f];
+    private static readonly float[] _gradY = [1f, 1f, -1f, -1f, 0f, 0f, 0f, 0f, 1f, -1f, 1f, -1f, 0f, 0f, 1f, -1f];
 
     // 4 gradient values for 1D
-    private static readonly float[] Grad1D = { 1f, -1f, 1f, -1f };
+    private static readonly float[] _grad1D = [1f, -1f, 1f, -1f];
 
     /// <summary>
     /// Initializes a new <see cref="PerlinNoise"/> generator with the given seed.
@@ -38,9 +37,9 @@ public sealed class PerlinNoise
         for (int i = 0; i < 512; i++)
             _perm[i] = source[i & 255];
     }
+    #endregion
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
+    #region Public API
     /// <summary>
     /// Returns 1D Perlin noise for <paramref name="x"/>.
     /// Output is in approximately [-1, 1].
@@ -95,7 +94,7 @@ public sealed class PerlinNoise
     /// <param name="x">World x coordinate.</param>
     /// <param name="y">World y coordinate.</param>
     /// <param name="octaves">Number of noise octaves to sum.</param>
-    /// <param name="persistence">Amplitude multiplier per octave (0 < persistence < 1).</param>
+    /// <param name="persistence">Amplitude multiplier per octave (0 &lt; persistence &lt; 1).</param>
     /// <param name="lacunarity">Frequency multiplier per octave (typically 2).</param>
     public float Fractal(float x, float y, int octaves, float persistence, float lacunarity)
     {
@@ -114,17 +113,18 @@ public sealed class PerlinNoise
 
         return total / maxAmplitude;
     }
+    #endregion
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
+    #region Private helpers
     /// <summary>Perlin fade curve: 6t^5 − 15t^4 + 10t^3.</summary>
     private static float Fade(float t) => t * t * t * (t * (t * 6f - 15f) + 10f);
 
-    private static float Grad1(int hash, float x) => Grad1D[hash & 3] * x;
+    private static float Grad1(int hash, float x) => _grad1D[hash & 3] * x;
 
     private static float Grad2(int hash, float x, float y)
     {
         int h = hash & 15;
-        return GradX[h] * x + GradY[h] * y;
+        return _gradX[h] * x + _gradY[h] * y;
     }
+    #endregion
 }

@@ -1,53 +1,52 @@
-﻿using Alca.MonoGame.Kernel.Audio.Spatial;
+﻿using Alca.MonoGame.Kernel.Audio.Mixer;
+using Alca.MonoGame.Kernel.Audio.Spatial;
 using Alca.MonoGame.Kernel.Audio.Utilities;
 
 namespace Alca.MonoGame.Kernel.Audio;
 
 public sealed class AudioController : IDisposable
 {
-    /// <summary> Tracks sound effect instances created so they can be paused, unpaused, and/or disposed.</summary>
     private readonly List<SoundEffectInstance> _activeSoundEffectInstances = [];
-
     private readonly AudioListener3D _listener = new();
+    private readonly AudioMixer _mixer;
 
-    /// <summary> Tracks the volume for song playback when muting and unmuting.</summary>
+    private float _baseSongVolume = 1f;
+    private float _baseSoundEffectVolume = 1f;
     private float _previousSongVolume;
-
-    /// <summary> Tracks the volume for sound effect playback when muting and unmuting.</summary>
     private float _previousSoundEffectVolume;
 
     /// <summary>Gets a value that indicates if audio is muted.</summary>
     public bool IsMuted { get; private set; }
 
-    /// <summary>Gets or Sets the global volume of songs.</summary>
-    /// <remarks>If IsMuted is true, the getter will always return back 0.0f and the setter will ignore setting the volume.</remarks>
+    /// <summary>Initializes a new <see cref="AudioController"/> with the given mixer for channel routing.</summary>
+    public AudioController(AudioMixer mixer)
+    {
+        _mixer = mixer;
+    }
+
+    /// <summary>Gets or sets the base volume of songs, independent of the mixer channel.</summary>
+    /// <remarks>The effective volume applied respects the Music mixer channel. If IsMuted is true, the getter returns 0 and the setter is ignored.</remarks>
     public float SongVolume
     {
-        get => IsMuted ? 0.0f : MediaPlayer.Volume;
+        get => IsMuted ? 0.0f : _baseSongVolume;
         set
         {
-            if (IsMuted)
-            {
-                return;
-            }
-
-            MediaPlayer.Volume = Math.Clamp(value, 0.0f, 1.0f);
+            if (IsMuted) return;
+            _baseSongVolume = Math.Clamp(value, 0.0f, 1.0f);
+            if (MediaPlayer.State == MediaState.Playing)
+                ApplySongVolume(_mixer.Music);
         }
     }
 
-    /// <summary>Gets or Sets the global volume of sound effects.</summary>
-    /// <remarks>If IsMuted is true, the getter will always return back 0.0f and the setter will ignore setting the volume.</remarks>
+    /// <summary>Gets or sets the base volume of sound effects, independent of the mixer channel.</summary>
+    /// <remarks>The effective volume applied respects the SFX mixer channel. If IsMuted is true, the getter returns 0 and the setter is ignored.</remarks>
     public float SoundEffectVolume
     {
-        get => IsMuted ? 0.0f : SoundEffect.MasterVolume;
+        get => IsMuted ? 0.0f : _baseSoundEffectVolume;
         set
         {
-            if (IsMuted)
-            {
-                return;
-            }
-
-            SoundEffect.MasterVolume = Math.Clamp(value, 0.0f, 1.0f);
+            if (IsMuted) return;
+            _baseSoundEffectVolume = Math.Clamp(value, 0.0f, 1.0f);
         }
     }
 
@@ -81,23 +80,21 @@ public sealed class AudioController : IDisposable
     /// <param name="pitch">The pitch adjustment, ranging from -1.0 (down an octave) to 0.0 (no change) to 1.0 (up an octave).</param>
     /// <param name="pan">The panning, ranging from -1.0 (left speaker) to 0.0 (centered), 1.0 (right speaker).</param>
     /// <param name="isLooped">Whether the the sound effect should loop after playback.</param>
-    /// <returns>The sound effect instance created by playing the sound effect.</returns>
+    /// <param name="channel">Optional mixer channel for volume routing. If null, uses the Sfx channel.</param>
     /// <returns>The sound effect instance created by this method.</returns>
-    public SoundEffectInstance PlaySoundEffect(SoundEffect soundEffect, float volume = 1.0f, float pitch = 1.0f, float pan = 0.0f, bool isLooped = false)
+    public SoundEffectInstance PlaySoundEffect(SoundEffect soundEffect, float volume = 1.0f, float pitch = 1.0f, float pan = 0.0f, bool isLooped = false, AudioMixerChannel? channel = null)
     {
-        // Create an instance from the sound effect given.
-        SoundEffectInstance soundEffectInstance = soundEffect.CreateInstance();
+        channel ??= _mixer.Sfx;
 
-        // Apply the volume, pitch, pan, and loop values specified.
-        soundEffectInstance.Volume = volume;
+        SoundEffectInstance soundEffectInstance = soundEffect.CreateInstance();
         soundEffectInstance.Pitch = pitch;
         soundEffectInstance.Pan = pan;
         soundEffectInstance.IsLooped = isLooped;
 
-        // Tell the instance to play
-        soundEffectInstance.Play();
+        float effectiveVolume = volume * channel.EffectiveVolume;
+        soundEffectInstance.Volume = Math.Clamp(effectiveVolume, 0f, 1f);
 
-        // Add it to the active instances for tracking
+        soundEffectInstance.Play();
         _activeSoundEffectInstances.Add(soundEffectInstance);
 
         return soundEffectInstance;
@@ -106,17 +103,18 @@ public sealed class AudioController : IDisposable
     /// <summary>Plays the given song.</summary>
     /// <param name="song">The song to play.</param>
     /// <param name="isRepeating">Optionally specify if the song should repeat. Default is true.</param>
-    public static void PlaySong(Song song, bool isRepeating = true)
+    /// <param name="channel">Optional mixer channel for volume routing. If null, uses the Music channel.</param>
+    public void PlaySong(Song song, bool isRepeating = true, AudioMixerChannel? channel = null)
     {
-        // Check if the media player is already playing, if so, stop it.
-        // If we do not stop it, this could cause issues on some platforms
+        channel ??= _mixer.Music;
+
         if (MediaPlayer.State == MediaState.Playing)
-        {
             MediaPlayer.Stop();
-        }
 
         MediaPlayer.Play(song);
         MediaPlayer.IsRepeating = isRepeating;
+
+        ApplySongVolume(channel);
     }
 
     /// <summary>Pauses all audio.</summary>
@@ -148,11 +146,9 @@ public sealed class AudioController : IDisposable
     /// <summary>Mutes all audio.</summary>
     public void MuteAudio()
     {
-        // Store the volume so they can be restored during ResumeAudio
         _previousSongVolume = MediaPlayer.Volume;
         _previousSoundEffectVolume = SoundEffect.MasterVolume;
 
-        // Set all volumes to 0
         MediaPlayer.Volume = 0.0f;
         SoundEffect.MasterVolume = 0.0f;
 
@@ -162,11 +158,13 @@ public sealed class AudioController : IDisposable
     /// <summary>Unmutes all audio to the volume level prior to muting.</summary>
     public void UnmuteAudio()
     {
-        // Restore the previous volume values.
         MediaPlayer.Volume = _previousSongVolume;
         SoundEffect.MasterVolume = _previousSoundEffectVolume;
 
         IsMuted = false;
+
+        if (MediaPlayer.State == MediaState.Playing)
+            ApplySongVolume(_mixer.Music);
     }
 
     /// <summary>Toggles the current audio mute state.</summary>
@@ -232,6 +230,12 @@ public sealed class AudioController : IDisposable
     }
 
     /// <summary>Creates a new <see cref="AudioCrossfader"/> tied to this controller's scope.</summary>
-    public AudioCrossfader CreateCrossfader() => new();
+    public static AudioCrossfader CreateCrossfader() => new();
+
+    private void ApplySongVolume(AudioMixerChannel channel)
+    {
+        float effective = _baseSongVolume * channel.EffectiveVolume;
+        MediaPlayer.Volume = Math.Clamp(effective, 0f, 1f);
+    }
 }
 

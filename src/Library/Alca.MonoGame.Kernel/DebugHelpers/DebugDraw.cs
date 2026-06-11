@@ -21,8 +21,7 @@ public static class DebugDraw
     /// <summary>Gets the number of commands currently queued.</summary>
     internal static int CommandCount => _count;
 
-    // ── Write API ─────────────────────────────────────────────────────────────
-
+    #region Write API
     /// <summary>Draws a line from <paramref name="from"/> to <paramref name="to"/>.</summary>
     public static void DrawLine(Vector2 from, Vector2 to, Color color, float duration = 0f)
     {
@@ -80,7 +79,7 @@ public static class DebugDraw
         };
     }
 
-    /// <summary>Draws a text label at <paramref name="pos"/>. Requires a <see cref="SpriteFont"/> passed to <see cref="Draw"/>.</summary>
+    /// <summary>Draws a text label at <paramref name="pos"/>. Requires a <see cref="SpriteFont"/> passed to <c>Draw</c>.</summary>
     public static void DrawText(Vector2 pos, string text, Color color, float duration = 0f)
     {
         if (!IsEnabled || _count >= BufferCapacity) return;
@@ -96,9 +95,9 @@ public static class DebugDraw
 
     /// <summary>Removes all queued commands immediately.</summary>
     public static void Clear() => _count = 0;
+    #endregion
 
-    // ── Update / Draw ─────────────────────────────────────────────────────────
-
+    #region Update / Draw
     /// <summary>
     /// Decrements <c>Lifetime</c> for all commands and removes those that have expired.
     /// Call once per frame in <c>Update()</c>.
@@ -185,9 +184,9 @@ public static class DebugDraw
 
         spriteBatch.End();
     }
+    #endregion
 
-    // ── Internal helpers ──────────────────────────────────────────────────────
-
+    #region Internal helpers
     private static void DrawCircleInternal(SpriteBatch sb, Texture2D pixel, Vector2 center, float radius, int segments, Color color)
     {
         float step = MathF.PI * 2f / segments;
@@ -200,4 +199,5 @@ public static class DebugDraw
             DrawHelper.DrawLine(pixel, sb, from, to, color);
         }
     }
+    #endregion
 }

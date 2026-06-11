@@ -17,8 +17,7 @@ public sealed class LightingWorld
     /// <summary>Gets the number of currently registered lights.</summary>
     public int LightCount => _lights.Count;
 
-    // ── Registration ──────────────────────────────────────────────────────────
-
+    #region Registration
     /// <summary>Registers <paramref name="light"/> so it participates in <see cref="Resolve"/> queries. No-op if already registered.</summary>
     public void Register(LightBehaviour light)
     {
@@ -28,9 +27,9 @@ public sealed class LightingWorld
 
     /// <summary>Unregisters <paramref name="light"/> from lighting calculations.</summary>
     public void Unregister(LightBehaviour light) => _lights.Remove(light);
+    #endregion
 
-    // ── Queries ───────────────────────────────────────────────────────────────
-
+    #region Queries
     /// <summary>
     /// Returns the accumulated illumination color at <paramref name="worldPosition"/> for the given <paramref name="layer"/>.
     /// Starts from <see cref="AmbientColor"/> and blends each contributing light in registration order.
@@ -93,18 +92,18 @@ public sealed class LightingWorld
             float innerAngle = 0f, outerAngle = 0f;
             Vector2 direction = Vector2.Zero;
 
-            if (light is SpotLight2D spot)
+            if (light is SpotLight2DBehaviour spot)
             {
                 type = LightShaderData.TypeSpot;
                 innerAngle = spot.InnerAngle;
                 outerAngle = spot.OuterAngle;
                 direction = spot.Direction ?? Vector2.UnitX;
             }
-            else if (light is PointLight2D)
+            else if (light is PointLight2DBehaviour)
             {
                 type = LightShaderData.TypePoint;
             }
-            else if (light is DirectionalLight2D dir)
+            else if (light is DirectionalLight2DBehaviour dir)
             {
                 type = LightShaderData.TypeDirectional;
                 direction = dir.Direction;
@@ -126,7 +125,7 @@ public sealed class LightingWorld
     /// Missing parameters are silently ignored.
     /// Note: allocates temporary arrays — do not call every frame on a hot path.
     /// </summary>
-    [Obsolete("Use FillShaderBuffer for zero-allocation GPU path.")]
+    /// <remarks>Prefer <see cref="FillShaderBuffer"/> for zero-allocation GPU path.</remarks>
     public void FillShaderParameters(Effect effect)
     {
         int count = 0;
@@ -157,4 +156,5 @@ public sealed class LightingWorld
         effect.Parameters["_LightColors"]?.SetValue(colors);
         effect.Parameters["_LightRanges"]?.SetValue(ranges);
     }
+    #endregion
 }

@@ -14,8 +14,7 @@ public sealed class NavAgent : GameBehaviour
     private Pathfinder? _pathfinder;
     private TransformBehaviour? _transform;
 
-    // ── Configuration ──────────────────────────────────────────────────────────
-
+    #region Configuration
     /// <summary>Gets or sets movement speed in world units per second. Default is 100.</summary>
     public float Speed { get; set; } = 100f;
 
@@ -30,9 +29,9 @@ public sealed class NavAgent : GameBehaviour
 
     /// <summary>Gets or sets the rotation speed in radians per second when <see cref="RotateTowardMovement"/> is true. Default is 2π.</summary>
     public float RotationSpeed { get; set; } = MathHelper.TwoPi;
+    #endregion
 
-    // ── State ──────────────────────────────────────────────────────────────────
-
+    #region State
     /// <summary>Gets a value indicating whether a path is currently loaded.</summary>
     public bool HasPath => !_path.IsEmpty;
 
@@ -41,17 +40,17 @@ public sealed class NavAgent : GameBehaviour
 
     /// <summary>Gets the last destination set via <see cref="SetDestination"/>.</summary>
     public Vector2 Destination { get; private set; }
+    #endregion
 
-    // ── Events ─────────────────────────────────────────────────────────────────
-
+    #region Events
     /// <summary>Raised when the agent reaches its destination. No heap allocation — assign in Initialize/LoadContent, not in Update.</summary>
     public Action? OnDestinationReached { get; set; }
 
     /// <summary>Raised when <see cref="SetDestination"/> is called but no path could be found.</summary>
     public Action? OnPathNotFound { get; set; }
+    #endregion
 
-    // ── Lifecycle ──────────────────────────────────────────────────────────────
-
+    #region Lifecycle
     /// <inheritdoc/>
     public override void Awake()
     {
@@ -98,9 +97,9 @@ public sealed class NavAgent : GameBehaviour
         if (RotateTowardMovement)
             ApplyRotation(dir, delta);
     }
+    #endregion
 
-    // ── API ────────────────────────────────────────────────────────────────────
-
+    #region API
     /// <summary>
     /// Calculates a path to <paramref name="worldPosition"/> and begins movement.
     /// Requires <see cref="NavGrid"/> and <see cref="Pathfinder"/> to be set on the owning <see cref="ECS.GameWorld"/>.
@@ -177,9 +176,9 @@ public sealed class NavAgent : GameBehaviour
         if (Destination != default)
             SetDestination(Destination);
     }
+    #endregion
 
-    // ── Internal ───────────────────────────────────────────────────────────────
-
+    #region Internal
     private void ApplyRotation(Vector2 dir, float delta)
     {
         float targetAngle = MathF.Atan2(dir.Y, dir.X);
@@ -198,4 +197,5 @@ public sealed class NavAgent : GameBehaviour
         while (angle < -MathF.PI) angle += MathHelper.TwoPi;
         return angle;
     }
+    #endregion
 }

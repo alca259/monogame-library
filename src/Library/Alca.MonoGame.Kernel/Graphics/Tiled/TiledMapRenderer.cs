@@ -22,8 +22,10 @@ public sealed class TiledMapRenderer : IDisposable
     {
         _viewportAdapter = new DefaultViewportAdapter(graphicsDevice);
         _extCamera = new OrthographicCamera(_viewportAdapter);
-        _renderer = new TilemapSpriteBatchRenderer();
-        _renderer.BlendState = BlendState.AlphaBlend;
+        _renderer = new TilemapSpriteBatchRenderer
+        {
+            BlendState = BlendState.AlphaBlend
+        };
     }
 
     /// <summary>Initialises an empty renderer for unit testing (no hardware required).</summary>

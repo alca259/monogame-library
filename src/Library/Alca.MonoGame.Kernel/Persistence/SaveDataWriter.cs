@@ -22,8 +22,7 @@ public sealed class SaveDataWriter : IDisposable
         _position = 0;
     }
 
-    // ── Write primitives ─────────────────────────────────────────────────────
-
+    #region Write primitives
     /// <summary>Writes a <see cref="bool"/> (1 byte).</summary>
     public void Write(bool value) => WriteByte(value ? (byte)1 : (byte)0);
 
@@ -100,9 +99,9 @@ public sealed class SaveDataWriter : IDisposable
             _returned = true;
         }
     }
+    #endregion
 
-    // ── Internal ─────────────────────────────────────────────────────────────
-
+    #region Internal
     private void WriteByte(byte value)
     {
         EnsureCapacity(1);
@@ -119,4 +118,5 @@ public sealed class SaveDataWriter : IDisposable
         ArrayPool<byte>.Shared.Return(_buffer);
         _buffer = newBuffer;
     }
+    #endregion
 }

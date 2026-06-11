@@ -26,16 +26,15 @@ public sealed class WeatherAudioLayer : IDisposable
 
     private bool _disposed;
 
-    // ── Configuration ─────────────────────────────────────────────────────────
-
+    #region Configuration
     /// <summary>Gets or sets the volume fade speed in units per second. Default 1 (full fade in 1 second).</summary>
     public float FadeSpeed { get; set; } = 1f;
 
     /// <summary>Gets or sets the mixer channel all weather audio is routed through. Null means no channel routing.</summary>
     public AudioMixerChannel? Channel { get; set; }
+    #endregion
 
-    // ── Content loading ───────────────────────────────────────────────────────
-
+    #region Content loading
     /// <summary>
     /// Creates looping instances for ambient tracks and pre-allocates the strike pool.
     /// Must be called once before the first <see cref="Update"/>.
@@ -64,9 +63,9 @@ public sealed class WeatherAudioLayer : IDisposable
                 _strikePool[i] = thunderStrike.CreateInstance();
         }
     }
+    #endregion
 
-    // ── Game loop ─────────────────────────────────────────────────────────────
-
+    #region Game loop
     /// <summary>
     /// Interpolates current volumes toward the targets in <paramref name="profile"/>,
     /// applies optional channel routing, and ensures looping instances are playing or paused.
@@ -85,9 +84,9 @@ public sealed class WeatherAudioLayer : IDisposable
         SetInstanceVolume(_windInstance,    _currentWindVolume,    channelVolume);
         SetInstanceVolume(_thunderInstance, _currentThunderVolume, channelVolume);
     }
+    #endregion
 
-    // ── Lightning audio ───────────────────────────────────────────────────────
-
+    #region Lightning audio
     /// <summary>
     /// Plays a spatial thunder strike sound at <paramref name="strikePosition"/> using
     /// a round-robin pre-allocated instance from the pool.
@@ -121,9 +120,9 @@ public sealed class WeatherAudioLayer : IDisposable
                 _strikePool[i].Dispose();
         _disposed = true;
     }
+    #endregion
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
+    #region Private helpers
     private float ApproachVolume(float current, float target, float dt)
     {
         float diff = target - current;
@@ -159,4 +158,5 @@ public sealed class WeatherAudioLayer : IDisposable
         instance.Stop();
         instance.Dispose();
     }
+    #endregion
 }

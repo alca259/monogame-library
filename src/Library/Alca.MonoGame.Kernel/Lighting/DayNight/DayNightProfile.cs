@@ -6,8 +6,7 @@ namespace Alca.MonoGame.Kernel.Lighting.DayNight;
 /// </summary>
 public sealed class DayNightProfile
 {
-    // ── Keyframes ─────────────────────────────────────────────────────────────
-
+    #region Keyframes
     /// <summary>Gets the keyframe at midnight (00:00).</summary>
     public DayNightKeyframe Midnight { get; }
 
@@ -22,14 +21,14 @@ public sealed class DayNightProfile
 
     /// <summary>Gets the real-time duration of a full in-game day in seconds. Default is 600.</summary>
     public float DayDurationSeconds { get; }
+    #endregion
 
-    // ── Default profile ───────────────────────────────────────────────────────
-
+    #region Default profile
     /// <summary>Gets a default day/night profile with sensible ambient colors.</summary>
     public static readonly DayNightProfile Default = new();
+    #endregion
 
-    // ── Constructor ───────────────────────────────────────────────────────────
-
+    #region Constructor
     /// <summary>
     /// Creates a <see cref="DayNightProfile"/> with the given keyframes and day duration.
     /// Default values produce a natural-looking 10-minute game day.
@@ -47,9 +46,9 @@ public sealed class DayNightProfile
         Sunset   = sunset   ?? new DayNightKeyframe(TimeOfDay.Sunset,    new Color(255, 100, 50),  0.6f, 135f);
         DayDurationSeconds = dayDurationSeconds;
     }
+    #endregion
 
-    // ── Sampling ──────────────────────────────────────────────────────────────
-
+    #region Sampling
     /// <summary>
     /// Samples the profile at <paramref name="time"/> by finding the two adjacent keyframes
     /// and linearly interpolating between them. Wraps correctly between sunset and midnight.
@@ -93,9 +92,9 @@ public sealed class DayNightProfile
 
         return Interpolate(from, to, t);
     }
+    #endregion
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
+    #region Private helpers
     private static DayNightKeyframe Interpolate(in DayNightKeyframe a, in DayNightKeyframe b, float t)
     {
         byte r = (byte)MathHelper.Lerp(a.AmbientColor.R, b.AmbientColor.R, t);
@@ -109,4 +108,5 @@ public sealed class DayNightProfile
 
         return new DayNightKeyframe(midTime, new Color(r, g, bv, alpha), intensity, sunAngle);
     }
+    #endregion
 }

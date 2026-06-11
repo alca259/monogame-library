@@ -9,10 +9,9 @@ public sealed class EventChannel : IDisposable
 {
     private record struct HandlerEntry(Delegate Handler, int Priority);
 
-    private readonly Dictionary<Type, List<HandlerEntry>> _handlers = new();
+    private readonly Dictionary<Type, List<HandlerEntry>> _handlers = [];
 
-    // ── Subscribe ─────────────────────────────────────────────────────────────
-
+    #region Subscribe
     /// <summary>Subscribes <paramref name="handler"/> to events of type <typeparamref name="T"/> with default priority 0.</summary>
     public void Subscribe<T>(Action<T> handler) => SubscribeWithPriority(handler, 0);
 
@@ -63,9 +62,9 @@ public sealed class EventChannel : IDisposable
             }
         }
     }
+    #endregion
 
-    // ── Publish ───────────────────────────────────────────────────────────────
-
+    #region Publish
     /// <summary>Dispatches <paramref name="evt"/> to all subscribed handlers in priority order.</summary>
     public void Publish<T>(T evt)
     {
@@ -84,12 +83,13 @@ public sealed class EventChannel : IDisposable
             if (evt.IsCancelled) break;
         }
     }
+    #endregion
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
-
+    #region Lifecycle
     /// <summary>Removes all subscriptions on this channel only. Does not affect the global <see cref="EventBus"/>.</summary>
     public void Clear() => _handlers.Clear();
 
     /// <inheritdoc/>
     public void Dispose() => Clear();
+    #endregion
 }

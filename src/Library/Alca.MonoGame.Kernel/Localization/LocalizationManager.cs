@@ -52,7 +52,8 @@ public sealed class LocalizationManager : IStringLocalizer
 
     /// <summary>Loads the JSON language file for the given culture and raises CultureChanged.</summary>
     /// <param name="culture">Two-letter ISO culture code, e.g., "es" or "en".</param>
-    public void LoadLanguage(string culture)
+    /// <param name="relativePath">The relative path to the localization files.</param>
+    public void LoadLanguage(string culture, string relativePath = "Content/Localization")
     {
         if (culture == CurrentCulture) return;
 
@@ -61,7 +62,7 @@ public sealed class LocalizationManager : IStringLocalizer
 
         try
         {
-            using Stream stream = TitleContainer.OpenStream($"Content/Localization/{culture}.json");
+            using Stream stream = TitleContainer.OpenStream($"{relativePath}/{culture}.json");
             Dictionary<string, string>? loaded = JsonSerializer.Deserialize<Dictionary<string, string>>(stream);
 
             if (loaded is not null)

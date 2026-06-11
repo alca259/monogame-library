@@ -26,8 +26,7 @@ public sealed class NoiseMap
         _data = new float[width, height];
     }
 
-    // ── Generation ────────────────────────────────────────────────────────────
-
+    #region Generation
     /// <summary>
     /// Fills the map using fractal Brownian motion from a <see cref="PerlinNoise"/> source.
     /// Each cell value is in [0, 1].
@@ -74,9 +73,9 @@ public sealed class NoiseMap
             for (int x = 0; x < Width; x++)
                 _data[x, y] = noise.Get01(x * scale, y * scale);
     }
+    #endregion
 
-    // ── Export ────────────────────────────────────────────────────────────────
-
+    #region Export
     /// <summary>
     /// Creates and returns a new greyscale <see cref="Texture2D"/> representing the noise map.
     /// Each pixel's RGB channels equal the cell value scaled to [0, 255].
@@ -92,11 +91,12 @@ public sealed class NoiseMap
             for (int x = 0; x < Width; x++)
             {
                 byte value = (byte)(_data[x, y] * 255f);
-                pixels[y * Width + x] = new Color(value, value, value, 255);
+                pixels[y * Width + x] = new Color(value, value, value, (byte)255);
             }
         }
 
         texture.SetData(pixels);
         return texture;
     }
+    #endregion
 }

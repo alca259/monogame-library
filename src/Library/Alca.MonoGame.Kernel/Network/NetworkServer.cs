@@ -159,8 +159,7 @@ public sealed class NetworkServer : IDisposable, INetEventListener
     /// <inheritdoc/>
     public void Dispose() => Stop();
 
-    // ── INetEventListener ──────────────────────────────────────────────────────
-
+    #region INetEventListener
     void INetEventListener.OnPeerConnected(NetPeer peer)
     {
         _peers[peer.Id] = peer;
@@ -206,9 +205,9 @@ public sealed class NetworkServer : IDisposable, INetEventListener
     {
         request.AcceptIfKey(_connectionKey);
     }
+    #endregion
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
-
+    #region Helpers
     private static DeliveryMethod ToDeliveryMethod(NetworkChannel channel) => channel switch
     {
         NetworkChannel.Unreliable => DeliveryMethod.Unreliable,
@@ -217,4 +216,5 @@ public sealed class NetworkServer : IDisposable, INetEventListener
         NetworkChannel.Sequenced => DeliveryMethod.Sequenced,
         _ => DeliveryMethod.ReliableOrdered
     };
+    #endregion
 }

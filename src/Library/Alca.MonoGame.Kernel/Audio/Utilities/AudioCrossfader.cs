@@ -131,8 +131,7 @@ public sealed class AudioCrossfader : IDisposable
         _isCrossfading = false;
     }
 
-    // ── Internal ──────────────────────────────────────────────────────────────
-
+    #region Internal
     private void CompleteCurrentCrossfade()
     {
         if (_trackB is not null)
@@ -146,4 +145,5 @@ public sealed class AudioCrossfader : IDisposable
 
         _isCrossfading = false;
     }
+    #endregion
 }
