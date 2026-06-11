@@ -1,6 +1,5 @@
 using Alca.MonoGame.Kernel.Scenes;
 using Alca.MonoGame.Kernel.UI;
-using Alca.MonoGame.Kernel.UnitTests.Fixtures;
 using Microsoft.Xna.Framework.Content;
 
 namespace Alca.MonoGame.Kernel.UnitTests.Scenes;

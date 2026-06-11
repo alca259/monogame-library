@@ -1,7 +1,6 @@
 using Alca.MonoGame.Kernel.ECS;
 using Alca.MonoGame.Kernel.Lighting;
 using Alca.MonoGame.Kernel.Lighting.GPU;
-using Alca.MonoGame.Kernel.UnitTests.Fixtures;
 
 namespace Alca.MonoGame.Kernel.UnitTests.Lighting.GPU;
 

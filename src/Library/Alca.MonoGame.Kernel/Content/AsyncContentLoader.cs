@@ -4,11 +4,12 @@ namespace Alca.MonoGame.Kernel.Content;
 public sealed class AsyncContentLoader : IDisposable
 {
     private readonly Queue<IPendingLoad> _pendingAssets = new(16);
-    private readonly object _queueLock = new();
+    private readonly Lock _queueLock = new();
     private CancellationTokenSource _cancelSource = new();
     private bool _disposed;
 
     /// <summary>Maximum number of assets processed per <see cref="FlushPending"/> call. Defaults to 1.</summary>
+    /// <remarks>Values below 0 are converted to absolute value.</remarks>
     public int MaxAssetsPerFrame { get; set; } = 1;
 
     /// <summary>Gets a cancellation token tied to this loader's lifetime.</summary>
@@ -40,16 +41,16 @@ public sealed class AsyncContentLoader : IDisposable
 
             progress?.Report(0.5f);
         }, ct).ContinueWith(
-            t =>
+            continuationAction: t =>
             {
                 if (t.IsFaulted)
                     tcs.TrySetException(t.Exception!.GetBaseException());
                 else if (t.IsCanceled)
                     tcs.TrySetCanceled(ct);
             },
-            CancellationToken.None,
-            TaskContinuationOptions.NotOnRanToCompletion,
-            TaskScheduler.Default);
+            cancellationToken: CancellationToken.None,
+            continuationOptions: TaskContinuationOptions.NotOnRanToCompletion,
+            scheduler: TaskScheduler.Default);
 
         return tcs.Task;
     }
@@ -61,7 +62,12 @@ public sealed class AsyncContentLoader : IDisposable
     public void FlushPending(ContentManager content)
     {
         int processed = 0;
-        while (processed < MaxAssetsPerFrame)
+        
+        // No me fio del desarrollador jajajaj
+        var localMaxAssetsPerFrame = Math.Abs(MaxAssetsPerFrame);
+        if (localMaxAssetsPerFrame == 0) localMaxAssetsPerFrame = 1;
+
+        while (processed < localMaxAssetsPerFrame)
         {
             IPendingLoad? pending;
             lock (_queueLock)
