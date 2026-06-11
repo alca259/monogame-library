@@ -57,7 +57,7 @@ public sealed class AudioController : IDisposable
         soundEffectInstance.Pan = pan;
         soundEffectInstance.IsLooped = isLooped;
 
-        float effectiveVolume = volume * channel.EffectiveVolume;
+        float effectiveVolume = volume * _mixer.Master.EffectiveVolume * channel.EffectiveVolume;
         soundEffectInstance.Volume = Math.Clamp(effectiveVolume, 0f, 1f);
 
         soundEffectInstance.Play();
@@ -79,7 +79,9 @@ public sealed class AudioController : IDisposable
 
         MediaPlayer.Play(song);
         MediaPlayer.IsRepeating = isRepeating;
-        MediaPlayer.Volume = Math.Clamp(channel.EffectiveVolume, 0f, 1f);
+
+        float effectiveVolume = _mixer.Master.EffectiveVolume * channel.EffectiveVolume;
+        MediaPlayer.Volume = Math.Clamp(effectiveVolume, 0f, 1f);
     }
 
     /// <summary>Pauses all audio.</summary>
@@ -138,6 +140,9 @@ public sealed class AudioController : IDisposable
     {
         return new SoundEffectPool(effect, capacity);
     }
+
+    /// <summary>Gets the Master mixer channel for global volume control.</summary>
+    public AudioMixerChannel Master => _mixer.Master;
 
     /// <summary>Gets the world-space position of the current 3D audio listener.</summary>
     public Vector3 ListenerPosition => _listener.Position;

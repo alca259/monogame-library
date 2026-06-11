@@ -95,9 +95,10 @@ public sealed class AudioZoneBehaviour : GameBehaviour
 
     private void ApplyVolume()
     {
-        if (_instance is null) return;
-        float channelVolume = MixerChannel is not null ? MixerChannel.EffectiveVolume : 1f;
-        _instance.Volume = Math.Clamp(_currentVolume * channelVolume, 0f, 1f);
+        if (_instance is null || _controller is null) return;
+        float masterVolume = _controller.Master.EffectiveVolume;
+        float channelVolume = MixerChannel?.EffectiveVolume ?? 1f;
+        _instance.Volume = Math.Clamp(_currentVolume * masterVolume * channelVolume, 0f, 1f);
     }
 
     private void StopInstance()

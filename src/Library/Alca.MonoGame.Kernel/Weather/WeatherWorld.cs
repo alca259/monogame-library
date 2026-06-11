@@ -270,7 +270,9 @@ public sealed class WeatherWorld
               }
             : ActiveProfile;
 
-        Audio?.Update(gameTime, audioProfile);
+        if (Audio is not null && AudioController is not null)
+            Audio.Update(gameTime, audioProfile, AudioController);
+
         Lightning?.Update(gameTime, ActiveProfile,
             IsInterior ? _emptyBehaviourList : _registeredBehaviours);
     }

@@ -71,18 +71,20 @@ public sealed class WeatherAudioLayer : IDisposable
     /// applies optional channel routing, and ensures looping instances are playing or paused.
     /// No heap allocations.
     /// </summary>
-    public void Update(GameTime gameTime, in WeatherProfile profile)
+    public void Update(GameTime gameTime, in WeatherProfile profile, Audio.AudioController audioController)
     {
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        float masterVolume = audioController.Master.EffectiveVolume;
         float channelVolume = Channel?.EffectiveVolume ?? 1f;
+        float effectiveVolume = masterVolume * channelVolume;
 
         _currentRainVolume    = ApproachVolume(_currentRainVolume,    profile.RainVolume,    dt);
         _currentWindVolume    = ApproachVolume(_currentWindVolume,    profile.WindVolume,    dt);
         _currentThunderVolume = ApproachVolume(_currentThunderVolume, profile.ThunderVolume, dt);
 
-        SetInstanceVolume(_rainInstance,    _currentRainVolume,    channelVolume);
-        SetInstanceVolume(_windInstance,    _currentWindVolume,    channelVolume);
-        SetInstanceVolume(_thunderInstance, _currentThunderVolume, channelVolume);
+        SetInstanceVolume(_rainInstance,    _currentRainVolume,    effectiveVolume);
+        SetInstanceVolume(_windInstance,    _currentWindVolume,    effectiveVolume);
+        SetInstanceVolume(_thunderInstance, _currentThunderVolume, effectiveVolume);
     }
     #endregion
 
@@ -104,7 +106,10 @@ public sealed class WeatherAudioLayer : IDisposable
 
         _strikeEmitter.Position = new Vector3(strikePosition, 0f);
         audioController.ApplySpatialAudio(instance, _strikeEmitter);
-        instance.Volume = Math.Clamp(instance.Volume, 0f, 1f);
+
+        float masterVolume = audioController.Master.EffectiveVolume;
+        float channelVolume = Channel?.EffectiveVolume ?? 1f;
+        instance.Volume = Math.Clamp(masterVolume * channelVolume, 0f, 1f);
         instance.Play();
     }
 

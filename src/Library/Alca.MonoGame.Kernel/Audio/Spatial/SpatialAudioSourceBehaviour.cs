@@ -57,10 +57,9 @@ public sealed class SpatialAudioSourceBehaviour : GameBehaviour
         _emitter.Position = Entity.Transform.Position;
         _emitter.Velocity = Entity.Transform.Velocity;
 
-        float effectiveVolume = MixerChannel is not null
-            ? Volume * MixerChannel.EffectiveVolume
-            : Volume;
-        _instance.Volume = Math.Clamp(effectiveVolume, 0f, 1f);
+        float masterVolume = _controller.Master.EffectiveVolume;
+        float channelVolume = MixerChannel?.EffectiveVolume ?? 1f;
+        _instance.Volume = Math.Clamp(Volume * masterVolume * channelVolume, 0f, 1f);
         _controller.ApplySpatialAudio(_instance, _emitter);
     }
 
@@ -74,10 +73,9 @@ public sealed class SpatialAudioSourceBehaviour : GameBehaviour
         _instance.IsLooped = Loop;
         _instance.Pitch = Pitch;
 
-        float effectiveVolume = MixerChannel is not null
-            ? Volume * MixerChannel.EffectiveVolume
-            : Volume;
-        _instance.Volume = Math.Clamp(effectiveVolume, 0f, 1f);
+        float masterVolume = _controller.Master.EffectiveVolume;
+        float channelVolume = MixerChannel?.EffectiveVolume ?? 1f;
+        _instance.Volume = Math.Clamp(Volume * masterVolume * channelVolume, 0f, 1f);
         _instance.Play();
     }
 

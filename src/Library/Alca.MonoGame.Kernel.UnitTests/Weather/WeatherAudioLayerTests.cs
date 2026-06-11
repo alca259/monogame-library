@@ -1,3 +1,5 @@
+using Alca.MonoGame.Kernel.Audio;
+using Alca.MonoGame.Kernel.Audio.Mixer;
 using Alca.MonoGame.Kernel.Weather;
 
 namespace Alca.MonoGame.Kernel.UnitTests.Weather;
@@ -29,21 +31,23 @@ public sealed class WeatherAudioLayerTests
     [Fact]
     public void Update_WithoutLoadSounds_DoesNotThrow()
     {
-        var layer   = new WeatherAudioLayer();
-        var profile = new WeatherProfile();
-        var ex = Record.Exception(() => layer.Update(MakeGameTime(), profile));
+        var layer      = new WeatherAudioLayer();
+        var profile    = new WeatherProfile();
+        var controller = new AudioController(new AudioMixer());
+        var ex = Record.Exception(() => layer.Update(MakeGameTime(), profile, controller));
         Assert.Null(ex);
     }
 
     [Fact]
     public void Update_MultipleFrames_DoesNotThrow()
     {
-        var layer   = new WeatherAudioLayer();
-        var profile = new WeatherProfile { RainVolume = 0.8f, WindVolume = 0.5f, ThunderVolume = 0.3f };
+        var layer      = new WeatherAudioLayer();
+        var profile    = new WeatherProfile { RainVolume = 0.8f, WindVolume = 0.5f, ThunderVolume = 0.3f };
+        var controller = new AudioController(new AudioMixer());
 
         for (int i = 0; i < 120; i++)
         {
-            var ex = Record.Exception(() => layer.Update(MakeGameTime(), profile));
+            var ex = Record.Exception(() => layer.Update(MakeGameTime(), profile, controller));
             Assert.Null(ex);
         }
     }
