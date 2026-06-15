@@ -201,7 +201,7 @@ public sealed class SceneCodeGenerator : ICodeGenService
         sb.AppendLine();
         sb.AppendLine($"{indent}// ── Entity: {entity.Name} {new string('─', Math.Max(0, 64 - entity.Name.Length))}");
         sb.Append($"{indent}var {varName} = world.CreateEntity(\"{EscapeString(entity.Name)}\"");
-        sb.AppendLine($", new Vector2({FormatFloat(entity.Position.X)}, {FormatFloat(entity.Position.Y)}));");
+        sb.AppendLine($", new Vector3({FormatFloat(entity.Position.X)}, {FormatFloat(entity.Position.Y)}, {FormatFloat(entity.Position.Z)}))");;
 
         if (parentVarName is not null)
             sb.AppendLine($"{indent}{varName}.SetParent({parentVarName});");

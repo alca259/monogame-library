@@ -53,12 +53,15 @@ public sealed partial class InspectorView : ContentView
 
     private void WireTransformCommands()
     {
-        PosXStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyPosX(v); };
-        PosYStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyPosY(v); };
-        RotZStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyRotZ(v); };
+        PosXStepper.ValueCommitted  += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyPosX(v); };
+        PosYStepper.ValueCommitted  += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyPosY(v); };
+        PosZStepper.ValueCommitted  += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyPosZ(v); };
+        RotXStepper.ValueCommitted  += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyRotX(v); };
+        RotYStepper.ValueCommitted  += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyRotY(v); };
+        RotZStepper.ValueCommitted  += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyRotZ(v); };
         ScaleXStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyScaleX(v); };
         ScaleYStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyScaleY(v); };
-        DepthStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyDepth(v); };
+        ScaleZStepper.ValueCommitted += (_, v) => { if (!_suppressTransformEvents) _vm.ApplyScaleZ(v); };
     }
 
     private void OnObjectActiveChanged(object sender, CheckedChangedEventArgs e)
@@ -80,12 +83,15 @@ public sealed partial class InspectorView : ContentView
 
         _suppressTransformEvents = true;
         ObjectActiveCheck.IsChecked = selected.Active;
-        PosXStepper.Value = selected.Position.X;
-        PosYStepper.Value = selected.Position.Y;
-        RotZStepper.Value = selected.Rotation;
+        PosXStepper.Value  = selected.Position.X;
+        PosYStepper.Value  = selected.Position.Y;
+        PosZStepper.Value  = selected.Position.Z;
+        RotXStepper.Value  = selected.Rotation.X;
+        RotYStepper.Value  = selected.Rotation.Y;
+        RotZStepper.Value  = selected.Rotation.Z;
         ScaleXStepper.Value = selected.Scale.X;
         ScaleYStepper.Value = selected.Scale.Y;
-        DepthStepper.Value = selected.PositionZ;
+        ScaleZStepper.Value = selected.Scale.Z;
         _suppressTransformEvents = false;
 
         BuildBehaviourCards();

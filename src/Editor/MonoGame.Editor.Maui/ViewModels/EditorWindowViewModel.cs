@@ -231,6 +231,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
                                                .ConfigureAwait(true);
             if (project is null) return;
             Context.SetActiveProject(project);
+            await ApplyProjectSettingsAsync(project).ConfigureAwait(true);
             Log($"[Editor] Auto-loaded project '{project.Name}'.");
             await TryLoadLastSceneForProjectAsync(project).ConfigureAwait(true);
         }
@@ -238,6 +239,17 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
         {
             Log($"[Editor] Auto-load failed: {ex.Message}", LogLevel.Warning);
         }
+    }
+
+    private async Task ApplyProjectSettingsAsync(EditorProject project)
+    {
+        try
+        {
+            ProjectSettings settings = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
+            if (settings.GridCellSize > 0)
+                Context.Gizmos.GridCellSize = settings.GridCellSize;
+        }
+        catch { }
     }
 
     private async Task TryLoadLastSceneForProjectAsync(EditorProject project)
@@ -348,6 +360,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
             Context.SetActiveScene(null);
             _preferences.LastProjectPath = path;
             _preferences.AddRecentProject(path);
+            await ApplyProjectSettingsAsync(project).ConfigureAwait(true);
             Log($"[Editor] Project '{project.Name}' opened.");
             await TryLoadLastSceneForProjectAsync(project).ConfigureAwait(true);
         }
@@ -431,19 +444,42 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
         EditorScene? scene = Context.ActiveScene;
         EditorProject? project = Context.ActiveProject;
         if (scene is null) return;
+        if (DialogService.Navigation is not { } navigation) return;
 
         try
         {
-            string? path = await DialogService.PickFileAsync(new PickOptions { PickerTitle = "Save Scene As" });
-            if (path is null) return;
-            if (!path.EndsWith(".scene.json", StringComparison.OrdinalIgnoreCase))
-                path += ".scene.json";
+            // Paso 1 — elegir carpeta de destino dentro del proyecto (o raíz del sistema si no hay proyecto)
+            string baseFolder = project is not null && Directory.Exists(project.RootPath)
+                ? project.RootPath
+                : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            string? relFolder = await RelativePathPickerDialog.ShowAsync(
+                navigation,
+                baseFolder,
+                filesMode: false,
+                title: "Save Scene As — Select folder");
+            if (relFolder is null) return;
+
+            string destFolder = Path.Combine(baseFolder, relFolder);
+
+            // Paso 2 — nombre del archivo
+            string suggested = string.IsNullOrEmpty(scene.Name) ? "NewScene" : scene.Name;
+            string? fileName = await DialogService.PromptAsync(
+                "Save Scene As",
+                "File name (without extension):",
+                initialValue: suggested);
+            if (string.IsNullOrWhiteSpace(fileName)) return;
+
+            // Construir ruta final garantizando extensión correcta
+            string safeName = string.Concat(fileName.Trim().Split(Path.GetInvalidFileNameChars()));
+            string path = Path.Combine(destFolder, safeName + ".scene.json");
 
             scene.ScenePath = path;
-            scene.Name = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(path));
+            scene.Name = safeName;
 
             await SceneSerializer.SaveAsync(scene, path).ConfigureAwait(true);
             Context.MarkSceneClean();
+            UpdateTitle();
             Log($"[Save] Scene saved to {path}");
         }
         catch (Exception ex)
@@ -563,6 +599,12 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
 
         ProjectSettings settings = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
         await ProjectSettingsDialog.ShowAsync(navigation, project, settings).ConfigureAwait(true);
+
+        // Recargar y aplicar ajustes de runtime que el diálogo pudo cambiar.
+        ProjectSettings updated = await ProjectSettings.LoadAsync(project).ConfigureAwait(true);
+        if (updated.GridCellSize > 0)
+            Context.Gizmos.GridCellSize = updated.GridCellSize;
+        ViewportInvalidateRequested?.Invoke();
     }
 
     [RelayCommand]

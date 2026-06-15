@@ -11,8 +11,8 @@ public sealed class GizmoController
     /// <summary>Longitud de cada flecha de eje en píxeles de pantalla.</summary>
     public const float ArrowLength = 80f;
 
-    /// <summary>Tamaño del cuadrado de la punta de flecha en píxeles de pantalla.</summary>
-    public const float ArrowHeadSize = 12f;
+    /// <summary>Tamaño (profundidad de la punta triangular) de la cabeza de flecha en píxeles de pantalla.</summary>
+    public const float ArrowHeadSize = 14f;
 
     /// <summary>Radio del círculo de rotación en píxeles de pantalla.</summary>
     public const float RotateRadius = 70f;
@@ -22,12 +22,6 @@ public sealed class GizmoController
 
     /// <summary>Semitamaño de la caja delimitadora predeterminada de un objeto en unidades de mundo (a Escala 1).</summary>
     public const float DefaultBoundsHalfSize = 24f;
-
-    /// <summary>Desplazamiento en X de pantalla desde el origen del gizmo al vástago de la manija de profundidad Z.</summary>
-    public const float ZHandleOffsetX = ArrowLength + ArrowHeadSize + 14f;
-
-    /// <summary>Tamaño de la manija de diamante de profundidad Z en píxeles de pantalla.</summary>
-    public const float ZHandleSize = 12f;
 
     /// <summary>Distancia desde el origen a las manijas de escala en modo Universal (mitad de la flecha para evitar solape).</summary>
     public const float UniversalScaleAxisRadius = ArrowLength * 0.55f;
@@ -39,10 +33,9 @@ public sealed class GizmoController
     private bool _dragging;
     private GizmoDragAxis _dragAxis;
     private float _dragWorldStartX, _dragWorldStartY;
-    private float _objPosStartX, _objPosStartY;
-    private float _objPosStartZ;
-    private float _objRotStart;
-    private float _objScaleStartX, _objScaleStartY;
+    private float _objPosStartX, _objPosStartY, _objPosStartZ;
+    private float _objRotStartX, _objRotStartY, _objRotStartZ;
+    private float _objScaleStartX, _objScaleStartY, _objScaleStartZ;
 
     // ── Propiedades públicas ──────────────────────────────────────────────────
 
@@ -105,10 +98,13 @@ public sealed class GizmoController
             _dragWorldStartY = clickWorldY;
             _objPosStartX = selected.Position.X;
             _objPosStartY = selected.Position.Y;
-            _objPosStartZ = selected.PositionZ;
-            _objRotStart = selected.Rotation;
+            _objPosStartZ = selected.Position.Z;
+            _objRotStartX = selected.Rotation.X;
+            _objRotStartY = selected.Rotation.Y;
+            _objRotStartZ = selected.Rotation.Z;
             _objScaleStartX = selected.Scale.X;
             _objScaleStartY = selected.Scale.Y;
+            _objScaleStartZ = selected.Scale.Z;
         }
 
         return true;
@@ -126,7 +122,9 @@ public sealed class GizmoController
     {
         GizmoDragAxis axis;
         float worldStartX, worldStartY;
-        float posStartX, posStartY, posStartZ, rotStart, scaleStartX, scaleStartY;
+        float posStartX, posStartY, posStartZ;
+        float rotStartX, rotStartY, rotStartZ;
+        float scaleStartX, scaleStartY, scaleStartZ;
 
         lock (_lock)
         {
@@ -137,9 +135,12 @@ public sealed class GizmoController
             posStartX = _objPosStartX;
             posStartY = _objPosStartY;
             posStartZ = _objPosStartZ;
-            rotStart = _objRotStart;
+            rotStartX = _objRotStartX;
+            rotStartY = _objRotStartY;
+            rotStartZ = _objRotStartZ;
             scaleStartX = _objScaleStartX;
             scaleStartY = _objScaleStartY;
+            scaleStartZ = _objScaleStartZ;
         }
 
         float dx = worldX - worldStartX;
@@ -148,26 +149,24 @@ public sealed class GizmoController
         switch (axis)
         {
             case GizmoDragAxis.X:
+                // En vista Right, el eje X de pantalla mueve la profundidad Z del mundo.
                 if (Orientation == ViewOrientation.Right)
-                {
-                    selected.PositionZ = posStartZ + dx;
-                }
+                    selected.Position = new EditorVector3(posStartX, posStartY, posStartZ + dx);
                 else
                 {
-                    selected.Position = new EditorVector2(posStartX + dx, posStartY);
+                    selected.Position = new EditorVector3(posStartX + dx, posStartY, posStartZ);
                     if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
                 }
                 break;
 
             case GizmoDragAxis.Y:
+                // En vista Top, el eje Y de pantalla mueve la profundidad Z del mundo.
+                // Signo positivo: arrastrar hacia abajo (dy > 0) → Z aumenta (objeto baja en pantalla). ✓
                 if (Orientation == ViewOrientation.Top)
-                {
-                    // Drag up (dy < 0) = aumentar Z (más profundidad / más lejos)
-                    selected.PositionZ = posStartZ - dy;
-                }
+                    selected.Position = new EditorVector3(posStartX, posStartY, posStartZ + dy);
                 else
                 {
-                    selected.Position = new EditorVector2(posStartX, posStartY + dy);
+                    selected.Position = new EditorVector3(posStartX, posStartY + dy, posStartZ);
                     if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
                 }
                 break;
@@ -175,19 +174,17 @@ public sealed class GizmoController
             case GizmoDragAxis.XY:
                 if (Orientation == ViewOrientation.Top)
                 {
-                    selected.Position = new EditorVector2(posStartX + dx, posStartY);
-                    selected.PositionZ = posStartZ - dy;
+                    selected.Position = new EditorVector3(posStartX + dx, posStartY, posStartZ + dy);
                     if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
                 }
                 else if (Orientation == ViewOrientation.Right)
                 {
-                    selected.Position = new EditorVector2(posStartX, posStartY + dy);
-                    selected.PositionZ = posStartZ + dx;
+                    selected.Position = new EditorVector3(posStartX, posStartY + dy, posStartZ + dx);
                     if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
                 }
                 else
                 {
-                    selected.Position = new EditorVector2(posStartX + dx, posStartY + dy);
+                    selected.Position = new EditorVector3(posStartX + dx, posStartY + dy, posStartZ);
                     if (SnapEnabled) selected.Position = SnapToGrid(selected.Position);
                 }
                 break;
@@ -198,27 +195,56 @@ public sealed class GizmoController
                     float deg = angle * (180f / MathF.PI);
                     if (SnapEnabled && SnapRotationDegrees > 0f)
                         deg = MathF.Round(deg / SnapRotationDegrees) * SnapRotationDegrees;
-                    selected.Rotation = deg;
+
+                    // Cada vista de ortografía rota alrededor de un eje diferente.
+                    selected.Rotation = Orientation switch
+                    {
+                        ViewOrientation.Top => new EditorVector3(rotStartX, deg, rotStartZ),
+                        ViewOrientation.Right => new EditorVector3(deg, rotStartY, rotStartZ),
+                        _ => new EditorVector3(rotStartX, rotStartY, deg),  // Front → eje Z
+                    };
                     break;
                 }
 
             case GizmoDragAxis.ScaleX:
                 {
                     float delta = dx * 0.02f;
-                    float newX = Math.Max(0.01f, scaleStartX + delta);
-                    if (SnapEnabled && SnapScaleStep > 0f)
-                        newX = MathF.Round(newX / SnapScaleStep) * SnapScaleStep;
-                    selected.Scale = new EditorVector2(Math.Max(0.01f, newX), Math.Max(0.01f, scaleStartY));
+                    // En vista Right, el eje X de pantalla controla Scale.Z.
+                    if (Orientation == ViewOrientation.Right)
+                    {
+                        float newZ = Math.Max(0.01f, scaleStartZ + delta);
+                        if (SnapEnabled && SnapScaleStep > 0f)
+                            newZ = MathF.Round(newZ / SnapScaleStep) * SnapScaleStep;
+                        selected.Scale = new EditorVector3(scaleStartX, scaleStartY, Math.Max(0.01f, newZ));
+                    }
+                    else
+                    {
+                        float newX = Math.Max(0.01f, scaleStartX + delta);
+                        if (SnapEnabled && SnapScaleStep > 0f)
+                            newX = MathF.Round(newX / SnapScaleStep) * SnapScaleStep;
+                        selected.Scale = new EditorVector3(Math.Max(0.01f, newX), scaleStartY, scaleStartZ);
+                    }
                     break;
                 }
 
             case GizmoDragAxis.ScaleY:
                 {
                     float delta = -dy * 0.02f;
-                    float newY = Math.Max(0.01f, scaleStartY + delta);
-                    if (SnapEnabled && SnapScaleStep > 0f)
-                        newY = MathF.Round(newY / SnapScaleStep) * SnapScaleStep;
-                    selected.Scale = new EditorVector2(Math.Max(0.01f, scaleStartX), Math.Max(0.01f, newY));
+                    // En vista Top, el eje Y de pantalla controla Scale.Z.
+                    if (Orientation == ViewOrientation.Top)
+                    {
+                        float newZ = Math.Max(0.01f, scaleStartZ + delta);
+                        if (SnapEnabled && SnapScaleStep > 0f)
+                            newZ = MathF.Round(newZ / SnapScaleStep) * SnapScaleStep;
+                        selected.Scale = new EditorVector3(scaleStartX, scaleStartY, Math.Max(0.01f, newZ));
+                    }
+                    else
+                    {
+                        float newY = Math.Max(0.01f, scaleStartY + delta);
+                        if (SnapEnabled && SnapScaleStep > 0f)
+                            newY = MathF.Round(newY / SnapScaleStep) * SnapScaleStep;
+                        selected.Scale = new EditorVector3(scaleStartX, Math.Max(0.01f, newY), scaleStartZ);
+                    }
                     break;
                 }
 
@@ -230,7 +256,8 @@ public sealed class GizmoController
                     float newVal = Math.Max(0.01f, scaleStartX + delta);
                     if (SnapEnabled && SnapScaleStep > 0f)
                         newVal = MathF.Round(newVal / SnapScaleStep) * SnapScaleStep;
-                    selected.Scale = new EditorVector2(Math.Max(0.01f, newVal), Math.Max(0.01f, scaleStartY + delta));
+                    float v = Math.Max(0.01f, newVal);
+                    selected.Scale = new EditorVector3(v, Math.Max(0.01f, scaleStartY + delta), Math.Max(0.01f, scaleStartZ + delta));
                     break;
                 }
         }
@@ -244,7 +271,9 @@ public sealed class GizmoController
     {
         bool wasDragging;
         GizmoDragAxis axis;
-        float posStartX, posStartY, posStartZ, rotStart, scaleStartX, scaleStartY;
+        float posStartX, posStartY, posStartZ;
+        float rotStartX, rotStartY, rotStartZ;
+        float scaleStartX, scaleStartY, scaleStartZ;
 
         lock (_lock)
         {
@@ -253,41 +282,31 @@ public sealed class GizmoController
             posStartX = _objPosStartX;
             posStartY = _objPosStartY;
             posStartZ = _objPosStartZ;
-            rotStart = _objRotStart;
+            rotStartX = _objRotStartX;
+            rotStartY = _objRotStartY;
+            rotStartZ = _objRotStartZ;
             scaleStartX = _objScaleStartX;
             scaleStartY = _objScaleStartY;
+            scaleStartZ = _objScaleStartZ;
             _dragging = false;
         }
 
         if (!wasDragging || selected is null) return null;
 
-        // Ajuste al soltar: cuando SnapEnabled está activo, ya se ajustó durante el arrastre.
-        // Cuando Ctrl está presionado y SnapEnabled está desactivado, aplicar un ajuste de cuadrícula puntual.
         if (!SnapEnabled && ctrlHeld && axis is GizmoDragAxis.X or GizmoDragAxis.Y or GizmoDragAxis.XY)
             selected.Position = SnapToGrid(selected.Position);
 
-        EditorVector2 startPos = new(posStartX, posStartY);
-        EditorVector2 startScale = new(scaleStartX, scaleStartY);
+        EditorVector3 startPos = new(posStartX, posStartY, posStartZ);
+        EditorVector3 startRot = new(rotStartX, rotStartY, rotStartZ);
+        EditorVector3 startScale = new(scaleStartX, scaleStartY, scaleStartZ);
 
-        // Produce the most appropriate undo command based on axis + orientation.
-        // For combined XY drags in non-Front views both position and PositionZ change;
-        // we prioritise the MoveEntityCommand (position) since it covers the majority of cases.
         return axis switch
         {
-            GizmoDragAxis.X when Orientation == ViewOrientation.Right
-                => new MoveEntityZCommand(selected, posStartZ, selected.PositionZ),
-
-            GizmoDragAxis.Y when Orientation == ViewOrientation.Top
-                => new MoveEntityZCommand(selected, posStartZ, selected.PositionZ),
-
-            GizmoDragAxis.X or GizmoDragAxis.Y or GizmoDragAxis.XY
+            GizmoDragAxis.X or GizmoDragAxis.Y or GizmoDragAxis.XY or GizmoDragAxis.Z
                 => new MoveEntityCommand(selected, startPos, selected.Position),
 
-            GizmoDragAxis.Z
-                => new MoveEntityZCommand(selected, posStartZ, selected.PositionZ),
-
             GizmoDragAxis.Rotate
-                => new RotateEntityCommand(selected, rotStart, selected.Rotation),
+                => new RotateEntityCommand(selected, startRot, selected.Rotation),
 
             GizmoDragAxis.ScaleX or GizmoDragAxis.ScaleY or GizmoDragAxis.ScaleUniform
                 => new ScaleEntityCommand(selected, startScale, selected.Scale),
@@ -297,12 +316,13 @@ public sealed class GizmoController
     }
 
     /// <summary>Ajusta una posición en espacio de mundo a la esquina de celda de cuadrícula más cercana.</summary>
-    public EditorVector2 SnapToGrid(EditorVector2 worldPos)
+    public EditorVector3 SnapToGrid(EditorVector3 worldPos)
     {
         float size = _gridCellSize;
-        return new EditorVector2(
+        return new EditorVector3(
             MathF.Round(worldPos.X / size) * size,
-            MathF.Round(worldPos.Y / size) * size);
+            MathF.Round(worldPos.Y / size) * size,
+            worldPos.Z);
     }
 
     // ── Prueba de colisión ────────────────────────────────────────────────────

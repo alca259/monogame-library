@@ -13,9 +13,14 @@ public sealed class ViewportRenderer : IDrawable
     private const float OGizmoSpokeRadius = 28f;
     private const float OGizmoHitRadius = 12f;
 
-    public EditorCamera2D Camera { get; } = new();
+    // ── Grid adaptativo ───────────────────────────────────────────────────────
+    /// <summary>Separación mínima en píxeles entre líneas de cuadrícula antes de escalar el tamaño de celda.</summary>
+    private const float MinGridStepPx = 40f;
 
-    public int GridCellSize { get; set; } = 26;
+    /// <summary>Factor por el que se multiplica el tamaño de celda cuando es demasiado denso. Cambiar para pruebas.</summary>
+    public const float GridScaleFactor = 10f;
+
+    public EditorCamera2D Camera { get; } = new();
 
     /// <summary>Plano ortográfico activo. Controla qué ejes del mundo se muestran y qué propiedades
     /// afectan el arrastre del gizmo de transformación.</summary>
@@ -43,8 +48,20 @@ public sealed class ViewportRenderer : IDrawable
 
     private void DrawGrid(ICanvas canvas, RectF rect)
     {
-        float step = GridCellSize * Camera.Zoom;
-        if (step < 6) return;
+        // Tamaño base de celda (unidades de mundo) procedente de GizmoController / ProjectSettings.
+        float cellSize = EditorContext.Instance.Gizmos.GridCellSize;
+
+        // Escalado adaptativo: aumentar el tamaño de celda mientras las líneas estén demasiado juntas.
+        float step = cellSize * Camera.Zoom;
+        while (step < MinGridStepPx)
+        {
+            cellSize *= GridScaleFactor;
+            step = cellSize * Camera.Zoom;
+            if (cellSize > 1e9f) return; // salvaguarda para zoom extremo
+        }
+
+        // Última comprobación: si sigue siendo invisible, no dibujar.
+        if (step < 6f) return;
 
         canvas.StrokeColor = ResolveColor("Border").WithAlpha(0.35f);
         canvas.StrokeSize = 1;
@@ -53,19 +70,44 @@ public sealed class ViewportRenderer : IDrawable
         PointF tl = Camera.ScreenToWorld(new PointF(rect.Left, rect.Top), size);
         PointF br = Camera.ScreenToWorld(new PointF(rect.Right, rect.Bottom), size);
 
-        float startX = MathF.Floor(tl.X / GridCellSize) * GridCellSize;
-        for (float wx = startX; wx <= br.X + GridCellSize; wx += GridCellSize)
+        float startX = MathF.Floor(tl.X / cellSize) * cellSize;
+        for (float wx = startX; wx <= br.X + cellSize; wx += cellSize)
         {
             PointF sp = Camera.WorldToScreen(new PointF(wx, 0), size);
             canvas.DrawLine(sp.X, rect.Top, sp.X, rect.Bottom);
         }
 
-        float startY = MathF.Floor(tl.Y / GridCellSize) * GridCellSize;
-        for (float wy = startY; wy <= br.Y + GridCellSize; wy += GridCellSize)
+        float startY = MathF.Floor(tl.Y / cellSize) * cellSize;
+        for (float wy = startY; wy <= br.Y + cellSize; wy += cellSize)
         {
             PointF sp = Camera.WorldToScreen(new PointF(0, wy), size);
             canvas.DrawLine(rect.Left, sp.Y, rect.Right, sp.Y);
         }
+
+        DrawGridScale(canvas, rect, cellSize);
+    }
+
+    /// <summary>Dibuja en la esquina inferior izquierda la escala actual de celda del grid.</summary>
+    private void DrawGridScale(ICanvas canvas, RectF rect, float effectiveCellSize)
+    {
+        string label = FormatGridCellSize(effectiveCellSize);
+
+        float px = 28f;
+        float py = rect.Height - 14f;
+
+        canvas.FontColor = ResolveColor("Border").WithAlpha(0.75f);
+        canvas.FontSize = 10;
+        canvas.DrawString(label, px, py, HorizontalAlignment.Left);
+    }
+
+    /// <summary>Formatea el tamaño de celda en metros con sufijo legible (m / km).</summary>
+    private static string FormatGridCellSize(float meters)
+    {
+        if (meters >= 1000f)
+            return $"Grid: {meters / 1000f:G3} km";
+        if (meters >= 1f)
+            return $"Grid: {meters:G3} m";
+        return $"Grid: {meters * 100f:G3} cm";
     }
 
     // ── Proyección según orientación ─────────────────────────────────────────
@@ -76,10 +118,30 @@ public sealed class ViewportRenderer : IDrawable
     /// </summary>
     private PointF GetWorldCenter(EditorGameObject obj) => Orientation switch
     {
-        ViewOrientation.Top => new PointF(obj.Position.X, obj.PositionZ),
-        ViewOrientation.Right => new PointF(obj.PositionZ, obj.Position.Y),
+        ViewOrientation.Top => new PointF(obj.Position.X, obj.Position.Z),
+        ViewOrientation.Right => new PointF(obj.Position.Z, obj.Position.Y),
         _ => new PointF(obj.Position.X, obj.Position.Y),
     };
+
+    /// <summary>Devuelve el componente de rotación relevante para la orientación activa (en grados).</summary>
+    private float GetVisibleRotation(EditorGameObject obj) => Orientation switch
+    {
+        ViewOrientation.Top => obj.Rotation.Y,
+        ViewOrientation.Right => obj.Rotation.X,
+        _ => obj.Rotation.Z,
+    };
+
+    /// <summary>Devuelve los semitamaños de renderizado según la orientación activa.</summary>
+    private (float halfW, float halfH) GetVisibleScale(EditorGameObject obj)
+    {
+        const float defaultHalfSize = 16f;
+        return Orientation switch
+        {
+            ViewOrientation.Top => (defaultHalfSize * obj.Scale.X, defaultHalfSize * obj.Scale.Z),
+            ViewOrientation.Right => (defaultHalfSize * obj.Scale.Z, defaultHalfSize * obj.Scale.Y),
+            _ => (defaultHalfSize * obj.Scale.X, defaultHalfSize * obj.Scale.Y),
+        };
+    }
 
     /// <summary>
     /// Convierte el centro del objeto a coordenadas de pantalla respetando la orientación activa.
@@ -113,9 +175,7 @@ public sealed class ViewportRenderer : IDrawable
     {
         if (!obj.Active) return;
 
-        const float defaultHalfSize = 16f;
-        float halfW = defaultHalfSize * obj.Scale.X;
-        float halfH = defaultHalfSize * obj.Scale.Y;
+        (float halfW, float halfH) = GetVisibleScale(obj);
 
         PointF wc = GetWorldCenter(obj);
         PointF topLeft = Camera.WorldToScreen(new PointF(wc.X - halfW, wc.Y - halfH), viewSize);
@@ -137,16 +197,14 @@ public sealed class ViewportRenderer : IDrawable
 
     private SelectionInfo? BuildSelectionInfo(EditorGameObject obj, RectF rect)
     {
-        const float defaultHalfSize = 16f;
-        float halfW = defaultHalfSize * obj.Scale.X;
-        float halfH = defaultHalfSize * obj.Scale.Y;
+        (float halfW, float halfH) = GetVisibleScale(obj);
 
         SizeF viewSize = new(rect.Width, rect.Height);
         PointF wc = GetWorldCenter(obj);
         PointF tl = Camera.WorldToScreen(new PointF(wc.X - halfW, wc.Y - halfH), viewSize);
         PointF br = Camera.WorldToScreen(new PointF(wc.X + halfW, wc.Y + halfH), viewSize);
 
-        return new SelectionInfo(new RectF(tl.X, tl.Y, br.X - tl.X, br.Y - tl.Y), obj.Rotation);
+        return new SelectionInfo(new RectF(tl.X, tl.Y, br.X - tl.X, br.Y - tl.Y), GetVisibleRotation(obj));
     }
 
     private void DrawSelection(ICanvas canvas, SelectionInfo sel)
@@ -216,7 +274,7 @@ public sealed class ViewportRenderer : IDrawable
                 break;
 
             case GizmoMode.Rotate:
-                DrawRotateHandles(canvas, ox, oy, selected.Rotation, GizmoController.RotateRadius, accent);
+                DrawRotateHandles(canvas, ox, oy, GetVisibleRotation(selected), GizmoController.RotateRadius, accent);
                 break;
 
             case GizmoMode.Scale:
@@ -224,7 +282,7 @@ public sealed class ViewportRenderer : IDrawable
                 break;
 
             case GizmoMode.Universal:
-                DrawUniversalHandles(canvas, ox, oy, selected.Rotation, axes,
+                DrawUniversalHandles(canvas, ox, oy, GetVisibleRotation(selected), axes,
                     axisX, axisY, accent, labelX, labelY);
                 break;
         }
@@ -236,33 +294,53 @@ public sealed class ViewportRenderer : IDrawable
     {
         bool hasX = axes.HasFlag(GizmoAxisMask.X);
         bool hasY = axes.HasFlag(GizmoAxisMask.Y);
+        const float headSize = GizmoController.ArrowHeadSize;   // 14 px
 
         if (hasX)
         {
+            // Línea del eje X
             canvas.StrokeColor = axisX;
             canvas.StrokeSize = 2;
             canvas.DrawLine(ox, oy, ox + len, oy);
+
+            // Punta triangular apuntando a la derecha
+            PathF arrowX = new();
+            arrowX.MoveTo(ox + len, oy - 7);
+            arrowX.LineTo(ox + len + headSize, oy);
+            arrowX.LineTo(ox + len, oy + 7);
+            arrowX.Close();
             canvas.FillColor = axisX;
-            canvas.FillRectangle(ox + len, oy - 6, 12, 12);
+            canvas.FillPath(arrowX);
+
             canvas.FontColor = axisX;
             canvas.FontSize = 9;
-            canvas.DrawString(labelX, ox + len + 14, oy, HorizontalAlignment.Left);
+            canvas.DrawString(labelX, ox + len + headSize + 4, oy, HorizontalAlignment.Left);
         }
 
         if (hasY)
         {
+            // Línea del eje Y (arriba en pantalla)
             canvas.StrokeColor = axisY;
             canvas.StrokeSize = 2;
             canvas.DrawLine(ox, oy, ox, oy - len);
+
+            // Punta triangular apuntando hacia arriba
+            PathF arrowY = new();
+            arrowY.MoveTo(ox - 7, oy - len);
+            arrowY.LineTo(ox, oy - len - headSize);
+            arrowY.LineTo(ox + 7, oy - len);
+            arrowY.Close();
             canvas.FillColor = axisY;
-            canvas.FillRectangle(ox - 6, oy - len - 12, 12, 12);
+            canvas.FillPath(arrowY);
+
             canvas.FontColor = axisY;
             canvas.FontSize = 9;
-            canvas.DrawString(labelY, ox, oy - len - 22, HorizontalAlignment.Center);
+            canvas.DrawString(labelY, ox, oy - len - headSize - 6, HorizontalAlignment.Center);
         }
 
         if (hasX && hasY)
         {
+            // Cuadrado de movimiento libre (XY)
             Color yellow = Color.FromArgb("#FFEE44");
             canvas.FillColor = yellow.WithAlpha(0.55f);
             canvas.FillRectangle(ox + 12, oy - 28, 16, 16);

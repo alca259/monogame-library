@@ -155,7 +155,6 @@ public sealed partial class EditorWindow : ContentPage
         InspectorSep.IsVisible = _inspectorVisible;
         DockRow.IsVisible = _dockVisible;
 
-        _viewportRenderer.GridCellSize = prefs.GridCellSize;
         EditorContext.Instance.Gizmos.GridCellSize = prefs.GridCellSize;
         EditorContext.Instance.Gizmos.SnapRotationDegrees = prefs.SnapRotationDegrees;
         EditorContext.Instance.Gizmos.SnapScaleStep = prefs.SnapScaleStep;
@@ -171,7 +170,7 @@ public sealed partial class EditorWindow : ContentPage
         prefs.LeftPanelWidth = (int)_hierPanelWidth;
         prefs.RightPanelWidth = (int)_inspPanelWidth;
         prefs.ConsolePanelHeight = (int)_dockPanelHeight;
-        prefs.GridCellSize = _viewportRenderer.GridCellSize;
+        prefs.GridCellSize = (int)EditorContext.Instance.Gizmos.GridCellSize;
         prefs.SnapRotationDegrees = EditorContext.Instance.Gizmos.SnapRotationDegrees;
         prefs.SnapScaleStep = EditorContext.Instance.Gizmos.SnapScaleStep;
         prefs.Save();
@@ -231,8 +230,8 @@ public sealed partial class EditorWindow : ContentPage
         if (sel is null) return;
         Microsoft.Maui.Graphics.PointF pos = _viewportRenderer.Orientation switch
         {
-            ViewOrientation.Top => new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.PositionZ),
-            ViewOrientation.Right => new Microsoft.Maui.Graphics.PointF(sel.PositionZ, sel.Position.Y),
+            ViewOrientation.Top => new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Z),
+            ViewOrientation.Right => new Microsoft.Maui.Graphics.PointF(sel.Position.Z, sel.Position.Y),
             _ => new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y),
         };
         _viewportRenderer.Camera.Position = pos;

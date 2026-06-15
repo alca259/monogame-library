@@ -6,14 +6,17 @@ namespace MonoGame.Editor.Maui.Rendering;
 /// </summary>
 public sealed class EditorCamera2D
 {
-    private const float MinZoom = 0.1f;
-    private const float MaxZoom = 10f;
+    private const float MinZoom = 0.001f;
+    private const float MaxZoom = 5000f;
+
+    /// <summary>Zoom inicial: 50 px por unidad de mundo (1 m = 50 px).</summary>
+    public const float DefaultZoom = 50f;
 
     /// <summary>Posición en espacio mundo del centro de la cámara.</summary>
     public PointF Position { get; set; } = PointF.Zero;
 
-    /// <summary>Factor de escala del zoom, limitado a [0.1, 10].</summary>
-    public float Zoom { get; private set; } = 1f;
+    /// <summary>Factor de escala del zoom, limitado a [0.001, 5000].</summary>
+    public float Zoom { get; private set; } = DefaultZoom;
 
     /// <summary>Convierte un punto de espacio mundo a coordenadas de pantalla.</summary>
     public PointF WorldToScreen(PointF worldPos, SizeF viewportSize)

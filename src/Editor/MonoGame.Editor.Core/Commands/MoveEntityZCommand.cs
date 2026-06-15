@@ -1,6 +1,10 @@
 namespace MonoGame.Editor.Core.Commands;
 
-/// <summary>Cambia la profundidad Z de un <see cref="EditorGameObject"/> (usado en modo 2.5D).</summary>
+/// <summary>
+/// Obsoleto: la profundidad Z está integrada en <see cref="EditorGameObject.Position"/>.
+/// Usa <see cref="MoveEntityCommand"/> con <see cref="EditorVector3"/> para todos los cambios de posición.
+/// </summary>
+[Obsolete("Use MoveEntityCommand with EditorVector3. This class will be removed in a future version.")]
 public sealed class MoveEntityZCommand : IEditorCommand
 {
     private readonly EditorGameObject _target;
@@ -19,8 +23,8 @@ public sealed class MoveEntityZCommand : IEditorCommand
     public string Description => $"Set Z depth '{_target.Name}'";
 
     /// <inheritdoc/>
-    public void Execute() => _target.PositionZ = _newZ;
+    public void Execute() => _target.Position = new EditorVector3(_target.Position.X, _target.Position.Y, _newZ);
 
     /// <inheritdoc/>
-    public void Undo() => _target.PositionZ = _previousZ;
+    public void Undo() => _target.Position = new EditorVector3(_target.Position.X, _target.Position.Y, _previousZ);
 }

@@ -76,38 +76,59 @@ public sealed partial class InspectorViewModel : ViewModelBase
     public void ApplyPosX(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new MoveEntityCommand(s, new EditorVector2((float)v, s.Position.Y)));
+            Context.Commands.Execute(new MoveEntityCommand(s, new EditorVector3((float)v, s.Position.Y, s.Position.Z)));
     }
 
     public void ApplyPosY(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new MoveEntityCommand(s, new EditorVector2(s.Position.X, (float)v)));
+            Context.Commands.Execute(new MoveEntityCommand(s, new EditorVector3(s.Position.X, (float)v, s.Position.Z)));
+    }
+
+    public void ApplyPosZ(double v)
+    {
+        if (Selected is { } s)
+            Context.Commands.Execute(new MoveEntityCommand(s, new EditorVector3(s.Position.X, s.Position.Y, (float)v)));
+    }
+
+    public void ApplyRotX(double v)
+    {
+        if (Selected is { } s)
+            Context.Commands.Execute(new RotateEntityCommand(s, new EditorVector3((float)v, s.Rotation.Y, s.Rotation.Z)));
+    }
+
+    public void ApplyRotY(double v)
+    {
+        if (Selected is { } s)
+            Context.Commands.Execute(new RotateEntityCommand(s, new EditorVector3(s.Rotation.X, (float)v, s.Rotation.Z)));
     }
 
     public void ApplyRotZ(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new RotateEntityCommand(s, s.Rotation, (float)v));
+            Context.Commands.Execute(new RotateEntityCommand(s, new EditorVector3(s.Rotation.X, s.Rotation.Y, (float)v)));
     }
 
     public void ApplyScaleX(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new ScaleEntityCommand(s, new EditorVector2((float)v, s.Scale.Y)));
+            Context.Commands.Execute(new ScaleEntityCommand(s, new EditorVector3((float)v, s.Scale.Y, s.Scale.Z)));
     }
 
     public void ApplyScaleY(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new ScaleEntityCommand(s, new EditorVector2(s.Scale.X, (float)v)));
+            Context.Commands.Execute(new ScaleEntityCommand(s, new EditorVector3(s.Scale.X, (float)v, s.Scale.Z)));
     }
 
-    public void ApplyDepth(double v)
+    public void ApplyScaleZ(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new MoveEntityZCommand(s, s.PositionZ, (float)v));
+            Context.Commands.Execute(new ScaleEntityCommand(s, new EditorVector3(s.Scale.X, s.Scale.Y, (float)v)));
     }
+
+    /// <summary>Alias de compatibilidad para el stepper de profundidad del Inspector (equivale a ApplyPosZ).</summary>
+    public void ApplyDepth(double v) => ApplyPosZ(v);
 
     public void SetActive(bool next)
     {

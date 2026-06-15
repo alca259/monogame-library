@@ -53,7 +53,6 @@ public sealed class DuplicateEntityCommand : IEditorCommand
             Name = source.Name + " (copy)",
             Active = source.Active,
             Position = source.Position,
-            PositionZ = source.PositionZ,
             Rotation = source.Rotation,
             Scale = source.Scale,
             PrefabPath = source.PrefabPath,

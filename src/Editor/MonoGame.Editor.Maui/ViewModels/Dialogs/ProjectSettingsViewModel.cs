@@ -23,6 +23,7 @@ public sealed partial class ProjectSettingsViewModel : DialogViewModel<bool>
     [ObservableProperty] private string _virtualHeight = "1080";
     [ObservableProperty] private string _gameAppCsproj = string.Empty;
     [ObservableProperty] private string _gameScriptsCsproj = string.Empty;
+    [ObservableProperty] private string _gridCellSize = "1";
 
     // Content
     [ObservableProperty] private string _contentRelPath = "Content";
@@ -68,6 +69,9 @@ public sealed partial class ProjectSettingsViewModel : DialogViewModel<bool>
         RootNamespace = _settings.RootNamespace;
         GeneratedCodeFolder = _settings.GeneratedCodeFolder;
         GenerateOnSave = _settings.GenerateOnSave;
+        GridCellSize = _settings.GridCellSize > 0
+            ? _settings.GridCellSize.ToString("G")
+            : "1";
     }
 
     private void SaveToSettings()
@@ -86,6 +90,7 @@ public sealed partial class ProjectSettingsViewModel : DialogViewModel<bool>
         _settings.RootNamespace = RootNamespace?.Trim() ?? string.Empty;
         _settings.GeneratedCodeFolder = GeneratedCodeFolder?.Trim() ?? "Generated";
         _settings.GenerateOnSave = GenerateOnSave;
+        _settings.GridCellSize = ParseFloat(GridCellSize, 1f);
     }
 
     [RelayCommand]
@@ -134,6 +139,10 @@ public sealed partial class ProjectSettingsViewModel : DialogViewModel<bool>
 
     private static int ParseInt(string? text, int fallback)
         => int.TryParse(text, out int v) && v > 0 ? v : fallback;
+
+    private static float ParseFloat(string? text, float fallback)
+        => float.TryParse(text, System.Globalization.NumberStyles.Float,
+               System.Globalization.CultureInfo.InvariantCulture, out float v) && v > 0 ? v : fallback;
 
     private static List<string> ParseLocaleList(string? text)
     {

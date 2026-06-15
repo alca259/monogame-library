@@ -64,7 +64,7 @@ public sealed partial class RelativePathPickerViewModel : DialogViewModel<string
     {
         if (_syncing || value is null) return;
 
-        if (value.IsDirectory)
+        if (value.IsDirectory) 
         {
             if (_expandedPaths.Contains(value.FullPath))
                 _expandedPaths.Remove(value.FullPath);
@@ -119,31 +119,32 @@ public sealed partial class RelativePathPickerViewModel : DialogViewModel<string
 
             EmptyMessage = "Empty folder";
             FlattenDirectory(_baseFolder, 0);
+
+            // Restaurar la selección dentro del bloque syncing para que OnSelectedNodeChanged
+            // no procese el nodo restaurado como un clic nuevo y evitar el bucle infinito.
+            if (_selectedPath is null) return;
+
+            FileSystemNode? toSelect = null;
+            foreach (FileSystemNode n in Nodes)
+            {
+                if (n.FullPath.Equals(_selectedPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    toSelect = n;
+                    break;
+                }
+            }
+
+            if (toSelect is not null)
+                SelectedNode = toSelect;
+            else
+            {
+                _selectedPath = null;
+                CurrentRelativePath = string.Empty;
+            }
         }
         finally
         {
             _syncing = false;
-        }
-
-        // Restaurar la selección con la instancia nueva del nodo correspondiente
-        if (_selectedPath is null) return;
-
-        FileSystemNode? toSelect = null;
-        foreach (FileSystemNode n in Nodes)
-        {
-            if (n.FullPath.Equals(_selectedPath, StringComparison.OrdinalIgnoreCase))
-            {
-                toSelect = n;
-                break;
-            }
-        }
-
-        if (toSelect is not null)
-            SelectedNode = toSelect;
-        else
-        {
-            _selectedPath = null;
-            CurrentRelativePath = string.Empty;
         }
     }
 
