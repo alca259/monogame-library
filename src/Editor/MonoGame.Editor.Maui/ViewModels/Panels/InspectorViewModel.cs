@@ -76,59 +76,70 @@ public sealed partial class InspectorViewModel : ViewModelBase
     public void ApplyPosX(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new MoveEntityCommand(s, new EditorVector3((float)v, s.Position.Y, s.Position.Z)));
+            ExecuteTransformCommand(s, new MoveEntityCommand(s, new EditorVector3((float)v, s.Position.Y, s.Position.Z)));
     }
 
     public void ApplyPosY(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new MoveEntityCommand(s, new EditorVector3(s.Position.X, (float)v, s.Position.Z)));
+            ExecuteTransformCommand(s, new MoveEntityCommand(s, new EditorVector3(s.Position.X, (float)v, s.Position.Z)));
     }
 
     public void ApplyPosZ(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new MoveEntityCommand(s, new EditorVector3(s.Position.X, s.Position.Y, (float)v)));
+            ExecuteTransformCommand(s, new MoveEntityCommand(s, new EditorVector3(s.Position.X, s.Position.Y, (float)v)));
     }
 
     public void ApplyRotX(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new RotateEntityCommand(s, new EditorVector3((float)v, s.Rotation.Y, s.Rotation.Z)));
+            ExecuteTransformCommand(s, new RotateEntityCommand(s, new EditorVector3((float)v, s.Rotation.Y, s.Rotation.Z)));
     }
 
     public void ApplyRotY(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new RotateEntityCommand(s, new EditorVector3(s.Rotation.X, (float)v, s.Rotation.Z)));
+            ExecuteTransformCommand(s, new RotateEntityCommand(s, new EditorVector3(s.Rotation.X, (float)v, s.Rotation.Z)));
     }
 
     public void ApplyRotZ(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new RotateEntityCommand(s, new EditorVector3(s.Rotation.X, s.Rotation.Y, (float)v)));
+            ExecuteTransformCommand(s, new RotateEntityCommand(s, new EditorVector3(s.Rotation.X, s.Rotation.Y, (float)v)));
     }
 
     public void ApplyScaleX(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new ScaleEntityCommand(s, new EditorVector3((float)v, s.Scale.Y, s.Scale.Z)));
+            ExecuteTransformCommand(s, new ScaleEntityCommand(s, new EditorVector3((float)v, s.Scale.Y, s.Scale.Z)));
     }
 
     public void ApplyScaleY(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new ScaleEntityCommand(s, new EditorVector3(s.Scale.X, (float)v, s.Scale.Z)));
+            ExecuteTransformCommand(s, new ScaleEntityCommand(s, new EditorVector3(s.Scale.X, (float)v, s.Scale.Z)));
     }
 
     public void ApplyScaleZ(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new ScaleEntityCommand(s, new EditorVector3(s.Scale.X, s.Scale.Y, (float)v)));
+            ExecuteTransformCommand(s, new ScaleEntityCommand(s, new EditorVector3(s.Scale.X, s.Scale.Y, (float)v)));
     }
 
     /// <summary>Alias de compatibilidad para el stepper de profundidad del Inspector (equivale a ApplyPosZ).</summary>
     public void ApplyDepth(double v) => ApplyPosZ(v);
+
+    /// <summary>
+    /// Ejecuta el comando y publica <see cref="GameObjectSelectedEvent"/> para forzar el repintado del viewport.
+    /// <see cref="EditorContext.MarkSceneDirty"/> solo publica su evento la primera vez que la escena pasa a dirty,
+    /// por lo que necesitamos un evento adicional para los cambios posteriores.
+    /// </summary>
+    private void ExecuteTransformCommand(EditorGameObject target, IEditorCommand command)
+    {
+        Context.Commands.Execute(command);
+        Context.EventBus.Publish(new GameObjectSelectedEvent(target));
+    }
 
     public void SetActive(bool next)
     {

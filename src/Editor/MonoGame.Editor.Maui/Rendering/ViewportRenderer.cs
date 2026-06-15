@@ -131,10 +131,14 @@ public sealed class ViewportRenderer : IDrawable
         _ => obj.Rotation.Z,
     };
 
-    /// <summary>Devuelve los semitamaños de renderizado según la orientación activa.</summary>
+    /// <summary>
+    /// Devuelve los semitamaños de renderizado según la orientación activa.
+    /// Con <c>defaultHalfSize = 0.5f</c>, un objeto a escala (1,1,1) ocupa exactamente
+    /// 1×1 unidades de mundo (1 celda de grid cuando GridCellSize = 1).
+    /// </summary>
     private (float halfW, float halfH) GetVisibleScale(EditorGameObject obj)
     {
-        const float defaultHalfSize = 16f;
+        const float defaultHalfSize = 0.5f;
         return Orientation switch
         {
             ViewOrientation.Top => (defaultHalfSize * obj.Scale.X, defaultHalfSize * obj.Scale.Z),
@@ -210,37 +214,29 @@ public sealed class ViewportRenderer : IDrawable
     private void DrawSelection(ICanvas canvas, SelectionInfo sel)
     {
         RectF b = sel.ScreenBounds;
+        Color accent = ResolveColor("AccentBlue");
 
-        canvas.StrokeColor = ResolveColor("AccentBlue");
+        // Borde del rectángulo de selección
+        canvas.StrokeColor = accent;
         canvas.StrokeSize = 1;
         canvas.DrawRectangle(b);
 
+        // Solo las 4 esquinas, mismo color que el borde (sin relleno blanco ni pivote)
         const float h = 6f, hh = h / 2f;
-        float midX = b.Center.X, midY = b.Center.Y;
 
-        PointF[] pts =
+        PointF[] corners =
         [
-            new(b.Left,  b.Top),    new(midX, b.Top),    new(b.Right, b.Top),
-            new(b.Left,  midY),                           new(b.Right, midY),
-            new(b.Left,  b.Bottom), new(midX, b.Bottom), new(b.Right, b.Bottom),
+            new(b.Left,  b.Top),
+            new(b.Right, b.Top),
+            new(b.Left,  b.Bottom),
+            new(b.Right, b.Bottom),
         ];
 
-        canvas.FillColor = Colors.White;
-        canvas.StrokeColor = ResolveColor("AccentBlue");
-        foreach (PointF p in pts)
-        {
-            RectF r = new(p.X - hh, p.Y - hh, h, h);
-            canvas.FillRectangle(r);
-            canvas.DrawRectangle(r);
-        }
-
-        float rotY = b.Top - 18f;
-        canvas.StrokeColor = ResolveColor("AccentBlue");
-        canvas.DrawLine(midX, b.Top, midX, rotY);
-        canvas.FillColor = Colors.White;
-        canvas.FillCircle(midX, rotY, 4f);
-        canvas.StrokeColor = ResolveColor("AccentBlue");
-        canvas.DrawCircle(midX, rotY, 4f);
+        canvas.FillColor = accent;
+        canvas.StrokeColor = accent;
+        canvas.StrokeSize = 1;
+        foreach (PointF p in corners)
+            canvas.FillRectangle(p.X - hh, p.Y - hh, h, h);
     }
 
     // ── Gizmo transform handles ───────────────────────────────────────────────
