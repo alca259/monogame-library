@@ -29,6 +29,9 @@ public sealed class GizmoController
     /// <summary>Tamaño de la manija de diamante de profundidad Z en píxeles de pantalla.</summary>
     public const float ZHandleSize = 12f;
 
+    /// <summary>Distancia desde el origen a las manijas de escala en modo Universal (mitad de la flecha para evitar solape).</summary>
+    public const float UniversalScaleAxisRadius = ArrowLength * 0.55f;
+
     private const float HitTolerance = 10f;
 
     // ── Estado de arrastre (protegido por bloqueo) ───────────────────────────
@@ -45,6 +48,12 @@ public sealed class GizmoController
 
     /// <summary>Herramienta de transformación actualmente activa.</summary>
     public GizmoMode Mode { get; set; } = GizmoMode.Select;
+
+    /// <summary>Herramientas activas en el modo <see cref="GizmoMode.Universal"/>.</summary>
+    public GizmoTool EnabledTools { get; set; } = GizmoTool.Move | GizmoTool.Rotate | GizmoTool.Scale;
+
+    /// <summary>Ejes habilitados para interacción y renderizado del gizmo.</summary>
+    public GizmoAxisMask EnabledAxes { get; set; } = GizmoAxisMask.Both;
 
     /// <summary>Indica si se renderiza la superposición de cuadrícula.</summary>
     public bool ShowGrid { get; set; } = true;
@@ -83,9 +92,9 @@ public sealed class GizmoController
         float clickWorldX, float clickWorldY,
         EditorGameObject selected)
     {
-        if (Mode == GizmoMode.Select || Mode == GizmoMode.Rect) return false;
+        if (Mode is GizmoMode.Select or GizmoMode.Rect) return false;
 
-        GizmoDragAxis axis = HitTest(clickScreenX, clickScreenY, objScreenX, objScreenY, Mode);
+        GizmoDragAxis axis = HitTest(clickScreenX, clickScreenY, objScreenX, objScreenY, Mode, EnabledTools, EnabledAxes);
         if (axis == GizmoDragAxis.None) return false;
 
         lock (_lock)
@@ -298,51 +307,109 @@ public sealed class GizmoController
 
     // ── Prueba de colisión ────────────────────────────────────────────────────
 
-    private static GizmoDragAxis HitTest(float px, float py, float ox, float oy, GizmoMode mode) =>
+    private static GizmoDragAxis HitTest(
+        float px, float py, float ox, float oy,
+        GizmoMode mode, GizmoTool tools, GizmoAxisMask axes) =>
         mode switch
         {
-            GizmoMode.Move => HitTestMove(px, py, ox, oy),
-            GizmoMode.Rotate => HitTestRotate(px, py, ox, oy),
-            GizmoMode.Scale => HitTestScale(px, py, ox, oy),
+            GizmoMode.Move => HitTestMove(px, py, ox, oy, axes),
+            GizmoMode.Rotate => HitTestRotate(px, py, ox, oy, RotateRadius),
+            GizmoMode.Scale => HitTestScale(px, py, ox, oy, ArrowLength, axes),
+            GizmoMode.Universal => HitTestUniversal(px, py, ox, oy, tools, axes),
             _ => GizmoDragAxis.None,
         };
 
-    private static GizmoDragAxis HitTestMove(float px, float py, float ox, float oy)
+    private static GizmoDragAxis HitTestMove(float px, float py, float ox, float oy, GizmoAxisMask axes)
     {
-        // Cuadrado libre XY (verificar primero, ya que se superpone con los inicios de eje)
-        if (InRect(px, py, ox + 12, oy - 28, 16, 16)) return GizmoDragAxis.XY;
+        bool hasX = axes.HasFlag(GizmoAxisMask.X);
+        bool hasY = axes.HasFlag(GizmoAxisMask.Y);
+
+        // Cuadrado libre XY (verificar primero; requiere ambos ejes)
+        if (hasX && hasY && InRect(px, py, ox + 12, oy - 28, 16, 16)) return GizmoDragAxis.XY;
 
         // Eje X
-        if (InRect(px, py, ox, oy - HitTolerance, ArrowLength + ArrowHeadSize, HitTolerance * 2))
+        if (hasX && InRect(px, py, ox, oy - HitTolerance, ArrowLength + ArrowHeadSize, HitTolerance * 2))
             return GizmoDragAxis.X;
 
         // Eje Y (pantalla-Y arriba = dirección negativa)
-        if (InRect(px, py, ox - HitTolerance, oy - ArrowLength - ArrowHeadSize, HitTolerance * 2, ArrowLength + ArrowHeadSize))
+        if (hasY && InRect(px, py, ox - HitTolerance, oy - ArrowLength - ArrowHeadSize, HitTolerance * 2, ArrowLength + ArrowHeadSize))
             return GizmoDragAxis.Y;
 
         return GizmoDragAxis.None;
     }
 
-    private static GizmoDragAxis HitTestRotate(float px, float py, float ox, float oy)
+    private static GizmoDragAxis HitTestRotate(float px, float py, float ox, float oy, float radius)
     {
         float dx = px - ox;
         float dy = py - oy;
         float dist = MathF.Sqrt(dx * dx + dy * dy);
-        return MathF.Abs(dist - RotateRadius) < 12f ? GizmoDragAxis.Rotate : GizmoDragAxis.None;
+        return MathF.Abs(dist - radius) < 12f ? GizmoDragAxis.Rotate : GizmoDragAxis.None;
     }
 
-    private static GizmoDragAxis HitTestScale(float px, float py, float ox, float oy)
+    private static GizmoDragAxis HitTestScale(float px, float py, float ox, float oy, float axisRadius, GizmoAxisMask axes)
     {
+        bool hasX = axes.HasFlag(GizmoAxisMask.X);
+        bool hasY = axes.HasFlag(GizmoAxisMask.Y);
         float h = ScaleHandleSize / 2 + 4f;
 
-        // Centro (escala uniforme)
-        if (InRect(px, py, ox - h, oy - h, h * 2, h * 2)) return GizmoDragAxis.ScaleUniform;
+        // Centro (escala uniforme; requiere ambos ejes)
+        if (hasX && hasY && InRect(px, py, ox - h, oy - h, h * 2, h * 2)) return GizmoDragAxis.ScaleUniform;
 
         // Manija del extremo X
-        if (InRect(px, py, ox + ArrowLength - h, oy - h, h * 2, h * 2)) return GizmoDragAxis.ScaleX;
+        if (hasX && InRect(px, py, ox + axisRadius - h, oy - h, h * 2, h * 2)) return GizmoDragAxis.ScaleX;
 
         // Manija del extremo Y
-        if (InRect(px, py, ox - h, oy - ArrowLength - h, h * 2, h * 2)) return GizmoDragAxis.ScaleY;
+        if (hasY && InRect(px, py, ox - h, oy - axisRadius - h, h * 2, h * 2)) return GizmoDragAxis.ScaleY;
+
+        return GizmoDragAxis.None;
+    }
+
+    private static GizmoDragAxis HitTestUniversal(
+        float px, float py, float ox, float oy,
+        GizmoTool tools, GizmoAxisMask axes)
+    {
+        bool hasX = axes.HasFlag(GizmoAxisMask.X);
+        bool hasY = axes.HasFlag(GizmoAxisMask.Y);
+
+        // Prioridad de resolución (específico → amplio para evitar solapamientos):
+        // 1. Cuadrado libre XY de Move (centro pequeño, alta especificidad)
+        if (tools.HasFlag(GizmoTool.Move) && hasX && hasY && InRect(px, py, ox + 12, oy - 28, 16, 16))
+            return GizmoDragAxis.XY;
+
+        // 2. Centro de escala uniforme (encima del origen)
+        if (tools.HasFlag(GizmoTool.Scale) && hasX && hasY)
+        {
+            float h = ScaleHandleSize / 2 + 4f;
+            if (InRect(px, py, ox - h, oy - h, h * 2, h * 2)) return GizmoDragAxis.ScaleUniform;
+        }
+
+        // 3. Manijas de escala en los extremos de eje (a UniversalScaleAxisRadius)
+        if (tools.HasFlag(GizmoTool.Scale))
+        {
+            float h = ScaleHandleSize / 2 + 4f;
+            if (hasX && InRect(px, py, ox + UniversalScaleAxisRadius - h, oy - h, h * 2, h * 2))
+                return GizmoDragAxis.ScaleX;
+            if (hasY && InRect(px, py, ox - h, oy - UniversalScaleAxisRadius - h, h * 2, h * 2))
+                return GizmoDragAxis.ScaleY;
+        }
+
+        // 4. Flechas de Move a lo largo de los ejes completos
+        if (tools.HasFlag(GizmoTool.Move))
+        {
+            if (hasX && InRect(px, py, ox, oy - HitTolerance, ArrowLength + ArrowHeadSize, HitTolerance * 2))
+                return GizmoDragAxis.X;
+            if (hasY && InRect(px, py, ox - HitTolerance, oy - ArrowLength - ArrowHeadSize, HitTolerance * 2, ArrowLength + ArrowHeadSize))
+                return GizmoDragAxis.Y;
+        }
+
+        // 5. Anillo de rotación (independiente de ejes)
+        if (tools.HasFlag(GizmoTool.Rotate))
+        {
+            float dx = px - ox;
+            float dy = py - oy;
+            float dist = MathF.Sqrt(dx * dx + dy * dy);
+            if (MathF.Abs(dist - RotateRadius) < 12f) return GizmoDragAxis.Rotate;
+        }
 
         return GizmoDragAxis.None;
     }

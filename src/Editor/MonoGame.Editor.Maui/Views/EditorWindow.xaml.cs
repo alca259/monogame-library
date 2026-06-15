@@ -296,8 +296,7 @@ public sealed partial class EditorWindow : ContentPage
                         SizeF vs = new((float)Viewport.Width, (float)Viewport.Height);
                         Microsoft.Maui.Graphics.PointF clickWorld = _viewportRenderer.Camera.ScreenToWorld(
                             new Microsoft.Maui.Graphics.PointF(_panStartScreenX, _panStartScreenY), vs);
-                        Microsoft.Maui.Graphics.PointF objScreen = _viewportRenderer.Camera.WorldToScreen(
-                            new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y), vs);
+                        Microsoft.Maui.Graphics.PointF objScreen = _viewportRenderer.GetObjectScreenCenter(sel, vs);
 
                         _gizmoDragging = EditorContext.Instance.Gizmos.BeginDrag(
                             _panStartScreenX, _panStartScreenY,
@@ -325,8 +324,7 @@ public sealed partial class EditorWindow : ContentPage
                             float screenY = _panStartScreenY + (float)e.TotalY;
                             Microsoft.Maui.Graphics.PointF world = _viewportRenderer.Camera.ScreenToWorld(
                                 new Microsoft.Maui.Graphics.PointF(screenX, screenY), vs);
-                            Microsoft.Maui.Graphics.PointF objSc = _viewportRenderer.Camera.WorldToScreen(
-                                new Microsoft.Maui.Graphics.PointF(sel.Position.X, sel.Position.Y), vs);
+                            Microsoft.Maui.Graphics.PointF objSc = _viewportRenderer.GetObjectScreenCenter(sel, vs);
                             EditorContext.Instance.Gizmos.UpdateDrag(
                                 world.X, world.Y, screenX, screenY, objSc.X, objSc.Y, sel);
                             Viewport.Invalidate();

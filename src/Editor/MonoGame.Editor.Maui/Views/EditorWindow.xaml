@@ -120,6 +120,18 @@
                         </DataTrigger>
                     </Button.Triggers>
                 </Button>
+                <Button Text="✣" ToolTipProperties.Text="Universal (U)"
+                        Style="{StaticResource ToolButton}"
+                        Command="{Binding ActivateToolCommand}" CommandParameter="Universal"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="Transparent" TextColor="#9A9AA2">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ActiveTool}" Value="Universal">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
 
                 <!-- Separator -->
                 <BoxView WidthRequest="1" HeightRequest="24"
@@ -163,6 +175,80 @@
                             <Setter Property="BackgroundColor" Value="#4A9EFF"/>
                             <Setter Property="TextColor" Value="#FFFFFF"/>
                             <Setter Property="BorderColor" Value="#4A9EFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+
+                <!-- Separator -->
+                <BoxView WidthRequest="1" HeightRequest="24"
+                         Color="{StaticResource BorderColor}"
+                         Margin="6,0" VerticalOptions="Center"/>
+
+                <!-- Universal tool toggles — herramientas -->
+                <Button Text="M" ToolTipProperties.Text="Toggle Move"
+                        Style="{StaticResource PillButton}"
+                        Command="{Binding ToggleToolMoveCommand}"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="#252528" TextColor="#9A9AA2" BorderColor="#34343A">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ToolMoveEnabled}" Value="True">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                            <Setter Property="BorderColor" Value="#4A9EFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="R" ToolTipProperties.Text="Toggle Rotate"
+                        Style="{StaticResource PillButton}"
+                        Command="{Binding ToggleToolRotateCommand}"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="#252528" TextColor="#9A9AA2" BorderColor="#34343A">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ToolRotateEnabled}" Value="True">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                            <Setter Property="BorderColor" Value="#4A9EFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="S" ToolTipProperties.Text="Toggle Scale"
+                        Style="{StaticResource PillButton}"
+                        Command="{Binding ToggleToolScaleCommand}"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="#252528" TextColor="#9A9AA2" BorderColor="#34343A">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ToolScaleEnabled}" Value="True">
+                            <Setter Property="BackgroundColor" Value="#4A9EFF"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                            <Setter Property="BorderColor" Value="#4A9EFF"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+
+                <!-- Universal tool toggles — ejes -->
+                <Button Text="X" ToolTipProperties.Text="Toggle Axis X"
+                        Style="{StaticResource PillButton}"
+                        Command="{Binding ToggleAxisXCommand}"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="#252528" TextColor="#9A9AA2" BorderColor="#34343A">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding AxisXEnabled}" Value="True">
+                            <Setter Property="BackgroundColor" Value="#C73E3E"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                            <Setter Property="BorderColor" Value="#C73E3E"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Y" ToolTipProperties.Text="Toggle Axis Y"
+                        Style="{StaticResource PillButton}"
+                        Command="{Binding ToggleAxisYCommand}"
+                        IsEnabled="{Binding ToolsEnabled}"
+                        BackgroundColor="#252528" TextColor="#9A9AA2" BorderColor="#34343A">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding AxisYEnabled}" Value="True">
+                            <Setter Property="BackgroundColor" Value="#46C66A"/>
+                            <Setter Property="TextColor" Value="#FFFFFF"/>
+                            <Setter Property="BorderColor" Value="#46C66A"/>
                         </DataTrigger>
                     </Button.Triggers>
                 </Button>

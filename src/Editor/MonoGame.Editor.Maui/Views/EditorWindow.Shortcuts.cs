@@ -121,6 +121,10 @@ public sealed partial class EditorWindow
                 MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool(EditorWindowViewModel.SceneTools.Pan));
                 e.Handled = true;
                 break;
+            case VirtualKey.U:
+                MainThread.BeginInvokeOnMainThread(() => _vm.ActivateTool(EditorWindowViewModel.SceneTools.Universal));
+                e.Handled = true;
+                break;
             case VirtualKey.G:
                 MainThread.BeginInvokeOnMainThread(_vm.ToggleSnap);
                 e.Handled = true;

@@ -81,6 +81,13 @@ public sealed class ViewportRenderer : IDrawable
         _ => new PointF(obj.Position.X, obj.Position.Y),
     };
 
+    /// <summary>
+    /// Convierte el centro del objeto a coordenadas de pantalla respetando la orientación activa.
+    /// Úsalo en el code-behind siempre que necesites pasar <c>objScreenX/Y</c> al <see cref="MonoGame.Editor.Core.Gizmos.GizmoController"/>.
+    /// </summary>
+    public PointF GetObjectScreenCenter(EditorGameObject obj, SizeF viewportSize)
+        => Camera.WorldToScreen(GetWorldCenter(obj), viewportSize);
+
     // ── Scene objects (placeholder rects) ────────────────────────────────────
 
     private void DrawSceneObjects(ICanvas canvas, RectF rect)
@@ -188,13 +195,11 @@ public sealed class ViewportRenderer : IDrawable
         SizeF viewSize = new(rect.Width, rect.Height);
         PointF o = Camera.WorldToScreen(GetWorldCenter(selected), viewSize);
         float ox = o.X, oy = o.Y;
-        float len = GizmoController.ArrowLength;
 
         Color axisX = ResolveColor("AxisRed");
         Color axisY = ResolveColor("AxisGreen");
         Color accent = ResolveColor("AccentBlue");
 
-        // Determine labels for the two visible axes based on orientation
         (string labelX, string labelY) = Orientation switch
         {
             ViewOrientation.Top => ("x", "z"),
@@ -202,83 +207,140 @@ public sealed class ViewportRenderer : IDrawable
             _ => ("x", "y"),
         };
 
+        GizmoAxisMask axes = EditorContext.Instance.Gizmos.EnabledAxes;
+
         switch (mode)
         {
             case GizmoMode.Move:
-                {
-                    // X arm (red)
-                    canvas.StrokeColor = axisX;
-                    canvas.StrokeSize = 2;
-                    canvas.DrawLine(ox, oy, ox + len, oy);
-                    canvas.FillColor = axisX;
-                    canvas.FillRectangle(ox + len, oy - 6, 12, 12);
-                    canvas.FontColor = axisX;
-                    canvas.FontSize = 9;
-                    canvas.DrawString(labelX, ox + len + 14, oy, HorizontalAlignment.Left);
-
-                    // Y arm (green, screen-Y up)
-                    canvas.StrokeColor = axisY;
-                    canvas.StrokeSize = 2;
-                    canvas.DrawLine(ox, oy, ox, oy - len);
-                    canvas.FillColor = axisY;
-                    canvas.FillRectangle(ox - 6, oy - len - 12, 12, 12);
-                    canvas.FontColor = axisY;
-                    canvas.DrawString(labelY, ox, oy - len - 22, HorizontalAlignment.Center);
-
-                    // Free-move square (yellow)
-                    Color yellow = Color.FromArgb("#FFEE44");
-                    canvas.FillColor = yellow.WithAlpha(0.55f);
-                    canvas.FillRectangle(ox + 12, oy - 28, 16, 16);
-                    canvas.StrokeColor = yellow;
-                    canvas.StrokeSize = 1;
-                    canvas.DrawRectangle(ox + 12, oy - 28, 16, 16);
-
-                    break;
-                }
+                DrawMoveHandles(canvas, ox, oy, GizmoController.ArrowLength, axes, axisX, axisY, labelX, labelY);
+                break;
 
             case GizmoMode.Rotate:
-                {
-                    float r = GizmoController.RotateRadius;
-                    canvas.StrokeColor = accent;
-                    canvas.StrokeSize = 2;
-                    canvas.DrawCircle(ox, oy, r);
-
-                    float rad = selected.Rotation * MathF.PI / 180f;
-                    float endX = ox + r * MathF.Cos(rad);
-                    float endY = oy + r * MathF.Sin(rad);
-                    canvas.StrokeColor = accent;
-                    canvas.DrawLine(ox, oy, endX, endY);
-                    canvas.FillColor = Colors.White;
-                    canvas.FillCircle(endX, endY, 4f);
-                    canvas.StrokeColor = accent;
-                    canvas.DrawCircle(endX, endY, 4f);
-                    break;
-                }
+                DrawRotateHandles(canvas, ox, oy, selected.Rotation, GizmoController.RotateRadius, accent);
+                break;
 
             case GizmoMode.Scale:
-                {
-                    float sh = GizmoController.ScaleHandleSize;
-                    float hsh = sh / 2f;
+                DrawScaleHandles(canvas, ox, oy, GizmoController.ArrowLength, axes, axisX, axisY);
+                break;
 
-                    canvas.StrokeColor = axisX;
-                    canvas.StrokeSize = 2;
-                    canvas.DrawLine(ox, oy, ox + len, oy);
-                    canvas.FillColor = axisX;
-                    canvas.FillRectangle(ox + len - hsh, oy - hsh, sh, sh);
-
-                    canvas.StrokeColor = axisY;
-                    canvas.DrawLine(ox, oy, ox, oy - len);
-                    canvas.FillColor = axisY;
-                    canvas.FillRectangle(ox - hsh, oy - len - hsh, sh, sh);
-
-                    canvas.FillColor = Colors.White;
-                    canvas.StrokeColor = Colors.Gray;
-                    canvas.StrokeSize = 1;
-                    canvas.FillRectangle(ox - hsh, oy - hsh, sh, sh);
-                    canvas.DrawRectangle(ox - hsh, oy - hsh, sh, sh);
-                    break;
-                }
+            case GizmoMode.Universal:
+                DrawUniversalHandles(canvas, ox, oy, selected.Rotation, axes,
+                    axisX, axisY, accent, labelX, labelY);
+                break;
         }
+    }
+
+    private static void DrawMoveHandles(
+        ICanvas canvas, float ox, float oy, float len, GizmoAxisMask axes,
+        Color axisX, Color axisY, string labelX, string labelY)
+    {
+        bool hasX = axes.HasFlag(GizmoAxisMask.X);
+        bool hasY = axes.HasFlag(GizmoAxisMask.Y);
+
+        if (hasX)
+        {
+            canvas.StrokeColor = axisX;
+            canvas.StrokeSize = 2;
+            canvas.DrawLine(ox, oy, ox + len, oy);
+            canvas.FillColor = axisX;
+            canvas.FillRectangle(ox + len, oy - 6, 12, 12);
+            canvas.FontColor = axisX;
+            canvas.FontSize = 9;
+            canvas.DrawString(labelX, ox + len + 14, oy, HorizontalAlignment.Left);
+        }
+
+        if (hasY)
+        {
+            canvas.StrokeColor = axisY;
+            canvas.StrokeSize = 2;
+            canvas.DrawLine(ox, oy, ox, oy - len);
+            canvas.FillColor = axisY;
+            canvas.FillRectangle(ox - 6, oy - len - 12, 12, 12);
+            canvas.FontColor = axisY;
+            canvas.FontSize = 9;
+            canvas.DrawString(labelY, ox, oy - len - 22, HorizontalAlignment.Center);
+        }
+
+        if (hasX && hasY)
+        {
+            Color yellow = Color.FromArgb("#FFEE44");
+            canvas.FillColor = yellow.WithAlpha(0.55f);
+            canvas.FillRectangle(ox + 12, oy - 28, 16, 16);
+            canvas.StrokeColor = yellow;
+            canvas.StrokeSize = 1;
+            canvas.DrawRectangle(ox + 12, oy - 28, 16, 16);
+        }
+    }
+
+    private static void DrawRotateHandles(
+        ICanvas canvas, float ox, float oy, float rotationDeg, float radius, Color accent)
+    {
+        canvas.StrokeColor = accent;
+        canvas.StrokeSize = 2;
+        canvas.DrawCircle(ox, oy, radius);
+
+        float rad = rotationDeg * MathF.PI / 180f;
+        float endX = ox + radius * MathF.Cos(rad);
+        float endY = oy + radius * MathF.Sin(rad);
+        canvas.DrawLine(ox, oy, endX, endY);
+        canvas.FillColor = Colors.White;
+        canvas.FillCircle(endX, endY, 4f);
+        canvas.StrokeColor = accent;
+        canvas.DrawCircle(endX, endY, 4f);
+    }
+
+    private static void DrawScaleHandles(
+        ICanvas canvas, float ox, float oy, float axisRadius, GizmoAxisMask axes,
+        Color axisX, Color axisY)
+    {
+        bool hasX = axes.HasFlag(GizmoAxisMask.X);
+        bool hasY = axes.HasFlag(GizmoAxisMask.Y);
+        float sh = GizmoController.ScaleHandleSize;
+        float hsh = sh / 2f;
+
+        if (hasX)
+        {
+            canvas.StrokeColor = axisX;
+            canvas.StrokeSize = 2;
+            canvas.DrawLine(ox, oy, ox + axisRadius, oy);
+            canvas.FillColor = axisX;
+            canvas.FillRectangle(ox + axisRadius - hsh, oy - hsh, sh, sh);
+        }
+
+        if (hasY)
+        {
+            canvas.StrokeColor = axisY;
+            canvas.StrokeSize = 2;
+            canvas.DrawLine(ox, oy, ox, oy - axisRadius);
+            canvas.FillColor = axisY;
+            canvas.FillRectangle(ox - hsh, oy - axisRadius - hsh, sh, sh);
+        }
+
+        if (hasX && hasY)
+        {
+            canvas.FillColor = Colors.White;
+            canvas.StrokeColor = Colors.Gray;
+            canvas.StrokeSize = 1;
+            canvas.FillRectangle(ox - hsh, oy - hsh, sh, sh);
+            canvas.DrawRectangle(ox - hsh, oy - hsh, sh, sh);
+        }
+    }
+
+    private static void DrawUniversalHandles(
+        ICanvas canvas, float ox, float oy, float rotationDeg, GizmoAxisMask axes,
+        Color axisX, Color axisY, Color accent, string labelX, string labelY)
+    {
+        GizmoTool tools = EditorContext.Instance.Gizmos.EnabledTools;
+
+        // Dibujar en orden: Rotate (anillo exterior, fondo), Scale (media flecha), Move (flecha completa, frente)
+        if (tools.HasFlag(GizmoTool.Rotate))
+            DrawRotateHandles(canvas, ox, oy, rotationDeg, GizmoController.RotateRadius, accent);
+
+        if (tools.HasFlag(GizmoTool.Scale))
+            DrawScaleHandles(canvas, ox, oy, GizmoController.UniversalScaleAxisRadius, axes, axisX, axisY);
+
+        if (tools.HasFlag(GizmoTool.Move))
+            DrawMoveHandles(canvas, ox, oy, GizmoController.ArrowLength, axes, axisX, axisY, labelX, labelY);
     }
 
     // ── Axis gizmo, esquina inferior-izquierda ────────────────────────────────

@@ -49,7 +49,8 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
         Rotate,
         Scale,
         Rect,
-        Pan
+        Pan,
+        Universal
     }
 
     [ObservableProperty]
@@ -57,6 +58,21 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isSnap;
+
+    [ObservableProperty]
+    private bool _toolMoveEnabled = true;
+
+    [ObservableProperty]
+    private bool _toolRotateEnabled = true;
+
+    [ObservableProperty]
+    private bool _toolScaleEnabled = true;
+
+    [ObservableProperty]
+    private bool _axisXEnabled = true;
+
+    [ObservableProperty]
+    private bool _axisYEnabled = true;
 
     [ObservableProperty]
     private bool _isNav;
@@ -705,15 +721,23 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     #region Toolbar — gizmo tools & toggles
 
     [RelayCommand]
-    public void ActivateTool(SceneTools? tool)
+    public void ActivateTool(object? parameter)
     {
-        ActiveTool = tool ?? SceneTools.Select;
-        Context.Gizmos.Mode = ActiveTool switch
+        // Acepta tanto SceneTools (llamadas desde código) como string (CommandParameter de XAML).
+        SceneTools tool = parameter switch
+        {
+            SceneTools t => t,
+            string s when Enum.TryParse<SceneTools>(s, out SceneTools parsed) => parsed,
+            _ => SceneTools.Select,
+        };
+        ActiveTool = tool;
+        Context.Gizmos.Mode = tool switch
         {
             SceneTools.Move => GizmoMode.Move,
             SceneTools.Rotate => GizmoMode.Rotate,
             SceneTools.Scale => GizmoMode.Scale,
             SceneTools.Rect => GizmoMode.Rect,
+            SceneTools.Universal => GizmoMode.Universal,
             _ => GizmoMode.Select,
         };
         ViewportInvalidateRequested?.Invoke();
@@ -724,6 +748,60 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
     {
         IsSnap = !IsSnap;
         Context.Gizmos.SnapEnabled = IsSnap;
+    }
+
+    [RelayCommand]
+    public void ToggleToolMove()
+    {
+        ToolMoveEnabled = !ToolMoveEnabled;
+        UpdateEnabledTools();
+    }
+
+    [RelayCommand]
+    public void ToggleToolRotate()
+    {
+        ToolRotateEnabled = !ToolRotateEnabled;
+        UpdateEnabledTools();
+    }
+
+    [RelayCommand]
+    public void ToggleToolScale()
+    {
+        ToolScaleEnabled = !ToolScaleEnabled;
+        UpdateEnabledTools();
+    }
+
+    [RelayCommand]
+    public void ToggleAxisX()
+    {
+        AxisXEnabled = !AxisXEnabled;
+        UpdateEnabledAxes();
+    }
+
+    [RelayCommand]
+    public void ToggleAxisY()
+    {
+        AxisYEnabled = !AxisYEnabled;
+        UpdateEnabledAxes();
+    }
+
+    private void UpdateEnabledTools()
+    {
+        GizmoTool tools = GizmoTool.None;
+        if (ToolMoveEnabled) tools |= GizmoTool.Move;
+        if (ToolRotateEnabled) tools |= GizmoTool.Rotate;
+        if (ToolScaleEnabled) tools |= GizmoTool.Scale;
+        Context.Gizmos.EnabledTools = tools;
+        ViewportInvalidateRequested?.Invoke();
+    }
+
+    private void UpdateEnabledAxes()
+    {
+        GizmoAxisMask axes = GizmoAxisMask.None;
+        if (AxisXEnabled) axes |= GizmoAxisMask.X;
+        if (AxisYEnabled) axes |= GizmoAxisMask.Y;
+        Context.Gizmos.EnabledAxes = axes;
+        ViewportInvalidateRequested?.Invoke();
     }
 
     [RelayCommand]
