@@ -59,6 +59,18 @@ public abstract class BehaviourEditor
         string? textColor = null, string? bgColor = null)
         => PropertyControlHelper.BuildPropertyRow(labelText, control, textColor, bgColor);
 
+    /// <summary>Dos steppers X/Y para una propiedad Vector2 serializada como objeto JSON {X,Y}.</summary>
+    protected static View BuildVector2Field(string label, JsonElement el,
+        Action<double> onX, Action<double> onY, bool readOnly = false)
+    {
+        (double x, double y) = PropertyControlHelper.GetVector2(el);
+        return PropertyControlHelper.BuildVector2Field(label, x, y, onX, onY, readOnly);
+    }
+
+    /// <summary>Serializa un par (x, y) como JsonElement {X, Y}.</summary>
+    protected static JsonElement SerializeVector2(double x, double y)
+        => PropertyControlHelper.SerializeVector2(x, y);
+
     /// <summary>Ejecuta un cambio de propiedad con soporte de deshacer/rehacer.</summary>
     protected static void SetProperty(EditorBehaviour behaviour, string key, JsonElement newValue)
         => PropertyControlHelper.SetProperty(behaviour, key, newValue);

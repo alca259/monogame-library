@@ -292,6 +292,40 @@ internal static class PropertyControlHelper
             EditorContext.Instance.EventBus.Publish(new GameObjectSelectedEvent(obj));
     }
 
+    // ── Vector2 helpers ───────────────────────────────────────────────────────
+
+    /// <summary>Extrae X e Y de un JsonElement que representa un Vector2 serializado.</summary>
+    internal static (double X, double Y) GetVector2(JsonElement el) => (
+        el.TryGetProperty("X", out JsonElement x) ? x.GetDouble() : 0.0,
+        el.TryGetProperty("Y", out JsonElement y) ? y.GetDouble() : 0.0);
+
+    /// <summary>Fila con dos steppers X/Y (colores rojo/verde) para propiedades Vector2.</summary>
+    internal static View BuildVector2Field(string label, double x, double y,
+        Action<double> onX, Action<double> onY, bool readOnly = false)
+    {
+        Controls.AxisStepper stepX = new() { Axis = "X", Value = x, Step = 0.1, IsEnabled = !readOnly };
+        Controls.AxisStepper stepY = new() { Axis = "Y", Value = y, Step = 0.1, IsEnabled = !readOnly };
+        stepX.ValueCommitted += (_, v) => onX(v);
+        stepY.ValueCommitted += (_, v) => onY(v);
+
+        Grid container = new()
+        {
+            ColumnDefinitions =
+            [
+                new ColumnDefinition(GridLength.Star),
+                new ColumnDefinition(GridLength.Star),
+            ],
+            ColumnSpacing = 4,
+        };
+        container.Add(stepX, 0, 0);
+        container.Add(stepY, 1, 0);
+        return BuildPropertyRow(label, container);
+    }
+
+    /// <summary>Serializa un Vector2 como objeto anónimo JSON {X, Y}.</summary>
+    internal static JsonElement SerializeVector2(double x, double y)
+        => JsonSerializer.SerializeToElement(new { X = (float)x, Y = (float)y });
+
     // ── Helpers internos ──────────────────────────────────────────────────────
 
     internal static bool IsColorValue(JsonElement value)
