@@ -33,6 +33,7 @@ public sealed class GizmoController
     private bool _dragging;
     private GizmoDragAxis _dragAxis;
     private float _dragWorldStartX, _dragWorldStartY;
+    private float _dragScreenStartX, _dragScreenStartY;   // posición pantalla del clic inicial (para escala)
     private float _objPosStartX, _objPosStartY, _objPosStartZ;
     private float _objRotStartX, _objRotStartY, _objRotStartZ;
     private float _objScaleStartX, _objScaleStartY, _objScaleStartZ;
@@ -96,6 +97,8 @@ public sealed class GizmoController
             _dragAxis = axis;
             _dragWorldStartX = clickWorldX;
             _dragWorldStartY = clickWorldY;
+            _dragScreenStartX = clickScreenX;
+            _dragScreenStartY = clickScreenY;
             _objPosStartX = selected.Position.X;
             _objPosStartY = selected.Position.Y;
             _objPosStartZ = selected.Position.Z;
@@ -122,6 +125,7 @@ public sealed class GizmoController
     {
         GizmoDragAxis axis;
         float worldStartX, worldStartY;
+        float screenStartX, screenStartY;
         float posStartX, posStartY, posStartZ;
         float rotStartX, rotStartY, rotStartZ;
         float scaleStartX, scaleStartY, scaleStartZ;
@@ -132,6 +136,8 @@ public sealed class GizmoController
             axis = _dragAxis;
             worldStartX = _dragWorldStartX;
             worldStartY = _dragWorldStartY;
+            screenStartX = _dragScreenStartX;
+            screenStartY = _dragScreenStartY;
             posStartX = _objPosStartX;
             posStartY = _objPosStartY;
             posStartZ = _objPosStartZ;
@@ -208,18 +214,21 @@ public sealed class GizmoController
 
             case GizmoDragAxis.ScaleX:
                 {
-                    float delta = dx * 0.02f;
+                    // Delta de pantalla en X normalizado por la longitud del brazo → la manija sigue al ratón.
+                    // screenDeltaX > 0 = arrastrar a la derecha = acercar al extremo del brazo = escala aumenta.
+                    float screenDeltaX = screenX - screenStartX;
+                    float ratio = screenDeltaX / ArrowLength;
                     // En vista Right, el eje X de pantalla controla Scale.Z.
                     if (Orientation == ViewOrientation.Right)
                     {
-                        float newZ = Math.Max(0.01f, scaleStartZ + delta);
+                        float newZ = Math.Max(0.01f, scaleStartZ * (1f + ratio));
                         if (SnapEnabled && SnapScaleStep > 0f)
                             newZ = MathF.Round(newZ / SnapScaleStep) * SnapScaleStep;
                         selected.Scale = new EditorVector3(scaleStartX, scaleStartY, Math.Max(0.01f, newZ));
                     }
                     else
                     {
-                        float newX = Math.Max(0.01f, scaleStartX + delta);
+                        float newX = Math.Max(0.01f, scaleStartX * (1f + ratio));
                         if (SnapEnabled && SnapScaleStep > 0f)
                             newX = MathF.Round(newX / SnapScaleStep) * SnapScaleStep;
                         selected.Scale = new EditorVector3(Math.Max(0.01f, newX), scaleStartY, scaleStartZ);
@@ -229,18 +238,21 @@ public sealed class GizmoController
 
             case GizmoDragAxis.ScaleY:
                 {
-                    float delta = -dy * 0.02f;
+                    // El brazo Y apunta hacia arriba (screenY negativo). Arrastrar hacia arriba →
+                    // screenDeltaY < 0 → negamos para que ratio > 0 = escala aumenta.
+                    float screenDeltaY = screenY - screenStartY;
+                    float ratio = -screenDeltaY / ArrowLength;
                     // En vista Top, el eje Y de pantalla controla Scale.Z.
                     if (Orientation == ViewOrientation.Top)
                     {
-                        float newZ = Math.Max(0.01f, scaleStartZ + delta);
+                        float newZ = Math.Max(0.01f, scaleStartZ * (1f + ratio));
                         if (SnapEnabled && SnapScaleStep > 0f)
                             newZ = MathF.Round(newZ / SnapScaleStep) * SnapScaleStep;
                         selected.Scale = new EditorVector3(scaleStartX, scaleStartY, Math.Max(0.01f, newZ));
                     }
                     else
                     {
-                        float newY = Math.Max(0.01f, scaleStartY + delta);
+                        float newY = Math.Max(0.01f, scaleStartY * (1f + ratio));
                         if (SnapEnabled && SnapScaleStep > 0f)
                             newY = MathF.Round(newY / SnapScaleStep) * SnapScaleStep;
                         selected.Scale = new EditorVector3(scaleStartX, Math.Max(0.01f, newY), scaleStartZ);
@@ -250,14 +262,24 @@ public sealed class GizmoController
 
             case GizmoDragAxis.ScaleUniform:
                 {
-                    float dist = MathF.Sqrt(dx * dx + dy * dy);
-                    float sign = (dx + dy) > 0 ? 1f : -1f;
-                    float delta = sign * dist * 0.02f;
-                    float newVal = Math.Max(0.01f, scaleStartX + delta);
+                    // Distancia de pantalla desde el clic inicial; hacia arriba-derecha = aumentar.
+                    float sdx = screenX - screenStartX;
+                    float sdy = screenY - screenStartY;
+                    float dist = MathF.Sqrt(sdx * sdx + sdy * sdy);
+                    // Positivo si el ratón se aleja del centro del objeto en pantalla (hacia arriba-derecha).
+                    float sign = (sdx - sdy) > 0 ? 1f : -1f;   // -sdy porque Y-up: arriba = sdy negativo
+                    float ratio = sign * dist / ArrowLength;
+                    float newX = Math.Max(0.01f, scaleStartX * (1f + ratio));
+                    float newY = Math.Max(0.01f, scaleStartY * (1f + ratio));
+                    float newZ = Math.Max(0.01f, scaleStartZ * (1f + ratio));
                     if (SnapEnabled && SnapScaleStep > 0f)
-                        newVal = MathF.Round(newVal / SnapScaleStep) * SnapScaleStep;
-                    float v = Math.Max(0.01f, newVal);
-                    selected.Scale = new EditorVector3(v, Math.Max(0.01f, scaleStartY + delta), Math.Max(0.01f, scaleStartZ + delta));
+                    {
+                        newX = MathF.Round(newX / SnapScaleStep) * SnapScaleStep;
+                        newY = MathF.Round(newY / SnapScaleStep) * SnapScaleStep;
+                        newZ = MathF.Round(newZ / SnapScaleStep) * SnapScaleStep;
+                    }
+                    selected.Scale = new EditorVector3(
+                        Math.Max(0.01f, newX), Math.Max(0.01f, newY), Math.Max(0.01f, newZ));
                     break;
                 }
         }
@@ -293,7 +315,7 @@ public sealed class GizmoController
 
         if (!wasDragging || selected is null) return null;
 
-        if (!SnapEnabled && ctrlHeld && axis is GizmoDragAxis.X or GizmoDragAxis.Y or GizmoDragAxis.XY)
+        if (!SnapEnabled && ctrlHeld && axis is GizmoDragAxis.X or GizmoDragAxis.Y or GizmoDragAxis.XY or GizmoDragAxis.Z)
             selected.Position = SnapToGrid(selected.Position);
 
         EditorVector3 startPos = new(posStartX, posStartY, posStartZ);
@@ -315,14 +337,14 @@ public sealed class GizmoController
         };
     }
 
-    /// <summary>Ajusta una posición en espacio de mundo a la esquina de celda de cuadrícula más cercana.</summary>
+    /// <summary>Ajusta una posición en espacio de mundo a la esquina de celda de cuadrícula más cercana en los tres ejes.</summary>
     public EditorVector3 SnapToGrid(EditorVector3 worldPos)
     {
         float size = _gridCellSize;
         return new EditorVector3(
             MathF.Round(worldPos.X / size) * size,
             MathF.Round(worldPos.Y / size) * size,
-            worldPos.Z);
+            MathF.Round(worldPos.Z / size) * size);
     }
 
     // ── Prueba de colisión ────────────────────────────────────────────────────

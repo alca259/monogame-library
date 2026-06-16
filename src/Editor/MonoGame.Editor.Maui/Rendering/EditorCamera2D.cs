@@ -18,19 +18,22 @@ public sealed class EditorCamera2D
     /// <summary>Factor de escala del zoom, limitado a [0.001, 5000].</summary>
     public float Zoom { get; private set; } = DefaultZoom;
 
-    /// <summary>Convierte un punto de espacio mundo a coordenadas de pantalla.</summary>
+    /// <summary>
+    /// Convierte un punto de espacio mundo a coordenadas de pantalla.
+    /// El eje Y se invierte para que Y positivo apunte hacia arriba en pantalla (convención Y-up).
+    /// </summary>
     public PointF WorldToScreen(PointF worldPos, SizeF viewportSize)
     {
-        float x = (worldPos.X - Position.X) * Zoom + viewportSize.Width * 0.5f;
-        float y = (worldPos.Y - Position.Y) * Zoom + viewportSize.Height * 0.5f;
+        float x =  (worldPos.X - Position.X) * Zoom + viewportSize.Width  * 0.5f;
+        float y = -(worldPos.Y - Position.Y) * Zoom + viewportSize.Height * 0.5f;
         return new PointF(x, y);
     }
 
-    /// <summary>Convierte un punto de pantalla a coordenadas de espacio mundo.</summary>
+    /// <summary>Convierte un punto de pantalla a coordenadas de espacio mundo (Y-up).</summary>
     public PointF ScreenToWorld(PointF screenPos, SizeF viewportSize)
     {
-        float x = (screenPos.X - viewportSize.Width * 0.5f) / Zoom + Position.X;
-        float y = (screenPos.Y - viewportSize.Height * 0.5f) / Zoom + Position.Y;
+        float x =  (screenPos.X - viewportSize.Width  * 0.5f) / Zoom + Position.X;
+        float y = -(screenPos.Y - viewportSize.Height * 0.5f) / Zoom + Position.Y;
         return new PointF(x, y);
     }
 
