@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json;
-using MauiShapes = Microsoft.Maui.Controls.Shapes;
+using MonoGame.Editor.Core.Attributes;
 
 namespace MonoGame.Editor.Maui.Views.Panels;
 
@@ -108,9 +108,9 @@ public sealed partial class InspectorView : ContentView
 
         foreach (EditorBehaviour behaviour in selected.Behaviours)
         {
-            if (_vm.Registry.RegisteredTypes.TryGetValue(behaviour.TypeName, out Type? type))
-                EnsurePropertiesPopulated(behaviour, type);
-            BehaviourCardsStack.Children.Add(BuildBehaviourCard(behaviour, selected));
+            _vm.Registry.RegisteredTypes.TryGetValue(behaviour.TypeName, out Type? type);
+            if (type is not null) EnsurePropertiesPopulated(behaviour, type);
+            BehaviourCardsStack.Children.Add(BuildBehaviourCard(behaviour, selected, type));
         }
     }
 
@@ -151,15 +151,40 @@ public sealed partial class InspectorView : ContentView
         return JsonSerializer.SerializeToElement(string.Empty);
     }
 
-    private View BuildBehaviourCard(EditorBehaviour behaviour, EditorGameObject owner)
+    private View BuildBehaviourCard(EditorBehaviour behaviour, EditorGameObject owner, Type? type)
     {
         string shortName = GetShortTypeName(behaviour.TypeName);
         bool collapsed = _collapsedBehaviours.Contains(behaviour.TypeName);
 
-        // Body — property rows
+        // Body — custom editor o property rows con atributos
         VerticalStackLayout body = new() { Spacing = 0 };
-        foreach (KeyValuePair<string, JsonElement> prop in behaviour.Properties)
-            body.Children.Add(BuildPropertyRow(behaviour, prop.Key, prop.Value));
+
+        Drawers.BehaviourEditor? customEditor = Drawers.BehaviourEditorRegistry.GetEditor(behaviour.TypeName);
+        if (customEditor is null && type is not null)
+            customEditor = Drawers.BehaviourEditorRegistry.GetEditor(type);
+
+        if (customEditor is not null)
+        {
+            Drawers.BehaviourEditorRegistry.PrepareEditor(customEditor);
+            body.Children.Add(customEditor.BuildInspector(behaviour, owner));
+        }
+        else
+        {
+            foreach (KeyValuePair<string, JsonElement> prop in behaviour.Properties)
+            {
+                PropertyInfo? pi = type?.GetProperty(prop.Key);
+
+                if (pi?.GetCustomAttribute<EditorHideAttribute>() is not null) continue;
+
+                if (pi?.GetCustomAttribute<EditorHeaderAttribute>() is { } hdr)
+                    body.Children.Add(Drawers.PropertyControlHelper.BuildHeaderSeparator(hdr.Title));
+
+                View? row = BuildPropertyRow(behaviour, prop.Key, prop.Value, pi);
+                if (row is not null)
+                    body.Children.Add(row);
+            }
+        }
+
         body.IsVisible = !collapsed;
 
         // Header — chevron / type name / remove button
@@ -247,155 +272,55 @@ public sealed partial class InspectorView : ContentView
         };
     }
 
-    private static View BuildPropertyRow(EditorBehaviour behaviour, string key, JsonElement value)
+    private static View? BuildPropertyRow(EditorBehaviour behaviour, string key, JsonElement value, PropertyInfo? pi)
     {
-        View control;
+        bool readOnly = pi?.GetCustomAttribute<EditorReadOnlyAttribute>() is not null;
+
+        EditorPropertyAttribute? propAttr = pi?.GetCustomAttribute<EditorPropertyAttribute>();
+        string label = propAttr?.Label ?? key;
+        string? textColor = propAttr?.LabelTextColor;
+        string? bgColor = propAttr?.LabelBackgroundColor;
+
+        // [EditorFilePicker] → Entry readonly + botón "…"
+        if (pi?.GetCustomAttribute<EditorFilePickerAttribute>() is { } fp)
+        {
+            string sv = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
+            return Drawers.PropertyControlHelper.BuildFilePickerField(label, sv,
+                DialogService.Navigation,
+                EditorContext.Instance.ActiveProject?.RootPath ?? "",
+                fp.Extensions,
+                v => Drawers.PropertyControlHelper.SetProperty(behaviour, key, JsonSerializer.SerializeToElement(v)),
+                readOnly);
+        }
+
+        // [EditorRange] + número → slider
+        if (pi?.GetCustomAttribute<EditorRangeAttribute>() is { } range && value.ValueKind == JsonValueKind.Number)
+        {
+            return Drawers.PropertyControlHelper.BuildSliderField(label, value.GetDouble(), range.Min, range.Max,
+                v => Drawers.PropertyControlHelper.SetProperty(behaviour, key, JsonSerializer.SerializeToElement(v)),
+                readOnly, textColor, bgColor);
+        }
+
+        // Detección por tipo de JsonElement
         if (value.ValueKind is JsonValueKind.True or JsonValueKind.False)
-            control = BuildBoolPropertyControl(behaviour, key, value.GetBoolean());
-        else if (value.ValueKind == JsonValueKind.Number)
-            control = BuildNumberPropertyControl(behaviour, key, value.GetDouble());
-        else if (value.ValueKind == JsonValueKind.Object && IsColorValue(value))
-            control = BuildColorPropertyControl(behaviour, key, value);
-        else
-            control = BuildStringPropertyControl(behaviour, key, value.ToString());
+            return Drawers.PropertyControlHelper.BuildBoolField(label, value.GetBoolean(),
+                v => Drawers.PropertyControlHelper.SetProperty(behaviour, key, JsonSerializer.SerializeToElement(v)),
+                readOnly);
 
-        Grid row = new()
-        {
-            ColumnDefinitions = new ColumnDefinitionCollection
-            {
-                new ColumnDefinition(new GridLength(90, GridUnitType.Absolute)),
-                new ColumnDefinition(GridLength.Star),
-            },
-            Padding = new Thickness(10, 4),
-            ColumnSpacing = 6,
-        };
-        row.Add(new Label
-        {
-            Text = key,
-            Style = (Style)Application.Current!.Resources["LabelSecondary"],
-            VerticalOptions = LayoutOptions.Center,
-        }, 0, 0);
-        row.Add(control, 1, 0);
-        return row;
-    }
+        if (value.ValueKind == JsonValueKind.Number)
+            return Drawers.PropertyControlHelper.BuildNumberField(label, value.GetDouble(),
+                v => Drawers.PropertyControlHelper.SetProperty(behaviour, key, JsonSerializer.SerializeToElement(v)),
+                readOnly, textColor, bgColor);
 
-    private static bool IsColorValue(JsonElement value)
-        => value.ValueKind == JsonValueKind.Object
-        && value.TryGetProperty("R", out _)
-        && value.TryGetProperty("G", out _)
-        && value.TryGetProperty("B", out _)
-        && value.TryGetProperty("A", out _);
+        if (value.ValueKind == JsonValueKind.Object && Drawers.PropertyControlHelper.IsColorValue(value))
+            return Drawers.PropertyControlHelper.BuildColorField(label, value,
+                nv => Drawers.PropertyControlHelper.SetProperty(behaviour, key, nv));
 
-    private static View BuildColorPropertyControl(EditorBehaviour behaviour, string key, JsonElement value)
-    {
-        int r = value.TryGetProperty("R", out JsonElement rp) ? rp.GetInt32() : 0;
-        int g = value.TryGetProperty("G", out JsonElement gp) ? gp.GetInt32() : 0;
-        int b = value.TryGetProperty("B", out JsonElement bp) ? bp.GetInt32() : 0;
-        int a = value.TryGetProperty("A", out JsonElement ap) ? ap.GetInt32() : 255;
-
-        Color initialColor = Color.FromRgba(r, g, b, a);
-
-        Border swatch = new()
-        {
-            BackgroundColor = initialColor,
-            WidthRequest = 32,
-            HeightRequest = 20,
-            StrokeThickness = 1,
-            Stroke = Color.FromArgb("#505058"),
-            StrokeShape = new MauiShapes.RoundRectangle { CornerRadius = 3 },
-        };
-
-        Label hexLabel = new()
-        {
-            Text = ColorToHex(r, g, b, a),
-            Style = (Style)Application.Current!.Resources["LabelSecondary"],
-            VerticalOptions = LayoutOptions.Center,
-        };
-
-        Grid container = new()
-        {
-            ColumnDefinitions = new ColumnDefinitionCollection
-            {
-                new ColumnDefinition(new GridLength(36, GridUnitType.Absolute)),
-                new ColumnDefinition(GridLength.Star),
-            },
-            ColumnSpacing = 6,
-        };
-        container.Add(swatch, 0, 0);
-        container.Add(hexLabel, 1, 0);
-
-        TapGestureRecognizer tap = new();
-        tap.Tapped += async (_, _) =>
-        {
-            if (DialogService.Navigation is not { } navigation) return;
-
-            Color? picked = await RgbaColorPickerDialog.ShowAsync(navigation, swatch.BackgroundColor);
-            if (picked is null) return;
-
-            swatch.BackgroundColor = picked;
-
-            int nr = (int)(picked.Red * 255);
-            int ng = (int)(picked.Green * 255);
-            int nb = (int)(picked.Blue * 255);
-            int na = (int)(picked.Alpha * 255);
-            hexLabel.Text = ColorToHex(nr, ng, nb, na);
-
-            uint packed = ((uint)na << 24) | ((uint)nb << 16) | ((uint)ng << 8) | (uint)nr;
-            var colorData = new { R = (byte)nr, G = (byte)ng, B = (byte)nb, A = (byte)na, PackedValue = packed };
-
-            JsonElement previous = behaviour.Properties[key];
-            JsonElement next = JsonSerializer.SerializeToElement(colorData);
-            EditorContext.Instance.Commands.Execute(
-                new SetPropertyCommand<JsonElement>($"Set {key}", previous, next,
-                    v => behaviour.Properties[key] = v));
-        };
-        container.GestureRecognizers.Add(tap);
-
-        return container;
-    }
-
-    private static string ColorToHex(int r, int g, int b, int a)
-        => $"#{r:X2}{g:X2}{b:X2}{a:X2}";
-
-    private static View BuildBoolPropertyControl(EditorBehaviour behaviour, string key, bool current)
-    {
-        CheckBox check = new() { IsChecked = current, Color = Color.FromArgb("#4A9EFF") };
-        check.CheckedChanged += (_, e) =>
-        {
-            JsonElement previous = behaviour.Properties[key];
-            JsonElement next = JsonSerializer.SerializeToElement(e.Value);
-            EditorContext.Instance.Commands.Execute(
-                new SetPropertyCommand<JsonElement>($"Set {key}", previous, next, v => behaviour.Properties[key] = v));
-        };
-        return check;
-    }
-
-    private static View BuildNumberPropertyControl(EditorBehaviour behaviour, string key, double current)
-    {
-        AxisStepper stepper = new() { ShowAxisTag = false, Value = current, Step = 0.1 };
-        stepper.ValueCommitted += (_, v) =>
-        {
-            JsonElement previous = behaviour.Properties[key];
-            JsonElement next = JsonSerializer.SerializeToElement(v);
-            EditorContext.Instance.Commands.Execute(
-                new SetPropertyCommand<JsonElement>($"Set {key}", previous, next, e => behaviour.Properties[key] = e));
-        };
-        return stepper;
-    }
-
-    private static View BuildStringPropertyControl(EditorBehaviour behaviour, string key, string current)
-    {
-        Border shell = new() { Style = (Style)Application.Current!.Resources["InputShell"] };
-        Entry entry = new() { Style = (Style)Application.Current!.Resources["InputEntry"], Text = current };
-        entry.Completed += (_, _) =>
-        {
-            JsonElement previous = behaviour.Properties[key];
-            JsonElement next = JsonSerializer.SerializeToElement(entry.Text ?? string.Empty);
-            EditorContext.Instance.Commands.Execute(
-                new SetPropertyCommand<JsonElement>($"Set {key}", previous, next, v => behaviour.Properties[key] = v));
-        };
-        shell.Content = entry;
-        return shell;
+        // Fallback: texto
+        string strValue = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : value.ToString();
+        return Drawers.PropertyControlHelper.BuildTextField(label, strValue,
+            v => Drawers.PropertyControlHelper.SetProperty(behaviour, key, JsonSerializer.SerializeToElement(v)),
+            readOnly, textColor, bgColor);
     }
 
     private static string GetShortTypeName(string typeName)

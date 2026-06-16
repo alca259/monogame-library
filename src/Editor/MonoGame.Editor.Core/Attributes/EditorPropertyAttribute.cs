@@ -24,4 +24,10 @@ public sealed class EditorPropertyAttribute : Attribute
     /// se renderizan una junto a la otra. Valor 0 (por defecto) significa apilado normal.
     /// </summary>
     public int SideBySideGroup { get; init; } = 0;
+
+    /// <summary>Color del texto de la etiqueta en formato hex (p. ej. <c>"#FFFFFF"</c>). <c>null</c> = color de tema por defecto.</summary>
+    public string? LabelTextColor { get; init; }
+
+    /// <summary>Color de fondo de la etiqueta en formato hex (p. ej. <c>"#C73E3E"</c>). <c>null</c> = sin fondo especial.</summary>
+    public string? LabelBackgroundColor { get; init; }
 }

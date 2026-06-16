@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace MonoGame.Editor.Maui.Rendering;
 
 /// <summary>
@@ -12,6 +14,9 @@ public sealed class ViewportRenderer : IDrawable
     private const float OGizmoCenterOffsetY = 52f; // desde rect.Top
     private const float OGizmoSpokeRadius = 28f;
     private const float OGizmoHitRadius = 12f;
+
+    // ── Caché de tipos para DrawBehaviourGizmos (evita scan de ensamblados por fotograma) ──
+    private readonly Dictionary<string, Type?> _behaviourTypeCache = new();
 
     // ── Grid adaptativo ───────────────────────────────────────────────────────
     /// <summary>Separación mínima en píxeles entre líneas de cuadrícula antes de escalar el tamaño de celda.</summary>
@@ -38,6 +43,7 @@ public sealed class ViewportRenderer : IDrawable
             if (sel is not null)
                 DrawSelection(canvas, sel);
             DrawGizmoHandles(canvas, rect, selected);
+            DrawBehaviourGizmos(canvas, rect, selected);
         }
 
         DrawGizmo(canvas, rect);
@@ -551,6 +557,76 @@ public sealed class ViewportRenderer : IDrawable
     {
         float dx = a.X - b.X, dy = a.Y - b.Y;
         return dx * dx + dy * dy;
+    }
+
+    // ── Gizmos de Behaviour (radius preview) ─────────────────────────────────
+
+    /// <summary>
+    /// Dibuja los gizmos visuales definidos por atributos en los Behaviours del objeto seleccionado.
+    /// Actualmente renderiza un círculo por cada propiedad float con <c>[EditorRadiusPreview]</c>.
+    /// </summary>
+    private void DrawBehaviourGizmos(ICanvas canvas, RectF rect, EditorGameObject obj)
+    {
+        if (obj.Behaviours.Count == 0) return;
+
+        SizeF size = new(rect.Width, rect.Height);
+        PointF center = Camera.WorldToScreen(GetWorldCenter(obj), size);
+
+        canvas.StrokeColor = Colors.White.WithAlpha(0.35f);
+        canvas.StrokeSize = 1;
+
+        foreach (EditorBehaviour behaviour in obj.Behaviours)
+        {
+            if (!_behaviourTypeCache.TryGetValue(behaviour.TypeName, out Type? type))
+            {
+                type = FindBehaviourType(behaviour.TypeName);
+                _behaviourTypeCache[behaviour.TypeName] = type;
+            }
+            if (type is null) continue;
+
+            foreach (PropertyInfo pi in type.GetProperties(
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+            {
+                if (pi.GetCustomAttribute<MonoGame.Editor.Core.Attributes.EditorRadiusPreviewAttribute>() is null) continue;
+                if (!behaviour.Properties.TryGetValue(pi.Name, out System.Text.Json.JsonElement el)) continue;
+                if (el.ValueKind != System.Text.Json.JsonValueKind.Number) continue;
+
+                float worldRadius = el.GetSingle();
+                if (worldRadius <= 0f) continue;
+
+                float screenRadius = worldRadius * Camera.Zoom;
+                if (screenRadius < 2f) continue;
+
+                canvas.DrawCircle(center.X, center.Y, screenRadius);
+            }
+        }
+    }
+
+    private static Type? FindBehaviourType(string typeName)
+    {
+        // Intento directo por nombre completo
+        foreach (System.Reflection.Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            try
+            {
+                Type? t = asm.GetType(typeName);
+                if (t is not null) return t;
+            }
+            catch { }
+        }
+
+        // Intento con el segmento antes de la coma (AssemblyQualifiedName → FullName)
+        string lookup = typeName.Contains(',') ? typeName[..typeName.IndexOf(',')].Trim() : typeName;
+        foreach (System.Reflection.Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            try
+            {
+                foreach (Type t in asm.GetTypes())
+                    if (t.FullName == lookup) return t;
+            }
+            catch { }
+        }
+        return null;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
