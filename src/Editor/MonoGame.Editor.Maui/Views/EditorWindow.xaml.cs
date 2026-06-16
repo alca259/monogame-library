@@ -372,7 +372,7 @@ public sealed partial class EditorWindow : ContentPage
         Viewport.Invalidate();
     }
 
-    private static EditorGameObject? HitTest(List<EditorGameObject> objects, Microsoft.Maui.Graphics.PointF worldPos)
+    private EditorGameObject? HitTest(List<EditorGameObject> objects, Microsoft.Maui.Graphics.PointF worldPos)
     {
         for (int i = objects.Count - 1; i >= 0; i--)
         {
@@ -385,12 +385,25 @@ public sealed partial class EditorWindow : ContentPage
                 if (child is not null) return child;
             }
 
-            const float defaultHalfSize = 16f;
-            float halfW = defaultHalfSize * obj.Scale.X;
-            float halfH = defaultHalfSize * obj.Scale.Y;
+            // halfSize debe coincidir con ViewportRenderer.GetVisibleScale (defaultHalfSize = 0.5f).
+            const float defaultHalfSize = 0.5f;
+            (float halfW, float halfH) = _viewportRenderer.Orientation switch
+            {
+                ViewOrientation.Top   => (defaultHalfSize * obj.Scale.X, defaultHalfSize * obj.Scale.Z),
+                ViewOrientation.Right => (defaultHalfSize * obj.Scale.Z, defaultHalfSize * obj.Scale.Y),
+                _                    => (defaultHalfSize * obj.Scale.X, defaultHalfSize * obj.Scale.Y),
+            };
 
-            if (worldPos.X >= obj.Position.X - halfW && worldPos.X <= obj.Position.X + halfW &&
-                worldPos.Y >= obj.Position.Y - halfH && worldPos.Y <= obj.Position.Y + halfH)
+            // Centro del objeto en el plano de la orientación activa
+            Microsoft.Maui.Graphics.PointF center = _viewportRenderer.Orientation switch
+            {
+                ViewOrientation.Top   => new(obj.Position.X, obj.Position.Z),
+                ViewOrientation.Right => new(obj.Position.Z, obj.Position.Y),
+                _                    => new(obj.Position.X, obj.Position.Y),
+            };
+
+            if (worldPos.X >= center.X - halfW && worldPos.X <= center.X + halfW &&
+                worldPos.Y >= center.Y - halfH && worldPos.Y <= center.Y + halfH)
                 return obj;
         }
 

@@ -23,6 +23,7 @@ public sealed partial class InspectorView : ContentView
         BindingContext = _vm;
         WireTransformCommands();
         _vm.RefreshRequested += RefreshInspector;
+        _vm.TransformOnlyRefreshRequested += RefreshTransformOnly;
         _vm.PropertyChanged += OnViewModelPropertyChanged;
         UpdateTabContent();
     }
@@ -71,6 +72,31 @@ public sealed partial class InspectorView : ContentView
     }
 
     // ── Refresh (Transform values + behaviour cards) ────────────────────────────
+
+    /// <summary>
+    /// Actualiza SÓLO los steppers del Transform sin reconstruir las tarjetas de Behaviour.
+    /// Se invoca en respuesta a <see cref="InspectorViewModel.TransformOnlyRefreshRequested"/>
+    /// (cambio de propiedad) para evitar el bucle Slider.ValueChanged → SetProperty → rebuild.
+    /// </summary>
+    private void RefreshTransformOnly()
+    {
+        EditorGameObject? selected = _vm.Selected;
+        if (selected is null) return;
+
+        _suppressTransformEvents = true;
+        ObjectActiveCheck.IsChecked = selected.Active;
+        PosXStepper.Value   = selected.Position.X;
+        PosYStepper.Value   = selected.Position.Y;
+        PosZStepper.Value   = selected.Position.Z;
+        RotXStepper.Value   = selected.Rotation.X;
+        RotYStepper.Value   = selected.Rotation.Y;
+        RotZStepper.Value   = selected.Rotation.Z;
+        ScaleXStepper.Value = selected.Scale.X;
+        ScaleYStepper.Value = selected.Scale.Y;
+        ScaleZStepper.Value = selected.Scale.Z;
+        _suppressTransformEvents = false;
+        // NO BuildBehaviourCards()
+    }
 
     private void RefreshInspector()
     {

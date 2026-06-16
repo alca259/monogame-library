@@ -24,6 +24,13 @@ public sealed partial class InspectorViewModel : ViewModelBase
     /// <summary>Solicita a la vista repoblar Transform y reconstruir las tarjetas de behaviour.</summary>
     public event Action? RefreshRequested;
 
+    /// <summary>
+    /// Solicita a la vista actualizar SÓLO los valores de los steppers de Transform,
+    /// sin reconstruir las tarjetas de Behaviour. Se usa al cambiar una propiedad para
+    /// evitar el bucle Slider.ValueChanged → SetProperty → BuildBehaviourCards.
+    /// </summary>
+    public event Action? TransformOnlyRefreshRequested;
+
     [ObservableProperty]
     private EditorGameObject? _selected;
 
@@ -51,8 +58,10 @@ public sealed partial class InspectorViewModel : ViewModelBase
             Selected = e.GameObject;
             Refresh();
         });
-        // Actualizar sólo los valores de Transform cuando cambia una propiedad (sin reconstruir las tarjetas).
-        On<GameObjectPropertyChangedEvent>(_ => RefreshRequested?.Invoke());
+        // Actualizar sólo los steppers de Transform cuando cambia una propiedad.
+        // NO usar RefreshRequested (que llama a BuildBehaviourCards) porque provoca un bucle
+        // Slider.ValueChanged → SetProperty → GameObjectPropertyChangedEvent → BuildBehaviourCards → ...
+        On<GameObjectPropertyChangedEvent>(_ => TransformOnlyRefreshRequested?.Invoke());
         On<UndoPerformedEvent>(_ => Refresh());
         On<RedoPerformedEvent>(_ => Refresh());
         On<EditorStateChangedEvent>(e => ContentEnabled = e.NewState is EditorState.Editing);
