@@ -108,7 +108,8 @@ public sealed partial class SceneHierarchyViewModel : ViewModelBase
             },
             onRename: RenameItemAsync,
             onDragStart: StartDrag,
-            onDrop: HandleDrop);
+            onDrop: HandleDrop,
+            onPointerEntered: SetHoveredItem);
 
         Items.Add(item);
         total++;
@@ -236,8 +237,15 @@ public sealed partial class SceneHierarchyViewModel : ViewModelBase
     // ── Drag & drop ───────────────────────────────────────────────────────────
 
     private HierarchyItem? _draggingItem;
+    private HierarchyItem? _hoveredItem;
 
     internal void StartDrag(HierarchyItem item) => _draggingItem = item;
+
+    /// <summary>Llamado cuando el puntero entra en el área de un item (PointerEntered). No interfiere con la selección.</summary>
+    internal void SetHoveredItem(HierarchyItem item) => _hoveredItem = item;
+
+    /// <summary>Devuelve el item actualmente bajo el puntero (según el último PointerEntered).</summary>
+    internal HierarchyItem? HoveredItem => _hoveredItem;
 
     internal void HandleDrop(HierarchyItem target)
     {

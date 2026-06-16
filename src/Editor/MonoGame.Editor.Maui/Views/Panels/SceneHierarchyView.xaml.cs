@@ -68,14 +68,16 @@ public sealed partial class SceneHierarchyView : ContentView
     private void OnWindowPointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
         if (_windowContent is null) return;
+        // El item bajo el puntero se conoce gracias a PointerEnteredCommand en el DataTemplate.
+        // Solo iniciamos un drag candidato si el puntero está sobre un item.
+        HierarchyItem? hovered = _vm.HoveredItem;
+        if (hovered is null) return;
+
+        _pointerDownItem = hovered;
         Windows.Foundation.Point pt = e.GetCurrentPoint(_windowContent).Position;
-        _pointerDownItem = FindHierarchyItemAt(pt);
-        if (_pointerDownItem is not null)
-        {
-            _dragStartX = pt.X;
-            _dragStartY = pt.Y;
-            _isDragging = false;
-        }
+        _dragStartX = pt.X;
+        _dragStartY = pt.Y;
+        _isDragging = false;
     }
 
     private void OnWindowPointerMoved(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
@@ -96,10 +98,10 @@ public sealed partial class SceneHierarchyView : ContentView
 
     private void OnWindowPointerReleased(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
-        if (_isDragging && _windowContent is not null)
+        if (_isDragging)
         {
-            Windows.Foundation.Point pt = e.GetCurrentPoint(_windowContent).Position;
-            HierarchyItem? target = FindHierarchyItemAt(pt);
+            // El item destino es el último item en el que entró el puntero (PointerEntered).
+            HierarchyItem? target = _vm.HoveredItem;
             if (target is not null)
                 _vm.HandleDrop(target);
         }
@@ -111,23 +113,6 @@ public sealed partial class SceneHierarchyView : ContentView
     {
         _isDragging = false;
         _pointerDownItem = null;
-    }
-
-    private HierarchyItem? FindHierarchyItemAt(Windows.Foundation.Point windowPt)
-    {
-        if (_windowContent is null) return null;
-        try
-        {
-            System.Collections.Generic.IEnumerable<Microsoft.UI.Xaml.UIElement> elements =
-                Microsoft.UI.Xaml.Media.VisualTreeHelper.FindElementsInHostCoordinates(windowPt, _windowContent);
-            foreach (Microsoft.UI.Xaml.UIElement el in elements)
-            {
-                if (el is Microsoft.UI.Xaml.FrameworkElement fe && fe.DataContext is HierarchyItem item)
-                    return item;
-            }
-        }
-        catch { }
-        return null;
     }
 
 #else

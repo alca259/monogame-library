@@ -36,6 +36,9 @@ public sealed class HierarchyItem
     public Command RenameCommand { get; }
     public Command DragStartingCommand { get; }
     public Command DropCommand { get; }
+    public Command PointerEnteredCommand { get; }
+
+    private readonly Action<HierarchyItem> _onPointerEntered;
 
     public HierarchyItem(
         EditorGameObject obj,
@@ -44,7 +47,8 @@ public sealed class HierarchyItem
         Action onToggleExpand,
         Func<HierarchyItem, Task> onRename,
         Action<HierarchyItem> onDragStart,
-        Action<HierarchyItem> onDrop)
+        Action<HierarchyItem> onDrop,
+        Action<HierarchyItem> onPointerEntered)
     {
         GameObject = obj;
         Depth = depth;
@@ -53,6 +57,7 @@ public sealed class HierarchyItem
         _onRename = onRename;
         _onDragStart = onDragStart;
         _onDrop = onDrop;
+        _onPointerEntered = onPointerEntered;
 
         ToggleExpandCommand = new Command(() =>
         {
@@ -63,5 +68,6 @@ public sealed class HierarchyItem
         RenameCommand = new Command(async () => await _onRename(this));
         DragStartingCommand = new Command(() => _onDragStart(this));
         DropCommand = new Command(() => _onDrop(this));
+        PointerEnteredCommand = new Command(() => _onPointerEntered(this));
     }
 }
