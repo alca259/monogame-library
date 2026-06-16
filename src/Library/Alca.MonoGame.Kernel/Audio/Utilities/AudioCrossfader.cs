@@ -1,4 +1,4 @@
-namespace Alca.MonoGame.Kernel.Audio;
+namespace Alca.MonoGame.Kernel.Audio.Utilities;
 
 /// <summary>
 /// Smoothly transitions between two audio tracks using a linear crossfade.
@@ -131,8 +131,7 @@ public sealed class AudioCrossfader : IDisposable
         _isCrossfading = false;
     }
 
-    // ── Internal ──────────────────────────────────────────────────────────────
-
+    #region Internal
     private void CompleteCurrentCrossfade()
     {
         if (_trackB is not null)
@@ -146,4 +145,5 @@ public sealed class AudioCrossfader : IDisposable
 
         _isCrossfading = false;
     }
+    #endregion
 }

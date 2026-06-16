@@ -9,8 +9,7 @@ namespace Alca.MonoGame.Kernel.Physics.Triggers;
 /// </summary>
 public sealed class TriggerZone2D : GameBehaviour
 {
-    // ── Configuration ─────────────────────────────────────────────────────────
-
+    #region Configuration
     /// <summary>Gets or sets the collision shape. Default is <see cref="TriggerShapeType.AABB"/>.</summary>
     public TriggerShapeType Shape { get; set; } = TriggerShapeType.AABB;
 
@@ -31,9 +30,9 @@ public sealed class TriggerZone2D : GameBehaviour
     /// mask bit will be tested against each other. Default is -1 (all layers).
     /// </summary>
     public int LayerMask { get; set; } = -1;
+    #endregion
 
-    // ── Computed bounds ───────────────────────────────────────────────────────
-
+    #region Computed bounds
     /// <summary>
     /// Gets the world-space axis-aligned bounding rectangle, centered on <see cref="WorldCenter"/>.
     /// Used for AABB shape overlap tests.
@@ -53,9 +52,9 @@ public sealed class TriggerZone2D : GameBehaviour
 
     /// <summary>Gets the world-space center of this trigger zone (entity position + offset).</summary>
     public Vector2 WorldCenter => Entity.Transform.Position2d + Offset;
+    #endregion
 
-    // ── Events ────────────────────────────────────────────────────────────────
-
+    #region Events
     /// <summary>Raised on the first frame that another zone begins overlapping this zone.</summary>
     public Action<TriggerOverlapInfo>? OnEnter;
 
@@ -64,9 +63,9 @@ public sealed class TriggerZone2D : GameBehaviour
 
     /// <summary>Raised on the frame that another zone stops overlapping this zone.</summary>
     public Action<TriggerOverlapInfo>? OnExit;
+    #endregion
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
-
+    #region Lifecycle
     /// <inheritdoc/>
     public override void Awake()
     {
@@ -78,9 +77,9 @@ public sealed class TriggerZone2D : GameBehaviour
     {
         Entity.World.TriggerWorld?.Unregister(this);
     }
+    #endregion
 
-    // ── Internal event dispatch (called by TriggerWorld) ─────────────────────
-
+    #region Internal event dispatch (called by TriggerWorld)
     /// <summary>Dispatches the Enter event. Called by <see cref="TriggerWorld"/>.</summary>
     internal void RaiseEnter(TriggerZone2D other) => OnEnter?.Invoke(new TriggerOverlapInfo(this, other));
 
@@ -89,4 +88,5 @@ public sealed class TriggerZone2D : GameBehaviour
 
     /// <summary>Dispatches the Exit event. Called by <see cref="TriggerWorld"/>.</summary>
     internal void RaiseExit(TriggerZone2D other) => OnExit?.Invoke(new TriggerOverlapInfo(this, other));
+    #endregion
 }

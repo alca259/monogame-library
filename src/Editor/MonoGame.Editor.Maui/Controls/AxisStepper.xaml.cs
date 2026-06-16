@@ -65,9 +65,9 @@ public sealed partial class AxisStepper : ContentView
         AxisLabel.Text = Axis;
         AxisTagBorder.BackgroundColor = Axis switch
         {
-            "Y"   => (Color)Application.Current!.Resources["AxisGreen"],
-            "Z"   => (Color)Application.Current!.Resources["AxisBlue"],
-            _     => (Color)Application.Current!.Resources["AxisRed"],
+            "Y" => (Color)Application.Current!.Resources["AxisGreen"],
+            "Z" => (Color)Application.Current!.Resources["AxisBlue"],
+            _ => (Color)Application.Current!.Resources["AxisRed"],
         };
     }
 

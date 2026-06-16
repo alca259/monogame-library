@@ -13,8 +13,7 @@ public readonly struct WeatherTypeId : IEquatable<WeatherTypeId>
     /// <summary>Initializes a new <see cref="WeatherTypeId"/> with the given string key.</summary>
     public WeatherTypeId(string value) => Value = value ?? string.Empty;
 
-    // ── Predefined types ──────────────────────────────────────────────────────
-
+    #region Predefined types
     /// <summary>Clear sky with sunlight. Warm light, minimal wind.</summary>
     public static readonly WeatherTypeId Sunny = new("sunny");
 
@@ -44,9 +43,9 @@ public readonly struct WeatherTypeId : IEquatable<WeatherTypeId>
 
     /// <summary>Orange-alert wind event. Neutral light, very strong wind, wind sprite particles.</summary>
     public static readonly WeatherTypeId OrangeWind = new("orange_wind");
+    #endregion
 
-    // ── Equality ──────────────────────────────────────────────────────────────
-
+    #region Equality
     /// <inheritdoc/>
     public bool Equals(WeatherTypeId other) =>
         string.Equals(Value, other.Value, StringComparison.OrdinalIgnoreCase);
@@ -66,4 +65,5 @@ public readonly struct WeatherTypeId : IEquatable<WeatherTypeId>
 
     /// <summary>Inequality operator.</summary>
     public static bool operator !=(WeatherTypeId left, WeatherTypeId right) => !left.Equals(right);
+    #endregion
 }

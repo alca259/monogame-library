@@ -20,7 +20,7 @@ public abstract class LightBehaviour : GameBehaviour
 
     /// <summary>
     /// Gets or sets the maximum influence radius. 0 means unlimited (intended for
-    /// <see cref="AmbientLight"/> and <see cref="DirectionalLight2D"/>).
+    /// <see cref="AmbientLightBehaviour"/> and <see cref="DirectionalLight2DBehaviour"/>).
     /// </summary>
     public float Range { get; set; } = 0f;
 

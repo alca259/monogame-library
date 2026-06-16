@@ -55,6 +55,10 @@ public sealed class ProjectSettings
     [JsonPropertyName("localizationRelPath")]
     public string LocalizationRelPath { get; set; } = "Localization";
 
+    /// <summary>Tamaño de celda de la cuadrícula del editor en unidades de mundo. Se usa para el ajuste (snap) de transformaciones.</summary>
+    [JsonPropertyName("gridCellSize")]
+    public float GridCellSize { get; set; } = 1f;
+
     private static string GetPath(EditorProject project)
         => Path.Combine(project.ConfigPath, FileName);
 

@@ -1,7 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MonoGame.Editor.Maui.Views.Dialogs;
+using System.Collections.ObjectModel;
 
 namespace MonoGame.Editor.Maui.ViewModels.Dialogs;
 
@@ -56,14 +55,14 @@ public sealed partial class NewBehaviourViewModel : DialogViewModel<NewBehaviour
             return;
         }
 
-        string ns     = NamespaceName?.Trim()   ?? string.Empty;
-        string folder = RelativeFolder?.Trim()  ?? string.Empty;
+        string ns = NamespaceName?.Trim() ?? string.Empty;
+        string folder = RelativeFolder?.Trim() ?? string.Empty;
 
         List<string> methods = [];
-        if (OverrideAwake)     methods.Add("Awake");
-        if (OverrideStart)     methods.Add("Start");
-        if (OverrideUpdate)    methods.Add("Update");
-        if (OverrideDraw)      methods.Add("Draw");
+        if (OverrideAwake) methods.Add("Awake");
+        if (OverrideStart) methods.Add("Start");
+        if (OverrideUpdate) methods.Add("Update");
+        if (OverrideDraw) methods.Add("Draw");
         if (OverrideOnDestroy) methods.Add("OnDestroy");
 
         Close(new NewBehaviourResult(className, ns, folder, methods));

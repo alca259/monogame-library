@@ -1,6 +1,6 @@
-﻿using System.Globalization;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Globalization;
 
 namespace MonoGame.Editor.Maui.ViewModels.Dialogs;
 
@@ -30,31 +30,31 @@ public sealed partial class WorldConfigViewModel : DialogViewModel<EditorWorldCo
     public void LoadFrom(EditorWorldConfig cfg)
     {
         UsePhysics2D = cfg.UsePhysics2D;
-        GravityX     = cfg.GravityX.ToString(CultureInfo.InvariantCulture);
-        GravityY     = cfg.GravityY.ToString(CultureInfo.InvariantCulture);
+        GravityX = cfg.GravityX.ToString(CultureInfo.InvariantCulture);
+        GravityY = cfg.GravityY.ToString(CultureInfo.InvariantCulture);
 
-        UseLighting  = cfg.UseLighting;
-        AmbientR     = cfg.AmbientColorRgba[0].ToString();
-        AmbientG     = cfg.AmbientColorRgba[1].ToString();
-        AmbientB     = cfg.AmbientColorRgba[2].ToString();
-        AmbientA     = cfg.AmbientColorRgba[3].ToString();
+        UseLighting = cfg.UseLighting;
+        AmbientR = cfg.AmbientColorRgba[0].ToString();
+        AmbientG = cfg.AmbientColorRgba[1].ToString();
+        AmbientB = cfg.AmbientColorRgba[2].ToString();
+        AmbientA = cfg.AmbientColorRgba[3].ToString();
 
         UseNavigation = cfg.UseNavigation;
-        NavWidth      = cfg.NavGridWidth.ToString();
-        NavHeight     = cfg.NavGridHeight.ToString();
-        NavCellSize   = cfg.NavGridCellSize.ToString(CultureInfo.InvariantCulture);
-        NavOriginX    = cfg.NavGridOriginX.ToString(CultureInfo.InvariantCulture);
-        NavOriginY    = cfg.NavGridOriginY.ToString(CultureInfo.InvariantCulture);
+        NavWidth = cfg.NavGridWidth.ToString();
+        NavHeight = cfg.NavGridHeight.ToString();
+        NavCellSize = cfg.NavGridCellSize.ToString(CultureInfo.InvariantCulture);
+        NavOriginX = cfg.NavGridOriginX.ToString(CultureInfo.InvariantCulture);
+        NavOriginY = cfg.NavGridOriginY.ToString(CultureInfo.InvariantCulture);
 
         UseAudio = cfg.UseAudio;
     }
 
     private EditorWorldConfig BuildConfig() => new()
     {
-        UsePhysics2D   = UsePhysics2D,
-        GravityX       = ParseFloat(GravityX),
-        GravityY       = ParseFloat(GravityY),
-        UseLighting    = UseLighting,
+        UsePhysics2D = UsePhysics2D,
+        GravityX = ParseFloat(GravityX),
+        GravityY = ParseFloat(GravityY),
+        UseLighting = UseLighting,
         AmbientColorRgba =
         [
             ParseInt(AmbientR),
@@ -62,13 +62,13 @@ public sealed partial class WorldConfigViewModel : DialogViewModel<EditorWorldCo
             ParseInt(AmbientB),
             ParseInt(AmbientA),
         ],
-        UseNavigation   = UseNavigation,
-        NavGridWidth    = ParseInt(NavWidth),
-        NavGridHeight   = ParseInt(NavHeight),
+        UseNavigation = UseNavigation,
+        NavGridWidth = ParseInt(NavWidth),
+        NavGridHeight = ParseInt(NavHeight),
         NavGridCellSize = ParseFloat(NavCellSize),
-        NavGridOriginX  = ParseFloat(NavOriginX),
-        NavGridOriginY  = ParseFloat(NavOriginY),
-        UseAudio        = UseAudio,
+        NavGridOriginX = ParseFloat(NavOriginX),
+        NavGridOriginY = ParseFloat(NavOriginY),
+        UseAudio = UseAudio,
     };
 
     [RelayCommand]

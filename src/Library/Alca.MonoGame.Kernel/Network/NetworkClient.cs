@@ -114,8 +114,7 @@ public sealed class NetworkClient : IDisposable, INetEventListener
         _netManager.Stop();
     }
 
-    // ── INetEventListener ──────────────────────────────────────────────────────
-
+    #region INetEventListener
     void INetEventListener.OnPeerConnected(NetPeer peer)
     {
         _serverPeer = peer;
@@ -165,9 +164,9 @@ public sealed class NetworkClient : IDisposable, INetEventListener
     {
         // Clients do not accept incoming connections.
     }
+    #endregion
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
-
+    #region Helpers
     private static DeliveryMethod ToDeliveryMethod(NetworkChannel channel) => channel switch
     {
         NetworkChannel.Unreliable => DeliveryMethod.Unreliable,
@@ -176,4 +175,5 @@ public sealed class NetworkClient : IDisposable, INetEventListener
         NetworkChannel.Sequenced => DeliveryMethod.Sequenced,
         _ => DeliveryMethod.ReliableOrdered
     };
+    #endregion
 }

@@ -9,7 +9,7 @@ public struct LightContribution
     private Color _accumulated;
 
     /// <summary>Gets the accumulated light color.</summary>
-    public Color Accumulated => _accumulated;
+    public readonly Color Accumulated => _accumulated;
 
     /// <summary>Initializes a new contribution accumulator starting from <paramref name="baseColor"/>.</summary>
     public LightContribution(Color baseColor) => _accumulated = baseColor;

@@ -1,3 +1,6 @@
+using Alca.MonoGame.Kernel.Audio.Mixer;
+using Alca.MonoGame.Kernel.Audio.Spatial;
+
 namespace Alca.MonoGame.Kernel.Weather;
 
 /// <summary>
@@ -15,7 +18,7 @@ public sealed class WeatherAudioLayer : IDisposable
     private SoundEffectInstance? _thunderInstance;
     private SoundEffectInstance[]? _strikePool;
     private int _strikePoolIndex;
-    private readonly Audio.AudioEmitter3D _strikeEmitter = new();
+    private readonly AudioEmitter3D _strikeEmitter = new();
 
     private float _currentRainVolume;
     private float _currentWindVolume;
@@ -23,16 +26,15 @@ public sealed class WeatherAudioLayer : IDisposable
 
     private bool _disposed;
 
-    // ── Configuration ─────────────────────────────────────────────────────────
-
+    #region Configuration
     /// <summary>Gets or sets the volume fade speed in units per second. Default 1 (full fade in 1 second).</summary>
     public float FadeSpeed { get; set; } = 1f;
 
     /// <summary>Gets or sets the mixer channel all weather audio is routed through. Null means no channel routing.</summary>
-    public Audio.AudioMixerChannel? Channel { get; set; }
+    public AudioMixerChannel? Channel { get; set; }
+    #endregion
 
-    // ── Content loading ───────────────────────────────────────────────────────
-
+    #region Content loading
     /// <summary>
     /// Creates looping instances for ambient tracks and pre-allocates the strike pool.
     /// Must be called once before the first <see cref="Update"/>.
@@ -61,30 +63,32 @@ public sealed class WeatherAudioLayer : IDisposable
                 _strikePool[i] = thunderStrike.CreateInstance();
         }
     }
+    #endregion
 
-    // ── Game loop ─────────────────────────────────────────────────────────────
-
+    #region Game loop
     /// <summary>
     /// Interpolates current volumes toward the targets in <paramref name="profile"/>,
     /// applies optional channel routing, and ensures looping instances are playing or paused.
     /// No heap allocations.
     /// </summary>
-    public void Update(GameTime gameTime, in WeatherProfile profile)
+    public void Update(GameTime gameTime, in WeatherProfile profile, Audio.AudioController audioController)
     {
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        float masterVolume = audioController.Master.EffectiveVolume;
         float channelVolume = Channel?.EffectiveVolume ?? 1f;
+        float effectiveVolume = masterVolume * channelVolume;
 
         _currentRainVolume    = ApproachVolume(_currentRainVolume,    profile.RainVolume,    dt);
         _currentWindVolume    = ApproachVolume(_currentWindVolume,    profile.WindVolume,    dt);
         _currentThunderVolume = ApproachVolume(_currentThunderVolume, profile.ThunderVolume, dt);
 
-        SetInstanceVolume(_rainInstance,    _currentRainVolume,    channelVolume);
-        SetInstanceVolume(_windInstance,    _currentWindVolume,    channelVolume);
-        SetInstanceVolume(_thunderInstance, _currentThunderVolume, channelVolume);
+        SetInstanceVolume(_rainInstance,    _currentRainVolume,    effectiveVolume);
+        SetInstanceVolume(_windInstance,    _currentWindVolume,    effectiveVolume);
+        SetInstanceVolume(_thunderInstance, _currentThunderVolume, effectiveVolume);
     }
+    #endregion
 
-    // ── Lightning audio ───────────────────────────────────────────────────────
-
+    #region Lightning audio
     /// <summary>
     /// Plays a spatial thunder strike sound at <paramref name="strikePosition"/> using
     /// a round-robin pre-allocated instance from the pool.
@@ -102,7 +106,10 @@ public sealed class WeatherAudioLayer : IDisposable
 
         _strikeEmitter.Position = new Vector3(strikePosition, 0f);
         audioController.ApplySpatialAudio(instance, _strikeEmitter);
-        instance.Volume = Math.Clamp(instance.Volume, 0f, 1f);
+
+        float masterVolume = audioController.Master.EffectiveVolume;
+        float channelVolume = Channel?.EffectiveVolume ?? 1f;
+        instance.Volume = Math.Clamp(masterVolume * channelVolume, 0f, 1f);
         instance.Play();
     }
 
@@ -118,9 +125,9 @@ public sealed class WeatherAudioLayer : IDisposable
                 _strikePool[i].Dispose();
         _disposed = true;
     }
+    #endregion
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
+    #region Private helpers
     private float ApproachVolume(float current, float target, float dt)
     {
         float diff = target - current;
@@ -156,4 +163,5 @@ public sealed class WeatherAudioLayer : IDisposable
         instance.Stop();
         instance.Dispose();
     }
+    #endregion
 }

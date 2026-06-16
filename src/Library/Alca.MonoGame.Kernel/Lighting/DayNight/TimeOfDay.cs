@@ -25,8 +25,7 @@ public readonly struct TimeOfDay : IEquatable<TimeOfDay>
 
     private TimeOfDay(float hours) => _hours = hours;
 
-    // ── Factory ───────────────────────────────────────────────────────────────
-
+    #region Factory
     /// <summary>
     /// Creates a <see cref="TimeOfDay"/> from the given hour value, wrapping into [0, 24).
     /// Handles negative values correctly.
@@ -44,9 +43,9 @@ public readonly struct TimeOfDay : IEquatable<TimeOfDay>
 
     /// <summary>Gets sunset (20:00).</summary>
     public static TimeOfDay Sunset => new(20f);
+    #endregion
 
-    // ── Interpolation ─────────────────────────────────────────────────────────
-
+    #region Interpolation
     /// <summary>
     /// Interpolates between <paramref name="a"/> and <paramref name="b"/> by <paramref name="t"/>,
     /// taking the shortest path around the 24-hour clock.
@@ -61,9 +60,9 @@ public readonly struct TimeOfDay : IEquatable<TimeOfDay>
 
         return FromHours(a._hours + diff * t);
     }
+    #endregion
 
-    // ── Equality ──────────────────────────────────────────────────────────────
-
+    #region Equality
     /// <inheritdoc/>
     public bool Equals(TimeOfDay other) => _hours == other._hours;
 
@@ -81,4 +80,5 @@ public readonly struct TimeOfDay : IEquatable<TimeOfDay>
 
     /// <summary>Returns the time formatted as HH:MM.</summary>
     public override string ToString() => $"{(int)_hours:D2}:{(int)Minutes:D2}";
+    #endregion
 }

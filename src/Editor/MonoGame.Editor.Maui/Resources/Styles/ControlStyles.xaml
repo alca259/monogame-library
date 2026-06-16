@@ -160,6 +160,19 @@
         <Setter Property="CornerRadius"  Value="4"/>
     </Style>
 
+    <Style x:Key="LargeIconButton" TargetType="Button" BasedOn="{StaticResource FlatButton}">
+        <Setter Property="TextColor"     Value="{StaticResource TextPrimary}"/>
+        <Setter Property="HeightRequest" Value="32"/>
+        <Setter Property="WidthRequest"  Value="120"/>
+        <Setter Property="FontSize"      Value="13"/>
+        <Setter Property="Padding"       Value="0"/>
+        <Setter Property="CornerRadius"  Value="4"/>
+    </Style>
+
+    <Style x:Key="LargeIconButtonSuccess" TargetType="Button" BasedOn="{StaticResource LargeIconButton}">
+        <Setter Property="BackgroundColor"     Value="{StaticResource BtnSuccessBg}"/>
+    </Style>
+
     <!-- Mode toggle pills -->
     <Style x:Key="PillButton" TargetType="Button">
         <Setter Property="BackgroundColor" Value="{StaticResource PanelBackgroundAlt}"/>

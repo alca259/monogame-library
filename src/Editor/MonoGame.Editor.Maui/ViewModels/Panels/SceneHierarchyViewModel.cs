@@ -1,7 +1,7 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MonoGame.Editor.Maui.Views.Panels;
+using System.Collections.ObjectModel;
 
 namespace MonoGame.Editor.Maui.ViewModels.Panels;
 
@@ -75,7 +75,7 @@ public sealed partial class SceneHierarchyViewModel : ViewModelBase
 
         if (scene is null)
         {
-            CountText  = "0 entities";
+            CountText = "0 entities";
             StatusText = "0 objects in scene";
             HasSelection = false;
             return;
@@ -87,8 +87,8 @@ public sealed partial class SceneHierarchyViewModel : ViewModelBase
         foreach (EditorGameObject root in scene.RootGameObjects)
             FlattenInto(root, depth: 0, filtering, ref total);
 
-        CountText  = total == 1 ? "1 entity"          : $"{total} entities";
-        StatusText = total == 1 ? "1 object in scene"  : $"{total} objects in scene";
+        CountText = total == 1 ? "1 entity" : $"{total} entities";
+        StatusText = total == 1 ? "1 object in scene" : $"{total} objects in scene";
 
         SyncSelection(Context.SelectedObject);
     }
@@ -106,7 +106,10 @@ public sealed partial class SceneHierarchyViewModel : ViewModelBase
                 else _expandedIds.Remove(obj.Id);
                 RebuildList();
             },
-            onRename: RenameItemAsync);
+            onRename: RenameItemAsync,
+            onDragStart: StartDrag,
+            onDrop: HandleDrop,
+            onPointerEntered: SetHoveredItem);
 
         Items.Add(item);
         total++;
@@ -230,6 +233,37 @@ public sealed partial class SceneHierarchyViewModel : ViewModelBase
     }
 
     private bool CanDelete() => HasSelection && HasScene;
+
+    // ── Drag & drop ───────────────────────────────────────────────────────────
+
+    private HierarchyItem? _draggingItem;
+    private HierarchyItem? _hoveredItem;
+
+    internal void StartDrag(HierarchyItem item) => _draggingItem = item;
+
+    /// <summary>Llamado cuando el puntero entra en el área de un item (PointerEntered). No interfiere con la selección.</summary>
+    internal void SetHoveredItem(HierarchyItem item) => _hoveredItem = item;
+
+    /// <summary>Devuelve el item actualmente bajo el puntero (según el último PointerEntered).</summary>
+    internal HierarchyItem? HoveredItem => _hoveredItem;
+
+    internal void HandleDrop(HierarchyItem target)
+    {
+        HierarchyItem? source = _draggingItem;
+        _draggingItem = null;
+
+        if (source is null || source == target) return;
+
+        EditorScene? scene = Context.ActiveScene;
+        if (scene is null) return;
+
+        // Usar CollectReparentCandidates para validar que el target no es descendiente del source.
+        List<EditorGameObject> valid = CollectReparentCandidates(scene, source.GameObject);
+        if (!valid.Contains(target.GameObject)) return;
+
+        Context.Commands.Execute(new ReparentEntityCommand(source.GameObject, scene, target.GameObject));
+        RebuildList(scene);
+    }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 

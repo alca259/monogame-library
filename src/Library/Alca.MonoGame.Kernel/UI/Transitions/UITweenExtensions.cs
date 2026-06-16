@@ -9,8 +9,7 @@ namespace Alca.MonoGame.Kernel.UI.Transitions;
 /// </summary>
 public static class UITweenExtensions
 {
-    // ── Fade ─────────────────────────────────────────────────────────────────
-
+    #region Fade
     /// <summary>Tweens <paramref name="element"/> opacity from 0 to 1 over <paramref name="duration"/> seconds.</summary>
     public static Tween FadeIn(this UIElement element, float duration,
         Func<float, float>? easing = null, TweeningManager? tweening = null)
@@ -27,9 +26,9 @@ public static class UITweenExtensions
         var mgr = tweening ?? Core.Tweening;
         return mgr.TweenTo(element, e => e.Opacity, 0f, duration, easing ?? EasingCatalog.Linear);
     }
+    #endregion
 
-    // ── Slide ─────────────────────────────────────────────────────────────────
-
+    #region Slide
     /// <summary>
     /// Offsets <paramref name="element"/>'s bounds by <paramref name="fromOffset"/> then tweens back to the original position.
     /// </summary>
@@ -66,9 +65,9 @@ public static class UITweenExtensions
         mgr.TweenTo(proxy, p => p.OffsetX, (float)(destX - fromX), duration, easing ?? EasingCatalog.Linear);
         return mgr.TweenTo(proxy, p => p.OffsetY, (float)(destY - fromY), duration, easing ?? EasingCatalog.Linear);
     }
+    #endregion
 
-    // ── Internal proxy ────────────────────────────────────────────────────────
-
+    #region Internal proxy
     private sealed class SlideProxy
     {
         private readonly UIElement _element;
@@ -106,4 +105,5 @@ public static class UITweenExtensions
             }
         }
     }
+    #endregion
 }

@@ -36,8 +36,7 @@ public sealed class NavGrid
         InitializeCells();
     }
 
-    // ── Write ─────────────────────────────────────────────────────────────────
-
+    #region Write
     /// <summary>Sets whether the cell at (x, y) is walkable at ground level.</summary>
     public void SetWalkable(int x, int y, bool walkable)
     {
@@ -71,9 +70,9 @@ public sealed class NavGrid
         for (int i = 0; i < _cells.Length; i++)
             _cells[i] = _cells[i] with { IsWalkable = walkable };
     }
+    #endregion
 
-    // ── Query ──────────────────────────────────────────────────────────────────
-
+    #region Query
     /// <summary>Returns the cell at the given grid coordinates.</summary>
     public NavCell GetCell(int x, int y) => _cells[Index(x, y)];
 
@@ -82,9 +81,9 @@ public sealed class NavGrid
 
     /// <summary>Returns true if the cell at (x, y) is walkable at ground level.</summary>
     public bool IsWalkable(int x, int y) => IsInBounds(x, y) && _cells[Index(x, y)].IsWalkable;
+    #endregion
 
-    // ── Coordinate conversion ──────────────────────────────────────────────────
-
+    #region Coordinate conversion
     /// <summary>
     /// Converts a world-space position to grid coordinates.
     /// Coordinates may be out of bounds; call <see cref="IsInBounds"/> to validate.
@@ -99,9 +98,9 @@ public sealed class NavGrid
     public Vector2 GridToWorld(int x, int y) =>
         new(Origin.X + x * CellSize + CellSize * 0.5f,
             Origin.Y + y * CellSize + CellSize * 0.5f);
+    #endregion
 
-    // ── Internal ───────────────────────────────────────────────────────────────
-
+    #region Internal
     private int Index(int x, int y) => y * Width + x;
 
     private void InitializeCells()
@@ -121,4 +120,5 @@ public sealed class NavGrid
             }
         }
     }
+    #endregion
 }

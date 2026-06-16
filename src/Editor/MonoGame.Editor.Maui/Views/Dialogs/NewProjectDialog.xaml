@@ -64,7 +64,7 @@
                     </Grid>
 
                     <Label Grid.Row="2" Grid.Column="0"
-                           Text="Game .csproj"
+                           Text="Game .csproj (optional)"
                            Style="{StaticResource DimLabel}"
                            VerticalOptions="Center"/>
                     <Grid Grid.Row="2" Grid.Column="1"
@@ -99,10 +99,10 @@
                                        Spacing="8"
                                        Padding="20,12">
                     <Button Text="Cancel"
-                            Style="{StaticResource SmallIconButton}"
+                            Style="{StaticResource LargeIconButton}"
                             Command="{Binding CancelCommand}"/>
                     <Button Text="Create"
-                            Style="{StaticResource SmallIconButton}"
+                            Style="{StaticResource LargeIconButtonSuccess}"
                             Command="{Binding SubmitCommand}"/>
                 </HorizontalStackLayout>
 

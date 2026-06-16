@@ -1,4 +1,4 @@
-namespace Alca.MonoGame.Kernel.Audio;
+namespace Alca.MonoGame.Kernel.Audio.Spatial;
 
 /// <summary>Wraps AudioListener and exposes typed Vector3 properties for 3D audio positioning.</summary>
 public sealed class AudioListener3D

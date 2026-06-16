@@ -1,3 +1,5 @@
+using Alca.MonoGame.Kernel.Audio.Mixer;
+
 namespace Alca.MonoGame.Kernel.Weather;
 
 /// <summary>
@@ -38,8 +40,7 @@ public sealed class WeatherWorld
     private float _tempWalkDuration;
     private bool _tempWalkActive;
 
-    // ── Public state ──────────────────────────────────────────────────────────
-
+    #region Public state
     /// <summary>Gets the weather type currently active (or the origin type during a transition).</summary>
     public WeatherTypeId CurrentWeather => _currentWeather;
 
@@ -57,9 +58,9 @@ public sealed class WeatherWorld
 
     /// <summary>Gets the wind state derived from <see cref="ActiveProfile"/> this frame.</summary>
     public WindState CurrentWind { get; private set; }
+    #endregion
 
-    // ── Subsystem wiring (set before first Update) ────────────────────────────
-
+    #region Subsystem wiring (set before first Update) 
     /// <summary>Gets or sets the lighting world used to drive ambient color each frame.</summary>
     public Lighting.LightingWorld? LightingWorld { get; set; }
 
@@ -67,7 +68,7 @@ public sealed class WeatherWorld
     public Audio.AudioController? AudioController { get; set; }
 
     /// <summary>Gets or sets the audio mixer used for channel-based volume routing.</summary>
-    public Audio.AudioMixer? AudioMixer { get; set; }
+    public AudioMixer? AudioMixer { get; set; }
 
     /// <summary>
     /// Gets or sets the scale factor converting km/h to world units per second.
@@ -107,9 +108,9 @@ public sealed class WeatherWorld
     /// Default 0.2 (muffled outdoor sounds heard through walls).
     /// </summary>
     public float IndoorAudioMultiplier { get; set; } = 0.2f;
+    #endregion
 
-    // ── Optional subsystems ───────────────────────────────────────────────────
-
+    #region Optional subsystems
     /// <summary>Gets the lightning controller, or <see langword="null"/> if not enabled.</summary>
     public LightningController? Lightning { get; private set; }
 
@@ -118,26 +119,26 @@ public sealed class WeatherWorld
 
     /// <summary>Gets the audio layer, or <see langword="null"/> if not enabled.</summary>
     public WeatherAudioLayer? Audio { get; private set; }
+    #endregion
 
-    // ── Events ────────────────────────────────────────────────────────────────
-
+    #region Events
     /// <summary>
     /// Raised once per lightning strike, carrying position, intensity, and impulse data.
     /// Handlers are invoked synchronously from <see cref="Update"/>; do not allocate inside them.
     /// </summary>
     public event Action<LightningStrikeEvent>? LightningStruck;
+    #endregion
 
-    // ── Construction ──────────────────────────────────────────────────────────
-
+    #region Construction
     /// <summary>Initializes a new <see cref="WeatherWorld"/> starting in <see cref="WeatherTypeId.Sunny"/>.</summary>
     public WeatherWorld()
     {
         BuildDefaultCatalog();
         ApplyImmediate(WeatherTypeId.Sunny);
     }
+    #endregion
 
-    // ── Subsystem registration ────────────────────────────────────────────────
-
+    #region Subsystem registration
     /// <summary>Registers a particle layer that will be driven each frame. Call once before the first <see cref="Update"/>.</summary>
     public void EnableParticles(WeatherParticleLayer layer) => Particles = layer;
 
@@ -146,9 +147,9 @@ public sealed class WeatherWorld
 
     /// <summary>Registers an audio layer. Call once before the first <see cref="Update"/>.</summary>
     public void EnableAudio(WeatherAudioLayer layer) => Audio = layer;
+    #endregion
 
-    // ── Catalog management ────────────────────────────────────────────────────
-
+    #region Catalog management
     /// <summary>
     /// Registers a custom weather type or replaces an existing profile (built-in or previously registered).
     /// The wind/fog constraint is enforced: fog density is forced to 0 when wind speed max > 0.
@@ -188,9 +189,9 @@ public sealed class WeatherWorld
     /// <summary>Attempts to retrieve the profile for the given weather type. Returns false if not registered.</summary>
     public bool TryGetProfile(WeatherTypeId id, out WeatherProfile profile) =>
         _catalog.TryGetValue(id.Value, out profile);
+    #endregion
 
-    // ── Weather control ───────────────────────────────────────────────────────
-
+    #region Weather control
     /// <summary>
     /// Begins a smooth transition to <paramref name="type"/> over <paramref name="transitionDuration"/> seconds.
     /// If a transition is already in progress it completes instantly before the new one starts.
@@ -231,9 +232,9 @@ public sealed class WeatherWorld
 
         ApplyImmediate(type);
     }
+    #endregion
 
-    // ── Game loop ─────────────────────────────────────────────────────────────
-
+    #region Game loop
     /// <summary>
     /// Advances the weather simulation by one frame. Called automatically by
     /// <see cref="ECS.GameWorld.Update"/> when assigned to <see cref="ECS.GameWorld.WeatherWorld"/>.
@@ -269,13 +270,15 @@ public sealed class WeatherWorld
               }
             : ActiveProfile;
 
-        Audio?.Update(gameTime, audioProfile);
+        if (Audio is not null && AudioController is not null)
+            Audio.Update(gameTime, audioProfile, AudioController);
+
         Lightning?.Update(gameTime, ActiveProfile,
             IsInterior ? _emptyBehaviourList : _registeredBehaviours);
     }
+    #endregion
 
-    // ── ECS registration (called by WeatherBehaviour, not user code) ──────────
-
+    #region ECS registration (called by WeatherBehaviour, not user code)
     /// <summary>Registers a <see cref="WeatherBehaviour"/> to receive wind and lightning impulses.</summary>
     internal void Register(WeatherBehaviour behaviour)
     {
@@ -290,9 +293,9 @@ public sealed class WeatherWorld
     /// <summary>Raises the <see cref="LightningStruck"/> event. Called by <see cref="LightningController"/>.</summary>
     internal void RaiseLightningStruck(in LightningStrikeEvent evt) =>
         LightningStruck?.Invoke(evt);
+    #endregion
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
+    #region Private helpers
     private void BuildDefaultCatalog()
     {
         _catalog[WeatherTypeId.Sunny.Value]        = WeatherProfiles.Sunny;
@@ -445,7 +448,7 @@ public sealed class WeatherWorld
     {
         if (profile.WindSpeedMaxKmh > 0f && profile.FogDensity > 0f)
         {
-            global::System.Diagnostics.Debug.WriteLine(
+            System.Diagnostics.Debug.WriteLine(
                 $"[WeatherWorld] Profile '{id.Value}' has both wind (max {profile.WindSpeedMaxKmh} km/h) " +
                 $"and fog density ({profile.FogDensity}). Wind and fog are mutually exclusive — FogDensity forced to 0.");
 
@@ -454,4 +457,5 @@ public sealed class WeatherWorld
 
         return profile;
     }
+    #endregion
 }

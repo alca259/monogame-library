@@ -1,5 +1,3 @@
-using Alca.MonoGame.Kernel.Graphics.Shaders;
-
 namespace Alca.MonoGame.Kernel.UnitTests.Graphics.Shaders;
 
 // DissolveMaterial requires a compiled Effect from the MonoGame Content Pipeline.

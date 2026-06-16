@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MonoGame.Editor.Maui.Views.Dialogs;
 
 namespace MonoGame.Editor.Maui.ViewModels.Dialogs;
 
@@ -16,7 +15,7 @@ public sealed partial class LocaleCreationViewModel : DialogViewModel<LocaleCrea
     [RelayCommand]
     private void Submit()
     {
-        string code        = LocaleCode?.Trim()  ?? string.Empty;
+        string code = LocaleCode?.Trim() ?? string.Empty;
         string displayName = DisplayName?.Trim() ?? string.Empty;
 
         if (string.IsNullOrEmpty(code))

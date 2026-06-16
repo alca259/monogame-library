@@ -141,8 +141,7 @@ public sealed class Pathfinder
         return false;
     }
 
-    // ── Traversal helpers ──────────────────────────────────────────────────────
-
+    #region Traversal helpers
     private static bool IsCellTraversable(NavGrid grid, int x, int y, NavAgentProfile profile)
     {
         if (!grid.IsInBounds(x, y)) return false;
@@ -199,9 +198,9 @@ public sealed class Pathfinder
         }
         path.Reverse();
     }
+    #endregion
 
-    // ── Min-heap ───────────────────────────────────────────────────────────────
-
+    #region Min-heap
     private void HeapPush(int cellIdx, float f)
     {
         int i = _heapSize;
@@ -260,4 +259,5 @@ public sealed class Pathfinder
         (_heapIdx[a], _heapIdx[b]) = (_heapIdx[b], _heapIdx[a]);
         (_heapF[a], _heapF[b]) = (_heapF[b], _heapF[a]);
     }
+    #endregion
 }

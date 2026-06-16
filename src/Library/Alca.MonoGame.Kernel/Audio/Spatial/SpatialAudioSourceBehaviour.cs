@@ -1,13 +1,19 @@
+using Alca.MonoGame.Kernel.Audio.Mixer;
 using Alca.MonoGame.Kernel.ECS;
 
-namespace Alca.MonoGame.Kernel.Audio;
+namespace Alca.MonoGame.Kernel.Audio.Spatial;
 
 /// <summary>
 /// GameBehaviour that emits 3D spatial audio from the entity's world-space position.
 /// Syncs <see cref="AudioEmitter3D.Position"/> with <see cref="TransformBehaviour.Position"/> (X, Y, Z)
 /// every frame and applies 3D positioning via <see cref="AudioController"/>.
 /// </summary>
-public sealed class SpatialAudioSource : GameBehaviour
+/// <example>
+/// - Un NPC que habla.
+/// - Un disparo.
+/// - Efectos de entidad.
+/// </example>
+public sealed class SpatialAudioSourceBehaviour : GameBehaviour
 {
     private readonly AudioEmitter3D _emitter = new();
     private AudioController? _controller;
@@ -51,10 +57,9 @@ public sealed class SpatialAudioSource : GameBehaviour
         _emitter.Position = Entity.Transform.Position;
         _emitter.Velocity = Entity.Transform.Velocity;
 
-        float effectiveVolume = MixerChannel is not null
-            ? Volume * MixerChannel.EffectiveVolume
-            : Volume;
-        _instance.Volume = Math.Clamp(effectiveVolume, 0f, 1f);
+        float masterVolume = _controller.Master.EffectiveVolume;
+        float channelVolume = MixerChannel?.EffectiveVolume ?? 1f;
+        _instance.Volume = Math.Clamp(Volume * masterVolume * channelVolume, 0f, 1f);
         _controller.ApplySpatialAudio(_instance, _emitter);
     }
 
@@ -68,10 +73,9 @@ public sealed class SpatialAudioSource : GameBehaviour
         _instance.IsLooped = Loop;
         _instance.Pitch = Pitch;
 
-        float effectiveVolume = MixerChannel is not null
-            ? Volume * MixerChannel.EffectiveVolume
-            : Volume;
-        _instance.Volume = Math.Clamp(effectiveVolume, 0f, 1f);
+        float masterVolume = _controller.Master.EffectiveVolume;
+        float channelVolume = MixerChannel?.EffectiveVolume ?? 1f;
+        _instance.Volume = Math.Clamp(Volume * masterVolume * channelVolume, 0f, 1f);
         _instance.Play();
     }
 

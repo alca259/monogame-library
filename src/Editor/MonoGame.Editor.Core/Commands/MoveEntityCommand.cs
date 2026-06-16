@@ -4,12 +4,12 @@ namespace MonoGame.Editor.Core.Commands;
 public sealed class MoveEntityCommand : IEditorCommand
 {
     private readonly EditorGameObject _target;
-    private readonly EditorVector2 _previousPosition;
-    private readonly EditorVector2 _newPosition;
+    private readonly EditorVector3 _previousPosition;
+    private readonly EditorVector3 _newPosition;
 
     /// <param name="target">Objeto a mover.</param>
-    /// <param name="newPosition">Posición de destino.</param>
-    public MoveEntityCommand(EditorGameObject target, EditorVector2 newPosition)
+    /// <param name="newPosition">Posición de destino (X, Y, Z).</param>
+    public MoveEntityCommand(EditorGameObject target, EditorVector3 newPosition)
     {
         _target = target;
         _previousPosition = target.Position;
@@ -18,8 +18,8 @@ public sealed class MoveEntityCommand : IEditorCommand
 
     /// <param name="target">Objeto a mover.</param>
     /// <param name="previousPosition">Posición antes del movimiento (explícita, usada por el arrastre del gizmo).</param>
-    /// <param name="newPosition">Posición de destino.</param>
-    public MoveEntityCommand(EditorGameObject target, EditorVector2 previousPosition, EditorVector2 newPosition)
+    /// <param name="newPosition">Posición de destino (X, Y, Z).</param>
+    public MoveEntityCommand(EditorGameObject target, EditorVector3 previousPosition, EditorVector3 newPosition)
     {
         _target = target;
         _previousPosition = previousPosition;

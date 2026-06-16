@@ -1,7 +1,7 @@
-﻿using System.Collections.ObjectModel;
-using System.Text.Json;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
+using System.Text.Json;
 
 namespace MonoGame.Editor.Maui.ViewModels.Panels;
 
@@ -11,9 +11,9 @@ public sealed partial class UIThemeSectionViewModel(string name) : ObservableObj
     public string Name { get; } = name;
 
     [ObservableProperty] private string _texturePath = string.Empty;
-    [ObservableProperty] private string _left   = "8";
-    [ObservableProperty] private string _right  = "8";
-    [ObservableProperty] private string _top    = "8";
+    [ObservableProperty] private string _left = "8";
+    [ObservableProperty] private string _right = "8";
+    [ObservableProperty] private string _top = "8";
     [ObservableProperty] private string _bottom = "8";
     [ObservableProperty] private bool _tileEdges;
     [ObservableProperty] private bool _tileCenter;
@@ -21,23 +21,23 @@ public sealed partial class UIThemeSectionViewModel(string name) : ObservableObj
     public void Populate(EditorUIThemeEntry entry)
     {
         TexturePath = entry.TexturePath;
-        Left        = entry.BorderLeft.ToString();
-        Right       = entry.BorderRight.ToString();
-        Top         = entry.BorderTop.ToString();
-        Bottom      = entry.BorderBottom.ToString();
-        TileEdges   = entry.TileEdges;
-        TileCenter  = entry.TileCenter;
+        Left = entry.BorderLeft.ToString();
+        Right = entry.BorderRight.ToString();
+        Top = entry.BorderTop.ToString();
+        Bottom = entry.BorderBottom.ToString();
+        TileEdges = entry.TileEdges;
+        TileCenter = entry.TileCenter;
     }
 
     public EditorUIThemeEntry Read() => new()
     {
-        TexturePath  = TexturePath,
-        BorderLeft   = ParseInt(Left),
-        BorderRight  = ParseInt(Right),
-        BorderTop    = ParseInt(Top),
+        TexturePath = TexturePath,
+        BorderLeft = ParseInt(Left),
+        BorderRight = ParseInt(Right),
+        BorderTop = ParseInt(Top),
         BorderBottom = ParseInt(Bottom),
-        TileEdges    = TileEdges,
-        TileCenter   = TileCenter,
+        TileEdges = TileEdges,
+        TileCenter = TileCenter,
     };
 
     private static int ParseInt(string? text) => int.TryParse(text, out int v) ? v : 0;
@@ -124,7 +124,7 @@ public sealed partial class UIThemeInspectorViewModel : ViewModelBase
         ThemeName = string.Empty;
         foreach (UIThemeSectionViewModel section in Sections)
             section.Populate(new EditorUIThemeEntry());
-        CanSave    = false;
+        CanSave = false;
         StatusText = string.Empty;
     }
 
@@ -135,12 +135,12 @@ public sealed partial class UIThemeInspectorViewModel : ViewModelBase
 
         var theme = new EditorUITheme
         {
-            Name        = ThemeName,
-            Panel       = Section("Panel")?.Read()       ?? new EditorUIThemeEntry(),
-            Button      = Section("Button")?.Read()      ?? new EditorUIThemeEntry(),
-            Dropdown    = Section("Dropdown")?.Read()    ?? new EditorUIThemeEntry(),
+            Name = ThemeName,
+            Panel = Section("Panel")?.Read() ?? new EditorUIThemeEntry(),
+            Button = Section("Button")?.Read() ?? new EditorUIThemeEntry(),
+            Dropdown = Section("Dropdown")?.Read() ?? new EditorUIThemeEntry(),
             ProgressBar = Section("ProgressBar")?.Read() ?? new EditorUIThemeEntry(),
-            TextBox     = Section("TextBox")?.Read()     ?? new EditorUIThemeEntry(),
+            TextBox = Section("TextBox")?.Read() ?? new EditorUIThemeEntry(),
         };
 
         try

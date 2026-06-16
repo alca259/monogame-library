@@ -11,8 +11,7 @@ public sealed class WeatherBehaviour : GameBehaviour
 {
     private Physics.RigidBody2D? _rigidBody;
 
-    // ── Configuration ─────────────────────────────────────────────────────────
-
+    #region Configuration
     /// <summary>
     /// Gets or sets whether this entity's <see cref="Physics.RigidBody2D"/> receives wind forces each frame.
     /// Requires a sibling <see cref="Physics.RigidBody2D"/> component; silently no-ops if absent.
@@ -24,9 +23,9 @@ public sealed class WeatherBehaviour : GameBehaviour
 
     /// <summary>Gets or sets whether this entity can receive a radial impulse from nearby lightning strikes.</summary>
     public bool ReceivesLightningImpulse { get; set; } = false;
+    #endregion
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
-
+    #region Lifecycle
     /// <inheritdoc/>
     public override void Awake()
     {
@@ -39,9 +38,9 @@ public sealed class WeatherBehaviour : GameBehaviour
     {
         Entity.World.WeatherWorld?.Unregister(this);
     }
+    #endregion
 
-    // ── Internal dispatch (called by WeatherWorld, not user code) ─────────────
-
+    #region Internal dispatch (called by WeatherWorld, not user code)
     /// <summary>
     /// Applies <paramref name="windForce"/> to the sibling <see cref="Physics.RigidBody2D"/> this frame.
     /// No-op when <see cref="ReceivesWind"/> is false or no <see cref="Physics.RigidBody2D"/> is present.
@@ -69,4 +68,5 @@ public sealed class WeatherBehaviour : GameBehaviour
         Vector2 direction = Vector2.Normalize(pos - strikePosition);
         _rigidBody.ApplyImpulse(direction * strength * falloff);
     }
+    #endregion
 }

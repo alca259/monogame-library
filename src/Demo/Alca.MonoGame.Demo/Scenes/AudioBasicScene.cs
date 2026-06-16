@@ -71,7 +71,7 @@ public sealed class AudioBasicScene : Scene
         playMusicBtn.Clicked += () =>
         {
             if (_theme != null)
-                AudioController.PlaySong(_theme);
+                Core.Audio.PlaySong(_theme);
         };
         controls.Add(playMusicBtn);
 

@@ -6,9 +6,9 @@ namespace MonoGame.Editor.Core.Project;
 /// </summary>
 public static class ProjectScaffolder
 {
-    private const string GameAppFolder     = "GameApp";
+    private const string GameAppFolder = "GameApp";
     private const string GameScriptsFolder = "GameScripts";
-    private const string SrcFolder         = "src";
+    private const string SrcFolder = "src";
 
     /// <summary>
     /// Crea la estructura completa de subcarpetas <c>src/</c>.
@@ -18,8 +18,8 @@ public static class ProjectScaffolder
     {
         ArgumentNullException.ThrowIfNull(project);
 
-        string srcPath         = Path.Combine(project.RootPath, SrcFolder);
-        string gameAppPath     = Path.Combine(srcPath, GameAppFolder);
+        string srcPath = Path.Combine(project.RootPath, SrcFolder);
+        string gameAppPath = Path.Combine(srcPath, GameAppFolder);
         string gameScriptsPath = Path.Combine(srcPath, GameScriptsFolder);
 
         Directory.CreateDirectory(gameAppPath);
@@ -32,8 +32,8 @@ public static class ProjectScaffolder
         string ns = string.IsNullOrWhiteSpace(project.BaseNamespace) ? project.Name : project.BaseNamespace;
 
         WriteIfAbsent(Path.Combine(gameAppPath, $"{GameAppFolder}.csproj"), BuildGameAppCsproj(ns));
-        WriteIfAbsent(Path.Combine(gameAppPath, "Program.cs"),              BuildProgramCs(ns));
-        WriteIfAbsent(Path.Combine(gameAppPath, "Game1.cs"),                BuildGame1Cs(ns));
+        WriteIfAbsent(Path.Combine(gameAppPath, "Program.cs"), BuildProgramCs(ns));
+        WriteIfAbsent(Path.Combine(gameAppPath, "Game1.cs"), BuildGame1Cs(ns));
         WriteIfAbsent(Path.Combine(gameScriptsPath, $"{GameScriptsFolder}.csproj"), BuildGameScriptsCsproj(ns));
 
         string slnPath = Path.Combine(srcPath, $"{project.Name}.slnx");

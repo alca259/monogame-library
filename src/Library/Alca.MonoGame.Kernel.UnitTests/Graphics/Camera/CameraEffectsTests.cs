@@ -1,5 +1,3 @@
-using Alca.MonoGame.Kernel.Graphics.Camera;
-
 namespace Alca.MonoGame.Kernel.UnitTests.Graphics.Camera;
 
 public sealed class CameraEffectsTests

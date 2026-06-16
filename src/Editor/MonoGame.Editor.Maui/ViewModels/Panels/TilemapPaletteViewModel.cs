@@ -39,11 +39,11 @@ public sealed partial class TilemapPaletteViewModel : ViewModelBase
 
     private void Reset()
     {
-        TilemapInfoText    = "No tilemap layer selected";
-        TileCountText      = "0 tiles";
+        TilemapInfoText = "No tilemap layer selected";
+        TileCountText = "0 tiles";
         PlaceholderVisible = true;
-        HasLayer           = false;
-        IsEraseMode        = false;
+        HasLayer = false;
+        IsEraseMode = false;
         TilesetChanged?.Invoke(null);
     }
 
@@ -57,10 +57,10 @@ public sealed partial class TilemapPaletteViewModel : ViewModelBase
             : "No tilemap layer selected";
 
         int count = tileset?.TileCount ?? 0;
-        TileCountText      = count == 1 ? "1 tile" : $"{count} tiles";
+        TileCountText = count == 1 ? "1 tile" : $"{count} tiles";
         PlaceholderVisible = !hasLayer;
-        HasLayer           = hasLayer;
-        IsEraseMode        = false;
+        HasLayer = hasLayer;
+        IsEraseMode = false;
 
         TilesetChanged?.Invoke(tileset);
     }

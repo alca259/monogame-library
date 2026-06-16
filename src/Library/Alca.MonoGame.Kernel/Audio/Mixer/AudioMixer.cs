@@ -1,4 +1,4 @@
-namespace Alca.MonoGame.Kernel.Audio;
+namespace Alca.MonoGame.Kernel.Audio.Mixer;
 
 /// <summary>
 /// Singleton mixer that manages named volume channels for independent audio routing.

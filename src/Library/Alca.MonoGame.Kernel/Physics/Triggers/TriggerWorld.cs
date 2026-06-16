@@ -14,8 +14,7 @@ public sealed class TriggerWorld
     private readonly HashSet<long> _activeOverlaps = new(64);
     private readonly HashSet<long> _newOverlaps = new(64);
 
-    // ── Registration ──────────────────────────────────────────────────────────
-
+    #region Registration
     /// <summary>Registers <paramref name="zone"/> for overlap testing. No-op if already registered.</summary>
     public void Register(TriggerZone2D zone)
     {
@@ -36,9 +35,9 @@ public sealed class TriggerWorld
             _newOverlaps.Clear();
         }
     }
+    #endregion
 
-    // ── Update ────────────────────────────────────────────────────────────────
-
+    #region Update
     /// <summary>
     /// Tests all zone pairs and dispatches Enter/Stay/Exit events.
     /// O(n²) — intended for small to moderate numbers of trigger zones (≤ 200).
@@ -105,9 +104,9 @@ public sealed class TriggerWorld
         foreach (long key in _newOverlaps)
             _activeOverlaps.Add(key);
     }
+    #endregion
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
+    #region Private helpers
     private static bool AreOverlapping(TriggerZone2D a, TriggerZone2D b)
     {
         // Both AABB
@@ -150,4 +149,5 @@ public sealed class TriggerWorld
         i = (int)(key >> 32);
         j = (int)(key & 0xFFFFFFFFL);
     }
+    #endregion
 }

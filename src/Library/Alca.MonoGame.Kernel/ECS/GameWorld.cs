@@ -50,17 +50,11 @@ public sealed class GameWorld
     public Navigation.AsyncPathfinder? AsyncPathfinder { get; set; }
 
     /// <summary>
-    /// Gets or sets the audio controller used by <see cref="Audio.SpatialAudioSource"/> and
-    /// <see cref="Audio.SpatialAudioListener"/> components in this world.
-    /// Optional — omit for projects that do not use 3D spatial audio.
+    /// Gets or sets the audio controller used by <see cref="Audio.Spatial.SpatialAudioSourceBehaviour"/> and
+    /// <see cref="Audio.Spatial.SpatialAudioListenerBehaviour"/> components in this world.
+    /// Also includes a Global Mixer for centralized volume control.
     /// </summary>
     public Audio.AudioController? AudioController { get; set; }
-
-    /// <summary>
-    /// Gets or sets the audio mixer for channel-based volume routing used by audio components.
-    /// Optional — omit for projects that do not use audio mixing.
-    /// </summary>
-    public Audio.AudioMixer? AudioMixer { get; set; }
 
     /// <summary>
     /// Gets or sets the network server for this world. Set by <see cref="Network.NetworkManagerBehaviour"/>
@@ -103,8 +97,7 @@ public sealed class GameWorld
     /// </summary>
     public Dialogue.DialogueManager? DialogueManager { get; set; }
 
-    // ── Lifecycle ──────────────────────────────────────────────────────────────
-
+    #region Lifecycle
     /// <summary>Flushes pending creation/destruction then updates all active entities.</summary>
     public void Update(GameTime gameTime)
     {
@@ -130,9 +123,9 @@ public sealed class GameWorld
         for (int i = 0; i < _entities.Count; i++)
             _entities[i].Draw(gameTime, spriteBatch);
     }
+    #endregion
 
-    // ── Entity management ──────────────────────────────────────────────────────
-
+    #region Entity management
     /// <summary>
     /// Creates an entity with a pre-attached <see cref="TransformBehaviour"/> at the given 2D position (Z = 0).
     /// The entity is added to the world at the start of the next Update (deferred).
@@ -178,9 +171,9 @@ public sealed class GameWorld
 
         _toDestroy.Clear();
     }
+    #endregion
 
-    // ── Queries ────────────────────────────────────────────────────────────────
-
+    #region Queries
     /// <summary>Gets the number of active entities in this world.</summary>
     public int EntityCount => _entities.Count;
 
@@ -203,7 +196,7 @@ public sealed class GameWorld
     }
 
     /// <summary>Returns all components of type T (concrete type or interface) across all entities.</summary>
-    [Obsolete("Allocates an enumerator. Use FindComponents<T>(List<T>) for zero-alloc hot paths.")]
+    /// <remarks>This method allocates a new enumerator and yields results one by one. Use <see cref="FindComponents{T}(List{T})"/> for zero-alloc hot paths.</remarks>
     public IEnumerable<T> FindComponents<T>() where T : class
     {
         for (int i = 0; i < _entities.Count; i++)
@@ -247,9 +240,9 @@ public sealed class GameWorld
         for (int i = 0; i < _entities.Count; i++)
             _entities[i].GetComponents<T>(results);
     }
+    #endregion
 
-    // ── Internal ───────────────────────────────────────────────────────────────
-
+    #region Internal
     private void FlushPending()
     {
         for (int i = 0; i < _toAdd.Count; i++)
@@ -263,4 +256,5 @@ public sealed class GameWorld
         }
         _toDestroy.Clear();
     }
+    #endregion
 }

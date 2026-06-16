@@ -7,8 +7,7 @@ namespace Alca.MonoGame.Kernel.Weather;
 /// </summary>
 public static class WeatherProfiles
 {
-    // ── Light color presets ───────────────────────────────────────────────────
-
+    #region Light color presets
     private static readonly Color _warmAmbient    = new(255, 220, 160);
     private static readonly Color _neutralAmbient = new(200, 200, 200);
     private static readonly Color _coldAmbient    = new(160, 185, 220);
@@ -20,9 +19,9 @@ public static class WeatherProfiles
     private static readonly Color _snowSky   = new(190, 195, 210);
 
     private static readonly Color _fogColor  = new(210, 215, 220, 200);
+    #endregion
 
-    // ── Catalog ───────────────────────────────────────────────────────────────
-
+    #region Catalog
     /// <summary>Clear sunny day. Warm light, light breeze, no precipitation.</summary>
     public static readonly WeatherProfile Sunny = new()
     {
@@ -246,9 +245,9 @@ public static class WeatherProfiles
         WindVolume       = 1f,
         ThunderVolume    = 0f
     };
+    #endregion
 
-    // ── Lookup helper ─────────────────────────────────────────────────────────
-
+    #region Lookup helper
     /// <summary>
     /// Returns the default profile for a predefined <see cref="WeatherTypeId"/>, or <see langword="null"/> if the id is not in the built-in catalog.
     /// </summary>
@@ -266,4 +265,5 @@ public static class WeatherProfiles
         if (id == WeatherTypeId.OrangeWind)   return OrangeWind;
         return null;
     }
+    #endregion
 }

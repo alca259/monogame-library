@@ -72,8 +72,7 @@ public sealed class TimerManager
         }
     }
 
-    // ── Internal ──────────────────────────────────────────────────────────────
-
+    #region Internal
     private GameTimer ScheduleInternal(float seconds, Action callback, bool repeating, int maxFires)
     {
         var timer = AcquireFromPool();
@@ -99,4 +98,5 @@ public sealed class TimerManager
         if (_poolCount < _pool.Length)
             _pool[_poolCount++] = timer;
     }
+    #endregion
 }

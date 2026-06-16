@@ -24,6 +24,13 @@ public sealed partial class InspectorViewModel : ViewModelBase
     /// <summary>Solicita a la vista repoblar Transform y reconstruir las tarjetas de behaviour.</summary>
     public event Action? RefreshRequested;
 
+    /// <summary>
+    /// Solicita a la vista actualizar SÓLO los valores de los steppers de Transform,
+    /// sin reconstruir las tarjetas de Behaviour. Se usa al cambiar una propiedad para
+    /// evitar el bucle Slider.ValueChanged → SetProperty → BuildBehaviourCards.
+    /// </summary>
+    public event Action? TransformOnlyRefreshRequested;
+
     [ObservableProperty]
     private EditorGameObject? _selected;
 
@@ -44,7 +51,17 @@ public sealed partial class InspectorViewModel : ViewModelBase
 
     protected override void RegisterEvents()
     {
-        On<GameObjectSelectedEvent>(e => { Selected = e.GameObject; Refresh(); });
+        // Reconstruir tarjetas sólo cuando cambia el objeto seleccionado.
+        On<GameObjectSelectedEvent>(e =>
+        {
+            if (Selected == e.GameObject) return;
+            Selected = e.GameObject;
+            Refresh();
+        });
+        // Actualizar sólo los steppers de Transform cuando cambia una propiedad.
+        // NO usar RefreshRequested (que llama a BuildBehaviourCards) porque provoca un bucle
+        // Slider.ValueChanged → SetProperty → GameObjectPropertyChangedEvent → BuildBehaviourCards → ...
+        On<GameObjectPropertyChangedEvent>(_ => TransformOnlyRefreshRequested?.Invoke());
         On<UndoPerformedEvent>(_ => Refresh());
         On<RedoPerformedEvent>(_ => Refresh());
         On<EditorStateChangedEvent>(e => ContentEnabled = e.NewState is EditorState.Editing);
@@ -62,7 +79,7 @@ public sealed partial class InspectorViewModel : ViewModelBase
         HasSelection = Selected is not null;
         if (Selected is not null)
         {
-            ObjectName    = Selected.Name;
+            ObjectName = Selected.Name;
             ObjectIdShort = Selected.Id.ToString()[..8];
         }
         RefreshRequested?.Invoke();
@@ -76,37 +93,69 @@ public sealed partial class InspectorViewModel : ViewModelBase
     public void ApplyPosX(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new MoveEntityCommand(s, new EditorVector2((float)v, s.Position.Y)));
+            ExecuteTransformCommand(s, new MoveEntityCommand(s, new EditorVector3((float)v, s.Position.Y, s.Position.Z)));
     }
 
     public void ApplyPosY(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new MoveEntityCommand(s, new EditorVector2(s.Position.X, (float)v)));
+            ExecuteTransformCommand(s, new MoveEntityCommand(s, new EditorVector3(s.Position.X, (float)v, s.Position.Z)));
+    }
+
+    public void ApplyPosZ(double v)
+    {
+        if (Selected is { } s)
+            ExecuteTransformCommand(s, new MoveEntityCommand(s, new EditorVector3(s.Position.X, s.Position.Y, (float)v)));
+    }
+
+    public void ApplyRotX(double v)
+    {
+        if (Selected is { } s)
+            ExecuteTransformCommand(s, new RotateEntityCommand(s, new EditorVector3((float)v, s.Rotation.Y, s.Rotation.Z)));
+    }
+
+    public void ApplyRotY(double v)
+    {
+        if (Selected is { } s)
+            ExecuteTransformCommand(s, new RotateEntityCommand(s, new EditorVector3(s.Rotation.X, (float)v, s.Rotation.Z)));
     }
 
     public void ApplyRotZ(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new RotateEntityCommand(s, s.Rotation, (float)v));
+            ExecuteTransformCommand(s, new RotateEntityCommand(s, new EditorVector3(s.Rotation.X, s.Rotation.Y, (float)v)));
     }
 
     public void ApplyScaleX(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new ScaleEntityCommand(s, new EditorVector2((float)v, s.Scale.Y)));
+            ExecuteTransformCommand(s, new ScaleEntityCommand(s, new EditorVector3((float)v, s.Scale.Y, s.Scale.Z)));
     }
 
     public void ApplyScaleY(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new ScaleEntityCommand(s, new EditorVector2(s.Scale.X, (float)v)));
+            ExecuteTransformCommand(s, new ScaleEntityCommand(s, new EditorVector3(s.Scale.X, (float)v, s.Scale.Z)));
     }
 
-    public void ApplyDepth(double v)
+    public void ApplyScaleZ(double v)
     {
         if (Selected is { } s)
-            Context.Commands.Execute(new MoveEntityZCommand(s, s.PositionZ, (float)v));
+            ExecuteTransformCommand(s, new ScaleEntityCommand(s, new EditorVector3(s.Scale.X, s.Scale.Y, (float)v)));
+    }
+
+    /// <summary>Alias de compatibilidad para el stepper de profundidad del Inspector (equivale a ApplyPosZ).</summary>
+    public void ApplyDepth(double v) => ApplyPosZ(v);
+
+    /// <summary>
+    /// Ejecuta el comando y publica <see cref="GameObjectSelectedEvent"/> para forzar el repintado del viewport.
+    /// <see cref="EditorContext.MarkSceneDirty"/> solo publica su evento la primera vez que la escena pasa a dirty,
+    /// por lo que necesitamos un evento adicional para los cambios posteriores.
+    /// </summary>
+    private void ExecuteTransformCommand(EditorGameObject target, IEditorCommand command)
+    {
+        Context.Commands.Execute(command);
+        Context.EventBus.Publish(new GameObjectSelectedEvent(target));
     }
 
     public void SetActive(bool next)
@@ -177,9 +226,9 @@ public sealed partial class InspectorViewModel : ViewModelBase
             List<Task> tasks = [];
             foreach (string csproj in csprojFiles)
             {
-                string dir     = Path.GetDirectoryName(csproj) ?? string.Empty;
+                string dir = Path.GetDirectoryName(csproj) ?? string.Empty;
                 string dllName = Path.GetFileNameWithoutExtension(csproj) + ".dll";
-                string binDir  = Path.Combine(dir, "bin", settings.BuildConfiguration);
+                string binDir = Path.Combine(dir, "bin", settings.BuildConfiguration);
                 if (!Directory.Exists(binDir)) continue;
 
                 string? dllPath = Directory.GetFiles(binDir, dllName, SearchOption.AllDirectories).FirstOrDefault();

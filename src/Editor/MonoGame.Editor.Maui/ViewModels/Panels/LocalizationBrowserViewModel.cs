@@ -1,6 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 
 namespace MonoGame.Editor.Maui.ViewModels.Panels;
 
@@ -56,9 +56,9 @@ public sealed partial class LocalizationBrowserViewModel : ViewModelBase
         _model = null;
         KeyItems.Clear();
         Translations.Clear();
-        SelectedKey      = null;
-        CanSave          = false;
-        LocaleCountText  = "0 locales";
+        SelectedKey = null;
+        CanSave = false;
+        LocaleCountText = "0 locales";
 
         if (e.Project is null) return;
 

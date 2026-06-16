@@ -47,7 +47,7 @@ public sealed class EditorContext
     {
         EventBus = eventBus;
         Commands = new CommandStack(100, eventBus);
-        _logger  = new InternalEditorLogger(eventBus);
+        _logger = new InternalEditorLogger(eventBus);
     }
 
     #region Properties
@@ -249,8 +249,8 @@ public sealed class EditorContext
             => _bus.Publish(new LogEntryAddedEvent(new LogEntry(DateTime.Now, level, message)));
 
         public void LogWarning(string message) => Log(message, LogLevel.Warning);
-        public void LogError(string message)   => Log(message, LogLevel.Error);
-        public void LogDebug(string message)   => Log(message, LogLevel.Debug);
+        public void LogError(string message) => Log(message, LogLevel.Error);
+        public void LogDebug(string message) => Log(message, LogLevel.Debug);
     }
 
     #endregion

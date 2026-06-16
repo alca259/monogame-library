@@ -1,6 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 
 namespace MonoGame.Editor.Maui.ViewModels.Dialogs;
 
@@ -23,6 +23,7 @@ public sealed partial class ProjectSettingsViewModel : DialogViewModel<bool>
     [ObservableProperty] private string _virtualHeight = "1080";
     [ObservableProperty] private string _gameAppCsproj = string.Empty;
     [ObservableProperty] private string _gameScriptsCsproj = string.Empty;
+    [ObservableProperty] private string _gridCellSize = "1";
 
     // Content
     [ObservableProperty] private string _contentRelPath = "Content";
@@ -40,7 +41,7 @@ public sealed partial class ProjectSettingsViewModel : DialogViewModel<bool>
     /// <summary>Inicializa el diálogo con el proyecto y la configuración a editar.</summary>
     public void Initialize(EditorProject project, ProjectSettings settings)
     {
-        _project  = project;
+        _project = project;
         _settings = settings;
         LoadFromSettings();
     }
@@ -51,7 +52,7 @@ public sealed partial class ProjectSettingsViewModel : DialogViewModel<bool>
 
         BuildConfiguration = BuildConfigs.Contains(_settings.BuildConfiguration)
             ? _settings.BuildConfiguration : "Debug";
-        VirtualWidth  = _settings.VirtualWidth.ToString();
+        VirtualWidth = _settings.VirtualWidth.ToString();
         VirtualHeight = _settings.VirtualHeight.ToString();
 
         GameAppCsproj = !string.IsNullOrEmpty(_settings.GameAppCsprojRelPath)
@@ -60,32 +61,36 @@ public sealed partial class ProjectSettingsViewModel : DialogViewModel<bool>
                 ? Path.GetRelativePath(_project.RootPath, _project.GameCsprojPath)
                 : string.Empty);
 
-        GameScriptsCsproj   = _settings.GameScriptsCsprojRelPath;
-        ContentRelPath      = _settings.ContentRelPath;
+        GameScriptsCsproj = _settings.GameScriptsCsprojRelPath;
+        ContentRelPath = _settings.ContentRelPath;
         LocalizationRelPath = _settings.LocalizationRelPath;
-        DefaultLocale       = _settings.DefaultLocale;
-        SupportedLocales    = string.Join(", ", _settings.SupportedLocales);
-        RootNamespace       = _settings.RootNamespace;
+        DefaultLocale = _settings.DefaultLocale;
+        SupportedLocales = string.Join(", ", _settings.SupportedLocales);
+        RootNamespace = _settings.RootNamespace;
         GeneratedCodeFolder = _settings.GeneratedCodeFolder;
-        GenerateOnSave      = _settings.GenerateOnSave;
+        GenerateOnSave = _settings.GenerateOnSave;
+        GridCellSize = _settings.GridCellSize > 0
+            ? _settings.GridCellSize.ToString("G")
+            : "1";
     }
 
     private void SaveToSettings()
     {
         if (_settings is null) return;
 
-        _settings.BuildConfiguration       = BuildConfiguration;
-        _settings.VirtualWidth             = ParseInt(VirtualWidth, 1920);
-        _settings.VirtualHeight            = ParseInt(VirtualHeight, 1080);
-        _settings.GameAppCsprojRelPath     = GameAppCsproj?.Trim()     ?? string.Empty;
+        _settings.BuildConfiguration = BuildConfiguration;
+        _settings.VirtualWidth = ParseInt(VirtualWidth, 1920);
+        _settings.VirtualHeight = ParseInt(VirtualHeight, 1080);
+        _settings.GameAppCsprojRelPath = GameAppCsproj?.Trim() ?? string.Empty;
         _settings.GameScriptsCsprojRelPath = GameScriptsCsproj?.Trim() ?? string.Empty;
-        _settings.ContentRelPath           = ContentRelPath?.Trim()     ?? "Content";
-        _settings.LocalizationRelPath      = LocalizationRelPath?.Trim() ?? "Localization";
-        _settings.DefaultLocale            = DefaultLocale?.Trim()      ?? "en-US";
-        _settings.SupportedLocales         = ParseLocaleList(SupportedLocales);
-        _settings.RootNamespace            = RootNamespace?.Trim()      ?? string.Empty;
-        _settings.GeneratedCodeFolder      = GeneratedCodeFolder?.Trim() ?? "Generated";
-        _settings.GenerateOnSave           = GenerateOnSave;
+        _settings.ContentRelPath = ContentRelPath?.Trim() ?? "Content";
+        _settings.LocalizationRelPath = LocalizationRelPath?.Trim() ?? "Localization";
+        _settings.DefaultLocale = DefaultLocale?.Trim() ?? "en-US";
+        _settings.SupportedLocales = ParseLocaleList(SupportedLocales);
+        _settings.RootNamespace = RootNamespace?.Trim() ?? string.Empty;
+        _settings.GeneratedCodeFolder = GeneratedCodeFolder?.Trim() ?? "Generated";
+        _settings.GenerateOnSave = GenerateOnSave;
+        _settings.GridCellSize = ParseFloat(GridCellSize, 1f);
     }
 
     [RelayCommand]
@@ -134,6 +139,10 @@ public sealed partial class ProjectSettingsViewModel : DialogViewModel<bool>
 
     private static int ParseInt(string? text, int fallback)
         => int.TryParse(text, out int v) && v > 0 ? v : fallback;
+
+    private static float ParseFloat(string? text, float fallback)
+        => float.TryParse(text, System.Globalization.NumberStyles.Float,
+               System.Globalization.CultureInfo.InvariantCulture, out float v) && v > 0 ? v : fallback;
 
     private static List<string> ParseLocaleList(string? text)
     {

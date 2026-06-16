@@ -5,7 +5,7 @@ namespace Alca.MonoGame.Kernel.Lighting;
 /// Requires <see cref="LightBehaviour.Range"/> > 0 to have any effect.
 /// Use for flashlights, stage spotlights, and enemy cones of vision.
 /// </summary>
-public sealed class SpotLight2D : LightBehaviour
+public sealed class SpotLight2DBehaviour : LightBehaviour
 {
     /// <summary>Gets or sets the inner cone half-angle in degrees. Points inside this cone receive full intensity. Default is 15.</summary>
     public float InnerAngle { get; set; } = 15f;

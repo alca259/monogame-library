@@ -1,4 +1,5 @@
 using Alca.MonoGame.Kernel.Audio;
+using Alca.MonoGame.Kernel.Audio.Mixer;
 using Alca.MonoGame.Kernel.Graphics;
 using Alca.MonoGame.Kernel.Input;
 using Alca.MonoGame.Kernel.Localization;
@@ -108,6 +109,7 @@ public abstract class Core : Game
         services.AddSingleton<SpriteBatch>(sp =>
             new SpriteBatch(sp.GetRequiredService<GraphicsDevice>()));
         services.AddSingleton<InputManager>();
+        services.AddSingleton<AudioMixer>();
         services.AddSingleton<AudioController>();
         services.AddSingleton<SceneManager>(_ => new SceneManager(this));
         services.AddSingleton<TweeningManager>();

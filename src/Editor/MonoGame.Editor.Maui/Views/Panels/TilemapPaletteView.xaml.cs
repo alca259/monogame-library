@@ -31,7 +31,7 @@ public sealed partial class TilemapPaletteView : ContentView
 
     private void OnTilesetChanged(EditorTileset? tileset)
     {
-        _tileset        = tileset;
+        _tileset = tileset;
         _selectedTileId = tileset?.FirstGid ?? -1;
         ResizePaletteCanvas();
         PaletteCanvas.Invalidate();
@@ -89,9 +89,9 @@ public sealed partial class TilemapPaletteView : ContentView
                 return;
             }
 
-            int cols  = tileset.Columns;
+            int cols = tileset.Columns;
             int count = tileset.TileCount;
-            int rows  = (int)Math.Ceiling((double)count / cols);
+            int rows = (int)Math.Ceiling((double)count / cols);
 
             // Tile cells
             for (int i = 0; i < count; i++)
@@ -110,15 +110,15 @@ public sealed partial class TilemapPaletteView : ContentView
                 canvas.FillRectangle(x, y, CellSize, CellSize);
 
                 // Tile ID label
-                canvas.FontSize   = 9f;
-                canvas.FontColor  = Color.FromArgb("#9A9AA2");
+                canvas.FontSize = 9f;
+                canvas.FontColor = Color.FromArgb("#9A9AA2");
                 canvas.DrawString(gid.ToString(), x + 2, y + 2, CellSize - 4, CellSize - 4,
                                   HorizontalAlignment.Left, VerticalAlignment.Top);
             }
 
             // Grid lines
             canvas.StrokeColor = Color.FromArgb("#2A2A2E");
-            canvas.StrokeSize  = 1f;
+            canvas.StrokeSize = 1f;
 
             for (int col = 0; col <= cols; col++)
                 canvas.DrawLine(col * CellSize, 0, col * CellSize, rows * CellSize);
@@ -134,7 +134,7 @@ public sealed partial class TilemapPaletteView : ContentView
                     int sc = localId % cols;
                     int sr = localId / cols;
                     canvas.StrokeColor = Color.FromArgb("#4A9EFF");
-                    canvas.StrokeSize  = 2f;
+                    canvas.StrokeSize = 2f;
                     canvas.DrawRectangle(sc * CellSize, sr * CellSize, CellSize, CellSize);
                 }
             }
@@ -143,7 +143,7 @@ public sealed partial class TilemapPaletteView : ContentView
         private static void DrawGrid(ICanvas canvas, RectF dirtyRect)
         {
             canvas.StrokeColor = Color.FromArgb("#2A2A2E");
-            canvas.StrokeSize  = 1f;
+            canvas.StrokeSize = 1f;
             for (float x = 0; x < dirtyRect.Width; x += CellSize)
                 canvas.DrawLine(x, 0, x, dirtyRect.Height);
             for (float y = 0; y < dirtyRect.Height; y += CellSize)

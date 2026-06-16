@@ -1,6 +1,6 @@
 using Alca.MonoGame.Kernel.ECS;
 
-namespace Alca.MonoGame.Kernel.Audio;
+namespace Alca.MonoGame.Kernel.Audio.Spatial;
 
 /// <summary>
 /// GameBehaviour that acts as the 3D audio listener in the scene.
@@ -8,7 +8,7 @@ namespace Alca.MonoGame.Kernel.Audio;
 /// <see cref="TransformBehaviour.Position"/> (X, Y, Z) and forward direction each frame.
 /// Attach to the camera or player entity in a 2.5D scene.
 /// </summary>
-public sealed class SpatialAudioListener : GameBehaviour
+public sealed class SpatialAudioListenerBehaviour : GameBehaviour
 {
     private AudioController? _controller;
 

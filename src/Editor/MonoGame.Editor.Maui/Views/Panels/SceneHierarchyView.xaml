@@ -68,6 +68,7 @@
 
         <!-- ── Entity tree ───────────────────────────────────────── -->
         <CollectionView Grid.Row="1"
+                        x:Name="EntityList"
                         ItemsSource="{Binding Items}"
                         SelectedItem="{Binding SelectedItem}"
                         SelectionMode="Single"
@@ -76,6 +77,11 @@
                 <DataTemplate x:DataType="local:HierarchyItem">
                     <Grid ColumnDefinitions="Auto,*"
                           Padding="{Binding LeftPadding}">
+                        <Grid.GestureRecognizers>
+                            <!-- PointerEntered es hover puro: no interfiere con la selección por tap del CollectionView.
+                                 Se usa para saber qué item tiene el puntero encima durante un drag. -->
+                            <PointerGestureRecognizer PointerEnteredCommand="{Binding PointerEnteredCommand}"/>
+                        </Grid.GestureRecognizers>
 
                         <!-- Expand / collapse icon (tap = toggle, also selects row) -->
                         <Label Grid.Column="0"

@@ -1,4 +1,6 @@
 using Alca.MonoGame.Kernel.Audio;
+using Alca.MonoGame.Kernel.Audio.Mixer;
+using Alca.MonoGame.Kernel.Audio.Spatial;
 using Alca.MonoGame.Kernel.ECS;
 
 namespace Alca.MonoGame.Kernel.UnitTests.Audio;
@@ -11,9 +13,9 @@ public sealed class SpatialAudioListenerTests
     [Fact]
     public void DefaultIsMain_IsTrue()
     {
-        GameWorld world = new GameWorld { AudioController = new AudioController() };
+        GameWorld world = new GameWorld { AudioController = new AudioController(new AudioMixer()) };
         GameEntity entity = world.CreateEntity("listener");
-        SpatialAudioListener listener = entity.AddComponent<SpatialAudioListener>();
+        SpatialAudioListenerBehaviour listener = entity.AddComponent<SpatialAudioListenerBehaviour>();
 
         Assert.True(listener.IsMain);
     }
@@ -24,7 +26,7 @@ public sealed class SpatialAudioListenerTests
         GameWorld world = new GameWorld();
         GameEntity entity = world.CreateEntity("listener");
 
-        Exception? ex = Record.Exception(() => entity.AddComponent<SpatialAudioListener>());
+        Exception? ex = Record.Exception(() => entity.AddComponent<SpatialAudioListenerBehaviour>());
 
         Assert.Null(ex);
     }
@@ -34,7 +36,7 @@ public sealed class SpatialAudioListenerTests
     {
         GameWorld world = new GameWorld();
         GameEntity entity = world.CreateEntity("listener");
-        entity.AddComponent<SpatialAudioListener>();
+        entity.AddComponent<SpatialAudioListenerBehaviour>();
 
         Exception? ex = Record.Exception(() => world.Update(OneFrame()));
 
@@ -44,10 +46,10 @@ public sealed class SpatialAudioListenerTests
     [Fact]
     public void Update_SyncsListenerPosition_XAxis()
     {
-        AudioController controller = new();
+        AudioController controller = new(new AudioMixer());
         GameWorld world = new GameWorld { AudioController = controller };
         GameEntity entity = world.CreateEntity("listener", new Vector3(7f, 0f, 0f));
-        entity.AddComponent<SpatialAudioListener>();
+        entity.AddComponent<SpatialAudioListenerBehaviour>();
 
         world.Update(OneFrame());
 
@@ -57,10 +59,10 @@ public sealed class SpatialAudioListenerTests
     [Fact]
     public void Update_SyncsListenerPosition_YAxis()
     {
-        AudioController controller = new();
+        AudioController controller = new(new AudioMixer());
         GameWorld world = new GameWorld { AudioController = controller };
         GameEntity entity = world.CreateEntity("listener", new Vector3(0f, 12f, 0f));
-        entity.AddComponent<SpatialAudioListener>();
+        entity.AddComponent<SpatialAudioListenerBehaviour>();
 
         world.Update(OneFrame());
 
@@ -70,10 +72,10 @@ public sealed class SpatialAudioListenerTests
     [Fact]
     public void Update_SyncsListenerPosition_ZAxis()
     {
-        AudioController controller = new();
+        AudioController controller = new(new AudioMixer());
         GameWorld world = new GameWorld { AudioController = controller };
         GameEntity entity = world.CreateEntity("listener", new Vector3(0f, 0f, 5f));
-        entity.AddComponent<SpatialAudioListener>();
+        entity.AddComponent<SpatialAudioListenerBehaviour>();
 
         world.Update(OneFrame());
 
@@ -83,11 +85,11 @@ public sealed class SpatialAudioListenerTests
     [Fact]
     public void Update_SyncsListenerPosition_AllThreeAxes()
     {
-        AudioController controller = new();
+        AudioController controller = new(new AudioMixer());
         GameWorld world = new GameWorld { AudioController = controller };
         Vector3 expected = new(3f, 8f, -2f);
         GameEntity entity = world.CreateEntity("listener", expected);
-        entity.AddComponent<SpatialAudioListener>();
+        entity.AddComponent<SpatialAudioListenerBehaviour>();
 
         world.Update(OneFrame());
 
@@ -99,12 +101,12 @@ public sealed class SpatialAudioListenerTests
     [Fact]
     public void Update_WhenIsMainFalse_DoesNotUpdateController()
     {
-        AudioController controller = new();
+        AudioController controller = new(new AudioMixer());
         controller.UpdateListener(new Vector3(99f, 99f, 99f), Vector3.Forward);
 
         GameWorld world = new GameWorld { AudioController = controller };
         GameEntity entity = world.CreateEntity("listener", new Vector3(1f, 2f, 3f));
-        SpatialAudioListener listener = entity.AddComponent<SpatialAudioListener>();
+        SpatialAudioListenerBehaviour listener = entity.AddComponent<SpatialAudioListenerBehaviour>();
         listener.IsMain = false;
 
         world.Update(OneFrame());

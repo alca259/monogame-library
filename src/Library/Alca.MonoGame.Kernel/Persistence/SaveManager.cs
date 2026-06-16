@@ -25,8 +25,7 @@ public sealed class SaveManager
         Directory.CreateDirectory(_rootPath);
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
+    #region Public API
     /// <summary>Returns <c>true</c> if a save file exists for <paramref name="slotName"/>.</summary>
     public bool SlotExists(string slotName) => File.Exists(SavePath(slotName));
 
@@ -122,9 +121,9 @@ public sealed class SaveManager
         if (File.Exists(savePath)) File.Delete(savePath);
         if (File.Exists(metaPath)) File.Delete(metaPath);
     }
+    #endregion
 
-    // ── Internal helpers ──────────────────────────────────────────────────────
-
+    #region Internal helpers
     private string SavePath(string slotName) => Path.Combine(_rootPath, slotName + SaveExtension);
     private string MetaPath(string slotName) => Path.Combine(_rootPath, slotName + MetaExtension);
 
@@ -133,4 +132,5 @@ public sealed class SaveManager
         string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         return Path.Combine(appData, "Alca.MonoGame", "saves");
     }
+    #endregion
 }

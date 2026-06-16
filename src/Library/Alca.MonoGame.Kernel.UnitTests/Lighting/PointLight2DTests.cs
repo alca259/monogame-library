@@ -17,7 +17,7 @@ public sealed class PointLight2DTests
         world.LightingWorld!.AmbientColor = Color.Black;
 
         var entity = world.CreateEntity("light", Vector2.Zero);
-        var light = entity.AddComponent<PointLight2D>();
+        var light = entity.AddComponent<PointLight2DBehaviour>();
         light.Color = Color.White;
         light.Intensity = 1f;
         light.Range = 100f;
@@ -34,7 +34,7 @@ public sealed class PointLight2DTests
         world.LightingWorld!.AmbientColor = Color.Black;
 
         var entity = world.CreateEntity("light", Vector2.Zero);
-        var light = entity.AddComponent<PointLight2D>();
+        var light = entity.AddComponent<PointLight2DBehaviour>();
         light.Color = Color.White;
         light.Intensity = 1f;
         light.Range = 100f;
@@ -51,13 +51,13 @@ public sealed class PointLight2DTests
         world.LightingWorld!.AmbientColor = Color.Black;
 
         var e1 = world.CreateEntity("l1", Vector2.Zero);
-        var l1 = e1.AddComponent<PointLight2D>();
+        var l1 = e1.AddComponent<PointLight2DBehaviour>();
         l1.Color = Color.White;
         l1.Intensity = 1f;
         l1.Range = 100f;
 
         var e2 = world.CreateEntity("l2", Vector2.Zero);
-        var l2 = e2.AddComponent<PointLight2D>();
+        var l2 = e2.AddComponent<PointLight2DBehaviour>();
         l2.Color = Color.White;
         l2.Intensity = 0.5f;
         l2.Range = 100f;
@@ -77,7 +77,7 @@ public sealed class PointLight2DTests
         world.LightingWorld!.AmbientColor = Color.Black;
 
         var entity = world.CreateEntity("light", Vector2.Zero);
-        var light = entity.AddComponent<PointLight2D>();
+        var light = entity.AddComponent<PointLight2DBehaviour>();
         light.Color = Color.White;
         light.Intensity = 1f;
         light.Range = 100f;
@@ -100,7 +100,7 @@ public sealed class PointLight2DTests
         Assert.Equal(0, lightingWorld.LightCount);
 
         var entity = world.CreateEntity("light");
-        entity.AddComponent<PointLight2D>();
+        entity.AddComponent<PointLight2DBehaviour>();
 
         Assert.Equal(1, lightingWorld.LightCount);
 
@@ -119,7 +119,7 @@ public sealed class PointLight2DTests
         world.LightingWorld!.AmbientColor = Color.Black;
 
         var entity = world.CreateEntity("spot", Vector2.Zero);
-        var spot = entity.AddComponent<SpotLight2D>();
+        var spot = entity.AddComponent<SpotLight2DBehaviour>();
         spot.Color = Color.White;
         spot.Intensity = 1f;
         spot.Range = 200f;
@@ -142,7 +142,7 @@ public sealed class PointLight2DTests
         world.LightingWorld!.AmbientColor = Color.Black;
 
         var entity = world.CreateEntity("ambient");
-        var ambient = entity.AddComponent<AmbientLight>();
+        var ambient = entity.AddComponent<AmbientLightBehaviour>();
         ambient.Color = Color.White;
         ambient.Intensity = 1f;
 
@@ -162,7 +162,7 @@ public sealed class PointLight2DTests
         world.LightingWorld!.AmbientColor = Color.Black;
 
         var entity = world.CreateEntity("light", Vector2.Zero);
-        var light = entity.AddComponent<PointLight2D>();
+        var light = entity.AddComponent<PointLight2DBehaviour>();
         light.Color = Color.White;
         light.Intensity = 1f;
         light.Range = 100f;
@@ -201,10 +201,10 @@ public sealed class PointLight2DTests
         var lightingWorld = world.LightingWorld!;
 
         var near = world.CreateEntity("near", new Vector2(10f, 0f));
-        near.AddComponent<PointLight2D>().Range = 50f;
+        near.AddComponent<PointLight2DBehaviour>().Range = 50f;
 
         var far = world.CreateEntity("far", new Vector2(500f, 0f));
-        far.AddComponent<PointLight2D>().Range = 50f;
+        far.AddComponent<PointLight2DBehaviour>().Range = 50f;
 
         var results = new List<LightBehaviour>();
         lightingWorld.GetLightsInRange(Vector2.Zero, 100f, LightingLayer.World, results);

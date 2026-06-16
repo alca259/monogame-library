@@ -17,8 +17,7 @@ public sealed class DayNightCycle
     private bool _sunsetTriggered;
     private bool _midnightTriggered;
 
-    // ── Public state ──────────────────────────────────────────────────────────
-
+    #region Public state
     /// <summary>Gets the current in-game time of day.</summary>
     public TimeOfDay CurrentTime { get; private set; }
 
@@ -27,9 +26,9 @@ public sealed class DayNightCycle
 
     /// <summary>Gets or sets a value that pauses the cycle when true, ignoring <see cref="TimeScale"/>.</summary>
     public bool Paused { get; set; }
+    #endregion
 
-    // ── Events ────────────────────────────────────────────────────────────────
-
+    #region Events
     /// <summary>Raised once when the time crosses 06:00 in a forward direction.</summary>
     public Action? OnSunrise;
 
@@ -41,9 +40,9 @@ public sealed class DayNightCycle
 
     /// <summary>Raised once when the time crosses 00:00 (midnight) in a forward direction.</summary>
     public Action? OnMidnight;
+    #endregion
 
-    // ── Constructor ───────────────────────────────────────────────────────────
-
+    #region Constructor
     /// <summary>
     /// Initializes a new <see cref="DayNightCycle"/> using the given profile.
     /// </summary>
@@ -56,9 +55,9 @@ public sealed class DayNightCycle
         CurrentTime = TimeOfDay.Midnight;
         _prevHour = 0f;
     }
+    #endregion
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
+    #region Public API
     /// <summary>Instantly moves the clock to <paramref name="time"/> and updates the lighting world.</summary>
     public void SetTime(TimeOfDay time)
     {
@@ -83,9 +82,9 @@ public sealed class DayNightCycle
         UpdateLighting();
         CheckThresholds();
     }
+    #endregion
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
+    #region Private helpers
     private void UpdateLighting()
     {
         if (_lightingWorld is null) return;
@@ -162,4 +161,5 @@ public sealed class DayNightCycle
         // Wrap: [prev → 24) ∪ [0 → cur)
         return prev < threshold || cur >= threshold;
     }
+    #endregion
 }

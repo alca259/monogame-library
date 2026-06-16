@@ -25,7 +25,7 @@ public static class DialogService
     }
 
     /// <summary>Muestra una alerta informativa con un único botón.</summary>
-    public static Task AlertAsync(string title, string message, string cancel = "OK")
+    public static Task AlertAsync(string title, string message, string cancel = "Ok")
     {
         Page? page = CurrentPage;
         return page is null ? Task.CompletedTask : page.DisplayAlertAsync(title, message, cancel);
@@ -63,6 +63,41 @@ public static class DialogService
     {
         FileResult? result = await FilePicker.Default.PickAsync(options ?? new PickOptions()).ConfigureAwait(true);
         return result?.FullPath;
+    }
+
+    /// <summary>
+    /// Diálogo de guardado de archivo vía <c>FileSavePicker</c> nativo de WinUI.
+    /// Devuelve la ruta completa elegida, o <c>null</c> si se cancela.
+    /// </summary>
+    /// <param name="suggestedName">Nombre de archivo sugerido (sin extensión).</param>
+    /// <param name="filterLabel">Descripción del tipo de archivo.</param>
+    /// <param name="extension">Extensión permitida, incluyendo el punto (p. ej. <c>".json"</c>).</param>
+    public static async Task<string?> SaveFileAsync(string suggestedName, string filterLabel, string extension)
+    {
+#if WINDOWS
+        try
+        {
+            Microsoft.UI.Xaml.Window? win = Application.Current?.Windows.FirstOrDefault()
+                ?.Handler?.PlatformView as Microsoft.UI.Xaml.Window;
+            if (win is null) return null;
+
+            IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(win);
+            var picker = new Windows.Storage.Pickers.FileSavePicker();
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            picker.SuggestedFileName = suggestedName;
+            picker.FileTypeChoices.Add(filterLabel, new System.Collections.Generic.List<string> { extension });
+            Windows.Storage.StorageFile? file = await picker.PickSaveFileAsync();
+            return file?.Path;
+        }
+        catch
+        {
+            return null;
+        }
+#else
+        await Task.CompletedTask;
+        return null;
+#endif
     }
 
     /// <summary>

@@ -24,7 +24,7 @@ public abstract partial class DialogViewModel<TResult> : ObservableObject
     /// <summary>Muestra un error de validación y mantiene el diálogo abierto.</summary>
     protected void ShowError(string message)
     {
-        ValidationMessage  = message;
+        ValidationMessage = message;
         HasValidationError = true;
     }
 

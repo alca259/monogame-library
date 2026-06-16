@@ -29,8 +29,7 @@ public sealed class WeatherParticleLayer : IDisposable
 
     private bool _disposed;
 
-    // ── Configuration ─────────────────────────────────────────────────────────
-
+    #region Configuration
     /// <summary>
     /// Gets or sets the center of the horizontal emitter band in world space, typically just above the camera viewport.
     /// Update this each frame to follow the camera so precipitation covers the visible screen area.
@@ -46,9 +45,9 @@ public sealed class WeatherParticleLayer : IDisposable
     /// Set automatically by <see cref="WeatherWorld"/> each frame.
     /// </summary>
     public bool IsInterior { get; set; } = false;
+    #endregion
 
-    // ── Content loading ───────────────────────────────────────────────────────
-
+    #region Content loading
     /// <summary>
     /// Creates all particle effects from the supplied textures and caches modifier references.
     /// Must be called once before the first <see cref="Update"/>.
@@ -76,9 +75,9 @@ public sealed class WeatherParticleLayer : IDisposable
         if (windTexture is not null)
             (_windEffect, _windGravity) = BuildWindEffect(windTexture);
     }
+    #endregion
 
-    // ── Game loop ─────────────────────────────────────────────────────────────
-
+    #region Game loop
     /// <summary>
     /// Updates active particle effects, applies wind direction to cached gravity modifiers,
     /// and enables or disables each effect based on <paramref name="profile"/>.
@@ -132,9 +131,9 @@ public sealed class WeatherParticleLayer : IDisposable
         _windEffect?.Dispose();
         _disposed = true;
     }
+    #endregion
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
+    #region Private helpers
     private void UpdateEffect(
         ParticleEffect? effect,
         LinearGravityModifier? gravity,
@@ -167,9 +166,9 @@ public sealed class WeatherParticleLayer : IDisposable
         spriteBatch.Draw(effect);
         spriteBatch.End();
     }
+    #endregion
 
-    // ── Effect factories ──────────────────────────────────────────────────────
-
+    #region Effect factories
     private static (ParticleEffect effect, LinearGravityModifier gravity) BuildRainEffect(Texture2D texture)
     {
         var gravity = new LinearGravityModifier { Direction = Vector2.UnitY, Strength = 400f };
@@ -259,9 +258,9 @@ public sealed class WeatherParticleLayer : IDisposable
         var effect = new ParticleEffect("wind") { Emitters = [emitter] };
         return (effect, gravity);
     }
+    #endregion
 
-    // ── Profile type detection helpers (zero-alloc, no LINQ) ─────────────────
-
+    #region Profile type detection helpers (zero-alloc, no LINQ)
     // These helpers determine which precipitation effect to activate based on the profile.
     // When the developer registers a custom weather, the profile's precipitation flags govern
     // which effect renders; the mapping is: fog profiles → fog effect, snow profiles → snow, etc.
@@ -281,4 +280,5 @@ public sealed class WeatherParticleLayer : IDisposable
 
     private static bool IsWindProfile(in WeatherProfile p) =>
         p.WindSpeedMaxKmh >= 20f && p.FogDensity < 0.1f && !IsRainProfile(p) && !IsSnowProfile(p);
+    #endregion
 }

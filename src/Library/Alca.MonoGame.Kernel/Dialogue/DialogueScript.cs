@@ -47,14 +47,13 @@ public sealed class DialogueScript
     }
 
     /// <summary>Returns a new <see cref="Builder"/> to construct a <see cref="DialogueScript"/> fluently.</summary>
-    public static Builder Create() => new Builder();
+    public static Builder Create() => new();
 
-    // ── Nested Builder ────────────────────────────────────────────────────────
-
+    #region Nested Builder
     /// <summary>Fluent builder for <see cref="DialogueScript"/>.</summary>
     public sealed class Builder
     {
-        private readonly List<DialogueLine> _lines = new();
+        private readonly List<DialogueLine> _lines = [];
 
         /// <summary>Appends a new <see cref="DialogueLine"/> to the script.</summary>
         /// <param name="speakerId">Character identifier for the speaker.</param>
@@ -68,6 +67,7 @@ public sealed class DialogueScript
         }
 
         /// <summary>Builds and returns the completed <see cref="DialogueScript"/>.</summary>
-        public DialogueScript Build() => new DialogueScript(_lines.ToArray());
+        public DialogueScript Build() => new(_lines.ToArray());
     }
+    #endregion
 }

@@ -5,10 +5,9 @@ public static class EventBus
 {
     private record struct HandlerEntry(Delegate Handler, int Priority);
 
-    private static readonly Dictionary<Type, List<HandlerEntry>> _handlers = new();
+    private static readonly Dictionary<Type, List<HandlerEntry>> _handlers = [];
 
-    // ── Subscribe ─────────────────────────────────────────────────────────────
-
+    #region Subscribe
     /// <summary>Subscribes <paramref name="handler"/> to events of type <typeparamref name="T"/> with default priority 0.</summary>
     public static void Subscribe<T>(Action<T> handler) => SubscribeWithPriority(handler, 0);
 
@@ -65,8 +64,9 @@ public static class EventBus
             }
         }
     }
+    #endregion
 
-    // ── Publish ───────────────────────────────────────────────────────────────
+    #region Publish
 
     /// <summary>Dispatches <paramref name="evt"/> to all subscribed handlers in priority order (highest first).</summary>
     public static void Publish<T>(T evt)
@@ -92,4 +92,5 @@ public static class EventBus
 
     /// <summary>Removes all subscriptions for all event types.</summary>
     public static void Clear() => _handlers.Clear();
+    #endregion
 }

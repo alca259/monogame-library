@@ -16,8 +16,7 @@ public sealed class Physics2DQuery
         _world = physicsWorld.AetherWorld;
     }
 
-    // ── Raycast ───────────────────────────────────────────────────────────────
-
+    #region Raycast
     /// <summary>
     /// Casts a ray and returns the closest hit that matches the collision <paramref name="mask"/>.
     /// </summary>
@@ -93,9 +92,9 @@ public sealed class Physics2DQuery
             return 1f;
         }, origin, point2);
     }
+    #endregion
 
-    // ── Overlap queries ───────────────────────────────────────────────────────
-
+    #region Overlap queries
     /// <summary>
     /// Tests whether any fixture at the given world-space <paramref name="point"/> matches <paramref name="mask"/>.
     /// </summary>
@@ -199,4 +198,5 @@ public sealed class Physics2DQuery
             return true;
         }, ref aabb);
     }
+    #endregion
 }

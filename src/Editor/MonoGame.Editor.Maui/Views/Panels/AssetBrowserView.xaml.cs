@@ -34,7 +34,7 @@ public sealed partial class AssetBrowserView : ContentView
         BreadcrumbLayout.Children.Clear();
 
         string contentRoot = _vm.ContentRoot;
-        string folderPath  = _vm.CurrentFolderPath;
+        string folderPath = _vm.CurrentFolderPath;
         if (string.IsNullOrEmpty(contentRoot)) return;
 
         var segments = new List<(string Label, string Path)> { ("Content", contentRoot) };
@@ -55,8 +55,8 @@ public sealed partial class AssetBrowserView : ContentView
             if (i > 0)
                 BreadcrumbLayout.Children.Add(new Label
                 {
-                    Text            = " › ",
-                    Style           = (Style)Application.Current!.Resources["DimLabel"],
+                    Text = " › ",
+                    Style = (Style)Application.Current!.Resources["DimLabel"],
                     VerticalOptions = LayoutOptions.Center,
                 });
 
@@ -67,10 +67,10 @@ public sealed partial class AssetBrowserView : ContentView
             {
                 BreadcrumbLayout.Children.Add(new Label
                 {
-                    Text            = segLabel,
-                    Style           = (Style)Application.Current!.Resources["PrimaryLabel"],
+                    Text = segLabel,
+                    Style = (Style)Application.Current!.Resources["PrimaryLabel"],
                     VerticalOptions = LayoutOptions.Center,
-                    Padding         = new Thickness(4, 0),
+                    Padding = new Thickness(4, 0),
                 });
             }
             else
@@ -78,12 +78,12 @@ public sealed partial class AssetBrowserView : ContentView
                 string captured = segPath;
                 Button btn = new()
                 {
-                    Text            = segLabel,
-                    FontSize        = 11,
-                    Padding         = new Thickness(4, 0),
-                    HeightRequest   = 22,
+                    Text = segLabel,
+                    FontSize = 11,
+                    Padding = new Thickness(4, 0),
+                    HeightRequest = 22,
                     BackgroundColor = Colors.Transparent,
-                    TextColor       = Color.FromArgb("#9A9AA2"),
+                    TextColor = Color.FromArgb("#9A9AA2"),
                     VerticalOptions = LayoutOptions.Center,
                 };
                 btn.Clicked += (_, _) => _vm.NavigateToFolderCommand.Execute(captured);

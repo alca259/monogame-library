@@ -138,12 +138,12 @@
                             </Grid>
                             <BoxView HeightRequest="1" Color="{StaticResource Border}"/>
 
-                            <!-- Transform fields using AxisStepper -->
+                            <!-- Transform fields using AxisStepper (X Y Z por fila) -->
                             <Grid Padding="10,8"
-                                  RowDefinitions="Auto,Auto,Auto,Auto"
-                                  ColumnDefinitions="70,*,*"
+                                  RowDefinitions="Auto,Auto,Auto"
+                                  ColumnDefinitions="65,*,*,*"
                                   RowSpacing="6"
-                                  ColumnSpacing="6">
+                                  ColumnSpacing="4">
 
                                 <!-- Position -->
                                 <Label Grid.Row="0" Grid.Column="0" Text="Position"
@@ -152,12 +152,17 @@
                                                       x:Name="PosXStepper" Axis="X"/>
                                 <controls:AxisStepper Grid.Row="0" Grid.Column="2"
                                                       x:Name="PosYStepper" Axis="Y"/>
+                                <controls:AxisStepper Grid.Row="0" Grid.Column="3"
+                                                      x:Name="PosZStepper" Axis="Z"/>
 
                                 <!-- Rotation -->
                                 <Label Grid.Row="1" Grid.Column="0" Text="Rotation"
                                        Style="{StaticResource LabelSecondary}" VerticalOptions="Center"/>
                                 <controls:AxisStepper Grid.Row="1" Grid.Column="1"
-                                                      Grid.ColumnSpan="2"
+                                                      x:Name="RotXStepper" Axis="X"/>
+                                <controls:AxisStepper Grid.Row="1" Grid.Column="2"
+                                                      x:Name="RotYStepper" Axis="Y"/>
+                                <controls:AxisStepper Grid.Row="1" Grid.Column="3"
                                                       x:Name="RotZStepper" Axis="Z"/>
 
                                 <!-- Scale -->
@@ -167,14 +172,8 @@
                                                       x:Name="ScaleXStepper" Axis="X"/>
                                 <controls:AxisStepper Grid.Row="2" Grid.Column="2"
                                                       x:Name="ScaleYStepper" Axis="Y"/>
-
-                                <!-- Depth -->
-                                <Label Grid.Row="3" Grid.Column="0" Text="Depth"
-                                       Style="{StaticResource LabelSecondary}" VerticalOptions="Center"/>
-                                <controls:AxisStepper Grid.Row="3" Grid.Column="1"
-                                                      Grid.ColumnSpan="2"
-                                                      x:Name="DepthStepper" Axis="Z"
-                                                      ShowAxisTag="False"/>
+                                <controls:AxisStepper Grid.Row="2" Grid.Column="3"
+                                                      x:Name="ScaleZStepper" Axis="Z"/>
                             </Grid>
                             <BoxView HeightRequest="1" Color="{StaticResource Border}"/>
                         </VerticalStackLayout>

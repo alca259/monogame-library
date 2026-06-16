@@ -87,7 +87,7 @@ public sealed class SteeringBehaviorTests
     [Fact]
     public void SteeringController_CombinesMultipleBehaviors()
     {
-        var ctrl = new SteeringController { ApplyToTransform = false };
+        var ctrl = new SteeringControllerBehaviour { ApplyToTransform = false };
         ctrl.Add(new SeekBehavior { Target = new Vector2(100f, 0f), MaxSpeed = 100f }, weight: 1f);
         ctrl.Add(new SeekBehavior { Target = new Vector2(0f, 100f), MaxSpeed = 100f }, weight: 1f);
 
@@ -108,7 +108,7 @@ public sealed class SteeringBehaviorTests
     [Fact]
     public void SteeringController_ClampsFinalSpeedToMaxResultSpeed()
     {
-        var ctrl = new SteeringController { ApplyToTransform = false, MaxResultSpeed = 50f };
+        var ctrl = new SteeringControllerBehaviour { ApplyToTransform = false, MaxResultSpeed = 50f };
 
         // Single behavior returning 200 speed; controller should clamp to 50.
         var seek = new SeekBehavior { Target = new Vector2(100f, 0f), MaxSpeed = 200f };
@@ -122,7 +122,7 @@ public sealed class SteeringBehaviorTests
     [Fact]
     public void SteeringController_Add_BeyondCapacity_Throws()
     {
-        var ctrl = new SteeringController();
+        var ctrl = new SteeringControllerBehaviour();
         for (int i = 0; i < 8; i++)
             ctrl.Add(new SeekBehavior());
 

@@ -1,7 +1,7 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MonoGame.Editor.Maui.Views.Panels;
+using System.Collections.ObjectModel;
 
 namespace MonoGame.Editor.Maui.ViewModels.Panels;
 
@@ -16,11 +16,11 @@ public sealed partial class AssetBrowserViewModel : ViewModelBase
 
     protected override EditorFocusContext? FocusContext => EditorFocusContext.Assets;
 
-    private string _contentRoot        = string.Empty;
+    private string _contentRoot = string.Empty;
     private string _selectedFolderPath = string.Empty;
 
     public ObservableCollection<FolderItem> FolderItems { get; } = [];
-    public ObservableCollection<AssetItem>  AssetItems  { get; } = [];
+    public ObservableCollection<AssetItem> AssetItems { get; } = [];
 
     /// <summary>Raíz <c>Content/</c> del proyecto (para el breadcrumb de la vista).</summary>
     public string ContentRoot => _contentRoot;
@@ -75,12 +75,12 @@ public sealed partial class AssetBrowserViewModel : ViewModelBase
     {
         if (value is null)
         {
-            AssetPathText  = string.Empty;
+            AssetPathText = string.Empty;
             CanModifyAsset = false;
             return;
         }
 
-        AssetPathText  = value.Info.RelativePath;
+        AssetPathText = value.Info.RelativePath;
         CanModifyAsset = true;
         Bus.Publish(new AssetSelectedEvent(value.Info));
     }
@@ -92,23 +92,23 @@ public sealed partial class AssetBrowserViewModel : ViewModelBase
         FolderItems.Clear();
         AssetItems.Clear();
         _expandedFolders.Clear();
-        AssetPathText       = string.Empty;
-        AssetCountText      = "0 assets";
-        SelectedAsset       = null;
+        AssetPathText = string.Empty;
+        AssetCountText = "0 assets";
+        SelectedAsset = null;
         _selectedFolderPath = string.Empty;
-        CanModifyAsset      = false;
-        CanModifyFolder     = false;
+        CanModifyAsset = false;
+        CanModifyFolder = false;
 
         if (e.Project is null)
         {
-            _contentRoot      = string.Empty;
+            _contentRoot = string.Empty;
             CurrentFolderPath = string.Empty;
-            CanManage         = false;
+            CanManage = false;
             FolderChanged?.Invoke();
             return;
         }
 
-        _contentRoot      = e.Project.ContentPath;
+        _contentRoot = e.Project.ContentPath;
         CurrentFolderPath = _contentRoot;
         _expandedFolders.Add(_contentRoot);
         CanManage = true;
@@ -131,10 +131,10 @@ public sealed partial class AssetBrowserViewModel : ViewModelBase
     {
         if (!Directory.Exists(dir)) return;
 
-        string[] subdirs     = Directory.GetDirectories(dir);
-        bool     hasChildren = subdirs.Length > 0;
-        bool     isExpanded  = _expandedFolders.Contains(dir);
-        bool     isRoot      = string.Equals(dir, _contentRoot, StringComparison.OrdinalIgnoreCase);
+        string[] subdirs = Directory.GetDirectories(dir);
+        bool hasChildren = subdirs.Length > 0;
+        bool isExpanded = _expandedFolders.Contains(dir);
+        bool isRoot = string.Equals(dir, _contentRoot, StringComparison.OrdinalIgnoreCase);
 
         FolderItem item = null!;
         item = new FolderItem(dir, depth, hasChildren, isExpanded, isRoot,
@@ -292,7 +292,7 @@ public sealed partial class AssetBrowserViewModel : ViewModelBase
 
         if (string.IsNullOrWhiteSpace(newName) || newName == Path.GetFileName(_selectedFolderPath)) return;
 
-        string parent  = Path.GetDirectoryName(_selectedFolderPath) ?? _contentRoot;
+        string parent = Path.GetDirectoryName(_selectedFolderPath) ?? _contentRoot;
         string newPath = Path.Combine(parent, newName);
         try { Directory.Move(_selectedFolderPath, newPath); }
         catch (Exception ex) { Log($"[AssetBrowser] Failed to rename folder: {ex.Message}", LogLevel.Error); return; }
@@ -303,7 +303,7 @@ public sealed partial class AssetBrowserViewModel : ViewModelBase
         _expandedFolders.Remove(_selectedFolderPath);
         _expandedFolders.Add(newPath);
         _selectedFolderPath = string.Empty;
-        CanModifyFolder     = false;
+        CanModifyFolder = false;
 
         BuildFolderTree();
         FolderChanged?.Invoke();
@@ -333,7 +333,7 @@ public sealed partial class AssetBrowserViewModel : ViewModelBase
 
         _expandedFolders.Remove(_selectedFolderPath);
         _selectedFolderPath = string.Empty;
-        CanModifyFolder     = false;
+        CanModifyFolder = false;
 
         BuildFolderTree();
         FolderChanged?.Invoke();

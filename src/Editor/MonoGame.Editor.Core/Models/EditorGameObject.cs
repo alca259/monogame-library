@@ -12,42 +12,54 @@ public sealed class EditorGameObject
     /// <summary>Indica si este objeto y sus hijos están activos.</summary>
     public bool Active { get; set; } = true;
 
-    /// <summary>Posición en espacio de mundo de este objeto.</summary>
-    public EditorVector2 Position { get; set; } = EditorVector2.Zero;
+    /// <summary>Posición en espacio de mundo de este objeto (X, Y, Z).</summary>
+    public EditorVector3 Position { get; set; } = EditorVector3.Zero;
 
-    /// <summary>Profundidad en modo 2.5D (orden de paralaje). Se omite del JSON cuando es cero.</summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public float PositionZ { get; set; }
+    /// <summary>Rotación Euler en grados (X, Y, Z). Z es el eje de rotación habitual en vistas 2D frontales.</summary>
+    public EditorVector3 Rotation { get; set; } = EditorVector3.Zero;
 
-    /// <summary>Rotación en grados.</summary>
-    public float Rotation { get; set; }
-
-    /// <summary>Escala aplicada a este objeto y sus hijos.</summary>
-    public EditorVector2 Scale { get; set; } = EditorVector2.One;
+    /// <summary>Escala aplicada a este objeto (X, Y, Z).</summary>
+    public EditorVector3 Scale { get; set; } = EditorVector3.One;
 
     /// <summary>Posición en espacio local relativa a <see cref="Parent"/>.</summary>
     [JsonIgnore]
-    public EditorVector2 LocalPosition
+    public EditorVector3 LocalPosition
     {
         get => Parent is null
             ? Position
-            : new EditorVector2(Position.X - Parent.Position.X, Position.Y - Parent.Position.Y);
+            : new EditorVector3(
+                Position.X - Parent.Position.X,
+                Position.Y - Parent.Position.Y,
+                Position.Z - Parent.Position.Z);
         set => Position = Parent is null
             ? value
-            : new EditorVector2(Parent.Position.X + value.X, Parent.Position.Y + value.Y);
+            : new EditorVector3(
+                Parent.Position.X + value.X,
+                Parent.Position.Y + value.Y,
+                Parent.Position.Z + value.Z);
     }
 
     /// <summary>Rotación en espacio local en grados relativa a <see cref="Parent"/>.</summary>
     [JsonIgnore]
-    public float LocalRotation
+    public EditorVector3 LocalRotation
     {
-        get => Parent is null ? Rotation : Rotation - Parent.Rotation;
-        set => Rotation = Parent is null ? value : Parent.Rotation + value;
+        get => Parent is null
+            ? Rotation
+            : new EditorVector3(
+                Rotation.X - Parent.Rotation.X,
+                Rotation.Y - Parent.Rotation.Y,
+                Rotation.Z - Parent.Rotation.Z);
+        set => Rotation = Parent is null
+            ? value
+            : new EditorVector3(
+                Parent.Rotation.X + value.X,
+                Parent.Rotation.Y + value.Y,
+                Parent.Rotation.Z + value.Z);
     }
 
     /// <summary>Escala en espacio local relativa a <see cref="Parent"/>.</summary>
     [JsonIgnore]
-    public EditorVector2 LocalScale
+    public EditorVector3 LocalScale
     {
         get
         {
@@ -55,7 +67,8 @@ public sealed class EditorGameObject
 
             float px = MathF.Abs(Parent.Scale.X) < 0.0001f ? 1f : Parent.Scale.X;
             float py = MathF.Abs(Parent.Scale.Y) < 0.0001f ? 1f : Parent.Scale.Y;
-            return new EditorVector2(Scale.X / px, Scale.Y / py);
+            float pz = MathF.Abs(Parent.Scale.Z) < 0.0001f ? 1f : Parent.Scale.Z;
+            return new EditorVector3(Scale.X / px, Scale.Y / py, Scale.Z / pz);
         }
         set
         {
@@ -65,7 +78,10 @@ public sealed class EditorGameObject
                 return;
             }
 
-            Scale = new EditorVector2(Parent.Scale.X * value.X, Parent.Scale.Y * value.Y);
+            Scale = new EditorVector3(
+                Parent.Scale.X * value.X,
+                Parent.Scale.Y * value.Y,
+                Parent.Scale.Z * value.Z);
         }
     }
 

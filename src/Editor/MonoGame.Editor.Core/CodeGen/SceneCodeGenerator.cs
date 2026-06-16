@@ -11,9 +11,9 @@ public sealed class SceneCodeGenerator : ICodeGenService
 {
     /// <inheritdoc/>
     public async Task<CodeGenResult> GenerateSceneAsync(
-        EditorScene       scene,
-        EditorProject     project,
-        ProjectSettings   settings,
+        EditorScene scene,
+        EditorProject project,
+        ProjectSettings settings,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(project.GameSourcePath))
@@ -21,7 +21,7 @@ public sealed class SceneCodeGenerator : ICodeGenService
         if (string.IsNullOrWhiteSpace(settings.RootNamespace))
             return new CodeGenResult(false, string.Empty, "RootNamespace is not configured in Project Settings.");
 
-        string outputDir  = Path.Combine(project.GameSourcePath, settings.GeneratedCodeFolder, "Scenes");
+        string outputDir = Path.Combine(project.GameSourcePath, settings.GeneratedCodeFolder, "Scenes");
         string outputPath = Path.Combine(outputDir, $"{scene.Name}Scene.Generated.cs");
 
         try
@@ -33,8 +33,8 @@ public sealed class SceneCodeGenerator : ICodeGenService
             bool isNew = !File.Exists(outputPath);
             if (!isNew)
             {
-                string existingHash  = ComputeMd5(await File.ReadAllTextAsync(outputPath, cancellationToken).ConfigureAwait(false));
-                string newHash       = ComputeMd5(content);
+                string existingHash = ComputeMd5(await File.ReadAllTextAsync(outputPath, cancellationToken).ConfigureAwait(false));
+                string newHash = ComputeMd5(content);
                 if (existingHash == newHash)
                     return new CodeGenResult(true, outputPath);
             }
@@ -72,12 +72,12 @@ public sealed class SceneCodeGenerator : ICodeGenService
 
     /// <inheritdoc/>
     public Task<CodeGenResult> GenerateBehaviourSkeletonAsync(
-        string                className,
-        string                namespaceName,
-        string                relativeFolder,
+        string className,
+        string namespaceName,
+        string relativeFolder,
         IReadOnlyList<string> lifecycleMethodsToOverride,
-        EditorProject         project,
-        CancellationToken     cancellationToken = default)
+        EditorProject project,
+        CancellationToken cancellationToken = default)
         => new BehaviourSkeletonGenerator().GenerateBehaviourSkeletonAsync(
             className, namespaceName, relativeFolder, lifecycleMethodsToOverride, project, cancellationToken);
 
@@ -92,7 +92,7 @@ public sealed class SceneCodeGenerator : ICodeGenService
         HashSet<string> extraUsings = new(StringComparer.Ordinal);
 
         string timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss");
-        string relSource  = scene.ScenePath is { Length: > 0 } s ? s : "(unsaved)";
+        string relSource = scene.ScenePath is { Length: > 0 } s ? s : "(unsaved)";
 
         // Recopilar espacios de nombres adicionales a partir de los nombres de tipo de comportamiento
         List<EditorGameObject> roots = scene.RootGameObjects;
@@ -190,18 +190,18 @@ public sealed class SceneCodeGenerator : ICodeGenService
     }
 
     private static void AppendEntity(
-        StringBuilder        sb,
-        EditorGameObject     entity,
-        string?              parentVarName,
-        VariableNameTracker  names,
-        string               indent)
+        StringBuilder sb,
+        EditorGameObject entity,
+        string? parentVarName,
+        VariableNameTracker names,
+        string indent)
     {
         string varName = names.Allocate(ToCamelCase(entity.Name));
 
         sb.AppendLine();
         sb.AppendLine($"{indent}// ── Entity: {entity.Name} {new string('─', Math.Max(0, 64 - entity.Name.Length))}");
         sb.Append($"{indent}var {varName} = world.CreateEntity(\"{EscapeString(entity.Name)}\"");
-        sb.AppendLine($", new Vector2({FormatFloat(entity.Position.X)}, {FormatFloat(entity.Position.Y)}));");
+        sb.AppendLine($", new Vector3({FormatFloat(entity.Position.X)}, {FormatFloat(entity.Position.Y)}, {FormatFloat(entity.Position.Z)}))");;
 
         if (parentVarName is not null)
             sb.AppendLine($"{indent}{varName}.SetParent({parentVarName});");
@@ -209,9 +209,9 @@ public sealed class SceneCodeGenerator : ICodeGenService
         List<EditorBehaviour> behaviours = entity.Behaviours;
         for (int i = 0; i < behaviours.Count; i++)
         {
-            EditorBehaviour b       = behaviours[i];
-            string          bShort  = GetShortTypeName(b.TypeName);
-            string          bVar    = names.Allocate(ToCamelCase(bShort));
+            EditorBehaviour b = behaviours[i];
+            string bShort = GetShortTypeName(b.TypeName);
+            string bVar = names.Allocate(ToCamelCase(bShort));
 
             if (bShort == "SpriteRendererBehaviour")
             {
@@ -253,10 +253,10 @@ public sealed class SceneCodeGenerator : ICodeGenService
 
     private static void AppendPropertyAssignment(
         StringBuilder sb,
-        string        varName,
-        string        propName,
-        JsonElement   value,
-        string        indent)
+        string varName,
+        string propName,
+        JsonElement value,
+        string indent)
     {
         string? literal = ResolvePropertyLiteral(value);
         if (literal is null) return;
@@ -268,65 +268,65 @@ public sealed class SceneCodeGenerator : ICodeGenService
     {
         switch (value.ValueKind)
         {
-            case JsonValueKind.True:  return "true";
+            case JsonValueKind.True: return "true";
             case JsonValueKind.False: return null; // false es el valor predeterminado para bool, omitir
             case JsonValueKind.String:
-            {
-                string s = value.GetString() ?? string.Empty;
-                if (s.Length == 0) return null; // la cadena vacía es el valor predeterminado, omitir
-                return $"\"{EscapeString(s)}\"";
-            }
+                {
+                    string s = value.GetString() ?? string.Empty;
+                    if (s.Length == 0) return null; // la cadena vacía es el valor predeterminado, omitir
+                    return $"\"{EscapeString(s)}\"";
+                }
             case JsonValueKind.Number:
-            {
-                if (value.TryGetInt32(out int i))
                 {
-                    if (i == 0) return null; // 0 es el valor predeterminado, omitir
-                    return i.ToString();
+                    if (value.TryGetInt32(out int i))
+                    {
+                        if (i == 0) return null; // 0 es el valor predeterminado, omitir
+                        return i.ToString();
+                    }
+                    if (value.TryGetDouble(out double d))
+                    {
+                        if (d == 0.0) return null; // 0.0 es el valor predeterminado, omitir
+                        return $"{d}f";
+                    }
+                    return null;
                 }
-                if (value.TryGetDouble(out double d))
-                {
-                    if (d == 0.0) return null; // 0.0 es el valor predeterminado, omitir
-                    return $"{d}f";
-                }
-                return null;
-            }
             case JsonValueKind.Object:
-            {
-                // Intentar Color { R, G, B, A }
-                if (value.TryGetProperty("R", out JsonElement r) &&
-                    value.TryGetProperty("G", out JsonElement g) &&
-                    value.TryGetProperty("B", out JsonElement b) &&
-                    value.TryGetProperty("A", out JsonElement a))
                 {
-                    int ri = r.TryGetInt32(out int rv) ? rv : 0;
-                    int gi = g.TryGetInt32(out int gv) ? gv : 0;
-                    int bi2 = b.TryGetInt32(out int bv) ? bv : 0;
-                    int ai = a.TryGetInt32(out int av) ? av : 255;
-                    if (ri == 0 && gi == 0 && bi2 == 0 && ai == 255) return null;
-                    return $"new Color({ri}, {gi}, {bi2}, {ai})";
+                    // Intentar Color { R, G, B, A }
+                    if (value.TryGetProperty("R", out JsonElement r) &&
+                        value.TryGetProperty("G", out JsonElement g) &&
+                        value.TryGetProperty("B", out JsonElement b) &&
+                        value.TryGetProperty("A", out JsonElement a))
+                    {
+                        int ri = r.TryGetInt32(out int rv) ? rv : 0;
+                        int gi = g.TryGetInt32(out int gv) ? gv : 0;
+                        int bi2 = b.TryGetInt32(out int bv) ? bv : 0;
+                        int ai = a.TryGetInt32(out int av) ? av : 255;
+                        if (ri == 0 && gi == 0 && bi2 == 0 && ai == 255) return null;
+                        return $"new Color({ri}, {gi}, {bi2}, {ai})";
+                    }
+                    // Intentar Vector3 { X, Y, Z }
+                    if (value.TryGetProperty("X", out JsonElement x) &&
+                        value.TryGetProperty("Y", out JsonElement y) &&
+                        value.TryGetProperty("Z", out JsonElement z))
+                    {
+                        float xf = (float)x.GetDouble();
+                        float yf = (float)y.GetDouble();
+                        float zf = (float)z.GetDouble();
+                        if (xf == 0f && yf == 0f && zf == 0f) return null;
+                        return $"new Vector3({FormatFloat(xf)}, {FormatFloat(yf)}, {FormatFloat(zf)})";
+                    }
+                    // Intentar Vector2 { X, Y }
+                    if (value.TryGetProperty("X", out JsonElement x2) &&
+                        value.TryGetProperty("Y", out JsonElement y2))
+                    {
+                        float xf = (float)x2.GetDouble();
+                        float yf = (float)y2.GetDouble();
+                        if (xf == 0f && yf == 0f) return null;
+                        return $"new Vector2({FormatFloat(xf)}, {FormatFloat(yf)})";
+                    }
+                    return null;
                 }
-                // Intentar Vector3 { X, Y, Z }
-                if (value.TryGetProperty("X", out JsonElement x) &&
-                    value.TryGetProperty("Y", out JsonElement y) &&
-                    value.TryGetProperty("Z", out JsonElement z))
-                {
-                    float xf = (float)x.GetDouble();
-                    float yf = (float)y.GetDouble();
-                    float zf = (float)z.GetDouble();
-                    if (xf == 0f && yf == 0f && zf == 0f) return null;
-                    return $"new Vector3({FormatFloat(xf)}, {FormatFloat(yf)}, {FormatFloat(zf)})";
-                }
-                // Intentar Vector2 { X, Y }
-                if (value.TryGetProperty("X", out JsonElement x2) &&
-                    value.TryGetProperty("Y", out JsonElement y2))
-                {
-                    float xf = (float)x2.GetDouble();
-                    float yf = (float)y2.GetDouble();
-                    if (xf == 0f && yf == 0f) return null;
-                    return $"new Vector2({FormatFloat(xf)}, {FormatFloat(yf)})";
-                }
-                return null;
-            }
             default: return null;
         }
     }
@@ -423,7 +423,7 @@ public sealed class SceneCodeGenerator : ICodeGenService
     private static string ComputeMd5(string content)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(content);
-        byte[] hash  = MD5.HashData(bytes);
+        byte[] hash = MD5.HashData(bytes);
         return Convert.ToHexString(hash);
     }
 

@@ -6,6 +6,7 @@ public sealed partial class App : Application
     {
         InitializeComponent();
         UserAppTheme = AppTheme.Dark;
+        Drawers.BehaviourEditorRegistry.Initialize();
     }
 
     protected override Window CreateWindow(IActivationState? activationState)

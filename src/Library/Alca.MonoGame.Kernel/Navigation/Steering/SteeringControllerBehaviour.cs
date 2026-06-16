@@ -6,7 +6,7 @@ namespace Alca.MonoGame.Kernel.Navigation.Steering;
 /// Combines multiple <see cref="ISteeringBehavior"/> contributions (weighted sum) and optionally
 /// applies the result to the entity's <see cref="TransformBehaviour"/> each frame.
 /// </summary>
-public sealed class SteeringController : GameBehaviour
+public sealed class SteeringControllerBehaviour : GameBehaviour
 {
     private const int MaxEntries = 8;
 
@@ -78,8 +78,7 @@ public sealed class SteeringController : GameBehaviour
         }
     }
 
-    // ── Internal types ────────────────────────────────────────────────────────
-
+    #region Internal types
     private readonly struct SteeringEntry
     {
         internal readonly ISteeringBehavior _behavior;
@@ -91,4 +90,5 @@ public sealed class SteeringController : GameBehaviour
             _weight = weight;
         }
     }
+    #endregion
 }

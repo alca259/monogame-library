@@ -1,4 +1,4 @@
-namespace Alca.MonoGame.Kernel.Audio;
+namespace Alca.MonoGame.Kernel.Audio.Mixer;
 
 /// <summary>Named volume channel in an <see cref="AudioMixer"/>. Controls volume and mute state independently.</summary>
 public sealed class AudioMixerChannel

@@ -85,7 +85,7 @@
                 <ScrollView HeightRequest="320"
                             IsVisible="{Binding ActiveTab, Converter={StaticResource Equals}, ConverterParameter=General}">
                     <Grid Padding="20,16"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
                           ColumnDefinitions="140,*"
                           RowSpacing="10"
                           ColumnSpacing="8">
@@ -153,6 +153,18 @@
                                     Style="{StaticResource FlatButton}"
                                     Command="{Binding BrowseScriptsCsprojCommand}"/>
                         </Grid>
+
+                        <Label Grid.Row="5" Grid.Column="0"
+                               Text="Grid cell size"
+                               Style="{StaticResource DimLabel}"
+                               VerticalOptions="Center"/>
+                        <Entry Grid.Row="5" Grid.Column="1"
+                               Text="{Binding GridCellSize}"
+                               Keyboard="Numeric"
+                               Placeholder="1"
+                               BackgroundColor="{StaticResource BgPanel}"
+                               TextColor="{StaticResource PrimaryLabel}"
+                               PlaceholderColor="{StaticResource DimLabel}"/>
 
                     </Grid>
                 </ScrollView>

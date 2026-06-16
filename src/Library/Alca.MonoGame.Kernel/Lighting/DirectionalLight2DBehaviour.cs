@@ -6,7 +6,7 @@ namespace Alca.MonoGame.Kernel.Lighting;
 /// The <see cref="Direction"/> property is exposed for shader use but does not affect
 /// the CPU-side lighting accumulation.
 /// </summary>
-public sealed class DirectionalLight2D : LightBehaviour
+public sealed class DirectionalLight2DBehaviour : LightBehaviour
 {
     /// <summary>Gets or sets the normalized light direction. Defaults to <see cref="Vector2.UnitX"/> (right).</summary>
     public Vector2 Direction { get; set; } = Vector2.UnitX;

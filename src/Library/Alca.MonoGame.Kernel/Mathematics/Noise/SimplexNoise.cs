@@ -6,12 +6,11 @@ namespace Alca.MonoGame.Kernel.Mathematics.Noise;
 /// </summary>
 public sealed class SimplexNoise
 {
-    // ── Permutation table ─────────────────────────────────────────────────────
-
+    #region Permutation table
     private readonly int[] _perm = new int[512];
 
     // 2D gradient table (12 directions for 3D reuse; first 8 for 2D)
-    private static readonly int[,] Grad3 =
+    private static readonly int[,] _grad3 =
     {
         {  1,  1,  0 }, { -1,  1,  0 }, {  1, -1,  0 }, { -1, -1,  0 },
         {  1,  0,  1 }, { -1,  0,  1 }, {  1,  0, -1 }, { -1,  0, -1 },
@@ -46,9 +45,9 @@ public sealed class SimplexNoise
         for (int i = 0; i < 512; i++)
             _perm[i] = source[i & 255];
     }
+    #endregion
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
+    #region Public API
     /// <summary>
     /// Returns 2D Simplex noise for (<paramref name="x"/>, <paramref name="y"/>).
     /// Output is in approximately [-1, 1].
@@ -149,24 +148,25 @@ public sealed class SimplexNoise
 
     /// <summary>Returns 2D Simplex noise remapped to [0, 1].</summary>
     public float Get01(float x, float y) => (Get(x, y) + 1f) * 0.5f;
+    #endregion
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
+    #region Private helpers
     private static int FastFloor(float x) => x > 0 ? (int)x : (int)x - 1;
 
-    private float CornerContrib2(int gi, float x, float y)
+    private static float CornerContrib2(int gi, float x, float y)
     {
         float t = 0.5f - x * x - y * y;
         if (t < 0f) return 0f;
         t *= t;
-        return t * t * (Grad3[gi, 0] * x + Grad3[gi, 1] * y);
+        return t * t * (_grad3[gi, 0] * x + _grad3[gi, 1] * y);
     }
 
-    private float CornerContrib3(int gi, float x, float y, float z)
+    private static float CornerContrib3(int gi, float x, float y, float z)
     {
         float t = 0.6f - x * x - y * y - z * z;
         if (t < 0f) return 0f;
         t *= t;
-        return t * t * (Grad3[gi, 0] * x + Grad3[gi, 1] * y + Grad3[gi, 2] * z);
+        return t * t * (_grad3[gi, 0] * x + _grad3[gi, 1] * y + _grad3[gi, 2] * z);
     }
+    #endregion
 }

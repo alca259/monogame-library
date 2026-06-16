@@ -17,4 +17,7 @@ public enum GizmoMode
 
     /// <summary>Herramienta de diseño rectangular; muestra una caja delimitadora discontinua, sin manijas de transformación.</summary>
     Rect,
+
+    /// <summary>Muestra simultáneamente las manijas de Move, Rotate y Scale según <c>GizmoController.EnabledTools</c> y <c>EnabledAxes</c>.</summary>
+    Universal,
 }

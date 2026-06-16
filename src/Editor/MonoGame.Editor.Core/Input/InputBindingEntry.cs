@@ -10,8 +10,8 @@ public readonly record struct InputBindingEntry(DeviceType DeviceType, int Code)
     public string ToDisplayString() => DeviceType switch
     {
         DeviceType.Keyboard => ((Keys)Code).ToString(),
-        DeviceType.Mouse    => ((Alca.MonoGame.Kernel.Input.MouseButton)Code).ToString(),
-        DeviceType.Gamepad  => $"{(Buttons)Code} (Gamepad)",
-        _                   => Code.ToString()
+        DeviceType.Mouse => ((Alca.MonoGame.Kernel.Input.MouseButton)Code).ToString(),
+        DeviceType.Gamepad => $"{(Buttons)Code} (Gamepad)",
+        _ => Code.ToString()
     };
 }

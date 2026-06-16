@@ -1,5 +1,3 @@
-using Alca.MonoGame.Kernel.Graphics.Shaders;
-
 namespace Alca.MonoGame.Kernel.UnitTests.Graphics.Shaders;
 
 // SpriteMaterial and Material both require a live Effect (GraphicsDevice dependency).

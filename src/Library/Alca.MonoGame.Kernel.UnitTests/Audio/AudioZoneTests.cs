@@ -1,4 +1,6 @@
 using Alca.MonoGame.Kernel.Audio;
+using Alca.MonoGame.Kernel.Audio.Ambient;
+using Alca.MonoGame.Kernel.Audio.Mixer;
 using Alca.MonoGame.Kernel.ECS;
 
 namespace Alca.MonoGame.Kernel.UnitTests.Audio;
@@ -11,9 +13,9 @@ public sealed class AudioZoneTests
     [Fact]
     public void DefaultRadius_Is50()
     {
-        GameWorld world = new GameWorld { AudioController = new AudioController() };
+        GameWorld world = new GameWorld { AudioController = new AudioController(new AudioMixer()) };
         GameEntity entity = world.CreateEntity("zone");
-        AudioZone zone = entity.AddComponent<AudioZone>();
+        AudioZoneBehaviour zone = entity.AddComponent<AudioZoneBehaviour>();
 
         Assert.Equal(50f, zone.Radius);
     }
@@ -21,9 +23,9 @@ public sealed class AudioZoneTests
     [Fact]
     public void DefaultFadeInTime_Is1()
     {
-        GameWorld world = new GameWorld { AudioController = new AudioController() };
+        GameWorld world = new GameWorld { AudioController = new AudioController(new AudioMixer()) };
         GameEntity entity = world.CreateEntity("zone");
-        AudioZone zone = entity.AddComponent<AudioZone>();
+        AudioZoneBehaviour zone = entity.AddComponent<AudioZoneBehaviour>();
 
         Assert.Equal(1f, zone.FadeInTime);
     }
@@ -31,9 +33,9 @@ public sealed class AudioZoneTests
     [Fact]
     public void DefaultFadeOutTime_Is1()
     {
-        GameWorld world = new GameWorld { AudioController = new AudioController() };
+        GameWorld world = new GameWorld { AudioController = new AudioController(new AudioMixer()) };
         GameEntity entity = world.CreateEntity("zone");
-        AudioZone zone = entity.AddComponent<AudioZone>();
+        AudioZoneBehaviour zone = entity.AddComponent<AudioZoneBehaviour>();
 
         Assert.Equal(1f, zone.FadeOutTime);
     }
@@ -41,9 +43,9 @@ public sealed class AudioZoneTests
     [Fact]
     public void DefaultAmbientSound_IsNull()
     {
-        GameWorld world = new GameWorld { AudioController = new AudioController() };
+        GameWorld world = new GameWorld { AudioController = new AudioController(new AudioMixer()) };
         GameEntity entity = world.CreateEntity("zone");
-        AudioZone zone = entity.AddComponent<AudioZone>();
+        AudioZoneBehaviour zone = entity.AddComponent<AudioZoneBehaviour>();
 
         Assert.Null(zone.AmbientSound);
     }
@@ -51,9 +53,9 @@ public sealed class AudioZoneTests
     [Fact]
     public void DefaultMixerChannel_IsNull()
     {
-        GameWorld world = new GameWorld { AudioController = new AudioController() };
+        GameWorld world = new GameWorld { AudioController = new AudioController(new AudioMixer()) };
         GameEntity entity = world.CreateEntity("zone");
-        AudioZone zone = entity.AddComponent<AudioZone>();
+        AudioZoneBehaviour zone = entity.AddComponent<AudioZoneBehaviour>();
 
         Assert.Null(zone.MixerChannel);
     }
@@ -64,7 +66,7 @@ public sealed class AudioZoneTests
         GameWorld world = new GameWorld();
         GameEntity entity = world.CreateEntity("zone");
 
-        Exception? ex = Record.Exception(() => entity.AddComponent<AudioZone>());
+        Exception? ex = Record.Exception(() => entity.AddComponent<AudioZoneBehaviour>());
 
         Assert.Null(ex);
     }
@@ -72,9 +74,9 @@ public sealed class AudioZoneTests
     [Fact]
     public void Update_WithNoAmbientSound_DoesNotThrow()
     {
-        GameWorld world = new GameWorld { AudioController = new AudioController() };
+        GameWorld world = new GameWorld { AudioController = new AudioController(new AudioMixer()) };
         GameEntity entity = world.CreateEntity("zone");
-        entity.AddComponent<AudioZone>();
+        entity.AddComponent<AudioZoneBehaviour>();
 
         Exception? ex = Record.Exception(() => world.Update(OneFrame()));
 
@@ -86,7 +88,7 @@ public sealed class AudioZoneTests
     {
         GameWorld world = new GameWorld();
         GameEntity entity = world.CreateEntity("zone");
-        entity.AddComponent<AudioZone>();
+        entity.AddComponent<AudioZoneBehaviour>();
 
         Exception? ex = Record.Exception(() => world.Update(OneFrame()));
 
@@ -96,9 +98,9 @@ public sealed class AudioZoneTests
     [Fact]
     public void Radius_CanBeSet()
     {
-        GameWorld world = new GameWorld { AudioController = new AudioController() };
+        GameWorld world = new GameWorld { AudioController = new AudioController(new AudioMixer()) };
         GameEntity entity = world.CreateEntity("zone");
-        AudioZone zone = entity.AddComponent<AudioZone>();
+        AudioZoneBehaviour zone = entity.AddComponent<AudioZoneBehaviour>();
 
         zone.Radius = 100f;
 
@@ -108,9 +110,9 @@ public sealed class AudioZoneTests
     [Fact]
     public void MixerChannel_CanBeAssigned()
     {
-        GameWorld world = new GameWorld { AudioController = new AudioController() };
+        GameWorld world = new GameWorld { AudioController = new AudioController(new AudioMixer()) };
         GameEntity entity = world.CreateEntity("zone");
-        AudioZone zone = entity.AddComponent<AudioZone>();
+        AudioZoneBehaviour zone = entity.AddComponent<AudioZoneBehaviour>();
         AudioMixerChannel channel = new("Ambient");
 
         zone.MixerChannel = channel;
@@ -121,7 +123,7 @@ public sealed class AudioZoneTests
     [Fact]
     public void ListenerPositionViaController_ReflectsDefaultZero_WhenListenerNotUpdated()
     {
-        AudioController controller = new();
+        AudioController controller = new(new AudioMixer());
         GameWorld world = new GameWorld { AudioController = controller };
 
         Assert.Equal(Vector3.Zero, controller.ListenerPosition);

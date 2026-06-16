@@ -44,9 +44,9 @@ public sealed class GameBehaviourScanner
                 if (t is null || t.IsAbstract || !t.IsClass) continue;
                 if (!IsGameBehaviourSubclass(t)) continue;
 
-                string fullName  = t.FullName  ?? t.Name;
+                string fullName = t.FullName ?? t.Name;
                 string shortName = t.Name;
-                string ns        = t.Namespace ?? string.Empty;
+                string ns = t.Namespace ?? string.Empty;
 
                 result[fullName] = new TypeDescriptor(fullName, shortName, ns);
             }

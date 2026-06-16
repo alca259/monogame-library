@@ -1,7 +1,7 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MonoGame.Editor.Maui.Views.Panels;
+using System.Collections.ObjectModel;
 
 namespace MonoGame.Editor.Maui.ViewModels.Panels;
 
@@ -14,8 +14,8 @@ public sealed partial class ScriptBrowserViewModel : ViewModelBase
 {
     private readonly HashSet<string> _expandedFolders = [];
 
-    private string _scriptsRoot        = string.Empty;
-    private string _currentFolderPath  = string.Empty;
+    private string _scriptsRoot = string.Empty;
+    private string _currentFolderPath = string.Empty;
     private string _selectedFolderPath = string.Empty;
     private string _selectedScriptFile = string.Empty;
 
@@ -59,12 +59,12 @@ public sealed partial class ScriptBrowserViewModel : ViewModelBase
         FolderItems.Clear();
         ScriptItems.Clear();
         _expandedFolders.Clear();
-        ScriptCountText     = "0 scripts";
+        ScriptCountText = "0 scripts";
         _selectedFolderPath = string.Empty;
         _selectedScriptFile = string.Empty;
-        CanModifyFolder     = false;
-        CanModifyScript     = false;
-        CanManage           = false;
+        CanModifyFolder = false;
+        CanModifyScript = false;
+        CanManage = false;
 
         if (e.Project is null)
         {
@@ -99,10 +99,10 @@ public sealed partial class ScriptBrowserViewModel : ViewModelBase
     {
         if (!Directory.Exists(dir)) return;
 
-        string[] subdirs     = Directory.GetDirectories(dir);
-        bool     hasChildren = subdirs.Length > 0;
-        bool     isExpanded  = _expandedFolders.Contains(dir);
-        bool     isRoot      = string.Equals(dir, _scriptsRoot, StringComparison.OrdinalIgnoreCase);
+        string[] subdirs = Directory.GetDirectories(dir);
+        bool hasChildren = subdirs.Length > 0;
+        bool isExpanded = _expandedFolders.Contains(dir);
+        bool isRoot = string.Equals(dir, _scriptsRoot, StringComparison.OrdinalIgnoreCase);
 
         FolderItem item = null!;
         item = new FolderItem(dir, depth, hasChildren, isExpanded, isRoot,
@@ -114,7 +114,7 @@ public sealed partial class ScriptBrowserViewModel : ViewModelBase
                 BuildFolderTree();
 
                 _selectedFolderPath = dir;
-                CanModifyFolder     = !isRoot;
+                CanModifyFolder = !isRoot;
 
                 if (item.IsExpanded)
                 {
@@ -140,7 +140,7 @@ public sealed partial class ScriptBrowserViewModel : ViewModelBase
     {
         ScriptItems.Clear();
         _selectedScriptFile = string.Empty;
-        CanModifyScript     = false;
+        CanModifyScript = false;
 
         if (!Directory.Exists(_currentFolderPath)) return;
 
@@ -151,7 +151,7 @@ public sealed partial class ScriptBrowserViewModel : ViewModelBase
             string fileName = Path.GetFileName(file);
             ScriptItems.Add(new ScriptItem(
                 fileName,
-                onTap:    () => { _selectedScriptFile = fileName; CanModifyScript = true; },
+                onTap: () => { _selectedScriptFile = fileName; CanModifyScript = true; },
                 onRename: () => { _selectedScriptFile = fileName; _ = RenameScriptAsync(); },
                 onDelete: () => { _selectedScriptFile = fileName; _ = DeleteScriptAsync(); }));
             count++;
@@ -200,7 +200,7 @@ public sealed partial class ScriptBrowserViewModel : ViewModelBase
 
         if (string.IsNullOrWhiteSpace(newName) || newName == Path.GetFileName(_selectedFolderPath)) return;
 
-        string parent  = Path.GetDirectoryName(_selectedFolderPath) ?? _scriptsRoot;
+        string parent = Path.GetDirectoryName(_selectedFolderPath) ?? _scriptsRoot;
         string newPath = Path.Combine(parent, newName);
         try { Directory.Move(_selectedFolderPath, newPath); }
         catch (Exception ex) { Log($"[ScriptBrowser] Failed to rename folder: {ex.Message}", LogLevel.Error); return; }
@@ -211,7 +211,7 @@ public sealed partial class ScriptBrowserViewModel : ViewModelBase
         _expandedFolders.Remove(_selectedFolderPath);
         _expandedFolders.Add(newPath);
         _selectedFolderPath = string.Empty;
-        CanModifyFolder     = false;
+        CanModifyFolder = false;
 
         BuildFolderTree();
         LoadScripts();
@@ -240,7 +240,7 @@ public sealed partial class ScriptBrowserViewModel : ViewModelBase
 
         _expandedFolders.Remove(_selectedFolderPath);
         _selectedFolderPath = string.Empty;
-        CanModifyFolder     = false;
+        CanModifyFolder = false;
 
         BuildFolderTree();
         LoadScripts();
@@ -274,7 +274,7 @@ public sealed partial class ScriptBrowserViewModel : ViewModelBase
         catch (Exception ex) { Log($"[ScriptBrowser] Failed to rename script: {ex.Message}", LogLevel.Error); return; }
 
         _selectedScriptFile = string.Empty;
-        CanModifyScript     = false;
+        CanModifyScript = false;
         LoadScripts();
     }
 
@@ -295,7 +295,7 @@ public sealed partial class ScriptBrowserViewModel : ViewModelBase
         catch (Exception ex) { Log($"[ScriptBrowser] Failed to delete script: {ex.Message}", LogLevel.Error); return; }
 
         _selectedScriptFile = string.Empty;
-        CanModifyScript     = false;
+        CanModifyScript = false;
         LoadScripts();
     }
 
@@ -323,8 +323,8 @@ public sealed partial class ScriptBrowserViewModel : ViewModelBase
         catch (Exception ex) { Log($"[ScriptBrowser] Failed to create target folder: {ex.Message}", LogLevel.Error); return; }
 
         string filePath = Path.Combine(targetFolder, result.ClassName + ".cs");
-        string ns       = string.IsNullOrEmpty(result.NamespaceName) ? defaultNs : result.NamespaceName;
-        string content  = GenerateScriptTemplate(result.ClassName, ns);
+        string ns = string.IsNullOrEmpty(result.NamespaceName) ? defaultNs : result.NamespaceName;
+        string content = GenerateScriptTemplate(result.ClassName, ns);
 
         try
         {

@@ -35,13 +35,13 @@ public sealed partial class DockBarView : ContentView
     private void UpdateTabContent()
     {
         string tab = _vm.ActiveTab;
-        ScenesContent.IsVisible       = tab == "Scenes";
-        AssetsContent.IsVisible       = tab == "Assets";
-        ConsoleContent.IsVisible      = tab == "Console";
+        ScenesContent.IsVisible = tab == "Scenes";
+        AssetsContent.IsVisible = tab == "Assets";
+        ConsoleContent.IsVisible = tab == "Console";
         LocalizationContent.IsVisible = tab == "Localization";
-        InputMapsContent.IsVisible    = tab == "InputMaps";
-        TilemapContent.IsVisible      = tab == "Tilemap";
-        HistoryContent.IsVisible      = tab == "History";
-        ScriptsContent.IsVisible      = tab == "Scripts";
+        InputMapsContent.IsVisible = tab == "InputMaps";
+        TilemapContent.IsVisible = tab == "Tilemap";
+        HistoryContent.IsVisible = tab == "History";
+        ScriptsContent.IsVisible = tab == "Scripts";
     }
 }

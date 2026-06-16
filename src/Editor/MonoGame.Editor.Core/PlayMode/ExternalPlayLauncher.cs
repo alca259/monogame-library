@@ -35,10 +35,10 @@ public sealed class ExternalPlayLauncher : IDisposable
 
         ProcessStartInfo psi = new(gameExePath, args)
         {
-            UseShellExecute         = false,
-            RedirectStandardOutput  = logLine is not null,
-            RedirectStandardError   = logLine is not null,
-            CreateNoWindow          = false,
+            UseShellExecute = false,
+            RedirectStandardOutput = logLine is not null,
+            RedirectStandardError = logLine is not null,
+            CreateNoWindow = false,
         };
 
         _process = Process.Start(psi);
