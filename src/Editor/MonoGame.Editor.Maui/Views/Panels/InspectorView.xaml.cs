@@ -114,6 +114,10 @@ public sealed partial class InspectorView : ContentView
         }
     }
 
+    // IncludeFields = true para serializar los structs de MonoGame (Vector2.X, Vector3.Z, etc.
+    // son FIELDS no properties y el serializador por defecto los ignora produciendo "{}").
+    private static readonly JsonSerializerOptions s_fieldOptions = new() { IncludeFields = true };
+
     private static void EnsurePropertiesPopulated(EditorBehaviour behaviour, Type type)
     {
         PropertyInfo[] props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -132,7 +136,7 @@ public sealed partial class InspectorView : ContentView
             {
                 object? value = instance is not null ? prop.GetValue(instance) : null;
                 behaviour.Properties[prop.Name] = value is not null
-                    ? JsonSerializer.SerializeToElement(value, prop.PropertyType)
+                    ? JsonSerializer.SerializeToElement(value, prop.PropertyType, s_fieldOptions)
                     : GetDefaultJsonElement(prop.PropertyType);
             }
             catch (Exception ex) { Log($"[Inspector] Failed to read property {prop.Name}: {ex.Message}", LogLevel.Warning); }
@@ -145,7 +149,7 @@ public sealed partial class InspectorView : ContentView
         if (type == typeof(string)) return JsonSerializer.SerializeToElement(string.Empty);
         if (type.IsValueType)
         {
-            try { return JsonSerializer.SerializeToElement(Activator.CreateInstance(type)!, type); }
+            try { return JsonSerializer.SerializeToElement(Activator.CreateInstance(type)!, type, s_fieldOptions); }
             catch (Exception ex) { Log($"[Inspector] Failed to create default instance for type {type.Name}: {ex.Message}", LogLevel.Debug); }
         }
         return JsonSerializer.SerializeToElement(string.Empty);
@@ -315,6 +319,39 @@ public sealed partial class InspectorView : ContentView
         if (value.ValueKind == JsonValueKind.Object && Drawers.PropertyControlHelper.IsColorValue(value))
             return Drawers.PropertyControlHelper.BuildColorField(label, value,
                 nv => Drawers.PropertyControlHelper.SetProperty(behaviour, key, nv));
+
+        // Vector3 antes que Vector2 para evitar falsos positivos (V3 también tiene X e Y)
+        if (Drawers.PropertyControlHelper.IsVector3Value(value))
+        {
+            (double vx, double vy, double vz) = Drawers.PropertyControlHelper.GetVector3(value);
+            return Drawers.PropertyControlHelper.BuildVector3Field(label, vx, vy, vz,
+                v => Drawers.PropertyControlHelper.SetProperty(behaviour, key,
+                    Drawers.PropertyControlHelper.SerializeVector3(v,
+                        Drawers.PropertyControlHelper.GetVector3(behaviour.Properties.TryGetValue(key, out var cur) ? cur : value).Y,
+                        Drawers.PropertyControlHelper.GetVector3(behaviour.Properties.TryGetValue(key, out var cur2) ? cur2 : value).Z)),
+                v => Drawers.PropertyControlHelper.SetProperty(behaviour, key,
+                    Drawers.PropertyControlHelper.SerializeVector3(
+                        Drawers.PropertyControlHelper.GetVector3(behaviour.Properties.TryGetValue(key, out var cur) ? cur : value).X, v,
+                        Drawers.PropertyControlHelper.GetVector3(behaviour.Properties.TryGetValue(key, out var cur2) ? cur2 : value).Z)),
+                v => Drawers.PropertyControlHelper.SetProperty(behaviour, key,
+                    Drawers.PropertyControlHelper.SerializeVector3(
+                        Drawers.PropertyControlHelper.GetVector3(behaviour.Properties.TryGetValue(key, out var cur) ? cur : value).X,
+                        Drawers.PropertyControlHelper.GetVector3(behaviour.Properties.TryGetValue(key, out var cur2) ? cur2 : value).Y, v)),
+                readOnly);
+        }
+
+        if (Drawers.PropertyControlHelper.IsVector2Value(value))
+        {
+            (double vx, double vy) = Drawers.PropertyControlHelper.GetVector2(value);
+            return Drawers.PropertyControlHelper.BuildVector2Field(label, vx, vy,
+                v => Drawers.PropertyControlHelper.SetProperty(behaviour, key,
+                    Drawers.PropertyControlHelper.SerializeVector2(v,
+                        Drawers.PropertyControlHelper.GetVector2(behaviour.Properties.TryGetValue(key, out var cur) ? cur : value).Y)),
+                v => Drawers.PropertyControlHelper.SetProperty(behaviour, key,
+                    Drawers.PropertyControlHelper.SerializeVector2(
+                        Drawers.PropertyControlHelper.GetVector2(behaviour.Properties.TryGetValue(key, out var cur) ? cur : value).X, v)),
+                readOnly);
+        }
 
         // Fallback: texto
         string strValue = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : value.ToString();

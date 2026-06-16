@@ -136,6 +136,7 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
         On<SceneDirtyChangedEvent>(_ => { UpdateTitle(); ViewportInvalidateRequested?.Invoke(); });
         On<ProjectOpenedEvent>(_ => UpdateTitle());
         On<GameObjectSelectedEvent>(_ => ViewportInvalidateRequested?.Invoke());
+        On<GameObjectPropertyChangedEvent>(_ => ViewportInvalidateRequested?.Invoke());
         On<SceneCreatedEvent>(_ => ViewportInvalidateRequested?.Invoke());
         On<UndoPerformedEvent>(_ => ViewportInvalidateRequested?.Invoke());
         On<RedoPerformedEvent>(_ => ViewportInvalidateRequested?.Invoke());

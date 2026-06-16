@@ -9,6 +9,8 @@ public sealed class HierarchyItem
 {
     private readonly Action _onToggleExpand;
     private readonly Func<HierarchyItem, Task> _onRename;
+    private readonly Action<HierarchyItem> _onDragStart;
+    private readonly Action<HierarchyItem> _onDrop;
 
     private static readonly Color PrefabColor = Color.FromArgb("#7EB8F7");
     private static readonly Color NormalColor = Color.FromArgb("#E6E6E8");
@@ -32,19 +34,25 @@ public sealed class HierarchyItem
 
     public Command ToggleExpandCommand { get; }
     public Command RenameCommand { get; }
+    public Command DragStartingCommand { get; }
+    public Command DropCommand { get; }
 
     public HierarchyItem(
         EditorGameObject obj,
         int depth,
         bool isExpanded,
         Action onToggleExpand,
-        Func<HierarchyItem, Task> onRename)
+        Func<HierarchyItem, Task> onRename,
+        Action<HierarchyItem> onDragStart,
+        Action<HierarchyItem> onDrop)
     {
         GameObject = obj;
         Depth = depth;
         IsExpanded = isExpanded;
         _onToggleExpand = onToggleExpand;
         _onRename = onRename;
+        _onDragStart = onDragStart;
+        _onDrop = onDrop;
 
         ToggleExpandCommand = new Command(() =>
         {
@@ -53,5 +61,7 @@ public sealed class HierarchyItem
         });
 
         RenameCommand = new Command(async () => await _onRename(this));
+        DragStartingCommand = new Command(() => _onDragStart(this));
+        DropCommand = new Command(() => _onDrop(this));
     }
 }

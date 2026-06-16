@@ -106,7 +106,9 @@ public sealed partial class SceneHierarchyViewModel : ViewModelBase
                 else _expandedIds.Remove(obj.Id);
                 RebuildList();
             },
-            onRename: RenameItemAsync);
+            onRename: RenameItemAsync,
+            onDragStart: StartDrag,
+            onDrop: HandleDrop);
 
         Items.Add(item);
         total++;
@@ -230,6 +232,30 @@ public sealed partial class SceneHierarchyViewModel : ViewModelBase
     }
 
     private bool CanDelete() => HasSelection && HasScene;
+
+    // ── Drag & drop ───────────────────────────────────────────────────────────
+
+    private HierarchyItem? _draggingItem;
+
+    internal void StartDrag(HierarchyItem item) => _draggingItem = item;
+
+    internal void HandleDrop(HierarchyItem target)
+    {
+        HierarchyItem? source = _draggingItem;
+        _draggingItem = null;
+
+        if (source is null || source == target) return;
+
+        EditorScene? scene = Context.ActiveScene;
+        if (scene is null) return;
+
+        // Usar CollectReparentCandidates para validar que el target no es descendiente del source.
+        List<EditorGameObject> valid = CollectReparentCandidates(scene, source.GameObject);
+        if (!valid.Contains(target.GameObject)) return;
+
+        Context.Commands.Execute(new ReparentEntityCommand(source.GameObject, scene, target.GameObject));
+        RebuildList(scene);
+    }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 

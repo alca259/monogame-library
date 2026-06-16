@@ -44,7 +44,15 @@ public sealed partial class InspectorViewModel : ViewModelBase
 
     protected override void RegisterEvents()
     {
-        On<GameObjectSelectedEvent>(e => { Selected = e.GameObject; Refresh(); });
+        // Reconstruir tarjetas sólo cuando cambia el objeto seleccionado.
+        On<GameObjectSelectedEvent>(e =>
+        {
+            if (Selected == e.GameObject) return;
+            Selected = e.GameObject;
+            Refresh();
+        });
+        // Actualizar sólo los valores de Transform cuando cambia una propiedad (sin reconstruir las tarjetas).
+        On<GameObjectPropertyChangedEvent>(_ => RefreshRequested?.Invoke());
         On<UndoPerformedEvent>(_ => Refresh());
         On<RedoPerformedEvent>(_ => Refresh());
         On<EditorStateChangedEvent>(e => ContentEnabled = e.NewState is EditorState.Editing);

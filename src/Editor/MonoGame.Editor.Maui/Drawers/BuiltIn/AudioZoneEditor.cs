@@ -7,6 +7,8 @@ namespace MonoGame.Editor.Maui.Drawers.BuiltIn;
 [CustomBehaviourEditor("Alca.MonoGame.Kernel.Audio.Ambient.AudioZoneBehaviour")]
 internal sealed class AudioZoneEditor : BehaviourEditor
 {
+    public override IReadOnlyList<string> RadiusPreviewProperties => ["Radius"];
+
     public override View BuildInspector(EditorBehaviour behaviour, EditorGameObject owner)
     {
         VerticalStackLayout layout = new() { Spacing = 0 };

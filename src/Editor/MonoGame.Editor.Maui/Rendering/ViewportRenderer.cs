@@ -76,15 +76,19 @@ public sealed class ViewportRenderer : IDrawable
         PointF tl = Camera.ScreenToWorld(new PointF(rect.Left, rect.Top), size);
         PointF br = Camera.ScreenToWorld(new PointF(rect.Right, rect.Bottom), size);
 
-        float startX = MathF.Floor(tl.X / cellSize) * cellSize;
-        for (float wx = startX; wx <= br.X + cellSize; wx += cellSize)
+        // Usar Min/Max para que el bucle funcione independientemente de si el eje está invertido.
+        // Con la cámara Y-up, tl.Y > br.Y (esquina superior de pantalla = Y mundo mayor).
+        float minX = Math.Min(tl.X, br.X), maxX = Math.Max(tl.X, br.X);
+        float startX = MathF.Floor(minX / cellSize) * cellSize;
+        for (float wx = startX; wx <= maxX + cellSize; wx += cellSize)
         {
             PointF sp = Camera.WorldToScreen(new PointF(wx, 0), size);
             canvas.DrawLine(sp.X, rect.Top, sp.X, rect.Bottom);
         }
 
-        float startY = MathF.Floor(tl.Y / cellSize) * cellSize;
-        for (float wy = startY; wy <= br.Y + cellSize; wy += cellSize)
+        float minY = Math.Min(tl.Y, br.Y), maxY = Math.Max(tl.Y, br.Y);
+        float startY = MathF.Floor(minY / cellSize) * cellSize;
+        for (float wy = startY; wy <= maxY + cellSize; wy += cellSize)
         {
             PointF sp = Camera.WorldToScreen(new PointF(0, wy), size);
             canvas.DrawLine(rect.Left, sp.Y, rect.Right, sp.Y);
@@ -582,24 +586,37 @@ public sealed class ViewportRenderer : IDrawable
                 type = FindBehaviourType(behaviour.TypeName);
                 _behaviourTypeCache[behaviour.TypeName] = type;
             }
-            if (type is null) continue;
 
-            foreach (PropertyInfo pi in type.GetProperties(
-                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+            // Fuente 1: atributo [EditorRadiusPreview] en la propiedad del tipo (cuando está disponible).
+            if (type is not null)
             {
-                if (pi.GetCustomAttribute<MonoGame.Editor.Core.Attributes.EditorRadiusPreviewAttribute>() is null) continue;
-                if (!behaviour.Properties.TryGetValue(pi.Name, out System.Text.Json.JsonElement el)) continue;
-                if (el.ValueKind != System.Text.Json.JsonValueKind.Number) continue;
+                foreach (PropertyInfo pi in type.GetProperties(
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                {
+                    if (pi.GetCustomAttribute<MonoGame.Editor.Core.Attributes.EditorRadiusPreviewAttribute>() is null) continue;
+                    DrawRadiusCircle(canvas, centre: center, behaviour, pi.Name);
+                }
+            }
 
-                float worldRadius = el.GetSingle();
-                if (worldRadius <= 0f) continue;
-
-                float screenRadius = worldRadius * Camera.Zoom;
-                if (screenRadius < 2f) continue;
-
-                canvas.DrawCircle(center.X, center.Y, screenRadius);
+            // Fuente 2: editor built-in declara RadiusPreviewProperties para tipos del NuGet sin atributo.
+            Drawers.BehaviourEditor? editor = Drawers.BehaviourEditorRegistry.GetEditor(behaviour.TypeName);
+            if (editor is not null)
+            {
+                foreach (string propName in editor.RadiusPreviewProperties)
+                    DrawRadiusCircle(canvas, centre: center, behaviour, propName);
             }
         }
+    }
+
+    private void DrawRadiusCircle(ICanvas canvas, PointF centre, EditorBehaviour behaviour, string propName)
+    {
+        if (!behaviour.Properties.TryGetValue(propName, out System.Text.Json.JsonElement el)) return;
+        if (el.ValueKind != System.Text.Json.JsonValueKind.Number) return;
+        float worldRadius = el.GetSingle();
+        if (worldRadius <= 0f) return;
+        float screenRadius = worldRadius * Camera.Zoom;
+        if (screenRadius < 2f) return;
+        canvas.DrawCircle(centre.X, centre.Y, screenRadius);
     }
 
     private static Type? FindBehaviourType(string typeName)

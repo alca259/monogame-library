@@ -7,6 +7,8 @@ namespace MonoGame.Editor.Maui.Drawers.BuiltIn;
 [CustomBehaviourEditor("Alca.MonoGame.Kernel.Lighting.PointLight2DBehaviour")]
 internal sealed class PointLight2DEditor : BehaviourEditor
 {
+    public override IReadOnlyList<string> RadiusPreviewProperties => ["Range"];
+
     public override View BuildInspector(EditorBehaviour behaviour, EditorGameObject owner)
     {
         VerticalStackLayout layout = new() { Spacing = 0 };

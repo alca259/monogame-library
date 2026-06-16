@@ -18,6 +18,12 @@ public abstract class BehaviourEditor
     /// <summary>Construye la UI completa del cuerpo de la tarjeta para el Behaviour dado.</summary>
     public abstract View BuildInspector(EditorBehaviour behaviour, EditorGameObject owner);
 
+    /// <summary>
+    /// Nombres de propiedades float que el viewport debe visualizar como círculos de radio.
+    /// Sobreescribir en editores built-in para tipos del NuGet que no tienen <c>[EditorRadiusPreview]</c>.
+    /// </summary>
+    public virtual IReadOnlyList<string> RadiusPreviewProperties => [];
+
     // ── Helpers de control ────────────────────────────────────────────────────
 
     /// <summary>Campo numérico como slider con rango definido.</summary>
@@ -70,6 +76,18 @@ public abstract class BehaviourEditor
     /// <summary>Serializa un par (x, y) como JsonElement {X, Y}.</summary>
     protected static JsonElement SerializeVector2(double x, double y)
         => PropertyControlHelper.SerializeVector2(x, y);
+
+    /// <summary>Tres steppers X/Y/Z para una propiedad Vector3 serializada como {X, Y, Z}.</summary>
+    protected static View BuildVector3Field(string label, JsonElement el,
+        Action<double> onX, Action<double> onY, Action<double> onZ, bool readOnly = false)
+    {
+        (double x, double y, double z) = PropertyControlHelper.GetVector3(el);
+        return PropertyControlHelper.BuildVector3Field(label, x, y, z, onX, onY, onZ, readOnly);
+    }
+
+    /// <summary>Serializa (x, y, z) como JsonElement {X, Y, Z}.</summary>
+    protected static JsonElement SerializeVector3(double x, double y, double z)
+        => PropertyControlHelper.SerializeVector3(x, y, z);
 
     /// <summary>Ejecuta un cambio de propiedad con soporte de deshacer/rehacer.</summary>
     protected static void SetProperty(EditorBehaviour behaviour, string key, JsonElement newValue)

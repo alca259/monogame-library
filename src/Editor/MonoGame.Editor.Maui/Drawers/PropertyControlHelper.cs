@@ -288,8 +288,10 @@ internal static class PropertyControlHelper
         EditorContext.Instance.Commands.Execute(
             new SetPropertyCommand<JsonElement>($"Set {key}", prev, newValue,
                 v => behaviour.Properties[key] = v));
+        // Publicar GameObjectPropertyChangedEvent en lugar de GameObjectSelectedEvent para evitar
+        // que el Inspector reconstruya las tarjetas de Behaviour mientras el usuario edita un control.
         if (EditorContext.Instance.SelectedObject is { } obj)
-            EditorContext.Instance.EventBus.Publish(new GameObjectSelectedEvent(obj));
+            EditorContext.Instance.EventBus.Publish(new GameObjectPropertyChangedEvent(obj));
     }
 
     // ── Vector2 helpers ───────────────────────────────────────────────────────
@@ -326,6 +328,43 @@ internal static class PropertyControlHelper
     internal static JsonElement SerializeVector2(double x, double y)
         => JsonSerializer.SerializeToElement(new { X = (float)x, Y = (float)y });
 
+    /// <summary>Extrae X, Y y Z de un JsonElement que representa un Vector3 serializado.</summary>
+    internal static (double X, double Y, double Z) GetVector3(JsonElement el) => (
+        el.TryGetProperty("X", out JsonElement x) ? x.GetDouble() : 0.0,
+        el.TryGetProperty("Y", out JsonElement y) ? y.GetDouble() : 0.0,
+        el.TryGetProperty("Z", out JsonElement z) ? z.GetDouble() : 0.0);
+
+    /// <summary>Fila con tres steppers X/Y/Z para propiedades Vector3.</summary>
+    internal static View BuildVector3Field(string label, double x, double y, double z,
+        Action<double> onX, Action<double> onY, Action<double> onZ, bool readOnly = false)
+    {
+        Controls.AxisStepper stepX = new() { Axis = "X", Value = x, Step = 0.1, IsEnabled = !readOnly };
+        Controls.AxisStepper stepY = new() { Axis = "Y", Value = y, Step = 0.1, IsEnabled = !readOnly };
+        Controls.AxisStepper stepZ = new() { Axis = "Z", Value = z, Step = 0.1, IsEnabled = !readOnly };
+        stepX.ValueCommitted += (_, v) => onX(v);
+        stepY.ValueCommitted += (_, v) => onY(v);
+        stepZ.ValueCommitted += (_, v) => onZ(v);
+
+        Grid container = new()
+        {
+            ColumnDefinitions =
+            [
+                new ColumnDefinition(GridLength.Star),
+                new ColumnDefinition(GridLength.Star),
+                new ColumnDefinition(GridLength.Star),
+            ],
+            ColumnSpacing = 4,
+        };
+        container.Add(stepX, 0, 0);
+        container.Add(stepY, 1, 0);
+        container.Add(stepZ, 2, 0);
+        return BuildPropertyRow(label, container);
+    }
+
+    /// <summary>Serializa un Vector3 como objeto anónimo JSON {X, Y, Z}.</summary>
+    internal static JsonElement SerializeVector3(double x, double y, double z)
+        => JsonSerializer.SerializeToElement(new { X = (float)x, Y = (float)y, Z = (float)z });
+
     // ── Helpers internos ──────────────────────────────────────────────────────
 
     internal static bool IsColorValue(JsonElement value)
@@ -334,4 +373,19 @@ internal static class PropertyControlHelper
         && value.TryGetProperty("G", out _)
         && value.TryGetProperty("B", out _)
         && value.TryGetProperty("A", out _);
+
+    /// <summary>Detecta un objeto JSON {X, Y} sin campo R (para no confundir con Color).</summary>
+    internal static bool IsVector2Value(JsonElement value)
+        => value.ValueKind == JsonValueKind.Object
+        && value.TryGetProperty("X", out _)
+        && value.TryGetProperty("Y", out _)
+        && !value.TryGetProperty("R", out _)
+        && !value.TryGetProperty("Z", out _);
+
+    /// <summary>Detecta un objeto JSON {X, Y, Z}.</summary>
+    internal static bool IsVector3Value(JsonElement value)
+        => value.ValueKind == JsonValueKind.Object
+        && value.TryGetProperty("X", out _)
+        && value.TryGetProperty("Y", out _)
+        && value.TryGetProperty("Z", out _);
 }

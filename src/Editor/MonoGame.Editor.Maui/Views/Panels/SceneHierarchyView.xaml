@@ -76,6 +76,12 @@
                 <DataTemplate x:DataType="local:HierarchyItem">
                     <Grid ColumnDefinitions="Auto,*"
                           Padding="{Binding LeftPadding}">
+                        <Grid.GestureRecognizers>
+                            <DragGestureRecognizer CanDrag="True"
+                                                   DragStartingCommand="{Binding DragStartingCommand}"/>
+                            <DropGestureRecognizer AllowDrop="True"
+                                                   DropCommand="{Binding DropCommand}"/>
+                        </Grid.GestureRecognizers>
 
                         <!-- Expand / collapse icon (tap = toggle, also selects row) -->
                         <Label Grid.Column="0"
