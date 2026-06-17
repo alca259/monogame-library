@@ -491,9 +491,9 @@ Recorrido manual de aceptación (debe igualar a MAUI):
 
 ## Checklist de iteración (marcar al avanzar)
 
-- [ ] F0 Andamiaje y solución
-- [ ] F1 Tema + infraestructura + controles base
-- [ ] F2 Shell (MainForm: menú/toolbar/status/splits)
+- [x] F0 Andamiaje y solución
+- [x] F1 Tema + infraestructura + controles base
+- [x] F2 Shell (MainForm: menú/toolbar/status/splits)
 - [ ] F3 Viewport MonoGame embebido + entrada + gizmos
 - [ ] F4 Jerarquía + Inspector + Transform
 - [ ] F5 Behaviours (Drawers) + Add/Remove
