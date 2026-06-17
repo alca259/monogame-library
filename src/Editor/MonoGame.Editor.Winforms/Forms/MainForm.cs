@@ -44,6 +44,7 @@ internal sealed partial class MainForm : Form
     {
         base.OnLoad(e);
         AdjustSplitters();
+        RestorePreferences();
         await _vm.TryAutoLoadLastProjectAsync().ConfigureAwait(true);
     }
 
@@ -55,6 +56,7 @@ internal sealed partial class MainForm : Form
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
+        SavePreferences();
         _vm.PropertyChanged -= OnVmPropertyChanged;
         _vm.Detach();
         base.OnFormClosed(e);
@@ -213,6 +215,48 @@ internal sealed partial class MainForm : Form
                     if (!form.IsDisposed) form.MarkComplete(ok, fail);
                 });
         };
+    }
+
+    #endregion
+
+    #region Persistencia de preferencias
+
+    private void RestorePreferences()
+    {
+        EditorPreferences prefs = _vm.Preferences;
+
+        if (prefs.LeftPanelWidth > 0)
+        {
+            int min = _splitMain.Panel1MinSize;
+            int max = _splitMain.Width - _splitMain.SplitterWidth - _splitMain.Panel2MinSize;
+            if (max > min)
+                _splitMain.SplitterDistance = Math.Clamp(prefs.LeftPanelWidth, min, max);
+        }
+
+        if (prefs.ConsolePanelHeight > 0)
+        {
+            int totalH = _splitViewportDock.Height;
+            int min    = _splitViewportDock.Panel1MinSize;
+            int max    = totalH - _splitViewportDock.SplitterWidth - _splitViewportDock.Panel2MinSize;
+            int dist   = totalH - prefs.ConsolePanelHeight - _splitViewportDock.SplitterWidth;
+            if (max > min)
+                _splitViewportDock.SplitterDistance = Math.Clamp(dist, min, max);
+        }
+
+        if (!prefs.HierarchyVisible) ToggleHierarchy();
+        if (!prefs.InspectorVisible) ToggleInspector();
+    }
+
+    private void SavePreferences()
+    {
+        EditorPreferences prefs = _vm.Preferences;
+        if (!_splitMain.Panel1Collapsed)
+            prefs.LeftPanelWidth = _splitMain.SplitterDistance;
+        if (!_splitViewportDock.Panel2Collapsed)
+            prefs.ConsolePanelHeight = _splitViewportDock.Panel2.Height;
+        prefs.HierarchyVisible = _hierarchyVisible;
+        prefs.InspectorVisible = _inspectorVisible;
+        prefs.Save();
     }
 
     #endregion
