@@ -11,5 +11,7 @@ internal static class EditorBootstrapper
         // Fuerza la creación del singleton (lazy) y registra el inicio.
         EditorContext.Instance.Logger.Log("Editor iniciado.");
         Log.Information("EditorBootstrapper: EditorContext inicializado.");
+
+        BehaviourEditorRegistry.Initialize();
     }
 }

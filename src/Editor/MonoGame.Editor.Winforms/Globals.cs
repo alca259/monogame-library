@@ -22,3 +22,5 @@ global using MonoGame.Editor.Winforms.Theme;
 global using MonoGame.Editor.Winforms.ViewModels;
 global using MonoGame.Editor.Winforms.ViewModels.Dialogs;
 global using MonoGame.Editor.Winforms.ViewModels.Panels;
+global using MonoGame.Editor.Winforms.Drawers;
+global using MonoGame.Editor.Winforms.Drawers.BuiltIn;

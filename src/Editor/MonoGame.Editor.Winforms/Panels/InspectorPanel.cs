@@ -1,7 +1,7 @@
-using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using MonoGame.Editor.Winforms.Controls;
+using MonoGame.Editor.Winforms.Forms.Dialogs;
 using MonoGame.Editor.Winforms.Theme;
 using MonoGame.Editor.Winforms.ViewModels.Panels;
 
@@ -140,7 +140,7 @@ internal sealed class InspectorPanel : UserControl
             BackColor = EditorColors.PanelBackgroundAlt,
             ForeColor = EditorColors.TextSecondary,
             Font      = EditorFonts.Primary,
-            Enabled   = false,  // habilitado en Fase 5
+            Enabled   = false,
         };
         _btnAddBehaviour.FlatAppearance.BorderColor = EditorColors.Border;
 
@@ -179,6 +179,8 @@ internal sealed class InspectorPanel : UserControl
         _spScaY.ValueCommitted += (_, _) => _vm.ApplyScaleY(_spScaY.Value);
         _spScaZ.ValueCommitted += (_, _) => _vm.ApplyScaleZ(_spScaZ.Value);
 
+        _btnAddBehaviour.Click += OnAddBehaviourClick;
+
         _vm.RefreshRequested              += OnRefreshRequested;
         _vm.TransformOnlyRefreshRequested += PopulateTransform;
 
@@ -210,7 +212,10 @@ internal sealed class InspectorPanel : UserControl
         if (has && _vm.Selected is { } sel)
             _chkActive.Checked = sel.Active;
 
+        _btnAddBehaviour.Enabled = enabled;
+
         PopulateTransform();
+        BuildBehaviourCards();
     }
 
     private void PopulateTransform()
@@ -236,6 +241,133 @@ internal sealed class InspectorPanel : UserControl
         SetStepper(_spScaX, sel?.Scale.X ?? 1);
         SetStepper(_spScaY, sel?.Scale.Y ?? 1);
         SetStepper(_spScaZ, sel?.Scale.Z ?? 1);
+    }
+
+    // ── Tarjetas de Behaviour ─────────────────────────────────────────────────
+
+    private void BuildBehaviourCards()
+    {
+        _behaviourArea.SuspendLayout();
+        _behaviourArea.Controls.Clear();
+
+        EditorGameObject? sel = _vm.Selected;
+        if (sel is null || !_vm.ContentEnabled)
+        {
+            _behaviourArea.ResumeLayout(false);
+            return;
+        }
+
+        // WinForms Dock=Top apila de abajo hacia arriba → añadir en orden inverso
+        for (int i = sel.Behaviours.Count - 1; i >= 0; i--)
+        {
+            EditorBehaviour behaviour = sel.Behaviours[i];
+            Panel card = BuildBehaviourCard(sel, behaviour);
+            card.Dock = DockStyle.Top;
+            _behaviourArea.Controls.Add(card);
+        }
+
+        _behaviourArea.ResumeLayout(true);
+    }
+
+    private Panel BuildBehaviourCard(EditorGameObject owner, EditorBehaviour behaviour)
+    {
+        string shortName = GetShortTypeName(behaviour.TypeName);
+
+        // Cabecera de la tarjeta
+        Panel header = new()
+        {
+            Height    = 28,
+            BackColor = EditorColors.PanelBackgroundAlt,
+        };
+
+        Label title = new()
+        {
+            Text      = shortName,
+            ForeColor = EditorColors.TextPrimary,
+            Font      = EditorFonts.PrimaryBold,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Padding   = new Padding(6, 0, 0, 0),
+            Dock      = DockStyle.Fill,
+        };
+
+        Button btnDelete = new()
+        {
+            Text      = "✕",
+            Width     = 24,
+            Dock      = DockStyle.Right,
+            FlatStyle = FlatStyle.Flat,
+            BackColor = EditorColors.PanelBackgroundAlt,
+            ForeColor = EditorColors.TextMuted,
+            Font      = EditorFonts.Small,
+            TabStop   = false,
+        };
+        btnDelete.FlatAppearance.BorderSize = 0;
+        btnDelete.Click += (_, _) =>
+        {
+            EditorContext.Instance.Commands.Execute(new RemoveBehaviourCommand(owner, behaviour));
+            EditorContext.Instance.EventBus.Publish(new GameObjectPropertyChangedEvent(owner));
+            BuildBehaviourCards();
+        };
+
+        header.Controls.Add(title);
+        header.Controls.Add(btnDelete);
+
+        // Cuerpo del editor
+        BehaviourEditor? editor = BehaviourEditorRegistry.GetEditor(behaviour.TypeName);
+        Control body;
+        if (editor is not null)
+        {
+            BehaviourEditorRegistry.PrepareEditor(editor);
+            try { body = editor.BuildInspector(behaviour, owner); }
+            catch { body = MakeFallbackLabel($"Error building inspector for {shortName}"); }
+        }
+        else
+        {
+            body = MakeFallbackLabel($"No editor for {shortName}");
+        }
+        body.Dock = DockStyle.Top;
+
+        Panel card = new()
+        {
+            AutoSize     = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            BackColor    = EditorColors.PanelBackground,
+        };
+        card.Controls.Add(body);
+        card.Controls.Add(header);
+
+        return card;
+    }
+
+    private void OnAddBehaviourClick(object? sender, EventArgs e)
+    {
+        EditorGameObject? sel = _vm.Selected;
+        if (sel is null) return;
+
+        string? typeName = AddBehaviourForm.Show(FindForm(), _vm.Registry);
+        if (typeName is null) return;
+
+        EditorBehaviour behaviour = new() { TypeName = typeName };
+        EditorContext.Instance.Commands.Execute(new AddBehaviourCommand(sel, behaviour));
+        EditorContext.Instance.EventBus.Publish(new GameObjectPropertyChangedEvent(sel));
+        BuildBehaviourCards();
+    }
+
+    private static Label MakeFallbackLabel(string message) => new()
+    {
+        Text      = message,
+        ForeColor = EditorColors.TextMuted,
+        Font      = EditorFonts.Small,
+        Height    = 22,
+        Padding   = new Padding(6, 0, 0, 0),
+    };
+
+    private static string GetShortTypeName(string typeName)
+    {
+        int comma = typeName.IndexOf(',');
+        string noAssembly = comma > 0 ? typeName[..comma].Trim() : typeName;
+        int dot = noAssembly.LastIndexOf('.');
+        return dot >= 0 ? noAssembly[(dot + 1)..] : noAssembly;
     }
 
     // ── Helpers de layout ─────────────────────────────────────────────────────
