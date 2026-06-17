@@ -61,10 +61,10 @@ partial class MainForm
     private SplitContainer _splitViewportDock;
 
     // ── Paneles ──────────────────────────────────────────────────────────────
-    internal Panel                 _pnlHierarchy;
+    internal SceneHierarchyPanel   _pnlHierarchy;
     internal MonoGameViewportHost  _viewport;
     internal Panel                 _pnlDock;
-    internal Panel                 _pnlInspector;
+    internal InspectorPanel        _pnlInspector;
 
     private void InitializeComponent()
     {
@@ -172,10 +172,10 @@ partial class MainForm
         _statusStrip.Items.AddRange(new ToolStripItem[] { _sslStatus, _sslObjectCount, _sslSep, _sslFps });
 
         // ── Paneles placeholder ───────────────────────────────────────────────
-        _pnlHierarchy = new Panel { Dock = DockStyle.Fill, BackColor = EditorColors.PanelBackground };
-        _viewport     = new MonoGameViewportHost();   // Fase 3: GDI+ renderer
+        _pnlHierarchy = new SceneHierarchyPanel();
+        _viewport     = new MonoGameViewportHost();
         _pnlDock      = new Panel { Dock = DockStyle.Fill, BackColor = EditorColors.PanelBackground };
-        _pnlInspector = new Panel { Dock = DockStyle.Fill, BackColor = EditorColors.PanelBackground };
+        _pnlInspector = new InspectorPanel();
 
         // ── SplitContainers anidados ─────────────────────────────────────────
         _splitViewportDock = new SplitContainer

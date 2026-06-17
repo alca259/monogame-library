@@ -495,7 +495,7 @@ Recorrido manual de aceptación (debe igualar a MAUI):
 - [x] F1 Tema + infraestructura + controles base
 - [x] F2 Shell (MainForm: menú/toolbar/status/splits)
 - [x] F3 Viewport MonoGame embebido + entrada + gizmos
-- [ ] F4 Jerarquía + Inspector + Transform
+- [x] F4 Jerarquía + Inspector + Transform
 - [ ] F5 Behaviours (Drawers) + Add/Remove
 - [ ] F6 DockBar: Scenes/Assets/Console
 - [ ] F7 Diálogos proyecto/escena/codegen/color
