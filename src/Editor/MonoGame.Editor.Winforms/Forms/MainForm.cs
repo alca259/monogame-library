@@ -20,6 +20,7 @@ internal sealed partial class MainForm : Form
         ApplyTheme();
         BuildMenus();
         BindVm();
+        WireDialogHooks();
     }
 
     #region Tema
@@ -177,6 +178,41 @@ internal sealed partial class MainForm : Form
         _sslObjectCount.Text  = _vm.ObjectCountText;
         _sslFps.Text          = _vm.FpsText;
         _sslFps.ForeColor     = _vm.CanStop ? EditorColors.PlayGreen : EditorColors.TextMuted;
+    }
+
+    #endregion
+
+    #region Hooks de diálogos
+
+    private void WireDialogHooks()
+    {
+        _vm.RequestNewProjectDialog = () =>
+            Task.FromResult(NewProjectForm.Show(this));
+
+        _vm.RequestNewSceneDialog = () =>
+            Task.FromResult(NewSceneForm.Show(this));
+
+        _vm.RequestProjectSettingsDialog = async () =>
+        {
+            EditorProject? project = EditorContext.Instance.ActiveProject;
+            if (project is not null)
+                await ProjectSettingsForm.ShowAsync(this, project).ConfigureAwait(true);
+        };
+
+        _vm.OpenCodeGenProgressDialog = () =>
+        {
+            CodeGenProgressForm form = new();
+            form.Show(this);
+            return new CodeGenProgressCallbacks(
+                (path, success) =>
+                {
+                    if (!form.IsDisposed) form.AddFileResult(path, success);
+                },
+                (ok, fail) =>
+                {
+                    if (!form.IsDisposed) form.MarkComplete(ok, fail);
+                });
+        };
     }
 
     #endregion

@@ -498,7 +498,7 @@ Recorrido manual de aceptación (debe igualar a MAUI):
 - [x] F4 Jerarquía + Inspector + Transform
 - [x] F5 Behaviours (Drawers) + Add/Remove
 - [x] F6 DockBar: Scenes/Assets/Console
-- [ ] F7 Diálogos proyecto/escena/codegen/color
+- [x] F7 Diálogos proyecto/escena/codegen/color
 - [ ] F8 Paneles restantes + Material preview
 - [ ] F9 Play/build/persistencia/pulido
 - [ ] F10 Retirada de MAUI + docs

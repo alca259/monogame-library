@@ -485,6 +485,12 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
 
     public Func<Task>? RequestProjectSettingsDialog { get; set; }
 
+    /// <summary>
+    /// Hook: abre el formulario de progreso de code gen y devuelve los callbacks
+    /// para reportar resultados. Asignado por MainForm en Fase 7.
+    /// </summary>
+    public Func<CodeGenProgressCallbacks?>? OpenCodeGenProgressDialog { get; set; }
+
     [RelayCommand]
     private async Task OpenProjectSettingsAsync()
     {
@@ -576,9 +582,15 @@ public sealed partial class EditorWindowViewModel : ViewModelBase
             return;
         }
 
+        CodeGenProgressCallbacks? progress = OpenCodeGenProgressDialog?.Invoke();
+
         Bus.Publish(new CodeGenStartedEvent(scene.Name));
         ICodeGenService codeGen = new SceneCodeGenerator();
         CodeGenResult result = await codeGen.GenerateSceneAsync(scene, project, settings).ConfigureAwait(true);
+
+        progress?.AddFileResult(result.OutputPath ?? "(error)", result.Success);
+        progress?.MarkComplete(result.Success ? 1 : 0, result.Success ? 0 : 1);
+
         Bus.Publish(new CodeGenCompletedEvent(result));
         Bus.Publish(new BuildFinishedEvent(result.Success ? 0 : 1, "CodeGen"));
         Context.Logger.Log(
