@@ -60,11 +60,11 @@ partial class MainForm
     private SplitContainer _splitCenterRight;
     private SplitContainer _splitViewportDock;
 
-    // ── Paneles (Fase 2 = placeholders) ─────────────────────────────────────
-    internal Panel _pnlHierarchy;
-    internal Panel _pnlViewport;
-    internal Panel _pnlDock;
-    internal Panel _pnlInspector;
+    // ── Paneles ──────────────────────────────────────────────────────────────
+    internal Panel                 _pnlHierarchy;
+    internal MonoGameViewportHost  _viewport;
+    internal Panel                 _pnlDock;
+    internal Panel                 _pnlInspector;
 
     private void InitializeComponent()
     {
@@ -173,7 +173,7 @@ partial class MainForm
 
         // ── Paneles placeholder ───────────────────────────────────────────────
         _pnlHierarchy = new Panel { Dock = DockStyle.Fill, BackColor = EditorColors.PanelBackground };
-        _pnlViewport  = new Panel { Dock = DockStyle.Fill, BackColor = EditorColors.ViewportBackground };
+        _viewport     = new MonoGameViewportHost();   // Fase 3: GDI+ renderer
         _pnlDock      = new Panel { Dock = DockStyle.Fill, BackColor = EditorColors.PanelBackground };
         _pnlInspector = new Panel { Dock = DockStyle.Fill, BackColor = EditorColors.PanelBackground };
 
@@ -188,7 +188,7 @@ partial class MainForm
             Panel2MinSize    = 60,
             SplitterDistance = 400,
         };
-        _splitViewportDock.Panel1.Controls.Add(_pnlViewport);
+        _splitViewportDock.Panel1.Controls.Add(_viewport);
         _splitViewportDock.Panel2.Controls.Add(_pnlDock);
 
         _splitCenterRight = new SplitContainer

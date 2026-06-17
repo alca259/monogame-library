@@ -87,7 +87,7 @@ internal sealed partial class MainForm : Form
     private void BindVm()
     {
         _vm.PropertyChanged             += OnVmPropertyChanged;
-        _vm.ViewportInvalidateRequested += () => _pnlViewport.Invalidate();
+        _vm.ViewportInvalidateRequested += () => _viewport.Invalidate();
 
         // Toolbar → comandos
         _tsiToolSelect.Click  += (_, _) => _vm.ActivateToolCommand.Execute(EditorWindowViewModel.SceneTools.Select);

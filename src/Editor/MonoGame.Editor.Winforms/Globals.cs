@@ -16,6 +16,7 @@ global using MonoGame.Editor.Core.Serialization;
 global using MonoGame.Editor.Core.Tilemaps;
 global using MonoGame.Editor.Winforms.Controls;
 global using MonoGame.Editor.Winforms.Infrastructure;
+global using MonoGame.Editor.Winforms.Rendering;
 global using MonoGame.Editor.Winforms.Theme;
 global using MonoGame.Editor.Winforms.ViewModels;
 global using MonoGame.Editor.Winforms.ViewModels.Dialogs;

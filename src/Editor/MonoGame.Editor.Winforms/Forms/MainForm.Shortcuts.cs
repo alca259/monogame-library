@@ -84,6 +84,9 @@ partial class MainForm
                 case Keys.Delete:
                     _vm.DeleteSelectedCommand.Execute(null);
                     return true;
+                case Keys.F:
+                    _viewport.FocusOnSelected();
+                    return true;
             }
         }
 
