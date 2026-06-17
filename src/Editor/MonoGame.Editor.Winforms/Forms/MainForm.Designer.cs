@@ -63,7 +63,7 @@ partial class MainForm
     // ── Paneles ──────────────────────────────────────────────────────────────
     internal SceneHierarchyPanel   _pnlHierarchy;
     internal MonoGameViewportHost  _viewport;
-    internal Panel                 _pnlDock;
+    internal DockBarPanel          _pnlDock;
     internal InspectorPanel        _pnlInspector;
 
     private void InitializeComponent()
@@ -174,7 +174,7 @@ partial class MainForm
         // ── Paneles placeholder ───────────────────────────────────────────────
         _pnlHierarchy = new SceneHierarchyPanel();
         _viewport     = new MonoGameViewportHost();
-        _pnlDock      = new Panel { Dock = DockStyle.Fill, BackColor = EditorColors.PanelBackground };
+        _pnlDock      = new DockBarPanel();
         _pnlInspector = new InspectorPanel();
 
         // ── SplitContainers anidados ─────────────────────────────────────────

@@ -497,7 +497,7 @@ Recorrido manual de aceptación (debe igualar a MAUI):
 - [x] F3 Viewport MonoGame embebido + entrada + gizmos
 - [x] F4 Jerarquía + Inspector + Transform
 - [x] F5 Behaviours (Drawers) + Add/Remove
-- [ ] F6 DockBar: Scenes/Assets/Console
+- [x] F6 DockBar: Scenes/Assets/Console
 - [ ] F7 Diálogos proyecto/escena/codegen/color
 - [ ] F8 Paneles restantes + Material preview
 - [ ] F9 Play/build/persistencia/pulido
