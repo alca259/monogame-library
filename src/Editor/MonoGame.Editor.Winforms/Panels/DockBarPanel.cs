@@ -5,8 +5,9 @@ using MonoGame.Editor.Winforms.Theme;
 namespace MonoGame.Editor.Winforms.Panels;
 
 /// <summary>
-/// Panel inferior del editor con pestañas temadas: Scenes, Assets y Console.
-/// Sustituye al <c>_pnlDock</c> genérico de <c>MainForm.Designer.cs</c>.
+/// Panel inferior del editor con pestañas temadas:
+/// Scenes, Assets, Console, Scripts, Localization, Input Map, Tilemap,
+/// History, Material, Sprite, UI Theme.
 /// </summary>
 internal sealed class DockBarPanel : UserControl
 {
@@ -25,15 +26,34 @@ internal sealed class DockBarPanel : UserControl
         };
         ApplyDarkTabStyle(tabs);
 
-        TabPage scenesTab  = MakeTab("Scenes");
-        TabPage assetsTab  = MakeTab("Assets");
-        TabPage consoleTab = MakeTab("Console");
+        TabPage scenesTab   = MakeTab("Scenes");
+        TabPage assetsTab   = MakeTab("Assets");
+        TabPage consoleTab  = MakeTab("Console");
+        TabPage scriptsTab  = MakeTab("Scripts");
+        TabPage localeTab   = MakeTab("Localization");
+        TabPage inputTab    = MakeTab("Input Map");
+        TabPage tilemapTab  = MakeTab("Tilemap");
+        TabPage historyTab  = MakeTab("History");
+        TabPage materialTab = MakeTab("Material");
+        TabPage spriteTab   = MakeTab("Sprite");
+        TabPage uiThemeTab  = MakeTab("UI Theme");
 
         scenesTab.Controls.Add(new SceneManagerPanel());
         assetsTab.Controls.Add(new AssetBrowserPanel());
         consoleTab.Controls.Add(new ConsolePanel());
+        scriptsTab.Controls.Add(new ScriptBrowserPanel());
+        localeTab.Controls.Add(new LocalizationBrowserPanel());
+        inputTab.Controls.Add(new InputMapEditorPanel());
+        tilemapTab.Controls.Add(new TilemapPalettePanel());
+        historyTab.Controls.Add(new UndoHistoryPanel());
+        materialTab.Controls.Add(new MaterialInspectorPanel());
+        spriteTab.Controls.Add(new SpriteInspectorPanel());
+        uiThemeTab.Controls.Add(new UIThemeInspectorPanel());
 
-        tabs.TabPages.AddRange([scenesTab, assetsTab, consoleTab]);
+        tabs.TabPages.AddRange([
+            scenesTab, assetsTab, consoleTab, scriptsTab, localeTab,
+            inputTab, tilemapTab, historyTab, materialTab, spriteTab, uiThemeTab,
+        ]);
         Controls.Add(tabs);
 
         ResumeLayout(false);

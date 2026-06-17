@@ -13,3 +13,6 @@ public sealed record NewSceneResult(string SceneName, float WorldWidth, float Wo
 public sealed record CodeGenProgressCallbacks(
     Action<string, bool> AddFileResult,
     Action<int, int>     MarkComplete);
+
+/// <summary>Resultado del diálogo de creación de script C#.</summary>
+public sealed record ScriptCreationResult(string ClassName, string NamespaceName, string RelativeFolder);
