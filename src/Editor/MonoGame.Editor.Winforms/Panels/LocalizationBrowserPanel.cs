@@ -74,6 +74,7 @@ internal sealed class LocalizationBrowserPanel : UserControl
             Dock             = DockStyle.Fill,
             Orientation      = Orientation.Vertical,
             BackColor        = EditorColors.Border,
+            Width = 500,
             SplitterWidth    = 2,
             Panel1MinSize    = 100,
             Panel2MinSize    = 150,

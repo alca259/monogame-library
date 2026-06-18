@@ -67,10 +67,11 @@ internal sealed class AssetBrowserPanel : UserControl
             Dock          = DockStyle.Fill,
             Orientation   = Orientation.Vertical,
             BackColor     = EditorColors.Border,
+            Width = 500,
             SplitterWidth = 2,
             Panel1MinSize = 100,
             Panel2MinSize = 150,
-            SplitterDistance = 160,
+            SplitterDistance = 130,
         };
 
         // ── TreeView de carpetas ──────────────────────────────────────────────
