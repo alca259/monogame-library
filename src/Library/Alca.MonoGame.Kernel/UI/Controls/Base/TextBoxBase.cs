@@ -1,9 +1,11 @@
 using System.Text;
 using Alca.MonoGame.Kernel.Graphics;
+using Alca.MonoGame.Kernel.UI.Core;
 using Alca.MonoGame.Kernel.UI.Focus;
+using Alca.MonoGame.Kernel.UI.Input;
 using Alca.MonoGame.Kernel.UI.Interaction;
 
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Base;
 
 /// <summary>Abstract base for all text-input controls. Manages the text buffer, cursor, selection, blink timer, and keyboard navigation.</summary>
 public abstract class TextBoxBase : UIElement, IUIInteractable, IFocusable
@@ -328,17 +330,18 @@ public abstract class TextBoxBase : UIElement, IUIInteractable, IFocusable
 
     private void HandleKeyboardUpdate()
     {
-        ProcessKeyboardInput(Core.Input.Keyboard.CurrentState, Core.Input.Keyboard.PreviousState);
+        var input = UIInputContext.Current!;
+        ProcessUIInput(input);
     }
 
-    /// <summary>Processes keyboard navigation keys. Override to add variant-specific key handling.</summary>
-    protected virtual void ProcessKeyboardInput(KeyboardState current, KeyboardState prev)
+    /// <summary>Processes UI input for text navigation and editing. Override to add variant-specific handling.</summary>
+    protected virtual void ProcessUIInput(UIInputContext input)
     {
         if (IsReadOnly) return;
 
-        bool shift = current.IsKeyDown(Keys.LeftShift) || current.IsKeyDown(Keys.RightShift);
+        bool shift = input.IsShiftHeld;
 
-        if (WasJustPressed(current, prev, Keys.Left))
+        if (input.MoveLeft?.IsPressed == true)
         {
             if (HasSelection && !shift)
             {
@@ -352,7 +355,7 @@ public abstract class TextBoxBase : UIElement, IUIInteractable, IFocusable
             }
             MarkCursorDirty();
         }
-        else if (WasJustPressed(current, prev, Keys.Right))
+        else if (input.MoveRight?.IsPressed == true)
         {
             if (HasSelection && !shift)
             {
@@ -366,23 +369,30 @@ public abstract class TextBoxBase : UIElement, IUIInteractable, IFocusable
             }
             MarkCursorDirty();
         }
-        else if (WasJustPressed(current, prev, Keys.Home))
+        else if (input.Home?.IsPressed == true)
         {
             _cursorIndex = 0;
             if (!shift) _selectionStart = 0;
             MarkCursorDirty();
         }
-        else if (WasJustPressed(current, prev, Keys.End))
+        else if (input.End?.IsPressed == true)
         {
             _cursorIndex = _text.Length;
             if (!shift) _selectionStart = _cursorIndex;
             MarkCursorDirty();
         }
-        else if (WasJustPressed(current, prev, Keys.Delete))
+        else if (input.Delete?.IsPressed == true)
         {
             if (HasSelection) DeleteSelection();
             else DeleteAfterCursor();
         }
+    }
+
+    /// <summary>Processes keyboard navigation keys (deprecated). Use ProcessUIInput instead.</summary>
+    protected virtual void ProcessKeyboardInput(KeyboardState current, KeyboardState prev)
+    {
+        // Legacy method — kept for backwards compatibility in tests.
+        // New code should use ProcessUIInput.
     }
 
     protected static bool WasJustPressed(KeyboardState current, KeyboardState prev, Keys key)

@@ -1,4 +1,6 @@
-namespace Alca.MonoGame.Kernel.UI;
+using Alca.MonoGame.Kernel.UI.Core;
+
+namespace Alca.MonoGame.Kernel.UI.Overlays;
 
 /// <summary>Manages floating overlay elements (dropdowns, tooltips) drawn on top of the main UI tree.</summary>
 public sealed class UIOverlayManager

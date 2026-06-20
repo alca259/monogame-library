@@ -1,7 +1,7 @@
-using Alca.MonoGame.Kernel.Input;
 using Alca.MonoGame.Kernel.Scenes;
-using Alca.MonoGame.Kernel.UI;
+using Alca.MonoGame.Kernel.UI.Core;
 using Alca.MonoGame.Kernel.UI.Focus;
+using Alca.MonoGame.Kernel.UI.Input;
 using Alca.MonoGame.Kernel.UI.Interaction;
 using Microsoft.Xna.Framework.Content;
 
@@ -15,10 +15,10 @@ public sealed class CoreUIIntegrationTests
         UIInteractionManager interaction = new();
         UIRoot root = new();
         root.Bounds = new Rectangle(0, 0, 800, 600);
-        MouseInfo mouse = new();
+        UIInputContext input = UIInputContext.CreateDefault();
         UIFocusManager focus = new();
 
-        Exception? ex = Record.Exception(() => interaction.Update(root, mouse, focus));
+        Exception? ex = Record.Exception(() => interaction.Update(root, input, focus));
 
         Assert.Null(ex);
     }

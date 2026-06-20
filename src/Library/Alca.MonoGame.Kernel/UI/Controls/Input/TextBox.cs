@@ -1,4 +1,6 @@
-namespace Alca.MonoGame.Kernel.UI.Controls;
+using Alca.MonoGame.Kernel.UI.Controls.Base;
+
+namespace Alca.MonoGame.Kernel.UI.Controls.Input;
 
 /// <summary>Single-line plain-text input field. Accepts all printable characters.</summary>
 public sealed class TextBox : TextBoxBase

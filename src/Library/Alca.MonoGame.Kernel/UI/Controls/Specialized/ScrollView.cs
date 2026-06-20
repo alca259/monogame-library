@@ -1,6 +1,8 @@
 using Alca.MonoGame.Kernel.Graphics;
+using Alca.MonoGame.Kernel.UI.Core;
+using Alca.MonoGame.Kernel.UI.Input;
 
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Specialized;
 
 /// <summary>
 /// A scrollable container that clips its visible area using a ScissorRectangle.
@@ -109,8 +111,10 @@ public sealed class ScrollView : UIContainer
     {
         if (!IsEnabled) return;
 
-        int rawDelta = -Core.Input.Mouse.ScrollWheelDelta;
-        if (rawDelta != 0 && Bounds.Contains(Core.Input.Mouse.Position))
+        var input = UIInputContext.Current!;
+
+        int rawDelta = -input.PointerScrollDelta;
+        if (rawDelta != 0 && input.PointerPosition is not null && Bounds.Contains(input.PointerPosition.Value))
         {
             float sign = rawDelta > 0 ? 1f : -1f;
             ScrollBy(new Vector2(0f, sign * ScrollSpeed));

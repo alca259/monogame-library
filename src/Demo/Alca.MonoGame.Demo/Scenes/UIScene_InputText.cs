@@ -1,3 +1,7 @@
+using Alca.MonoGame.Kernel.UI.Controls.Display;
+using Alca.MonoGame.Kernel.UI.Controls.Input;
+using Alca.MonoGame.Kernel.UI.Core;
+
 namespace Alca.MonoGame.Demo.Scenes;
 
 /// <summary>Scene 2/10 — demos TextBox, NumericBox, and PasswordBox in a GridLayout.</summary>

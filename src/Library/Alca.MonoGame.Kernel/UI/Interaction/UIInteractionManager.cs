@@ -1,5 +1,7 @@
 using Alca.MonoGame.Kernel.Input;
+using Alca.MonoGame.Kernel.UI.Core;
 using Alca.MonoGame.Kernel.UI.Focus;
+using Alca.MonoGame.Kernel.UI.Input;
 
 namespace Alca.MonoGame.Kernel.UI.Interaction;
 
@@ -23,13 +25,16 @@ public sealed class UIInteractionManager
     /// <summary>Processes pointer input against the UI tree.
     /// Must be called after the layout Arrange pass so Bounds are current.</summary>
     /// <param name="root">Root of the UI tree to test against.</param>
-    /// <param name="mouse">Current-frame mouse snapshot from InputManager.</param>
+    /// <param name="input">UI input context (abstraction over keyboard/mouse/gamepad).</param>
     /// <param name="focusManager">Optional focus manager; when provided, clicking an <see cref="IFocusable"/> element transfers focus to it.</param>
-    public void Update(UIRoot root, MouseInfo mouse, UIFocusManager? focusManager = null)
+    public void Update(UIRoot root, UIInputContext input, UIFocusManager? focusManager = null)
     {
-        Point mousePos = mouse.Position;
+        if (input.PointerPosition is null)
+            return;
 
-        UIElement? newHover = HitTest(root, mousePos);
+        Point pointerPos = input.PointerPosition.Value;
+
+        UIElement? newHover = HitTest(root, pointerPos);
 
         if (!ReferenceEquals(newHover, _hoveredElement))
         {
@@ -43,10 +48,7 @@ public sealed class UIInteractionManager
             HoverChanged?.Invoke(_hoveredElement);
         }
 
-        bool justPressed = mouse.WasButtonJustPressed(MouseButton.Left);
-        bool justReleased = mouse.WasButtonJustReleased(MouseButton.Left);
-
-        if (justPressed && newHover is not null)
+        if (input.WasPointerButtonJustPressed && newHover is not null)
         {
             if (focusManager is not null)
             {
@@ -60,13 +62,13 @@ public sealed class UIInteractionManager
                 focusManager.SetFocus(focusTarget);
             }
 
-            _eventArgs = new UIPointerEventArgs { Position = mousePos, Button = MouseButton.Left };
+            _eventArgs = new UIPointerEventArgs { Position = pointerPos, Button = MouseButton.Left };
             BubblePointerDown(newHover, ref _eventArgs);
         }
 
-        if (justReleased && newHover is not null)
+        if (input.WasPointerButtonJustReleased && newHover is not null)
         {
-            _eventArgs = new UIPointerEventArgs { Position = mousePos, Button = MouseButton.Left };
+            _eventArgs = new UIPointerEventArgs { Position = pointerPos, Button = MouseButton.Left };
             BubblePointerUp(newHover, ref _eventArgs);
         }
     }

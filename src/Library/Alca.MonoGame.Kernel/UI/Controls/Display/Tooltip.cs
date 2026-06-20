@@ -1,4 +1,7 @@
-namespace Alca.MonoGame.Kernel.UI.Controls;
+using Alca.MonoGame.Kernel.UI.Core;
+using Alca.MonoGame.Kernel.UI.Overlays;
+
+namespace Alca.MonoGame.Kernel.UI.Controls.Display;
 
 /// <summary>
 /// A floating tooltip that displays text near an anchor position with screen-edge clamping.

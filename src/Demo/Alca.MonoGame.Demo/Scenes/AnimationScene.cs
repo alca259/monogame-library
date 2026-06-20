@@ -1,4 +1,7 @@
 using Alca.MonoGame.Kernel.Graphics.Sprites;
+using Alca.MonoGame.Kernel.UI.Controls.Display;
+using Alca.MonoGame.Kernel.UI.Core;
+using Alca.MonoGame.Kernel.UI.Overlays;
 
 namespace Alca.MonoGame.Demo.Scenes;
 

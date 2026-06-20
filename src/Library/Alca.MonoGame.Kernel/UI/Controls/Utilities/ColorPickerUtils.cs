@@ -1,4 +1,4 @@
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Utilities;
 
 /// <summary>Pure math helpers for color format conversions used by the color picker controls.</summary>
 public static class ColorPickerUtils

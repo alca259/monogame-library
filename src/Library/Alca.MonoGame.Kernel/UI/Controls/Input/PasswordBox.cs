@@ -1,4 +1,6 @@
-namespace Alca.MonoGame.Kernel.UI.Controls;
+using Alca.MonoGame.Kernel.UI.Controls.Base;
+
+namespace Alca.MonoGame.Kernel.UI.Controls.Input;
 
 /// <summary>Single-line password field that renders all characters as a mask character.</summary>
 public sealed class PasswordBox : TextBoxBase

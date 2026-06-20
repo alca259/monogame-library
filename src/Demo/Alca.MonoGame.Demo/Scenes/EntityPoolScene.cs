@@ -1,3 +1,6 @@
+using Alca.MonoGame.Kernel.UI.Controls.Display;
+using Alca.MonoGame.Kernel.UI.Core;
+
 namespace Alca.MonoGame.Demo.Scenes;
 
 /// <summary>Scene 30 — GameEntityPool with ProjectileBehaviour poolable entity demo.</summary>

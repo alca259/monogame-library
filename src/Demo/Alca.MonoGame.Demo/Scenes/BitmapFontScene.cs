@@ -1,4 +1,5 @@
 using Alca.MonoGame.Kernel.Graphics.Fonts;
+using Alca.MonoGame.Kernel.UI.Core;
 
 namespace Alca.MonoGame.Demo.Scenes;
 

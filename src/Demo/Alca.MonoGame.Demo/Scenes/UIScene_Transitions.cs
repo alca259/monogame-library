@@ -1,4 +1,9 @@
 using Alca.MonoGame.Kernel.Tweening;
+using Alca.MonoGame.Kernel.UI.Controls.Display;
+using Alca.MonoGame.Kernel.UI.Controls.Input;
+using Alca.MonoGame.Kernel.UI.Controls.Selection;
+using Alca.MonoGame.Kernel.UI.Core;
+using Alca.MonoGame.Kernel.UI.Overlays;
 using Alca.MonoGame.Kernel.UI.Transitions;
 
 namespace Alca.MonoGame.Demo.Scenes;

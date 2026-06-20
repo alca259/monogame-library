@@ -1,9 +1,11 @@
 using Alca.MonoGame.Kernel.Graphics;
-using Alca.MonoGame.Kernel.Input;
+using Alca.MonoGame.Kernel.UI.Core;
 using Alca.MonoGame.Kernel.UI.Focus;
+using Alca.MonoGame.Kernel.UI.Input;
 using Alca.MonoGame.Kernel.UI.Interaction;
+using Alca.MonoGame.Kernel.UI.Overlays;
 
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Selection;
 
 /// <summary>A collapsed header that expands an overlay item list when clicked or activated via keyboard.</summary>
 public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
@@ -238,50 +240,55 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
     {
         if (!IsEnabled) return;
 
+        var input = UIInputContext.Current!;
+
         if (_isExpanded)
         {
-            Point mousePos = Core.Input.Mouse.Position;
-            bool justClicked = Core.Input.Mouse.WasButtonJustPressed(MouseButton.Left);
-
-            if (justClicked)
+            if (input.PointerPosition is not null)
             {
-                bool hitItem = false;
-                for (int i = 0; i < _options.Count; i++)
-                {
-                    Rectangle itemBounds = new(
-                        _listBounds.X,
-                        _listBounds.Y + i * ItemHeight,
-                        _listBounds.Width,
-                        ItemHeight);
+                Point mousePos = input.PointerPosition.Value;
+                bool justClicked = input.WasPointerButtonJustPressed;
 
-                    if (itemBounds.Contains(mousePos))
+                if (justClicked)
+                {
+                    bool hitItem = false;
+                    for (int i = 0; i < _options.Count; i++)
                     {
-                        SelectedIndex = i;
-                        Close();
-                        hitItem = true;
-                        break;
+                        Rectangle itemBounds = new(
+                            _listBounds.X,
+                            _listBounds.Y + i * ItemHeight,
+                            _listBounds.Width,
+                            ItemHeight);
+
+                        if (itemBounds.Contains(mousePos))
+                        {
+                            SelectedIndex = i;
+                            Close();
+                            hitItem = true;
+                            break;
+                        }
                     }
+
+                    // Click outside both header and list closes the dropdown
+                    if (!hitItem && !Bounds.Contains(mousePos))
+                        Close();
                 }
-
-                // Click outside both header and list closes the dropdown
-                if (!hitItem && !Bounds.Contains(mousePos))
-                    Close();
-            }
-            else
-            {
-                _highlightedIndex = -1;
-                for (int i = 0; i < _options.Count; i++)
+                else
                 {
-                    Rectangle itemBounds = new(
-                        _listBounds.X,
-                        _listBounds.Y + i * ItemHeight,
-                        _listBounds.Width,
-                        ItemHeight);
-
-                    if (itemBounds.Contains(mousePos))
+                    _highlightedIndex = -1;
+                    for (int i = 0; i < _options.Count; i++)
                     {
-                        _highlightedIndex = i;
-                        break;
+                        Rectangle itemBounds = new(
+                            _listBounds.X,
+                            _listBounds.Y + i * ItemHeight,
+                            _listBounds.Width,
+                            ItemHeight);
+
+                        if (itemBounds.Contains(mousePos))
+                        {
+                            _highlightedIndex = i;
+                            break;
+                        }
                     }
                 }
             }
@@ -291,36 +298,36 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
         {
             if (_isExpanded)
             {
-                if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Up) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadUp))
+                if (input.MoveUp?.IsPressed == true)
                 {
                     if (_highlightedIndex > 0) _highlightedIndex--;
                     else _highlightedIndex = _options.Count - 1;
                 }
-                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Down) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadDown))
+                else if (input.MoveDown?.IsPressed == true)
                 {
                     if (_highlightedIndex < _options.Count - 1) _highlightedIndex++;
                     else _highlightedIndex = 0;
                 }
-                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Enter) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.A))
+                else if (input.Confirm?.IsPressed == true)
                 {
                     if (_highlightedIndex >= 0)
                         SelectedIndex = _highlightedIndex;
                     Close();
                 }
-                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Escape) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.B))
+                else if (input.Cancel?.IsPressed == true)
                 {
                     Close();
                 }
             }
             else
             {
-                if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Enter) || Core.Input.Keyboard.WasKeyJustPressed(Keys.Space) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.A))
+                if (input.Confirm?.IsPressed == true)
                     Open();
-                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Up) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadUp))
+                else if (input.MoveUp?.IsPressed == true)
                 {
                     if (_selectedIndex > 0) SelectedIndex = _selectedIndex - 1;
                 }
-                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Down) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadDown))
+                else if (input.MoveDown?.IsPressed == true)
                 {
                     if (_selectedIndex < _options.Count - 1) SelectedIndex = _selectedIndex + 1;
                     else if (_selectedIndex == -1 && _options.Count > 0) SelectedIndex = 0;

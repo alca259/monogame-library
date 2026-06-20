@@ -1,4 +1,4 @@
-using Alca.MonoGame.Kernel.UI;
+using Alca.MonoGame.Kernel.UI.Core;
 
 namespace Alca.MonoGame.Kernel.Graphics;
 

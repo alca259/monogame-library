@@ -1,4 +1,4 @@
-namespace Alca.MonoGame.Kernel.UI;
+namespace Alca.MonoGame.Kernel.UI.Core;
 
 /// <summary>A UIElement that owns and propagates Update/Draw to a child collection.</summary>
 public class UIContainer : UIElement

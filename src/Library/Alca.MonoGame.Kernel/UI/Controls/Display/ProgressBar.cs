@@ -1,6 +1,7 @@
 using Alca.MonoGame.Kernel.Graphics;
+using Alca.MonoGame.Kernel.UI.Core;
 
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Display;
 
 /// <summary>Displays a fill bar representing a normalized value between 0 and 1.</summary>
 public sealed class ProgressBar : UIElement

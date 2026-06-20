@@ -1,3 +1,7 @@
+using Alca.MonoGame.Kernel.UI.Controls.Display;
+using Alca.MonoGame.Kernel.UI.Core;
+using Alca.MonoGame.Kernel.UI.Overlays;
+
 namespace Alca.MonoGame.Demo.Scenes;
 
 /// <summary>Scene 5/10 — demos Dropdown, RadioGroup, and RadioButton.</summary>

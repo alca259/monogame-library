@@ -1,3 +1,7 @@
+using Alca.MonoGame.Kernel.UI.Controls.Display;
+using Alca.MonoGame.Kernel.UI.Controls.Input;
+using Alca.MonoGame.Kernel.UI.Core;
+
 namespace Alca.MonoGame.Demo.Scenes;
 
 /// <summary>Scene 10/10 — demos UIFocusManager with Tab and arrow-key navigation over a 3×3 button grid.</summary>

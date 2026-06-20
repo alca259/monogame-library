@@ -1,6 +1,6 @@
 using Alca.MonoGame.Kernel.ECS;
 using Alca.MonoGame.Kernel.Graphics;
-using Alca.MonoGame.Kernel.UI;
+using Alca.MonoGame.Kernel.UI.Core;
 
 namespace Alca.MonoGame.Kernel.Scenes;
 

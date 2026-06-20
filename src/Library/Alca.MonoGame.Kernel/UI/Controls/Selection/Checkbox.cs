@@ -1,7 +1,8 @@
+using Alca.MonoGame.Kernel.UI.Core;
 using Alca.MonoGame.Kernel.UI.Focus;
 using Alca.MonoGame.Kernel.UI.Interaction;
 
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Selection;
 
 /// <summary>A toggle control with a checked/unchecked visual state.</summary>
 public sealed class Checkbox : UIElement, IUIInteractable, IFocusable

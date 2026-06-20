@@ -1,9 +1,10 @@
 using Alca.MonoGame.Kernel.Graphics;
-using Alca.MonoGame.Kernel.Input;
+using Alca.MonoGame.Kernel.UI.Core;
 using Alca.MonoGame.Kernel.UI.Focus;
+using Alca.MonoGame.Kernel.UI.Input;
 using Alca.MonoGame.Kernel.UI.Interaction;
 
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Input;
 
 /// <summary>A draggable slider that lets the user pick a float value in a [MinValue, MaxValue] range.</summary>
 public sealed class Slider : UIElement, IUIInteractable, IFocusable
@@ -186,15 +187,17 @@ public sealed class Slider : UIElement, IUIInteractable, IFocusable
     {
         if (!IsEnabled) return;
 
+        var input = UIInputContext.Current!;
+
         if (_isDragging)
         {
-            if (!Core.Input.Mouse.IsButtonDown(MouseButton.Left))
+            if (!input.IsPointerButtonPressed)
             {
                 _isDragging = false;
             }
-            else
+            else if (input.PointerPosition is not null)
             {
-                SetValueFromPosition(Core.Input.Mouse.Position.X, Core.Input.Mouse.Position.Y);
+                SetValueFromPosition(input.PointerPosition.Value.X, input.PointerPosition.Value.Y);
                 UpdateThumbRects();
             }
         }
@@ -205,21 +208,25 @@ public sealed class Slider : UIElement, IUIInteractable, IFocusable
 
             if (Orientation == Orientation.Horizontal)
             {
-                if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Left) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadLeft))
-                { Value -= step; UpdateThumbRects(); }
-                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Right) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadRight))
-                { Value += step; UpdateThumbRects(); }
+                if (input.MoveLeft?.IsPressed == true)
+                    Value -= step;
+                else if (input.MoveRight?.IsPressed == true)
+                    Value += step;
             }
             else
             {
-                if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Down) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadDown))
-                { Value -= step; UpdateThumbRects(); }
-                else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Up) || Core.Input.GamePads[0].WasButtonJustPressed(Buttons.DPadUp))
-                { Value += step; UpdateThumbRects(); }
+                if (input.MoveDown?.IsPressed == true)
+                    Value -= step;
+                else if (input.MoveUp?.IsPressed == true)
+                    Value += step;
             }
 
-            if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Home)) { Value = MinValue; UpdateThumbRects(); }
-            else if (Core.Input.Keyboard.WasKeyJustPressed(Keys.End)) { Value = MaxValue; UpdateThumbRects(); }
+            if (input.Home?.IsPressed == true)
+                Value = MinValue;
+            else if (input.End?.IsPressed == true)
+                Value = MaxValue;
+
+            UpdateThumbRects();
         }
     }
 

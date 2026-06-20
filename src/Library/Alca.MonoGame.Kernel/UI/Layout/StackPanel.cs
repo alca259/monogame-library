@@ -1,3 +1,5 @@
+using Alca.MonoGame.Kernel.UI.Core;
+
 namespace Alca.MonoGame.Kernel.UI.Layout;
 
 /// <summary>Arranges children in a single horizontal or vertical line with optional spacing between them.</summary>

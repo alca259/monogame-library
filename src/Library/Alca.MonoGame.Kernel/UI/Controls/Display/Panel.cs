@@ -1,6 +1,7 @@
 using Alca.MonoGame.Kernel.Graphics;
+using Alca.MonoGame.Kernel.UI.Core;
 
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Display;
 
 /// <summary>A container that renders a background fill and optional border before its children.</summary>
 public sealed class Panel : UIContainer

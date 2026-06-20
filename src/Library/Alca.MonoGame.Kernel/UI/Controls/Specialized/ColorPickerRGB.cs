@@ -1,7 +1,10 @@
 using Alca.MonoGame.Kernel.Graphics;
-using Alca.MonoGame.Kernel.Input;
+using Alca.MonoGame.Kernel.UI.Controls.Input;
+using Alca.MonoGame.Kernel.UI.Controls.Utilities;
+using Alca.MonoGame.Kernel.UI.Core;
+using Alca.MonoGame.Kernel.UI.Input;
 
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Specialized;
 
 /// <summary>A color picker with a color swatch, saturation/value square, hue slider, and hex input. Outputs RGB colors.</summary>
 public sealed class ColorPickerRGB : UIContainer
@@ -250,8 +253,12 @@ public sealed class ColorPickerRGB : UIContainer
         if (!IsEnabled) return;
         base.Update(gameTime);
 
-        Point mousePos = Core.Input.Mouse.Position;
-        bool held = Core.Input.Mouse.IsButtonDown(MouseButton.Left);
+        var input = UIInputContext.Current!;
+
+        if (input.PointerPosition is null) return;
+
+        Point mousePos = input.PointerPosition.Value;
+        bool held = input.IsPointerButtonPressed;
 
         if (_draggingHue)
         {
@@ -277,7 +284,7 @@ public sealed class ColorPickerRGB : UIContainer
                 ApplySvDrag(mousePos);
             }
         }
-        else if (Core.Input.Mouse.IsButtonDown(MouseButton.Left))
+        else if (held)
         {
             if (_hueBarBounds.Contains(mousePos))
             {

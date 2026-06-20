@@ -1,4 +1,4 @@
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Utilities;
 
 /// <summary>Determines how a UISprite texture is scaled or tiled within its Bounds.</summary>
 public enum SpriteDrawMode

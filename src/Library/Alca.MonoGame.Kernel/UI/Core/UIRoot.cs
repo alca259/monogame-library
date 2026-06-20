@@ -1,4 +1,6 @@
-namespace Alca.MonoGame.Kernel.UI;
+using Alca.MonoGame.Kernel.UI.Overlays;
+
+namespace Alca.MonoGame.Kernel.UI.Core;
 
 /// <summary>Root node of the UI visual tree. Owns the SpriteBatch.Begin/End and draws overlays last.</summary>
 public class UIRoot : UIContainer

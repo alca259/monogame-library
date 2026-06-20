@@ -1,5 +1,8 @@
 using System.Text;
 using Alca.MonoGame.Kernel.Physics;
+using Alca.MonoGame.Kernel.UI.Controls.Display;
+using Alca.MonoGame.Kernel.UI.Controls.Input;
+using Alca.MonoGame.Kernel.UI.Core;
 using Alca.MonoGame.Kernel.Weather;
 
 namespace Alca.MonoGame.Demo.Scenes;

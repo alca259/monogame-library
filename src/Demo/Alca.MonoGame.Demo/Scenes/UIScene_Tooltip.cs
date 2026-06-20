@@ -1,3 +1,8 @@
+using Alca.MonoGame.Kernel.UI.Controls.Display;
+using Alca.MonoGame.Kernel.UI.Controls.Input;
+using Alca.MonoGame.Kernel.UI.Core;
+using Alca.MonoGame.Kernel.UI.Overlays;
+
 namespace Alca.MonoGame.Demo.Scenes;
 
 /// <summary>Scene 9/10 — demos Tooltip appearing on button hover via UIOverlayManager.</summary>

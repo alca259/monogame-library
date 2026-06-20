@@ -1,4 +1,4 @@
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Selection;
 
 /// <summary>Manages mutual exclusion for a set of <see cref="RadioButton"/> instances.
 /// This is a non-visual coordinator — it does not render anything itself.</summary>

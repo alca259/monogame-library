@@ -1,6 +1,7 @@
+using Alca.MonoGame.Kernel.UI.Controls.Base;
 using System.Globalization;
 
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Input;
 
 /// <summary>Single-line numeric input field. Filters input to digits, one minus sign, and (optionally) one decimal separator.</summary>
 public sealed class NumericBox : TextBoxBase

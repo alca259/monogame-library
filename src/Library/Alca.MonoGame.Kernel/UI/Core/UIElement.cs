@@ -1,4 +1,4 @@
-namespace Alca.MonoGame.Kernel.UI;
+namespace Alca.MonoGame.Kernel.UI.Core;
 
 /// <summary>Base class for all UI elements in the visual tree.</summary>
 public abstract class UIElement

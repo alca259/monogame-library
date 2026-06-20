@@ -1,4 +1,7 @@
-namespace Alca.MonoGame.Kernel.UI.Controls;
+using Alca.MonoGame.Kernel.UI.Controls.Utilities;
+using Alca.MonoGame.Kernel.UI.Core;
+
+namespace Alca.MonoGame.Kernel.UI.Controls.Display;
 
 /// <summary>Displays a Texture2D inside its Bounds using the specified draw mode.</summary>
 public sealed class UISprite : UIElement

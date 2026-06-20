@@ -1,6 +1,7 @@
 using Alca.MonoGame.Kernel.Graphics;
+using Alca.MonoGame.Kernel.UI.Controls.Base;
 
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Input;
 
 /// <summary>Multi-line text area with Enter-key line breaks, word wrap, and vertical scrolling.</summary>
 public sealed class TextArea : TextBoxBase

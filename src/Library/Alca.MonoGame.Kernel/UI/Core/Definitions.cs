@@ -1,4 +1,40 @@
-namespace Alca.MonoGame.Kernel.UI;
+namespace Alca.MonoGame.Kernel.UI.Core;
+
+/// <summary>Horizontal alignment within a cell or container.</summary>
+public enum HAlign
+{
+    /// <summary>Aligns content to the left edge; stretches if used as cell fill.</summary>
+    Left,
+
+    /// <summary>Centers content horizontally.</summary>
+    Center,
+
+    /// <summary>Aligns content to the right edge.</summary>
+    Right
+}
+
+/// <summary>Vertical alignment within a cell or container.</summary>
+public enum VAlign
+{
+    /// <summary>Aligns content to the top edge; stretches if used as cell fill.</summary>
+    Top,
+
+    /// <summary>Centers content vertically.</summary>
+    Middle,
+
+    /// <summary>Aligns content to the bottom edge.</summary>
+    Bottom
+}
+
+/// <summary>Direction of layout flow for stack-based and progress controls.</summary>
+public enum Orientation
+{
+    /// <summary>Children laid out left to right.</summary>
+    Horizontal,
+
+    /// <summary>Children laid out top to bottom.</summary>
+    Vertical
+}
 
 /// <summary>Defines the four independent border insets and rendering mode for a 9-slice sprite.</summary>
 public readonly struct NineSliceBorderData

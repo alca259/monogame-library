@@ -1,4 +1,6 @@
-namespace Alca.MonoGame.Kernel.UI.Controls;
+using Alca.MonoGame.Kernel.UI.Core;
+
+namespace Alca.MonoGame.Kernel.UI.Controls.Display;
 
 /// <summary>Displays text with optional horizontal/vertical alignment and word-wrap.</summary>
 public sealed class Label : UIElement

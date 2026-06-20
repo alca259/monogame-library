@@ -1,8 +1,9 @@
 using Alca.MonoGame.Kernel.Graphics;
+using Alca.MonoGame.Kernel.UI.Core;
 using Alca.MonoGame.Kernel.UI.Focus;
 using Alca.MonoGame.Kernel.UI.Interaction;
 
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Input;
 
 /// <summary>A pressable button with hover/press animation and focus support.</summary>
 public sealed class Button : UIElement, IUIInteractable, IFocusable

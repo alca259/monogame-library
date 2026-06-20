@@ -1,8 +1,9 @@
 using Alca.MonoGame.Kernel.Graphics;
+using Alca.MonoGame.Kernel.UI.Core;
 using Alca.MonoGame.Kernel.UI.Focus;
 using Alca.MonoGame.Kernel.UI.Interaction;
 
-namespace Alca.MonoGame.Kernel.UI.Controls;
+namespace Alca.MonoGame.Kernel.UI.Controls.Selection;
 
 /// <summary>A single-choice radio button; selection is managed exclusively by its <see cref="RadioGroup"/>.</summary>
 public sealed class RadioButton : UIElement, IUIInteractable, IFocusable
