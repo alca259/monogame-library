@@ -6,6 +6,7 @@ public sealed class GameWorld
     private readonly List<GameEntity> _entities = [];
     private readonly List<GameEntity> _toAdd = [];
     private readonly HashSet<GameEntity> _toDestroy = [];
+    private readonly List<GameSystem> _systems = [];
 
     /// <summary>Gets or sets a value indicating whether this world processes updates. Draw always runs.</summary>
     public bool IsEnabled { get; set; } = true;
@@ -113,13 +114,19 @@ public sealed class GameWorld
         TriggerWorld?.Update(gameTime);
         DayNightCycle?.Update(gameTime);
 
+        for (int i = 0; i < _systems.Count; i++)
+            if (_systems[i].Enabled) _systems[i].Update(gameTime);
+
         for (int i = 0; i < _entities.Count; i++)
             _entities[i].Update(gameTime);
     }
 
-    /// <summary>Draws all active entities. Always runs regardless of <see cref="IsEnabled"/>.</summary>
+    /// <summary>Draws all active entities and systems. Always runs regardless of <see cref="IsEnabled"/>.</summary>
     public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
     {
+        for (int i = 0; i < _systems.Count; i++)
+            if (_systems[i].Enabled) _systems[i].Draw(gameTime, spriteBatch);
+
         for (int i = 0; i < _entities.Count; i++)
             _entities[i].Draw(gameTime, spriteBatch);
     }
@@ -156,11 +163,15 @@ public sealed class GameWorld
     public void Destroy(GameEntity entity) => _toDestroy.Add(entity);
 
     /// <summary>
-    /// Immediately calls <see cref="GameBehaviour.OnDestroy"/> on all entities (including pending ones)
-    /// and clears all entity lists. Safe to call multiple times.
+    /// Immediately calls <see cref="GameBehaviour.OnDestroy"/> on all entities (including pending ones),
+    /// calls <see cref="GameSystem.OnRemoved"/> on all systems, and clears all lists. Safe to call multiple times.
     /// </summary>
     public void Destroy()
     {
+        for (int i = 0; i < _systems.Count; i++)
+            _systems[i].OnRemoved();
+        _systems.Clear();
+
         for (int i = 0; i < _toAdd.Count; i++)
             _toAdd[i].Destroy();
         _toAdd.Clear();
@@ -170,6 +181,52 @@ public sealed class GameWorld
         _entities.Clear();
 
         _toDestroy.Clear();
+    }
+    #endregion
+
+    #region System management
+    /// <summary>Gets the number of registered systems.</summary>
+    public int SystemCount => _systems.Count;
+
+    /// <summary>
+    /// Registers a system, calls <see cref="GameSystem.Initialize"/> immediately, and inserts it
+    /// ordered by <see cref="GameSystem.Order"/> (ascending; ties keep insertion order).
+    /// </summary>
+    public T AddSystem<T>(T system) where T : GameSystem
+    {
+        system.SetWorldInternal(this);
+        InsertSystemOrdered(system);
+        system.Initialize();
+        return system;
+    }
+
+    /// <summary>Creates, registers, and initializes a system of type <typeparamref name="T"/> in one step.</summary>
+    public T AddSystem<T>() where T : GameSystem, new() => AddSystem(new T());
+
+    /// <summary>Removes a system, calling <see cref="GameSystem.OnRemoved"/>. Returns true if it was present.</summary>
+    public bool RemoveSystem(GameSystem system)
+    {
+        int index = _systems.IndexOf(system);
+        if (index < 0) return false;
+        _systems.RemoveAt(index);
+        system.OnRemoved();
+        return true;
+    }
+
+    /// <summary>Returns the first registered system assignable to <typeparamref name="T"/>, or null if not found.</summary>
+    public T? GetSystem<T>() where T : class
+    {
+        for (int i = 0; i < _systems.Count; i++)
+            if (_systems[i] is T match) return match;
+        return null;
+    }
+
+    private void InsertSystemOrdered(GameSystem system)
+    {
+        int i = _systems.Count;
+        while (i > 0 && _systems[i - 1].Order > system.Order)
+            i--;
+        _systems.Insert(i, system);
     }
     #endregion
 
