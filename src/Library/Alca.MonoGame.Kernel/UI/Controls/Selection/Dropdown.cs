@@ -395,6 +395,10 @@ public sealed class Dropdown : UIElement, IUIInteractable, IFocusable
             if (_isExpanded) Close(); else Open();
             args.Handled = true;
         }
+        else if (_isExpanded)
+        {
+            Close();
+        }
     }
 
     /// <inheritdoc/>
