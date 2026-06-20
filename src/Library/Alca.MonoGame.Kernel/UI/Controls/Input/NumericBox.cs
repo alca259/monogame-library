@@ -1,4 +1,5 @@
 using Alca.MonoGame.Kernel.UI.Controls.Base;
+using Alca.MonoGame.Kernel.UI.Input;
 using System.Globalization;
 
 namespace Alca.MonoGame.Kernel.UI.Controls.Input;
@@ -75,17 +76,17 @@ public sealed class NumericBox : TextBoxBase
 
     #endregion
 
-    #region Keyboard — Up/Down increment
+    #region Input — Up/Down increment
 
     /// <inheritdoc/>
-    protected override void ProcessKeyboardInput(KeyboardState current, KeyboardState prev)
+    protected override void ProcessUIInput(UIInputContext input)
     {
-        base.ProcessKeyboardInput(current, prev);
+        base.ProcessUIInput(input);
 
         if (Step > 0f)
         {
-            if (WasJustPressed(current, prev, Keys.Up)) ApplyStep(Step);
-            else if (WasJustPressed(current, prev, Keys.Down)) ApplyStep(-Step);
+            if (input.MoveUp?.IsPressed == true) ApplyStep(Step);
+            else if (input.MoveDown?.IsPressed == true) ApplyStep(-Step);
         }
     }
 

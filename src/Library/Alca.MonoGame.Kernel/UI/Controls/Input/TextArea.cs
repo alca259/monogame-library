@@ -1,5 +1,6 @@
 using Alca.MonoGame.Kernel.Graphics;
 using Alca.MonoGame.Kernel.UI.Controls.Base;
+using Alca.MonoGame.Kernel.UI.Input;
 
 namespace Alca.MonoGame.Kernel.UI.Controls.Input;
 
@@ -13,7 +14,6 @@ public sealed class TextArea : TextBoxBase
     private readonly List<string> _lines = new(8);
     private int _scrollOffsetLines;
     private bool _linesDirty = true;
-    private int _lastWheelValue;
 
     // Cached cursor line prefix — rebuilt on cursor change to avoid alloc in Draw.
     private string _cachedCursorLinePrefix = string.Empty;
@@ -90,23 +90,23 @@ public sealed class TextArea : TextBoxBase
     }
 
     /// <inheritdoc/>
-    protected override void ProcessKeyboardInput(KeyboardState current, KeyboardState prev)
+    protected override void ProcessUIInput(UIInputContext input)
     {
-        bool shift = current.IsKeyDown(Keys.LeftShift) || current.IsKeyDown(Keys.RightShift);
+        bool shift = input.IsShiftHeld;
 
-        if (WasJustPressed(current, prev, Keys.Up))
+        if (input.MoveUp?.IsPressed == true)
         {
             MoveCursorVertical(-1, shift);
             return;
         }
 
-        if (WasJustPressed(current, prev, Keys.Down))
+        if (input.MoveDown?.IsPressed == true)
         {
             MoveCursorVertical(1, shift);
             return;
         }
 
-        base.ProcessKeyboardInput(current, prev);
+        base.ProcessUIInput(input);
     }
 
     #endregion
@@ -235,10 +235,10 @@ public sealed class TextArea : TextBoxBase
 
         if (!IsEnabled) return;
 
-        MouseState ms = Mouse.GetState();
-        if (Bounds.Contains(ms.Position))
+        var input = UIInputContext.Current!;
+        if (input.PointerPosition is not null && Bounds.Contains(input.PointerPosition.Value))
         {
-            int wheelDelta = ms.ScrollWheelValue - _lastWheelValue;
+            int wheelDelta = input.PointerScrollDelta;
             if (wheelDelta != 0)
             {
                 int lineDelta = wheelDelta > 0 ? -1 : 1;
@@ -248,8 +248,6 @@ public sealed class TextArea : TextBoxBase
                     Math.Max(0, _lines.Count - VisibleLineCount()));
             }
         }
-
-        _lastWheelValue = ms.ScrollWheelValue;
     }
 
     #endregion

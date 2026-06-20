@@ -63,6 +63,12 @@ public abstract class Core : Game
     /// <summary>Gets or sets a value that indicates if the game should exit when the Escape key is pressed.</summary>
     public static bool ExitOnEscape { get; set; }
 
+    /// <summary>Gets or sets the action used to exit the application. Defaults to Escape and gamepad Start.</summary>
+    public static InputAction ExitAction { get; set; } = new InputAction("Exit", [Keys.Escape], [Buttons.Start]);
+
+    /// <summary>Gets or sets the action used to toggle fullscreen mode. Defaults to F11.</summary>
+    public static InputAction ToggleFullscreenAction { get; set; } = new InputAction("ToggleFullscreen", [Keys.F11]);
+
     /// <summary>Creates a new Core instance.</summary>
     /// <param name="title">The title to display in the title bar of the game window.</param>
     /// <param name="width">The initial width, in pixels, of the game window.</param>
@@ -173,18 +179,26 @@ public abstract class Core : Game
         Tweening.Update(gameTime);
         Timers.Update(gameTime);
 
+        ExitAction.Update(
+            Input.Keyboard.CurrentState, Input.Keyboard.PreviousState,
+            Input.Mouse.CurrentState, Input.Mouse.PreviousState,
+            Input.GamePads[0].CurrentState, Input.GamePads[0].PreviousState);
+
+        ToggleFullscreenAction.Update(
+            Input.Keyboard.CurrentState, Input.Keyboard.PreviousState,
+            Input.Mouse.CurrentState, Input.Mouse.PreviousState,
+            Input.GamePads[0].CurrentState, Input.GamePads[0].PreviousState);
+
         // Update UI input context with current input states
         UIInput.Update(
             Input.Keyboard.CurrentState, Input.Keyboard.PreviousState,
             Input.GamePads[0].CurrentState, Input.GamePads[0].PreviousState,
             Input.Mouse.CurrentState, Input.Mouse.PreviousState);
 
-        if (ExitOnEscape && Input.Keyboard.IsKeyDown(Keys.Escape))
-        {
+        if (ExitOnEscape && ExitAction.IsPressed)
             Exit();
-        }
 
-        if (Input.Keyboard.IsKeyDown(Keys.F11))
+        if (ToggleFullscreenAction.IsPressed)
         {
             _isFullScreen = !_isFullScreen;
             Graphics.IsFullScreen = _isFullScreen;
