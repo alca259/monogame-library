@@ -1,3 +1,5 @@
+using Alca.MonoGame.Kernel.UI.Core;
+
 namespace Alca.MonoGame.Demo.Scenes;
 
 /// <summary>Main menu — clickable list of all demo scenes.</summary>

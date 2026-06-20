@@ -1,4 +1,5 @@
 using Alca.MonoGame.Kernel.Scenes.Transitions;
+using Alca.MonoGame.Kernel.UI.Core;
 
 namespace Alca.MonoGame.Kernel.Scenes;
 
@@ -40,8 +41,8 @@ public sealed class SceneManager
     /// <summary>Gets the number of overlay scenes currently on the stack.</summary>
     public int OverlayCount => _sceneStack.Count;
 
-    /// <summary>Gets the <see cref="UI.UIRoot"/> of the currently active scene, or null if no scene is active or UI was not enabled.</summary>
-    public UI.UIRoot? ActiveUIRoot => _currentScene?.UIRoot;
+    /// <summary>Gets the <see cref="UI.Core.UIRoot"/> of the currently active scene, or null if no scene is active or UI was not enabled.</summary>
+    public UIRoot? ActiveUIRoot => _currentScene?.UIRoot;
 
     /// <summary>Exposed for unit testing only. Returns the current fade alpha value.</summary>
     internal float FadeAlpha => _fadeAlpha;

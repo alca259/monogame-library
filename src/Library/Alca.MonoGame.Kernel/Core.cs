@@ -7,9 +7,11 @@ using Alca.MonoGame.Kernel.Platform;
 using Alca.MonoGame.Kernel.Scenes;
 using Alca.MonoGame.Kernel.Timers;
 using Alca.MonoGame.Kernel.Tweening;
-using Alca.MonoGame.Kernel.UI;
+using Alca.MonoGame.Kernel.UI.Core;
 using Alca.MonoGame.Kernel.UI.Focus;
+using Alca.MonoGame.Kernel.UI.Input;
 using Alca.MonoGame.Kernel.UI.Interaction;
+using Alca.MonoGame.Kernel.UI.Overlays;
 
 namespace Alca.MonoGame.Kernel;
 
@@ -52,12 +54,20 @@ public abstract class Core : Game
     public static UIFocusManager UIFocus { get; private set; } = null!;
     /// <summary>Gets the UI overlay manager for floating elements such as dropdowns and tooltips.</summary>
     public static UIOverlayManager UIOverlay { get; private set; } = null!;
+    /// <summary>Gets the UI input context that abstracts keyboard/mouse/gamepad for UI controls.</summary>
+    public static UIInputContext UIInput { get; private set; } = null!;
     /// <summary>Gets the game-time timer scheduler.</summary>
     public static TimerManager Timers { get; private set; } = null!;
     /// <summary>Gets the game window (for TextInput event subscription and window title changes).</summary>
     public static new GameWindow Window { get; private set; } = null!;
     /// <summary>Gets or sets a value that indicates if the game should exit when the Escape key is pressed.</summary>
     public static bool ExitOnEscape { get; set; }
+
+    /// <summary>Gets or sets the action used to exit the application. Defaults to Escape and gamepad Start.</summary>
+    public static InputAction ExitAction { get; set; } = new InputAction("Exit", [Keys.Escape], [Buttons.Start]);
+
+    /// <summary>Gets or sets the action used to toggle fullscreen mode. Defaults to F11.</summary>
+    public static InputAction ToggleFullscreenAction { get; set; } = new InputAction("ToggleFullscreen", [Keys.F11]);
 
     /// <summary>Creates a new Core instance.</summary>
     /// <param name="title">The title to display in the title bar of the game window.</param>
@@ -122,6 +132,7 @@ public abstract class Core : Game
         services.AddSingleton<UIInteractionManager>();
         services.AddSingleton<UIFocusManager>();
         services.AddSingleton<UIOverlayManager>();
+        services.AddSingleton<UIInputContext>(_ => UIInputContext.CreateDefault());
         services.AddSingleton<TimerManager>();
 
         ConfigureServices(services);
@@ -141,6 +152,7 @@ public abstract class Core : Game
         UIInteraction = _serviceProvider.GetRequiredService<UIInteractionManager>();
         UIFocus = _serviceProvider.GetRequiredService<UIFocusManager>();
         UIOverlay = _serviceProvider.GetRequiredService<UIOverlayManager>();
+        UIInput = _serviceProvider.GetRequiredService<UIInputContext>();
         Timers = _serviceProvider.GetRequiredService<TimerManager>();
 
         PostInitialize();
@@ -167,12 +179,26 @@ public abstract class Core : Game
         Tweening.Update(gameTime);
         Timers.Update(gameTime);
 
-        if (ExitOnEscape && Input.Keyboard.IsKeyDown(Keys.Escape))
-        {
-            Exit();
-        }
+        ExitAction.Update(
+            Input.Keyboard.CurrentState, Input.Keyboard.PreviousState,
+            Input.Mouse.CurrentState, Input.Mouse.PreviousState,
+            Input.GamePads[0].CurrentState, Input.GamePads[0].PreviousState);
 
-        if (Input.Keyboard.IsKeyDown(Keys.F11))
+        ToggleFullscreenAction.Update(
+            Input.Keyboard.CurrentState, Input.Keyboard.PreviousState,
+            Input.Mouse.CurrentState, Input.Mouse.PreviousState,
+            Input.GamePads[0].CurrentState, Input.GamePads[0].PreviousState);
+
+        // Update UI input context with current input states
+        UIInput.Update(
+            Input.Keyboard.CurrentState, Input.Keyboard.PreviousState,
+            Input.GamePads[0].CurrentState, Input.GamePads[0].PreviousState,
+            Input.Mouse.CurrentState, Input.Mouse.PreviousState);
+
+        if (ExitOnEscape && ExitAction.IsPressed)
+            Exit();
+
+        if (ToggleFullscreenAction.IsPressed)
         {
             _isFullScreen = !_isFullScreen;
             Graphics.IsFullScreen = _isFullScreen;
@@ -181,7 +207,10 @@ public abstract class Core : Game
 
         UIRoot? activeUI = SceneManager.ActiveUIRoot;
         if (activeUI is not null)
-            UIInteraction.Update(activeUI, Input.Mouse, UIFocus);
+        {
+            UIInteraction.Update(activeUI, UIInput, UIFocus);
+            UIFocus.Update(UIInput);
+        }
 
         SceneManager.Update(gameTime);
 

@@ -15,8 +15,9 @@ public sealed class TypewriterEffect
     /// <summary>Gets or sets the number of characters revealed per second. Default is 30.</summary>
     public float CharsPerSecond { get; set; } = 30f;
 
-    /// <summary>Gets a value indicating whether all characters have been revealed.</summary>
-    public bool IsComplete => _charIndex >= _fullTextLength;
+    /// <summary>Gets a value indicating whether all characters have been revealed.
+    /// Returns false when no text is loaded (initial state or after Reset).</summary>
+    public bool IsComplete => _fullTextLength > 0 && _charIndex >= _fullTextLength;
 
     /// <summary>Gets the currently visible portion of the text.</summary>
     public string CurrentText { get; private set; } = string.Empty;

@@ -1,5 +1,6 @@
 using Alca.MonoGame.Kernel.Lighting;
 using Alca.MonoGame.Kernel.Lighting.GPU;
+using Alca.MonoGame.Kernel.UI.Core;
 
 namespace Alca.MonoGame.Demo.Scenes;
 

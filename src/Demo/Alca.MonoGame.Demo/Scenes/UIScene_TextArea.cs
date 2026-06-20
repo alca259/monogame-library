@@ -1,3 +1,7 @@
+using Alca.MonoGame.Kernel.UI.Controls.Display;
+using Alca.MonoGame.Kernel.UI.Controls.Input;
+using Alca.MonoGame.Kernel.UI.Core;
+
 namespace Alca.MonoGame.Demo.Scenes;
 
 /// <summary>Scene 3/10 — demos TextArea with character counter and clear button.</summary>

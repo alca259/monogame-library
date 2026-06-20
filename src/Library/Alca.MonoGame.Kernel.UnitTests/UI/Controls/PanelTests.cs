@@ -1,5 +1,5 @@
-using Alca.MonoGame.Kernel.UI;
-using Alca.MonoGame.Kernel.UI.Controls;
+using Alca.MonoGame.Kernel.UI.Controls.Display;
+using Alca.MonoGame.Kernel.UI.Core;
 
 namespace Alca.MonoGame.Kernel.UnitTests.UI.Controls;
 

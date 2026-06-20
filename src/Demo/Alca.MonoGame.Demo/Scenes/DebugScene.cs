@@ -1,5 +1,6 @@
 using Alca.MonoGame.Kernel.Debug;
 using Alca.MonoGame.Kernel.Graphics.Camera;
+using Alca.MonoGame.Kernel.UI.Core;
 
 namespace Alca.MonoGame.Demo.Scenes;
 

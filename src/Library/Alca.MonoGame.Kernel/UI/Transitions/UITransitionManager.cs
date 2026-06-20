@@ -1,4 +1,5 @@
 using Alca.MonoGame.Kernel.Tweening;
+using Alca.MonoGame.Kernel.UI.Core;
 using MonoGame.Extended.Tweening;
 
 namespace Alca.MonoGame.Kernel.UI.Transitions;

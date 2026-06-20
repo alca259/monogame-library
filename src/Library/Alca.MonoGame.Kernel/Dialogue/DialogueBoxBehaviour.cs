@@ -1,4 +1,5 @@
 using Alca.MonoGame.Kernel.ECS;
+using Alca.MonoGame.Kernel.Input;
 
 namespace Alca.MonoGame.Kernel.Dialogue;
 
@@ -34,6 +35,9 @@ public sealed class DialogueBoxBehaviour : GameBehaviour
     /// <summary>Gets or sets the pixel padding around content inside the dialogue box. Default is 10.</summary>
     public int Padding { get; set; } = 10;
 
+    /// <summary>Gets or sets the action used to advance or complete the current dialogue line. Defaults to Space, Enter, or gamepad A.</summary>
+    public InputAction AdvanceAction { get; set; } = new InputAction("Dialogue_Advance", [Keys.Space, Keys.Enter], [Buttons.A]);
+
     /// <summary>
     /// Creates a new <see cref="DialogueBoxBehaviour"/>.
     /// </summary>
@@ -62,11 +66,13 @@ public sealed class DialogueBoxBehaviour : GameBehaviour
 
         _typewriter.Advance((float)gameTime.ElapsedGameTime.TotalSeconds);
 
-        bool advancePressed =
-            Kernel.Core.Input?.IsKeyPressed(Keys.Space) == true ||
-            Kernel.Core.Input?.IsKeyPressed(Keys.Enter) == true;
+        if (Kernel.Core.Input is not null)
+            AdvanceAction.Update(
+                Kernel.Core.Input.Keyboard.CurrentState, Kernel.Core.Input.Keyboard.PreviousState,
+                Kernel.Core.Input.Mouse.CurrentState, Kernel.Core.Input.Mouse.PreviousState,
+                Kernel.Core.Input.GamePads[0].CurrentState, Kernel.Core.Input.GamePads[0].PreviousState);
 
-        if (!advancePressed) return;
+        if (!AdvanceAction.IsPressed) return;
 
         if (!_typewriter.IsComplete)
             _typewriter.CompleteInstantly();

@@ -1,3 +1,5 @@
+using Alca.MonoGame.Kernel.UI.Core;
+
 namespace Alca.MonoGame.Demo.Scenes;
 
 /// <summary>Scene 8/10 — demos ScrollView (vertical and horizontal content overflow).</summary>

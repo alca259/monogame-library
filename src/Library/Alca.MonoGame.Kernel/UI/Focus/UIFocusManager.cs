@@ -1,4 +1,4 @@
-using Alca.MonoGame.Kernel.Input;
+using Alca.MonoGame.Kernel.UI.Input;
 
 namespace Alca.MonoGame.Kernel.UI.Focus;
 
@@ -113,32 +113,19 @@ public sealed class UIFocusManager
     /// <summary>Moves focus in the Right direction using the focused element's FocusNeighborRight ID.</summary>
     public void FocusRight() => MoveFocusToNeighbor(_focused?.FocusNeighborRight);
 
-    /// <summary>Processes Tab and D-Pad input to drive focus changes.
+    /// <summary>Processes UI input to drive focus changes.
     /// Must be called once per frame after input states are updated.</summary>
-    public void Update(KeyboardInfo kb, GamePadInfo pad)
+    public void Update(UIInputContext input)
     {
-        bool tabPressed = kb.WasKeyJustPressed(Keys.Tab);
-        if (tabPressed)
-        {
-            bool shiftHeld = kb.IsKeyDown(Keys.LeftShift) || kb.IsKeyDown(Keys.RightShift);
-            if (shiftHeld)
-                FocusPrevious();
-            else
-                FocusNext();
-        }
+        if (input.TabNext?.IsPressed == true)
+            FocusNext();
+        else if (input.TabPrevious?.IsPressed == true)
+            FocusPrevious();
 
-        if (kb.WasKeyJustPressed(Keys.Up))    FocusUp();
-        if (kb.WasKeyJustPressed(Keys.Down))  FocusDown();
-        if (kb.WasKeyJustPressed(Keys.Left))  FocusLeft();
-        if (kb.WasKeyJustPressed(Keys.Right)) FocusRight();
-
-        if (pad.IsConnected)
-        {
-            if (pad.WasButtonJustPressed(Buttons.DPadUp))    FocusUp();
-            if (pad.WasButtonJustPressed(Buttons.DPadDown))  FocusDown();
-            if (pad.WasButtonJustPressed(Buttons.DPadLeft))  FocusLeft();
-            if (pad.WasButtonJustPressed(Buttons.DPadRight)) FocusRight();
-        }
+        if (input.MoveUp?.IsPressed == true)    FocusUp();
+        if (input.MoveDown?.IsPressed == true)  FocusDown();
+        if (input.MoveLeft?.IsPressed == true)  FocusLeft();
+        if (input.MoveRight?.IsPressed == true) FocusRight();
     }
 
     private int FindFocusedIndex()

@@ -1,4 +1,6 @@
 using Alca.MonoGame.Kernel.Navigation;
+using Alca.MonoGame.Kernel.UI.Controls.Display;
+using Alca.MonoGame.Kernel.UI.Core;
 
 namespace Alca.MonoGame.Demo.Scenes;
 

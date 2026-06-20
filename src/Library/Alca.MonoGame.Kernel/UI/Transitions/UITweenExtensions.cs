@@ -1,11 +1,13 @@
 using Alca.MonoGame.Kernel.Tweening;
+using Alca.MonoGame.Kernel.UI.Core;
 using MonoGame.Extended.Tweening;
+using KernelCore = Alca.MonoGame.Kernel.Core;
 
 namespace Alca.MonoGame.Kernel.UI.Transitions;
 
 /// <summary>
 /// Extension methods for animating common UI transitions (fade, slide) on any <see cref="UIElement"/>.
-/// All methods accept an explicit <see cref="TweeningManager"/> for testability; omit it to use <see cref="Core.Tweening"/>.
+/// All methods accept an explicit <see cref="TweeningManager"/> for testability; omit it to use <see cref="KernelCore.Tweening"/>.
 /// </summary>
 public static class UITweenExtensions
 {
@@ -15,7 +17,7 @@ public static class UITweenExtensions
         Func<float, float>? easing = null, TweeningManager? tweening = null)
     {
         element.Opacity = 0f;
-        var mgr = tweening ?? Core.Tweening;
+        var mgr = tweening ?? KernelCore.Tweening;
         return mgr.TweenTo(element, e => e.Opacity, 1f, duration, easing ?? EasingCatalog.Linear);
     }
 
@@ -23,7 +25,7 @@ public static class UITweenExtensions
     public static Tween FadeOut(this UIElement element, float duration,
         Func<float, float>? easing = null, TweeningManager? tweening = null)
     {
-        var mgr = tweening ?? Core.Tweening;
+        var mgr = tweening ?? KernelCore.Tweening;
         return mgr.TweenTo(element, e => e.Opacity, 0f, duration, easing ?? EasingCatalog.Linear);
     }
     #endregion
@@ -42,7 +44,7 @@ public static class UITweenExtensions
             element.Bounds.Width, element.Bounds.Height);
 
         var proxy = new SlideProxy(element, toX, toY);
-        var mgr = tweening ?? Core.Tweening;
+        var mgr = tweening ?? KernelCore.Tweening;
 
         mgr.TweenTo(proxy, p => p.OffsetX, 0f, duration, easing ?? EasingCatalog.Linear);
         return mgr.TweenTo(proxy, p => p.OffsetY, 0f, duration, easing ?? EasingCatalog.Linear);
@@ -60,7 +62,7 @@ public static class UITweenExtensions
         int destY = fromY + (int)toOffset.Y;
 
         var proxy = new SlideProxy(element, fromX, fromY);
-        var mgr = tweening ?? Core.Tweening;
+        var mgr = tweening ?? KernelCore.Tweening;
 
         mgr.TweenTo(proxy, p => p.OffsetX, (float)(destX - fromX), duration, easing ?? EasingCatalog.Linear);
         return mgr.TweenTo(proxy, p => p.OffsetY, (float)(destY - fromY), duration, easing ?? EasingCatalog.Linear);

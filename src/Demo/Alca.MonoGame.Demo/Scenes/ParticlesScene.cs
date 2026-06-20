@@ -1,4 +1,7 @@
 using Alca.MonoGame.Kernel.Graphics.Particles;
+using Alca.MonoGame.Kernel.UI.Controls.Display;
+using Alca.MonoGame.Kernel.UI.Core;
+using Alca.MonoGame.Kernel.UI.Overlays;
 using MonoGame.Extended.Graphics;
 using MonoGame.Extended.Particles;
 

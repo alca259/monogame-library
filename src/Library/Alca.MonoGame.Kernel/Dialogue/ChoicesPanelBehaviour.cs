@@ -1,4 +1,5 @@
 using Alca.MonoGame.Kernel.ECS;
+using Alca.MonoGame.Kernel.Input;
 
 namespace Alca.MonoGame.Kernel.Dialogue;
 
@@ -40,6 +41,12 @@ public sealed class ChoicesPanelBehaviour : GameBehaviour
     /// <summary>Gets or sets the color used to render choice text. Default is <see cref="Color.White"/>.</summary>
     public Color TextColor { get; set; } = Color.White;
 
+    /// <summary>Gets the per-choice input actions. Defaults map choice 1–4 to D1–D4 and X/Y/LB/RB.</summary>
+    public InputAction[] ChoiceActions { get; }
+
+    private static readonly Keys[] _defaultChoiceKeys = [Keys.D1, Keys.D2, Keys.D3, Keys.D4];
+    private static readonly Buttons[] _defaultChoiceButtons = [Buttons.X, Buttons.Y, Buttons.LeftShoulder, Buttons.RightShoulder];
+
     /// <summary>
     /// Creates a new <see cref="ChoicesPanelBehaviour"/>.
     /// </summary>
@@ -55,6 +62,14 @@ public sealed class ChoicesPanelBehaviour : GameBehaviour
         _maxChoices = maxChoices;
         _currentChoices = new DialogueChoice[maxChoices];
         _originalIndices = new int[maxChoices];
+
+        ChoiceActions = new InputAction[maxChoices];
+        for (int i = 0; i < maxChoices; i++)
+        {
+            Keys[] keys = i < _defaultChoiceKeys.Length ? [_defaultChoiceKeys[i]] : [];
+            Buttons[] buttons = i < _defaultChoiceButtons.Length ? [_defaultChoiceButtons[i]] : [];
+            ChoiceActions[i] = new InputAction($"Choice_{i + 1}", keys, buttons);
+        }
     }
 
     /// <inheritdoc/>
@@ -69,10 +84,27 @@ public sealed class ChoicesPanelBehaviour : GameBehaviour
     {
         if (!_visible || !Enabled) return;
 
-        if (_choiceCount > 0 && Kernel.Core.Input?.IsKeyPressed(Keys.D1) == true) SelectChoice(0);
-        if (_choiceCount > 1 && Kernel.Core.Input?.IsKeyPressed(Keys.D2) == true) SelectChoice(1);
-        if (_choiceCount > 2 && Kernel.Core.Input?.IsKeyPressed(Keys.D3) == true) SelectChoice(2);
-        if (_choiceCount > 3 && Kernel.Core.Input?.IsKeyPressed(Keys.D4) == true) SelectChoice(3);
+        if (Kernel.Core.Input is not null)
+        {
+            KeyboardState currKb = Kernel.Core.Input.Keyboard.CurrentState;
+            KeyboardState prevKb = Kernel.Core.Input.Keyboard.PreviousState;
+            MouseState currMs = Kernel.Core.Input.Mouse.CurrentState;
+            MouseState prevMs = Kernel.Core.Input.Mouse.PreviousState;
+            GamePadState currPad = Kernel.Core.Input.GamePads[0].CurrentState;
+            GamePadState prevPad = Kernel.Core.Input.GamePads[0].PreviousState;
+
+            for (int i = 0; i < _choiceCount; i++)
+                ChoiceActions[i].Update(currKb, prevKb, currMs, prevMs, currPad, prevPad);
+        }
+
+        for (int i = 0; i < _choiceCount; i++)
+        {
+            if (ChoiceActions[i].IsPressed)
+            {
+                SelectChoice(i);
+                break;
+            }
+        }
     }
 
     /// <inheritdoc/>
